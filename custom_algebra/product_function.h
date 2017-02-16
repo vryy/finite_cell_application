@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_PRODUCT_FUNCTION_H_INCLUDED )
+#define  KRATOS_PRODUCT_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/level_set.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  ProductFunctions
 ///@{
 
 ///@}
@@ -55,30 +55,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Detail class definition.
+/** Class for a general ProductFunction
 */
-class SphericalLevelSet : public LevelSet
+
+class ProductFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of SphericalLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(SphericalLevelSet);
+    /// Pointer definition of ProductFunction
+    KRATOS_CLASS_POINTER_DEFINITION(ProductFunction);
 
-    typedef LevelSet BaseType;
+    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    SphericalLevelSet(const double& cX, const double& cY, const double& cZ, const double& R)
-    : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
+    ProductFunction(const BaseType::Pointer& p_func_1, const BaseType::Pointer& p_func_2)
+    : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 
     /// Destructor.
-    virtual ~SphericalLevelSet() {}
+    virtual ~ProductFunction()
+    {}
 
 
     ///@}
@@ -91,25 +98,9 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return 3;
-    }
-
-
-    virtual double GetValue(const PointType& P) const
-    {
-        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) + pow(P(2) - mcZ, 2) - pow(mR, 2);
-    }
-
-
-    virtual Vector GetGradient(const PointType& P) const
-    {
-        Vector grad(3);
-        grad(0) = 2.0 * (P(0) - mcX);
-        grad(1) = 2.0 * (P(1) - mcY);
-        grad(2) = 2.0 * (P(2) - mcZ);
-        return grad;
+        return mp_func_1->GetValue(P) * mp_func_2->GetValue(P);
     }
 
 
@@ -130,16 +121,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Spherical Level Set";
+        return "Product Function of " + mp_func_1->Info() + " and " + mp_func_2->Info();
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "cX: " << mcX << ", cY: " << mcY << ", cZ: " << mcZ << ", R: " << mR;
     }
 
 
@@ -196,9 +189,8 @@ private:
     ///@name Member Variables
     ///@{
 
-
-    double mcX, mcY, mcZ, mR;
-
+    const BaseType::Pointer mp_func_1;
+    const BaseType::Pointer mp_func_2;
 
     ///@}
     ///@name Private Operators
@@ -225,15 +217,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    SphericalLevelSet& operator=(SphericalLevelSet const& rOther);
+    ProductFunction& operator=(ProductFunction const& rOther);
 
     /// Copy constructor.
-    SphericalLevelSet(SphericalLevelSet const& rOther);
+    ProductFunction(ProductFunction const& rOther);
 
 
     ///@}
 
-}; // Class SphericalLevelSet
+}; // Class ProductFunction
 
 ///@}
 
@@ -246,14 +238,12 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                SphericalLevelSet& rThis)
+/// input stream ProductFunction
+inline std::istream& operator >> (std::istream& rIStream, ProductFunction& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const SphericalLevelSet& rThis)
+/// output stream ProductFunction
+inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -267,4 +257,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_PRODUCT_FUNCTION_H_INCLUDED  defined

@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_PRODUCT_FUNCTION_H_INCLUDED )
-#define  KRATOS_PRODUCT_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_SCALAR_FUNCTION_H_INCLUDED )
+#define  KRATOS_SCALAR_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/function.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ProductFunctions
+///@name  ScalarFunctions
 ///@{
 
 ///@}
@@ -55,17 +55,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general ProductFunction
+/** Class for a general ScalarFunction
 */
 
-class ProductFunction : public Function<Element::GeometryType::PointType::PointType, double>
+class ScalarFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ProductFunction
-    KRATOS_CLASS_POINTER_DEFINITION(ProductFunction);
+    /// Pointer definition of ScalarFunction
+    KRATOS_CLASS_POINTER_DEFINITION(ScalarFunction);
 
     typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
 
@@ -79,12 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    ProductFunction(const BaseType& r_func_1, const BaseType& r_func_2)
-    : mr_func_1(r_func_1), mr_func_2(r_func_2)
+    ScalarFunction(const double& S)
+    : mS(S)
     {}
 
     /// Destructor.
-    virtual ~ProductFunction()
+    virtual ~ScalarFunction()
     {}
 
 
@@ -100,7 +100,7 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return mr_func_1.GetValue(P) * mr_func_2.GetValue(P);
+        return mS;
     }
 
 
@@ -121,7 +121,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Product Function of " + mr_func_1.Info() + " and " + mr_func_2.Info();
+        return "Scalar Function";
     }
 
     /// Print information about this object.
@@ -189,8 +189,7 @@ private:
     ///@name Member Variables
     ///@{
 
-    const BaseType& mr_func_1;
-    const BaseType& mr_func_2;
+    const double mS;
 
     ///@}
     ///@name Private Operators
@@ -217,15 +216,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ProductFunction& operator=(ProductFunction const& rOther);
+    ScalarFunction& operator=(ScalarFunction const& rOther);
 
     /// Copy constructor.
-    ProductFunction(ProductFunction const& rOther);
+    ScalarFunction(ScalarFunction const& rOther);
 
 
     ///@}
 
-}; // Class ProductFunction
+}; // Class ScalarFunction
 
 ///@}
 
@@ -238,12 +237,12 @@ private:
 ///@{
 
 
-/// input stream ProductFunction
-inline std::istream& operator >> (std::istream& rIStream, ProductFunction& rThis)
+/// input stream ScalarFunction
+inline std::istream& operator >> (std::istream& rIStream, ScalarFunction& rThis)
 {}
 
-/// output stream ProductFunction
-inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction& rThis)
+/// output stream ScalarFunction
+inline std::ostream& operator << (std::ostream& rOStream, const ScalarFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -257,4 +256,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_PRODUCT_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_SCALAR_FUNCTION_H_INCLUDED  defined

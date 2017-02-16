@@ -31,8 +31,9 @@
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
 #include "geometries/line_2d_2.h"
-#include "custom_utilities/level_set.h"
+#include "custom_geometries/finite_cell_geometry.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
+#include "custom_algebra/level_set.h"
 
 
 #define ESTIMATE_RCOND
@@ -239,34 +240,13 @@ public:
 
         // check the cut status with the level set
         int stat = r_level_set.CutStatus(r_geom);
-KRATOS_WATCH(stat)
+//KRATOS_WATCH(stat)
 
         if(stat == -1) // the cell is cut
         {
             // obtain the quadrature rule, necessary to construct a cut-cell quadrature
-            GeometryData::IntegrationMethod ThisIntegrationMethod;
-            if(integration_order == 1)
-            {
-                ThisIntegrationMethod = GeometryData::GI_GAUSS_1;
-            }
-            else if(integration_order == 2)
-            {
-                ThisIntegrationMethod = GeometryData::GI_GAUSS_2;
-            }
-            else if(integration_order == 3)
-            {
-                ThisIntegrationMethod = GeometryData::GI_GAUSS_3;
-            }
-            else if(integration_order == 4)
-            {
-                ThisIntegrationMethod = GeometryData::GI_GAUSS_4;
-            }
-            else if(integration_order == 5)
-            {
-                ThisIntegrationMethod = GeometryData::GI_GAUSS_5;
-            }
-            else
-                KRATOS_THROW_ERROR(std::logic_error, "Does not support for more integration points", "")
+            GeometryData::IntegrationMethod ThisIntegrationMethod
+                    = LevelSet::GetIntegrationMethod(integration_order);
 
             const GeometryType::IntegrationPointsArrayType& integration_points = r_geom.IntegrationPoints( ThisIntegrationMethod );
 
@@ -357,7 +337,7 @@ KRATOS_WATCH(stat)
                 // create a quadrature rule on the line
                 GeometryType::Pointer pLineGeom = GeometryType::Pointer( new Line2D2<NodeType>(Element::GeometryType::PointsArrayType( 2, Node<3>())) );
 
-                const GeometryType::IntegrationPointsArrayType& line_integration_points = pLineGeom->IntegrationPoints( GeometryData::GI_GAUSS_4 );
+                const GeometryType::IntegrationPointsArrayType& line_integration_points = pLineGeom->IntegrationPoints( GeometryData::GI_GAUSS_4 ); // TODO parameterize this
 
                 // integrate along P1-P2
                 for(std::size_t i = 0; i < line_integration_points.size(); ++i)
@@ -404,8 +384,7 @@ KRATOS_WATCH(stat)
 
 
             /* create new quadrature and assign to the geometry */
-
-            
+            FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ThisIntegrationMethod, Mw);
         }
     }
 

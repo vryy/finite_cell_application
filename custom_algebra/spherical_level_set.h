@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_PLANAR_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_PLANAR_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/level_set.h"
+#include "custom_algebra/level_set.h"
 
 
 namespace Kratos
@@ -57,14 +57,14 @@ namespace Kratos
 /// Short class definition.
 /** Detail class definition.
 */
-class PlanarLevelSet : public LevelSet
+class SphericalLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of PlanarLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(PlanarLevelSet);
+    /// Pointer definition of SphericalLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(SphericalLevelSet);
 
     typedef LevelSet BaseType;
 
@@ -73,12 +73,12 @@ public:
     ///@{
 
     /// Default constructor.
-    PlanarLevelSet(const double& A, const double& B, const double& C, const double& D)
-    : BaseType(), mA(A), mB(B), mC(C), mD(D)
+    SphericalLevelSet(const double& cX, const double& cY, const double& cZ, const double& R)
+    : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
     {}
 
     /// Destructor.
-    virtual ~PlanarLevelSet() {}
+    virtual ~SphericalLevelSet() {}
 
 
     ///@}
@@ -99,16 +99,16 @@ public:
 
     virtual double GetValue(const PointType& P) const
     {
-        return mA*P(0) + mB*P(1) + mC*P(2) + mD;
+        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) + pow(P(2) - mcZ, 2) - pow(mR, 2);
     }
 
 
     virtual Vector GetGradient(const PointType& P) const
     {
-        Vector grad(this->WorkingSpaceDimension());
-        grad(0) = mA;
-        grad(1) = mB;
-        grad(2) = mC;
+        Vector grad(3);
+        grad(0) = 2.0 * (P(0) - mcX);
+        grad(1) = 2.0 * (P(1) - mcY);
+        grad(2) = 2.0 * (P(2) - mcZ);
         return grad;
     }
 
@@ -130,7 +130,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Planar Level Set";
+        return "Spherical Level Set";
     }
 
     /// Print information about this object.
@@ -139,7 +139,7 @@ public:
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "A: " << mA << ", B: " << mB << ", C: " << mC << ", D: " << mD;
+        rOStream << "cX: " << mcX << ", cY: " << mcY << ", cZ: " << mcZ << ", R: " << mR;
     }
 
 
@@ -197,7 +197,7 @@ private:
     ///@{
 
 
-    double mA, mB, mC, mD;
+    double mcX, mcY, mcZ, mR;
 
 
     ///@}
@@ -225,15 +225,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    PlanarLevelSet& operator=(PlanarLevelSet const& rOther);
+    SphericalLevelSet& operator=(SphericalLevelSet const& rOther);
 
     /// Copy constructor.
-    PlanarLevelSet(PlanarLevelSet const& rOther);
+    SphericalLevelSet(SphericalLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class PlanarLevelSet
+}; // Class SphericalLevelSet
 
 ///@}
 
@@ -248,12 +248,12 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
-                PlanarLevelSet& rThis)
+                SphericalLevelSet& rThis)
 {}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
-                const PlanarLevelSet& rThis)
+                const SphericalLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -267,4 +267,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_PLANAR_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED  defined

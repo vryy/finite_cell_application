@@ -29,7 +29,8 @@
 #include "includes/define.h"
 #include "includes/element.h"
 #include "includes/ublas_interface.h"
-#include "custom_utilities/function.h"
+#include "geometries/geometry_data.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -125,6 +126,12 @@ public:
     virtual Vector GetGradient(GeometryType& rGeometry, const CoordinatesArrayType& rLocalPoint) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+    }
+
+
+    int CutStatus(Element::Pointer& p_elem) const
+    {
+        return CutStatus(p_elem->GetGeometry());
     }
 
 

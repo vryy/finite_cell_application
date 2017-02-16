@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            10 Feb 2017
+//  Date:            15 Feb 2017
 //
 
 
-#if !defined(KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_COS_FUNCTION_H_INCLUDED )
+#define  KRATOS_COS_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/level_set.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  CosFunctions
 ///@{
 
 ///@}
@@ -55,30 +55,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Detail class definition.
+/** Class for a general CosFunction
 */
-class CircularLevelSet : public LevelSet
+
+class CosFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of CircularLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(CircularLevelSet);
+    /// Pointer definition of CosFunction
+    KRATOS_CLASS_POINTER_DEFINITION(CosFunction);
 
-    typedef LevelSet BaseType;
+    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    CircularLevelSet(const double& cX, const double& cY, const double& R)
-    : BaseType(), mcX(cX), mcY(cY), mR(R)
+    CosFunction(const BaseType::Pointer& p_func)
+    : mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~CircularLevelSet() {}
+    virtual ~CosFunction()
+    {}
 
 
     ///@}
@@ -91,24 +98,9 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return 2;
-    }
-
-
-    virtual double GetValue(const PointType& P) const
-    {
-        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) - pow(mR, 2);
-    }
-
-
-    virtual Vector GetGradient(const PointType& P) const
-    {
-        Vector grad(2);
-        grad(0) = 2.0 * (P(0) - mcX);
-        grad(1) = 2.0 * (P(1) - mcY);
-        return grad;
+        return cos(mp_func->GetValue(P));
     }
 
 
@@ -129,16 +121,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Circular Level Set";
+        return "Cos Function";
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "cX: " << mcX << ", cY: " << mcY << ", R: " << mR;
     }
 
 
@@ -196,7 +190,7 @@ private:
     ///@{
 
 
-    double mcX, mcY, mR;
+    const BaseType::Pointer mp_func;
 
 
     ///@}
@@ -224,15 +218,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    CircularLevelSet& operator=(CircularLevelSet const& rOther);
+    CosFunction& operator=(CosFunction const& rOther);
 
     /// Copy constructor.
-    CircularLevelSet(CircularLevelSet const& rOther);
+    CosFunction(CosFunction const& rOther);
 
 
     ///@}
 
-}; // Class CircularLevelSet
+}; // Class CosFunction
 
 ///@}
 
@@ -245,14 +239,12 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                CircularLevelSet& rThis)
+/// input stream CosFunction
+inline std::istream& operator >> (std::istream& rIStream, CosFunction& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const CircularLevelSet& rThis)
+/// output stream CosFunction
+inline std::ostream& operator << (std::ostream& rOStream, const CosFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -266,4 +258,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_COS_FUNCTION_H_INCLUDED  defined

@@ -32,10 +32,11 @@
 #include "includes/ublas_interface.h"
 #include "includes/model_part.h"
 #include "utilities/math_utils.h"
-#include "custom_utilities/function.h"
 #include "geometries/line_3d_2.h"
 #include "geometries/quadrilateral_3d_4.h"
 #include "geometries/hexahedra_3d_8.h"
+#include "custom_algebra/function.h"
+#include "custom_algebra/level_set.h"
 
 
 namespace Kratos
@@ -274,40 +275,19 @@ public:
     template<class TOutputType>
     TOutputType Integrate(const Function<PointType, TOutputType>& rFunc, const int integration_order) const
     {
-        GeometryData::IntegrationMethod ThisIntegrationMethod;
-        if(integration_order == 1)
-        {
-            ThisIntegrationMethod = GeometryData::GI_GAUSS_1;
-        }
-        else if(integration_order == 2)
-        {
-            ThisIntegrationMethod = GeometryData::GI_GAUSS_2;
-        }
-        else if(integration_order == 3)
-        {
-            ThisIntegrationMethod = GeometryData::GI_GAUSS_3;
-        }
-        else if(integration_order == 4)
-        {
-            ThisIntegrationMethod = GeometryData::GI_GAUSS_4;
-        }
-        else if(integration_order == 5)
-        {
-            ThisIntegrationMethod = GeometryData::GI_GAUSS_5;
-        }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "Does not support for more integration points", "")
+        GeometryData::IntegrationMethod ThisIntegrationMethod
+                = LevelSet::GetIntegrationMethod(integration_order);
 
-        double Result = 0.0;
+        TOutputType Result = 0.0;
         this->Integrate(rFunc, Result, ThisIntegrationMethod);
 
         return Result;
     }
 
 
-    /// Integrate a function using the sample geometry and integration points
+    /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<class TOutputType>
+    template<typename TOutputType>
     void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryData::IntegrationMethod ThisIntegrationMethod) const
     {
@@ -316,19 +296,38 @@ public:
             const GeometryType::IntegrationPointsArrayType& integration_points
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
 
-            Matrix J, JtJ;
-            double DetJ;
-
-            CoordinatesArrayType GlobalCoords;
-
-            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            if(this->GetGeometry().WorkingSpaceDimension() == this->GetGeometry().LocalSpaceDimension())
             {
-                J = this->GetGeometry().Jacobian( J, integration_points[point] );
-                JtJ = prod(trans(J), J);
-                DetJ = sqrt(MathUtils<double>::Det(JtJ));
-                this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
+                Matrix J;
+                double DetJ;
 
-                rOutput += rFunc.GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
+                CoordinatesArrayType GlobalCoords;
+
+                for(std::size_t point = 0; point < integration_points.size(); ++point)
+                {
+                    J = this->GetGeometry().Jacobian( J, integration_points[point] );
+                    DetJ = MathUtils<double>::Det(J);
+                    this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
+
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
+                }
+            }
+            else
+            {
+                Matrix J, JtJ;
+                double DetJ;
+
+                CoordinatesArrayType GlobalCoords;
+
+                for(std::size_t point = 0; point < integration_points.size(); ++point)
+                {
+                    J = this->GetGeometry().Jacobian( J, integration_points[point] );
+                    JtJ = prod(trans(J), J);
+                    DetJ = sqrt(MathUtils<double>::Det(JtJ));
+                    this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
+
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
+                }
             }
         }
         else

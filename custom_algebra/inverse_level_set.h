@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            13 Feb 2017
+//  Date:            15 Feb 2017
 //
 
 
-#if !defined(KRATOS_FUNCTION_H_INCLUDED )
-#define  KRATOS_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_INVERSE_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_INVERSE_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,6 +27,9 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "custom_algebra/level_set.h"
 
 
 namespace Kratos
@@ -54,32 +57,38 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Abstract class for a general function R^m->R^n
+/** Class for product of two level sets
 */
-template<typename TInputType, typename TOutputType>
-class Function
+class InverseLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of Function
-    KRATOS_CLASS_POINTER_DEFINITION(Function);
+    /// Pointer definition of InverseLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(InverseLevelSet);
 
-    typedef TInputType InputType;
+    typedef LevelSet BaseType;
 
-    typedef TOutputType OutputType;
+    typedef typename Element::GeometryType GeometryType;
 
+    typedef typename GeometryType::PointType NodeType;
+
+    typedef typename NodeType::PointType PointType;
+
+    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    Function() {}
+    InverseLevelSet(const BaseType::Pointer& p_level_set)
+    : mp_level_set(p_level_set)
+    {}
 
     /// Destructor.
-    virtual ~Function() {}
+    virtual ~InverseLevelSet() {}
 
 
     ///@}
@@ -92,9 +101,21 @@ public:
     ///@{
 
 
-    virtual TOutputType GetValue(const TInputType& P) const
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+        return mp_level_set->WorkingSpaceDimension();
+    }
+
+
+    virtual double GetValue(const PointType& P) const
+    {
+        return -mp_level_set->GetValue(P);
+    }
+
+
+    virtual Vector GetGradient(const PointType& P) const
+    {
+        return -mp_level_set->GetGradient(P);
     }
 
 
@@ -115,7 +136,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Function R^m->R^n";
+        return "Inverse Level Set";
     }
 
     /// Print information about this object.
@@ -145,6 +166,9 @@ protected:
     ///@}
     ///@name Protected member Variables
     ///@{
+
+
+    const BaseType::Pointer mp_level_set;
 
 
     ///@}
@@ -209,15 +233,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    Function& operator=(Function const& rOther);
+    InverseLevelSet& operator=(InverseLevelSet const& rOther);
 
     /// Copy constructor.
-    Function(Function const& rOther);
+    InverseLevelSet(InverseLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class Function
+}; // Class InverseLevelSet
 
 ///@}
 
@@ -231,15 +255,11 @@ private:
 
 
 /// input stream function
-template<typename TInputType, typename TOutputType>
-inline std::istream& operator >> (std::istream& rIStream,
-                Function<TInputType, TOutputType>& rThis)
+inline std::istream& operator >> (std::istream& rIStream, InverseLevelSet& rThis)
 {}
 
 /// output stream function
-template<typename TInputType, typename TOutputType>
-inline std::ostream& operator << (std::ostream& rOStream,
-                const Function<TInputType, TOutputType>& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -253,4 +273,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_INVERSE_LEVEL_SET_H_INCLUDED  defined

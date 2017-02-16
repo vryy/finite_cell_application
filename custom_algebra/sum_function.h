@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            15 Feb 2017
 //
 
 
-#if !defined(KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED )
-#define  KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_SUM_FUNCTION_H_INCLUDED )
+#define  KRATOS_SUM_FUNCTION_H_INCLUDED
 
 
 
@@ -27,8 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_utilities/function.h"
-#include "custom_utilities/level_set.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -48,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  HeavisideFunctions
+///@name  SumFunctions
 ///@{
 
 ///@}
@@ -56,17 +55,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general HeavisideFunction
+/** Class for a general SumFunction
 */
 
-class HeavisideFunction : public Function<Element::GeometryType::PointType::PointType, double>
+class SumFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of HeavisideFunction
-    KRATOS_CLASS_POINTER_DEFINITION(HeavisideFunction);
+    /// Pointer definition of SumFunction
+    KRATOS_CLASS_POINTER_DEFINITION(SumFunction);
 
     typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
 
@@ -80,12 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    HeavisideFunction(const LevelSet& r_level_set)
-    : mr_level_set(r_level_set)
+    SumFunction(const double a, const BaseType::Pointer& p_func_1, const double b, const BaseType::Pointer& p_func_2)
+    : ma(a), mp_func_1(p_func_1), mb(b), mp_func_2(p_func_2)
     {}
 
     /// Destructor.
-    virtual ~HeavisideFunction()
+    virtual ~SumFunction()
     {}
 
 
@@ -101,10 +100,7 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        if(mr_level_set.GetValue(P) < 0.0)
-            return 1.0;
-        else
-            return 0.0;
+        return ma*mp_func_1->GetValue(P) + mb*mp_func_2->GetValue(P);
     }
 
 
@@ -125,7 +121,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Heaviside Function operated on a Level Set";
+        return "Sum Function of " + mp_func_1->Info() + " and " + mp_func_2->Info();
     }
 
     /// Print information about this object.
@@ -193,7 +189,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    const LevelSet& mr_level_set;
+    double ma, mb;
+    const BaseType::Pointer mp_func_1;
+    const BaseType::Pointer mp_func_2;
 
     ///@}
     ///@name Private Operators
@@ -220,15 +218,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    HeavisideFunction& operator=(HeavisideFunction const& rOther);
+    SumFunction& operator=(SumFunction const& rOther);
 
     /// Copy constructor.
-    HeavisideFunction(HeavisideFunction const& rOther);
+    SumFunction(SumFunction const& rOther);
 
 
     ///@}
 
-}; // Class HeavisideFunction
+}; // Class SumFunction
 
 ///@}
 
@@ -241,12 +239,12 @@ private:
 ///@{
 
 
-/// input stream HeavisideFunction
-inline std::istream& operator >> (std::istream& rIStream, HeavisideFunction& rThis)
+/// input stream SumFunction
+inline std::istream& operator >> (std::istream& rIStream, SumFunction& rThis)
 {}
 
-/// output stream HeavisideFunction
-inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunction& rThis)
+/// output stream SumFunction
+inline std::ostream& operator << (std::ostream& rOStream, const SumFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -260,4 +258,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunctio
 
 }  // namespace Kratos.
 
-#endif // KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_SUM_FUNCTION_H_INCLUDED  defined

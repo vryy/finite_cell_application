@@ -19,6 +19,7 @@
 // Project includes
 #include "includes/define.h"
 #include "finite_cell_application.h"
+#include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_python/add_custom_utilities_to_python.h"
 
 namespace Kratos
@@ -34,6 +35,7 @@ namespace Python
         class_<KratosFiniteCellApplication, KratosFiniteCellApplication::Pointer, bases<KratosApplication>, boost::noncopyable>
         ("KratosFiniteCellApplication");
 
+        FiniteCellApplication_AddCustomAlgebraToPython();
         FiniteCellApplication_AddCustomUtilitiesToPython();
 
     }

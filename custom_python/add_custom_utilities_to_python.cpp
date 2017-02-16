@@ -12,17 +12,9 @@
 // Project includes
 #include "includes/element.h"
 #include "custom_python/add_custom_utilities_to_python.h"
-#include "custom_utilities/function.h"
-#include "custom_utilities/heaviside_function.h"
-#include "custom_utilities/monomial_function.h"
-#include "custom_utilities/product_function.h"
-#include "custom_utilities/level_set.h"
-#include "custom_utilities/circular_level_set.h"
-#include "custom_utilities/spherical_level_set.h"
-#include "custom_utilities/linear_level_set.h"
-#include "custom_utilities/planar_level_set.h"
-#include "custom_utilities/div_free_basis_utility.h"
 #include "custom_utilities/binary_tree.h"
+#include "custom_utilities/div_free_basis_utility.h"
+#include "custom_utilities/moment_fitting_utility.h"
 
 
 namespace Kratos
@@ -58,55 +50,6 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
 
     typedef Function<PointType, double> FunctionR3R1Type;
 
-    class_<FunctionR3R1Type, FunctionR3R1Type::Pointer, boost::noncopyable >
-    ("FunctionR3R1", init<>())
-    ;
-
-    class_<HeavisideFunction, HeavisideFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("HeavisideFunction", init<const LevelSet&>())
-    ;
-
-    class_<MonomialFunction<1, 0, 0>, MonomialFunction<1, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX", init<>())
-    ;
-
-    class_<MonomialFunction<0, 1, 0>, MonomialFunction<0, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionY", init<>())
-    ;
-
-    class_<MonomialFunction<1, 1, 0>, MonomialFunction<1, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionXY", init<>())
-    ;
-
-    class_<ProductFunction, ProductFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("ProductFunction", init<const FunctionR3R1Type&, const FunctionR3R1Type&>())
-    ;
-
-    class_<LevelSet, LevelSet::Pointer, boost::noncopyable>
-    ( "LevelSet", init<>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<CircularLevelSet, CircularLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "CircularLevelSet", init<const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<SphericalLevelSet, SphericalLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "SphericalLevelSet", init<const double&, const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<LinearLevelSet, LinearLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "LinearLevelSet", init<const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<PlanarLevelSet, PlanarLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "PlanarLevelSet", init<const double&, const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
     class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable>
     ("BinaryTree", init<Element::Pointer&>())
     .def(init<NodeType::Pointer&, NodeType::Pointer&>())
@@ -115,7 +58,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     ;
 
     typedef BinaryTree<2> QuadTreeType;
-    double(QuadTreeType::*pointer_to_Integrate_double)(const Function<QuadTreeType::PointType, double>&, const int) const = &QuadTreeType::Integrate<double>;
+    double(QuadTreeType::*pointer_to_Integrate_double_quadtree)(const FunctionR3R1Type&, const int) const = &QuadTreeType::Integrate<double>;
 
     class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable>
     ("QuadTree", init<Element::Pointer&>())
@@ -125,25 +68,38 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("ResetId", &QuadTreeType::ResetId)
     .def("Renumber", &QuadTreeType::PyRenumber)
     .def("AddToModelPart", &QuadTreeType::PyAddToModelPart)
-    .def("Integrate", pointer_to_Integrate_double)
+    .def("Integrate", pointer_to_Integrate_double_quadtree)
     .def(self_ns::str(self))
     ;
 
     typedef BinaryTree<3> OctTreeType;
+    double(OctTreeType::*pointer_to_Integrate_double_octtree)(const FunctionR3R1Type&, const int) const = &OctTreeType::Integrate<double>;
 
     class_<OctTreeType, OctTreeType::Pointer, boost::noncopyable>
     ("OctTree", init<Element::Pointer&>())
     .def(init<NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&>())
     .def("Refine", &OctTreeType::Refine)
+    .def("RefineBy", &OctTreeType::RefineBy)
+    .def("ResetId", &OctTreeType::ResetId)
+    .def("Renumber", &OctTreeType::PyRenumber)
+    .def("AddToModelPart", &OctTreeType::PyAddToModelPart)
+    .def("Integrate", pointer_to_Integrate_double_octtree)
     .def(self_ns::str(self))
     ;
 
     void(DivFreeBasisUtility::*pointer_to_AssignQuadrature2D)(Element::Pointer&, const LevelSet&, const unsigned int&, const unsigned int&) = &DivFreeBasisUtility::AssignQuadrature2D;
 
     class_<DivFreeBasisUtility, DivFreeBasisUtility::Pointer, boost::noncopyable>
-    ( "DivFreeBasisUtility", init<>() )
+    ("DivFreeBasisUtility", init<>() )
     .def("GetValues", &ComputeDivFreeBasis)
     .def("AssignQuadrature2D", pointer_to_AssignQuadrature2D)
+    ;
+
+    class_<MomentFittingUtility, MomentFittingUtility::Pointer, boost::noncopyable>
+    ("MomentFittingUtility", init<>())
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<2>)
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<3>)
+    .def("ScaleQuadrature", &MomentFittingUtility::PyScaleQuadrature)
     ;
 
 }
