@@ -20,7 +20,9 @@
 
 namespace Kratos
 {
-    
+
+    KRATOS_CREATE_VARIABLE( boost::python::object, LOAD_FUNCTION )
+
     KratosFiniteCellApplication::KratosFiniteCellApplication()
     {}
 
@@ -29,6 +31,10 @@ namespace Kratos
         // calling base class register to register Kratos components
         KratosApplication::Register();
         std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
+
+        // register variables to Kratos kernel
+        KRATOS_REGISTER_VARIABLE( LOAD_FUNCTION )
+
     }
 
 } // namespace Kratos

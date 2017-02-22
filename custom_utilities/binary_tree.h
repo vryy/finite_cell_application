@@ -37,6 +37,7 @@
 #include "geometries/hexahedra_3d_8.h"
 #include "custom_algebra/function.h"
 #include "custom_algebra/level_set.h"
+#include "custom_geometries/finite_cell_geometry.h"
 
 
 namespace Kratos
@@ -142,6 +143,11 @@ public:
     ///@{
 
 
+    /*****************************************************************/
+    /******* INFORMATION *********************************************/
+    /*****************************************************************/
+
+
     const std::size_t WorkingSpaceDimension() const {return TDegree;}
 
 
@@ -176,6 +182,11 @@ public:
     {
         return (mpChildren.size() == 0);
     }
+
+
+    /*****************************************************************/
+    /******* CONSTRUCTION ********************************************/
+    /*****************************************************************/
 
 
     /// Create the sub-cells
@@ -272,13 +283,18 @@ public:
     }
 
 
+    /*****************************************************************/
+    /******* COMPUTATION *********************************************/
+    /*****************************************************************/
+
+
     template<class TOutputType>
     TOutputType Integrate(const Function<PointType, TOutputType>& rFunc, const int integration_order) const
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
                 = LevelSet::GetIntegrationMethod(integration_order);
 
-        TOutputType Result = 0.0;
+        TOutputType Result = TOutputType(0.0);
         this->Integrate(rFunc, Result, ThisIntegrationMethod);
 
         return Result;
@@ -296,38 +312,15 @@ public:
             const GeometryType::IntegrationPointsArrayType& integration_points
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
 
-            if(this->GetGeometry().WorkingSpaceDimension() == this->GetGeometry().LocalSpaceDimension())
+            std::vector<double> DetJ;
+            this->ComputeDetJ(DetJ, this->GetGeometry(), integration_points);
+
+            CoordinatesArrayType GlobalCoords;
+
+            for(std::size_t point = 0; point < integration_points.size(); ++point)
             {
-                Matrix J;
-                double DetJ;
-
-                CoordinatesArrayType GlobalCoords;
-
-                for(std::size_t point = 0; point < integration_points.size(); ++point)
-                {
-                    J = this->GetGeometry().Jacobian( J, integration_points[point] );
-                    DetJ = MathUtils<double>::Det(J);
-                    this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
-
-                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
-                }
-            }
-            else
-            {
-                Matrix J, JtJ;
-                double DetJ;
-
-                CoordinatesArrayType GlobalCoords;
-
-                for(std::size_t point = 0; point < integration_points.size(); ++point)
-                {
-                    J = this->GetGeometry().Jacobian( J, integration_points[point] );
-                    JtJ = prod(trans(J), J);
-                    DetJ = sqrt(MathUtils<double>::Det(JtJ));
-                    this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
-
-                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
-                }
+                this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
+                rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
             }
         }
         else
@@ -338,6 +331,11 @@ public:
             }
         }
     }
+
+
+    /*****************************************************************/
+    /******* POST PROCESSING *****************************************/
+    /*****************************************************************/
 
 
     void ResetId()
@@ -385,10 +383,11 @@ public:
 
 
     void AddToModelPart(ModelPart& r_model_part, Element const& r_sample_element,
-            Properties::Pointer& p_properties) const
+            const std::size_t level) const
     {
         if(this->IsLeaf())
         {
+            Properties::Pointer p_properties = r_model_part.pGetProperties(level);
             Element::Pointer pNewElement = r_sample_element.Create(Id(), mpThisGeometry, p_properties);
             r_model_part.AddElement(pNewElement);
 
@@ -398,7 +397,7 @@ public:
         else
         {
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
-                mpChildren[i]->AddToModelPart(r_model_part, r_sample_element, p_properties);
+                mpChildren[i]->AddToModelPart(r_model_part, r_sample_element, level + 1);
         }
     }
 
@@ -407,14 +406,67 @@ public:
     {
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
-        Properties::Pointer temp_properties = Properties::Pointer(new Properties());
-        temp_properties->SetId(1);
-
-        r_model_part.AddProperties(temp_properties);
-
-        this->AddToModelPart(r_model_part, r_clone_element, temp_properties);
+        this->AddToModelPart(r_model_part, r_clone_element, 1);
 
         r_model_part.Nodes().Unique();
+    }
+
+
+    /*****************************************************************/
+    /******* AUXILIARY ROUTINES **************************************/
+    /*****************************************************************/
+
+
+    void ConstructQuadrature(const int integration_order) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        GeometryData::IntegrationMethod ThisIntegrationMethod
+                = LevelSet::GetIntegrationMethod(integration_order);
+
+        // firstly create an array of integration points of sub-trees
+        this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
+
+        std::vector<double> DetJ(integration_points.size());
+        this->ComputeDetJ(DetJ, this->GetGeometry(), integration_points);
+
+        // scale the integration_point
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        {
+            integration_points[point].SetWeight(integration_points[point].Weight() / DetJ[point]);
+        }
+
+        /* create new quadrature and assign to the geometry */
+//        FiniteCellGeometry<GeometryType>::AssignGeometryData(this->GetGeometry(), ThisIntegrationMethod, integration_points);
+    }
+
+
+    /// Construct the recursive integration point array
+    void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
+            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+    {
+        if(this->IsLeaf())
+        {
+            const GeometryType::IntegrationPointsArrayType& sub_integration_points
+                = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
+
+            std::vector<double> DetJ(sub_integration_points.size());
+            this->ComputeDetJ(DetJ, this->GetGeometry(), sub_integration_points);
+
+            for(std::size_t point = 0; point < sub_integration_points.size(); ++point)
+            {
+                GeometryType::IntegrationPointType integration_point = sub_integration_points[point];
+                integration_point.SetWeight( DetJ[point] * integration_point.Weight() );
+                integration_points.push_back( integration_point );
+            }
+        }
+        else
+        {
+            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
+                mpChildren[i]->ConstructQuadrature(integration_points, ThisIntegrationMethod);
+            }
+        }
     }
 
 
@@ -577,6 +629,35 @@ private:
         return N;
     }
 
+
+    void ComputeDetJ(std::vector<double>& DetJ,
+            GeometryType& r_geom, const GeometryType::IntegrationPointsArrayType& integration_points) const
+    {
+        if(DetJ.size() != integration_points.size())
+            DetJ.resize(integration_points.size());
+
+        if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
+        {
+            Matrix J;
+
+            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            {
+                J = r_geom.Jacobian( J, integration_points[point] );
+                DetJ.push_back( MathUtils<double>::Det(J) );
+            }
+        }
+        else
+        {
+            Matrix J, JtJ;
+
+            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            {
+                J = r_geom.Jacobian( J, integration_points[point] );
+                JtJ = prod(trans(J), J);
+                DetJ.push_back( sqrt(MathUtils<double>::Det(JtJ)) );
+            }
+        }
+    }
 
     ///@}
     ///@name Private Operators

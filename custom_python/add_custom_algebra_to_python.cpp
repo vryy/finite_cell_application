@@ -27,6 +27,7 @@
 #include "custom_algebra/spherical_level_set.h"
 #include "custom_algebra/linear_level_set.h"
 #include "custom_algebra/planar_level_set.h"
+#include "custom_algebra/load_function_plate_with_the_hole.h"
 
 
 namespace Kratos
@@ -45,11 +46,27 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     typedef Function<PointType, double> FunctionR3R1Type;
 
+    typedef Function<PointType, PointType> FunctionR3R3Type;
+
+    typedef Function<PointType, Vector> FunctionR3RnType;
+
     double(FunctionR3R1Type::*pointer_to_Integrate)(Element::Pointer& p_elem) const = &FunctionR3R1Type::Integrate;
 
-    class_<FunctionR3R1Type, FunctionR3R1Type::Pointer, boost::noncopyable >
+    class_<FunctionR3R1Type, FunctionR3R1Type::Pointer, boost::noncopyable>
     ("FunctionR3R1", init<>())
     .def("Integrate", pointer_to_Integrate)
+    ;
+
+    class_<FunctionR3RnType, FunctionR3RnType::Pointer, boost::noncopyable>
+    ("FunctionR3Rn", init<>())
+    ;
+
+    class_<Variable<FunctionR3RnType::Pointer>, bases<VariableData>, boost::noncopyable>
+    ( "FunctionR3RnVariable", no_init )
+    ;
+
+    class_<Variable<boost::python::object>, boost::noncopyable>
+    ( "PythonObject", no_init )
     ;
 
     class_<HeavisideFunction, HeavisideFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
@@ -130,6 +147,14 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     class_<MonomialFunction<2, 2, 0>, MonomialFunction<2, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
     ("MonomialFunctionX2Y2", init<>())
+    ;
+
+    class_<LoadFunctionPlateWithTheHole<0>, LoadFunctionPlateWithTheHole<0>::Pointer, boost::noncopyable, bases<FunctionR3RnType> >
+    ("LoadFunctionPlateWithTheHoleX", init<const double, const double>())
+    ;
+
+    class_<LoadFunctionPlateWithTheHole<1>, LoadFunctionPlateWithTheHole<1>::Pointer, boost::noncopyable, bases<FunctionR3RnType> >
+    ("LoadFunctionPlateWithTheHoleY", init<const double, const double>())
     ;
 
     int(LevelSet::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &LevelSet::CutStatus;

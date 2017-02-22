@@ -28,6 +28,7 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/element.h"
+#include "includes/serializer.h"
 
 
 namespace Kratos
@@ -260,6 +261,15 @@ private:
     ///@name Private Operations
     ///@{
 
+    friend class Serializer;
+
+    virtual void save(Serializer& rSerializer) const
+    {
+    }
+
+    virtual void load(Serializer& rSerializer)
+    {
+    }
 
     ///@}
     ///@name Private  Access
@@ -336,6 +346,7 @@ inline double Function<typename Element::GeometryType::PointType::PointType, dou
 
     return Result;
 }
+
 
 ///@}
 ///@name Input and output

@@ -20,6 +20,7 @@
 // System includes
 #include <string>
 #include <iostream>
+#include <fstream>
 
 
 // External includes
@@ -151,7 +152,7 @@ public:
                 MA(i, j) = r_funcs[i]->GetValue(GlobalCoords);
             }
         }
-KRATOS_WATCH(MA)
+//KRATOS_WATCH(MA)
 
         // form the vector b
         Vector Mb(num_basis);
@@ -161,7 +162,7 @@ KRATOS_WATCH(MA)
             Mb(i) = 0.0;
             r_integrator.Integrate(ProductFunction(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
         }
-KRATOS_WATCH(Mb)
+//KRATOS_WATCH(Mb)
 
         // solve least square
         #ifdef ESTIMATE_RCOND
@@ -209,6 +210,37 @@ KRATOS_WATCH(Mb)
 
         /* create new quadrature and assign to the geometry */
         FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
+    }
+
+
+    void PySaveQuadrature(boost::python::list& pyElemList, const std::string& fileName) const
+    {
+        std::ofstream myFile;
+        myFile.open(fileName.c_str(), std::ios::out | std::ios::binary);
+
+        typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
+        BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
+                        std::make_pair(iterator_value_type(pyElemList), // begin
+                        iterator_value_type() ) ) // end
+        {
+            this->SaveQuadrature(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
+        }
+
+        myFile.close();
+    }
+
+
+    void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
+            const GeometryData::IntegrationMethod& ElementalIntegrationMethod) const
+    {
+        rOStream << p_elem->Id() << ElementalIntegrationMethod;
+        const GeometryType::IntegrationPointsArrayType& integration_points
+                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+
+        for(std::size_t i = 0; i < integration_points.size(); ++i)
+        {
+            rOStream << integration_points[i].Weight();
+        }
     }
 
 

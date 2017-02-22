@@ -49,6 +49,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     typedef NodeType::PointType PointType;
 
     typedef Function<PointType, double> FunctionR3R1Type;
+    typedef Function<PointType, Vector> FunctionR3RnType;
 
     class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable>
     ("BinaryTree", init<Element::Pointer&>())
@@ -59,6 +60,8 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
 
     typedef BinaryTree<2> QuadTreeType;
     double(QuadTreeType::*pointer_to_Integrate_double_quadtree)(const FunctionR3R1Type&, const int) const = &QuadTreeType::Integrate<double>;
+    Vector(QuadTreeType::*pointer_to_Integrate_Vector_quadtree)(const FunctionR3RnType&, const int) const = &QuadTreeType::Integrate<Vector>;
+//    void(QuadTreeType::*pointer_to_ConstructQuadrature_quadtree)(const int) const = &QuadTreeType::ConstructQuadrature;
 
     class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable>
     ("QuadTree", init<Element::Pointer&>())
@@ -69,6 +72,8 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("Renumber", &QuadTreeType::PyRenumber)
     .def("AddToModelPart", &QuadTreeType::PyAddToModelPart)
     .def("Integrate", pointer_to_Integrate_double_quadtree)
+    .def("Integrate", pointer_to_Integrate_Vector_quadtree)
+//    .def("ConstructQuadrature", pointer_to_ConstructQuadrature_quadtree)
     .def(self_ns::str(self))
     ;
 
@@ -100,6 +105,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<2>)
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<3>)
     .def("ScaleQuadrature", &MomentFittingUtility::PyScaleQuadrature)
+    .def("SaveQuadrature", &MomentFittingUtility::PySaveQuadrature)
     ;
 
 }

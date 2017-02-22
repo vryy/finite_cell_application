@@ -21,8 +21,11 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/element.h"
 #include "includes/variables.h"
+#include "includes/kratos_components.h"
 #include "includes/kratos_application.h"
+#include "custom_algebra/function.h"
 
 
 namespace Kratos
@@ -30,6 +33,8 @@ namespace Kratos
 
     ///@name Kratos Globals
     ///@{
+
+    KRATOS_DEFINE_VARIABLE( boost::python::object, LOAD_FUNCTION )
 
     ///@}
     ///@name Type Definitions
@@ -97,7 +102,7 @@ namespace Kratos
         /// Turn back information as a string.
         virtual std::string Info() const
         {
-            return "Base application for Finite Cell related analysis";
+            return "Base application for Finite-Cell-based analysis";
         }
 
         /// Print information about this object.

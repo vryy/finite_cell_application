@@ -38,6 +38,8 @@ namespace Python
         FiniteCellApplication_AddCustomAlgebraToPython();
         FiniteCellApplication_AddCustomUtilitiesToPython();
 
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
+
     }
 
 } // namespace Python.
