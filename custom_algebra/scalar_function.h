@@ -104,6 +104,20 @@ public:
     }
 
 
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        std::stringstream ss;
+        ss << mS;
+        return ss.str();
+    }
+
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(new ZeroFunction());
+    }
+
+
     ///@}
     ///@name Access
     ///@{

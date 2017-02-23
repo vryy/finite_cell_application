@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            23 Feb 2017
 //
 
 
-#if !defined(KRATOS_COS_FUNCTION_H_INCLUDED )
-#define  KRATOS_COS_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_INVERSE_FUNCTION_H_INCLUDED )
+#define  KRATOS_INVERSE_FUNCTION_H_INCLUDED
 
 
 
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  CosFunctions
+///@name  InverseFunctions
 ///@{
 
 ///@}
@@ -55,17 +55,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general CosFunction
+/** Class for a general InverseFunction
 */
 
-class CosFunction : public Function<Element::GeometryType::PointType::PointType, double>
+class InverseFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of CosFunction
-    KRATOS_CLASS_POINTER_DEFINITION(CosFunction);
+    /// Pointer definition of InverseFunction
+    KRATOS_CLASS_POINTER_DEFINITION(InverseFunction);
 
     typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
 
@@ -79,12 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    CosFunction(const BaseType::Pointer& p_func)
+    InverseFunction(const BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~CosFunction()
+    virtual ~InverseFunction()
     {}
 
 
@@ -100,7 +100,32 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return cos(mp_func->GetValue(P));
+        return 1.0/mp_func->GetValue(P);
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        std::stringstream ss;
+        ss << "1.0/" << mp_func->GetFormula(Format);
+        return ss.str();
+    }
+
+
+    virtual Function::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(
+                new NegateFunction(
+                    BaseType::Pointer(
+                        new ProductFunction(
+                            mp_func->GetDiffFunction(component),
+                            BaseType::Pointer(
+                                new PowFunction(2, BaseType::Pointer( new InverseFunction(mp_func) ) )
+                            )
+                        )
+                    )
+                )
+            );
     }
 
 
@@ -121,7 +146,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Cos Function";
+        return "Inverse Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
@@ -189,9 +214,7 @@ private:
     ///@name Member Variables
     ///@{
 
-
     const BaseType::Pointer mp_func;
-
 
     ///@}
     ///@name Private Operators
@@ -218,15 +241,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    CosFunction& operator=(CosFunction const& rOther);
+    InverseFunction& operator=(InverseFunction const& rOther);
 
     /// Copy constructor.
-    CosFunction(CosFunction const& rOther);
+    InverseFunction(InverseFunction const& rOther);
 
 
     ///@}
 
-}; // Class CosFunction
+}; // Class InverseFunction
 
 ///@}
 
@@ -239,12 +262,12 @@ private:
 ///@{
 
 
-/// input stream CosFunction
-inline std::istream& operator >> (std::istream& rIStream, CosFunction& rThis)
+/// input stream InverseFunction
+inline std::istream& operator >> (std::istream& rIStream, InverseFunction& rThis)
 {}
 
-/// output stream CosFunction
-inline std::ostream& operator << (std::ostream& rOStream, const CosFunction& rThis)
+/// output stream InverseFunction
+inline std::ostream& operator << (std::ostream& rOStream, const InverseFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -258,4 +281,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const CosFunction& rTh
 
 }  // namespace Kratos.
 
-#endif // KRATOS_COS_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_INVERSE_FUNCTION_H_INCLUDED  defined

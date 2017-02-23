@@ -15,11 +15,15 @@
 #include "custom_algebra/function.h"
 #include "custom_algebra/heaviside_function.h"
 #include "custom_algebra/scalar_function.h"
+#include "custom_algebra/zero_function.h"
 #include "custom_algebra/monomial_function.h"
-#include "custom_algebra/sin_function.h"
-#include "custom_algebra/cos_function.h"
+#include "custom_algebra/trigonometric_function.h"
 #include "custom_algebra/product_function.h"
 #include "custom_algebra/sum_function.h"
+#include "custom_algebra/scale_function.h"
+#include "custom_algebra/pow_function.h"
+#include "custom_algebra/negate_function.h"
+#include "custom_algebra/inverse_function.h"
 #include "custom_algebra/level_set.h"
 #include "custom_algebra/product_level_set.h"
 #include "custom_algebra/inverse_level_set.h"
@@ -50,11 +54,21 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     typedef Function<PointType, Vector> FunctionR3RnType;
 
-    double(FunctionR3R1Type::*pointer_to_Integrate)(Element::Pointer& p_elem) const = &FunctionR3R1Type::Integrate;
+    double(FunctionR3R1Type::*pointer_to_GetValue)(const double&, const double&) const = &FunctionR3R1Type::GetValue;
+    double(FunctionR3R1Type::*pointer_to_GetValue2)(const double&, const double&, const double&) const = &FunctionR3R1Type::GetValue;
+    double(FunctionR3R1Type::*pointer_to_GetValue3)(const PointType&) const = &FunctionR3R1Type::GetValue;
+    double(FunctionR3R1Type::*pointer_to_Integrate)(Element::Pointer&) const = &FunctionR3R1Type::Integrate;
+    double(FunctionR3R1Type::*pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR3R1Type::Integrate;
 
     class_<FunctionR3R1Type, FunctionR3R1Type::Pointer, boost::noncopyable>
     ("FunctionR3R1", init<>())
     .def("Integrate", pointer_to_Integrate)
+    .def("Integrate", pointer_to_Integrate2)
+    .def("GetValue", pointer_to_GetValue)
+    .def("GetValue", pointer_to_GetValue2)
+    .def("GetValue", pointer_to_GetValue3)
+    .def("GetFormula", &FunctionR3R1Type::GetFormula)
+    .def("GetDiffFunction", &FunctionR3R1Type::GetDiffFunction)
     ;
 
     class_<FunctionR3RnType, FunctionR3RnType::Pointer, boost::noncopyable>
@@ -78,11 +92,32 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ;
 
     class_<SumFunction, SumFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("SumFunction", init<const double, const FunctionR3R1Type::Pointer&, const double, const FunctionR3R1Type::Pointer&>())
+    ("SumFunction", init<const FunctionR3R1Type::Pointer&, const FunctionR3R1Type::Pointer&>())
+    ;
+
+    class_<ScaleFunction, ScaleFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("ScaleFunction", init<const double, const FunctionR3R1Type::Pointer&>())
+    ;
+
+    class_<PowFunction, PowFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("PowFunction", init<const double, const FunctionR3R1Type::Pointer&>())
+    .def(init<const FunctionR3R1Type::Pointer&, const double>())
+    ;
+
+    class_<NegateFunction, NegateFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("NegateFunction", init<const FunctionR3R1Type::Pointer&>())
+    ;
+
+    class_<InverseFunction, InverseFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("InverseFunction", init<const FunctionR3R1Type::Pointer&>())
     ;
 
     class_<ScalarFunction, ScalarFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
     ("ScalarFunction", init<const double&>())
+    ;
+
+    class_<ZeroFunction, ZeroFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("ZeroFunction", init<>())
     ;
 
     class_<SinFunction, SinFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
@@ -91,6 +126,10 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     class_<CosFunction, CosFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
     ("CosFunction", init<const FunctionR3R1Type::Pointer&>())
+    ;
+
+    class_<AcosFunction, AcosFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
+    ("AcosFunction", init<const FunctionR3R1Type::Pointer&>())
     ;
 
     class_<MonomialFunction<1, 0, 0>, MonomialFunction<1, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >

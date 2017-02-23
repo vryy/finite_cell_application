@@ -79,8 +79,8 @@ public:
     ///@{
 
     /// Default constructor.
-    SumFunction(const double a, const BaseType::Pointer& p_func_1, const double b, const BaseType::Pointer& p_func_2)
-    : ma(a), mp_func_1(p_func_1), mb(b), mp_func_2(p_func_2)
+    SumFunction(const BaseType::Pointer& p_func_1, const BaseType::Pointer& p_func_2)
+    : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 
     /// Destructor.
@@ -100,7 +100,24 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return ma*mp_func_1->GetValue(P) + mb*mp_func_2->GetValue(P);
+        return mp_func_1->GetValue(P) + mp_func_2->GetValue(P);
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return mp_func_1->GetFormula(Format) + "+" + mp_func_2->GetFormula(Format);
+    }
+
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(
+                    new SumFunction(
+                        mp_func_1->GetDiffFunction(component),
+                        mp_func_2->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -189,7 +206,6 @@ private:
     ///@name Member Variables
     ///@{
 
-    double ma, mb;
     const BaseType::Pointer mp_func_1;
     const BaseType::Pointer mp_func_2;
 

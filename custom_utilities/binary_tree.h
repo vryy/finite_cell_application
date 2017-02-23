@@ -305,7 +305,7 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
-            const GeometryData::IntegrationMethod ThisIntegrationMethod) const
+            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         if(this->IsLeaf())
         {
@@ -313,7 +313,7 @@ public:
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
 
             std::vector<double> DetJ;
-            this->ComputeDetJ(DetJ, this->GetGeometry(), integration_points);
+            Function<double, double>::ComputeDetJ(DetJ, this->GetGeometry(), integration_points);
 
             CoordinatesArrayType GlobalCoords;
 
@@ -417,7 +417,7 @@ public:
     /*****************************************************************/
 
 
-    void ConstructQuadrature(const int integration_order) const
+    void ConstructQuadrature(const LevelSet& r_level_set, const int integration_order) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -427,21 +427,33 @@ public:
         // firstly create an array of integration points of sub-trees
         this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
 
-        std::vector<double> DetJ(integration_points.size());
-        this->ComputeDetJ(DetJ, this->GetGeometry(), integration_points);
-
-        // scale the integration_point
+        // transform the integration_points back to local coordinates
+        // scale the weight if needed
+        CoordinatesArrayType LocalCoords;
+        bool is_inside;
         for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            integration_points[point].SetWeight(integration_points[point].Weight() / DetJ[point]);
+            is_inside = (r_level_set.GetValue(integration_points[point]) < 0.0);
+
+            this->GetGeometry().PointLocalCoordinates(LocalCoords, integration_points[point]);
+            noalias(integration_points[point]) = LocalCoords;
+
+            if(is_inside)
+            {
+                double DetJ = Function<double, double>::ComputeDetJ(this->GetGeometry(), integration_points[point]);
+                integration_points[point].SetWeight(integration_points[point].Weight() / DetJ);
+            }
+            else
+                integration_points[point].SetWeight(0.0);
         }
 
         /* create new quadrature and assign to the geometry */
-//        FiniteCellGeometry<GeometryType>::AssignGeometryData(this->GetGeometry(), ThisIntegrationMethod, integration_points);
+        FiniteCellGeometry<GeometryType>::AssignGeometryData(this->GetGeometry(), ThisIntegrationMethod, integration_points);
     }
 
 
     /// Construct the recursive integration point array
+    /// REMARKS: the integration_points is in global coordinates system
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
@@ -451,12 +463,17 @@ public:
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
 
             std::vector<double> DetJ(sub_integration_points.size());
-            this->ComputeDetJ(DetJ, this->GetGeometry(), sub_integration_points);
+            Function<double, double>::ComputeDetJ(DetJ, this->GetGeometry(), sub_integration_points);
+
+            CoordinatesArrayType GlobalCoords;
 
             for(std::size_t point = 0; point < sub_integration_points.size(); ++point)
             {
-                GeometryType::IntegrationPointType integration_point = sub_integration_points[point];
-                integration_point.SetWeight( DetJ[point] * integration_point.Weight() );
+                this->GetGeometry().GlobalCoordinates(GlobalCoords, sub_integration_points[point]);
+
+                GeometryType::IntegrationPointType integration_point;
+                noalias(integration_point) = GlobalCoords;
+                integration_point.SetWeight( DetJ[point] * sub_integration_points[point].Weight() );
                 integration_points.push_back( integration_point );
             }
         }
@@ -630,35 +647,6 @@ private:
     }
 
 
-    void ComputeDetJ(std::vector<double>& DetJ,
-            GeometryType& r_geom, const GeometryType::IntegrationPointsArrayType& integration_points) const
-    {
-        if(DetJ.size() != integration_points.size())
-            DetJ.resize(integration_points.size());
-
-        if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
-        {
-            Matrix J;
-
-            for(std::size_t point = 0; point < integration_points.size(); ++point)
-            {
-                J = r_geom.Jacobian( J, integration_points[point] );
-                DetJ.push_back( MathUtils<double>::Det(J) );
-            }
-        }
-        else
-        {
-            Matrix J, JtJ;
-
-            for(std::size_t point = 0; point < integration_points.size(); ++point)
-            {
-                J = r_geom.Jacobian( J, integration_points[point] );
-                JtJ = prod(trans(J), J);
-                DetJ.push_back( sqrt(MathUtils<double>::Det(JtJ)) );
-            }
-        }
-    }
-
     ///@}
     ///@name Private Operators
     ///@{
@@ -709,7 +697,9 @@ private:
 template<std::size_t TDegree>
 inline std::istream& operator >> (std::istream& rIStream,
                 BinaryTree<TDegree>& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 template<std::size_t TDegree>

@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            22 Feb 2017
 //
 
 
-#if !defined(KRATOS_SIN_FUNCTION_H_INCLUDED )
-#define  KRATOS_SIN_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_POW_FUNCTION_H_INCLUDED )
+#define  KRATOS_POW_FUNCTION_H_INCLUDED
 
 
 
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  SinFunctions
+///@name  PowFunctions
 ///@{
 
 ///@}
@@ -55,17 +55,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general SinFunction
+/** Class for a general PowFunction
 */
 
-class SinFunction : public Function<Element::GeometryType::PointType::PointType, double>
+class PowFunction : public Function<Element::GeometryType::PointType::PointType, double>
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of SinFunction
-    KRATOS_CLASS_POINTER_DEFINITION(SinFunction);
+    /// Pointer definition of PowFunction
+    KRATOS_CLASS_POINTER_DEFINITION(PowFunction);
 
     typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
 
@@ -79,12 +79,16 @@ public:
     ///@{
 
     /// Default constructor.
-    SinFunction(const BaseType::Pointer& p_func)
-    : mp_func(p_func)
+    PowFunction(const double& a, const BaseType::Pointer& p_func)
+    : ma(a), mp_func(p_func)
+    {}
+
+    PowFunction(const BaseType::Pointer& p_func, const double& a)
+    : ma(a), mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~SinFunction()
+    virtual ~PowFunction()
     {}
 
 
@@ -100,7 +104,43 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return sin(mp_func->GetValue(P));
+        return pow(mp_func->GetValue(P), ma);
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        std::stringstream ss;
+        if(Format == "matlab")
+        {
+            if(ma == 1.0)
+                ss << mp_func->GetFormula(Format);
+            else if(ma == 0.0)
+                ss << "1.0";
+            else
+                ss << "(" << mp_func->GetFormula(Format) << ")^" << ma;
+        }
+        return ss.str();
+    }
+
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        if(ma == 1.0)
+            return mp_func->GetDiffFunction(component);
+        else if(ma == 0.0)
+            return BaseType::Pointer(new ZeroFunction());
+        else
+            return BaseType::Pointer(
+                        new ProductFunction(
+                            BaseType::Pointer(
+                                new ScaleFunction(ma,
+                                    BaseType::Pointer(new PowFunction(ma-1, mp_func))
+                                )
+                            ),
+                            mp_func->GetDiffFunction(component)
+                        )
+                    );
     }
 
 
@@ -121,7 +161,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Sin Function";
+        return "Scale Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
@@ -189,9 +229,8 @@ private:
     ///@name Member Variables
     ///@{
 
-
+    double ma;
     const BaseType::Pointer mp_func;
-
 
     ///@}
     ///@name Private Operators
@@ -218,15 +257,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    SinFunction& operator=(SinFunction const& rOther);
+    PowFunction& operator=(PowFunction const& rOther);
 
     /// Copy constructor.
-    SinFunction(SinFunction const& rOther);
+    PowFunction(PowFunction const& rOther);
 
 
     ///@}
 
-}; // Class SinFunction
+}; // Class PowFunction
 
 ///@}
 
@@ -239,12 +278,12 @@ private:
 ///@{
 
 
-/// input stream SinFunction
-inline std::istream& operator >> (std::istream& rIStream, SinFunction& rThis)
+/// input stream PowFunction
+inline std::istream& operator >> (std::istream& rIStream, PowFunction& rThis)
 {}
 
-/// output stream SinFunction
-inline std::ostream& operator << (std::ostream& rOStream, const SinFunction& rThis)
+/// output stream PowFunction
+inline std::ostream& operator << (std::ostream& rOStream, const PowFunction& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -258,4 +297,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const SinFunction& rTh
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SIN_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_SCALE_FUNCTION_H_INCLUDED  defined

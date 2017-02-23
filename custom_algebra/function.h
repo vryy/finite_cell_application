@@ -19,6 +19,7 @@
 
 // System includes
 #include <string>
+#include <sstream>
 #include <iostream>
 
 
@@ -101,7 +102,38 @@ public:
     ///@{
 
 
+    TOutputType GetValue(const double& x, const double& y) const
+    {
+        TInputType P;
+        P[0] = x;
+        P[1] = y;
+        return GetValue(P);
+    }
+
+
+    TOutputType GetValue(const double& x, const double& y, const double& z) const
+    {
+        TInputType P;
+        P[0] = x;
+        P[1] = y;
+        P[2] = z;
+        return GetValue(P);
+    }
+
+
     virtual TOutputType GetValue(const TInputType& P) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+    }
+
+
+    virtual Function::Pointer GetDiffFunction(const int& component) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
     }
@@ -132,6 +164,57 @@ public:
             const GeometryData::IntegrationMethod ThisIntegrationMethod) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Integrate is not implemented", "")
+    }
+
+
+    static double ComputeDetJ(GeometryType& r_geom, const GeometryType::IntegrationPointType& integration_point)
+    {
+        if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
+        {
+            Matrix J;
+
+            J = r_geom.Jacobian( J, integration_point );
+            return MathUtils<double>::Det(J);
+        }
+        else
+        {
+            Matrix J, JtJ;
+
+            J = r_geom.Jacobian( J, integration_point );
+            JtJ = prod(trans(J), J);
+            return sqrt(MathUtils<double>::Det(JtJ));
+        }
+        return 0.0; // to silence the compiler
+    }
+
+
+    static void ComputeDetJ(std::vector<double>& DetJ,
+            GeometryType& r_geom, const GeometryType::IntegrationPointsArrayType& integration_points)
+    {
+        if(DetJ.size() != integration_points.size())
+            DetJ.resize(integration_points.size());
+
+        if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
+        {
+            Matrix J;
+
+            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            {
+                J = r_geom.Jacobian( J, integration_points[point] );
+                DetJ[point] = MathUtils<double>::Det(J);
+            }
+        }
+        else
+        {
+            Matrix J, JtJ;
+
+            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            {
+                J = r_geom.Jacobian( J, integration_points[point] );
+                JtJ = prod(trans(J), J);
+                DetJ[point] = sqrt(MathUtils<double>::Det(JtJ));
+            }
+        }
     }
 
 
@@ -310,38 +393,15 @@ inline double Function<typename Element::GeometryType::PointType::PointType, dou
 
     double Result = 0.0;
 
-    if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
+    std::vector<double> DetJ;
+    ComputeDetJ(DetJ, r_geom, integration_points);
+
+    CoordinatesArrayType GlobalCoords;
+
+    for(std::size_t point = 0; point < integration_points.size(); ++point)
     {
-        Matrix J;
-        double DetJ;
-
-        CoordinatesArrayType GlobalCoords;
-
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
-        {
-            J = r_geom.Jacobian( J, integration_points[point] );
-            DetJ = MathUtils<double>::Det(J);
-            r_geom.GlobalCoordinates(GlobalCoords, integration_points[point]);
-
-            Result += GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
-        }
-    }
-    else
-    {
-        Matrix J, JtJ;
-        double DetJ;
-
-        CoordinatesArrayType GlobalCoords;
-
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
-        {
-            J = r_geom.Jacobian( J, integration_points[point] );
-            JtJ = prod(trans(J), J);
-            DetJ = sqrt(MathUtils<double>::Det(JtJ));
-            r_geom.GlobalCoordinates(GlobalCoords, integration_points[point]);
-
-            Result += GetValue(GlobalCoords) * DetJ * integration_points[point].Weight();
-        }
+        r_geom.GlobalCoordinates(GlobalCoords, integration_points[point]);
+        Result += GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
     }
 
     return Result;
@@ -357,7 +417,9 @@ inline double Function<typename Element::GeometryType::PointType::PointType, dou
 template<typename TInputType, typename TOutputType>
 inline std::istream& operator >> (std::istream& rIStream,
                 Function<TInputType, TOutputType>& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 template<typename TInputType, typename TOutputType>

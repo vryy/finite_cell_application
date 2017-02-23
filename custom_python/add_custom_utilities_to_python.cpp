@@ -61,7 +61,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     typedef BinaryTree<2> QuadTreeType;
     double(QuadTreeType::*pointer_to_Integrate_double_quadtree)(const FunctionR3R1Type&, const int) const = &QuadTreeType::Integrate<double>;
     Vector(QuadTreeType::*pointer_to_Integrate_Vector_quadtree)(const FunctionR3RnType&, const int) const = &QuadTreeType::Integrate<Vector>;
-//    void(QuadTreeType::*pointer_to_ConstructQuadrature_quadtree)(const int) const = &QuadTreeType::ConstructQuadrature;
+    void(QuadTreeType::*pointer_to_ConstructQuadrature_quadtree)(const LevelSet&, const int) const = &QuadTreeType::ConstructQuadrature;
 
     class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable>
     ("QuadTree", init<Element::Pointer&>())
@@ -73,7 +73,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("AddToModelPart", &QuadTreeType::PyAddToModelPart)
     .def("Integrate", pointer_to_Integrate_double_quadtree)
     .def("Integrate", pointer_to_Integrate_Vector_quadtree)
-//    .def("ConstructQuadrature", pointer_to_ConstructQuadrature_quadtree)
+    .def("ConstructQuadrature", pointer_to_ConstructQuadrature_quadtree)
     .def(self_ns::str(self))
     ;
 

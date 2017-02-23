@@ -26,6 +26,7 @@
 // External includes
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/numeric/ublas/lu.hpp> 
 
 
 // Project includes
@@ -40,6 +41,7 @@
 
 
 #define ESTIMATE_RCOND
+#define CHECK_SOLUTION
 
 
 namespace Kratos
@@ -149,10 +151,10 @@ public:
             for(std::size_t j = 0; j < num_fit_points; ++j)
             {
                 r_geom.GlobalCoordinates(GlobalCoords, integration_points[j]);
-                MA(i, j) = r_funcs[i]->GetValue(GlobalCoords);
+                MA(i, j) = r_funcs[i]->GetValue(GlobalCoords) * Function<double, double>::ComputeDetJ(r_geom, integration_points[j]);
             }
         }
-//KRATOS_WATCH(MA)
+KRATOS_WATCH(MA)
 
         // form the vector b
         Vector Mb(num_basis);
@@ -162,21 +164,39 @@ public:
             Mb(i) = 0.0;
             r_integrator.Integrate(ProductFunction(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
         }
-//KRATOS_WATCH(Mb)
+KRATOS_WATCH(Mb)
 
         // solve least square
         #ifdef ESTIMATE_RCOND
         double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
         KRATOS_WATCH(rcond)
         #endif
-        /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
+
         Vector Mw;
-        LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
-//            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
+        if(MA.size1() == MA.size2())
+        {
+            /* the linear system is square, we can use a direct solver */
+            boost::numeric::ublas::permutation_matrix<> pm(MA.size1());
+            Matrix MAcopy = MA;
+            Mw = Mb;
+            boost::numeric::ublas::lu_factorize(MAcopy, pm);
+            boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
+        }
+        else
+        {
+            /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
+            LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
+    //            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
+        }
         KRATOS_WATCH(Mw)
-//        KRATOS_WATCH(sum(Mw))
+        KRATOS_WATCH(sum(Mw))
 //        double pi = 3.141592653589793238462643;
 //        KRATOS_WATCH(sum(Mw) - pi/4)
+
+        #ifdef CHECK_SOLUTION
+        Vector Error = (Mb - prod(MA, Mw)) / norm_2(Mb);
+        KRATOS_WATCH(Error)
+        #endif
 
         /* create new quadrature and assign to the geometry */
         FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
@@ -406,5 +426,6 @@ inline std::ostream& operator << (std::ostream& rOStream, const MomentFittingUti
 }  // namespace Kratos.
 
 #undef ESTIMATE_RCOND
+#undef CHECK_SOLUTION
 
 #endif // KRATOS_MOMENT_FITTING_UTILITY_H_INCLUDED  defined

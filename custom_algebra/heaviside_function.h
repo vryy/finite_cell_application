@@ -28,6 +28,7 @@
 // Project includes
 #include "includes/define.h"
 #include "custom_algebra/function.h"
+#include "custom_algebra/zero_function.h"
 #include "custom_algebra/level_set.h"
 
 
@@ -105,6 +106,18 @@ public:
             return 1.0;
         else
             return 0.0;
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return "H(L)";
+    }
+
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(new ZeroFunction());
     }
 
 
