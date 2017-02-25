@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general NegateFunction
 */
-
-class NegateFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class NegateFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of NegateFunction
     KRATOS_CLASS_POINTER_DEFINITION(NegateFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -79,7 +79,7 @@ public:
     ///@{
 
     /// Default constructor.
-    NegateFunction(const BaseType::Pointer& p_func)
+    NegateFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
@@ -112,9 +112,9 @@ public:
     }
 
 
-    virtual Function::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(new NegateFunction(mp_func->GetDiffFunction(component)));
+        return typename BaseType::Pointer(new NegateFunction(mp_func->GetDiffFunction(component)));
     }
 
 
@@ -203,7 +203,7 @@ private:
     ///@name Member Variables
     ///@{
 
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -252,11 +252,13 @@ private:
 
 
 /// input stream NegateFunction
-inline std::istream& operator >> (std::istream& rIStream, NegateFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, NegateFunction<TFunction>& rThis)
 {}
 
 /// output stream NegateFunction
-inline std::ostream& operator << (std::ostream& rOStream, const NegateFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const NegateFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

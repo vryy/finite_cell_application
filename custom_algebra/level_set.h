@@ -69,6 +69,8 @@ public:
     /// Pointer definition of LevelSet
     KRATOS_CLASS_POINTER_DEFINITION(LevelSet);
 
+    typedef Function<typename Element::GeometryType::PointType::PointType, double> BaseType;
+
     typedef typename Element::GeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;

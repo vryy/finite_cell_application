@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general PowFunction
 */
-
-class PowFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class PowFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of PowFunction
     KRATOS_CLASS_POINTER_DEFINITION(PowFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -79,11 +79,11 @@ public:
     ///@{
 
     /// Default constructor.
-    PowFunction(const double& a, const BaseType::Pointer& p_func)
+    PowFunction(const double& a, const typename BaseType::Pointer& p_func)
     : ma(a), mp_func(p_func)
     {}
 
-    PowFunction(const BaseType::Pointer& p_func, const double& a)
+    PowFunction(const typename BaseType::Pointer& p_func, const double& a)
     : ma(a), mp_func(p_func)
     {}
 
@@ -124,18 +124,18 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
         if(ma == 1.0)
             return mp_func->GetDiffFunction(component);
         else if(ma == 0.0)
-            return BaseType::Pointer(new ZeroFunction());
+            return typename BaseType::Pointer(new ZeroFunction<TFunction>());
         else
-            return BaseType::Pointer(
-                        new ProductFunction(
-                            BaseType::Pointer(
-                                new ScaleFunction(ma,
-                                    BaseType::Pointer(new PowFunction(ma-1, mp_func))
+            return typename BaseType::Pointer(
+                        new ProductFunction<TFunction>(
+                            typename BaseType::Pointer(
+                                new ScaleFunction<TFunction>(ma,
+                                    typename BaseType::Pointer(new PowFunction(ma-1, mp_func))
                                 )
                             ),
                             mp_func->GetDiffFunction(component)
@@ -161,7 +161,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Scale Function of " + mp_func->Info();
+        return "Pow Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
@@ -230,7 +230,7 @@ private:
     ///@{
 
     double ma;
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -279,11 +279,13 @@ private:
 
 
 /// input stream PowFunction
-inline std::istream& operator >> (std::istream& rIStream, PowFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, PowFunction<TFunction>& rThis)
 {}
 
 /// output stream PowFunction
-inline std::ostream& operator << (std::ostream& rOStream, const PowFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const PowFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

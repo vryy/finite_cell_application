@@ -48,7 +48,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  LoadFunctionPlateWithTheHoles
+///@name  LoadFunctionR3RnPlateWithTheHoles
 ///@{
 
 ///@}
@@ -59,16 +59,16 @@ namespace Kratos
 /** Class for the load apply on the sides of the standard plate with the hole problem
 */
 template<std::size_t tload_side>
-class LoadFunctionPlateWithTheHole : public Function<Element::GeometryType::PointType::PointType, Vector>
+class LoadFunctionR3RnPlateWithTheHole : public FunctionR3Rn
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of LoadFunctionPlateWithTheHole
-    KRATOS_CLASS_POINTER_DEFINITION(LoadFunctionPlateWithTheHole);
+    /// Pointer definition of LoadFunctionR3RnPlateWithTheHole
+    KRATOS_CLASS_POINTER_DEFINITION(LoadFunctionR3RnPlateWithTheHole);
 
-    typedef Function<Element::GeometryType::PointType::PointType, Vector> BaseType;
+    typedef FunctionR3Rn BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -80,12 +80,12 @@ public:
     ///@{
 
     /// Default constructor.
-    LoadFunctionPlateWithTheHole(const double P, const double r)
+    LoadFunctionR3RnPlateWithTheHole(const double P, const double r)
     : mP(P), mr(r)
     {}
 
     /// Destructor.
-    virtual ~LoadFunctionPlateWithTheHole()
+    virtual ~LoadFunctionR3RnPlateWithTheHole()
     {}
 
 
@@ -243,15 +243,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    LoadFunctionPlateWithTheHole& operator=(LoadFunctionPlateWithTheHole const& rOther);
+    LoadFunctionR3RnPlateWithTheHole& operator=(LoadFunctionR3RnPlateWithTheHole const& rOther);
 
     /// Copy constructor.
-    LoadFunctionPlateWithTheHole(LoadFunctionPlateWithTheHole const& rOther);
+    LoadFunctionR3RnPlateWithTheHole(LoadFunctionR3RnPlateWithTheHole const& rOther);
 
 
     ///@}
 
-}; // Class LoadFunctionPlateWithTheHole
+}; // Class LoadFunctionR3RnPlateWithTheHole
 
 ///@}
 
@@ -264,14 +264,14 @@ private:
 ///@{
 
 
-/// input stream LoadFunctionPlateWithTheHole
+/// input stream LoadFunctionR3RnPlateWithTheHole
 template<std::size_t tload_side>
-inline std::istream& operator >> (std::istream& rIStream, LoadFunctionPlateWithTheHole<tload_side>& rThis)
+inline std::istream& operator >> (std::istream& rIStream, LoadFunctionR3RnPlateWithTheHole<tload_side>& rThis)
 {}
 
-/// output stream LoadFunctionPlateWithTheHole
+/// output stream LoadFunctionR3RnPlateWithTheHole
 template<std::size_t tload_side>
-inline std::ostream& operator << (std::ostream& rOStream, const LoadFunctionPlateWithTheHole<tload_side>& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const LoadFunctionR3RnPlateWithTheHole<tload_side>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

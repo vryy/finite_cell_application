@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general InverseFunction
 */
-
-class InverseFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class InverseFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of InverseFunction
     KRATOS_CLASS_POINTER_DEFINITION(InverseFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -79,7 +79,7 @@ public:
     ///@{
 
     /// Default constructor.
-    InverseFunction(const BaseType::Pointer& p_func)
+    InverseFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
@@ -112,15 +112,15 @@ public:
     }
 
 
-    virtual Function::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(
-                new NegateFunction(
-                    BaseType::Pointer(
-                        new ProductFunction(
+        return typename BaseType::Pointer(
+                new NegateFunction<TFunction>(
+                    typename BaseType::Pointer(
+                        new ProductFunction<TFunction>(
                             mp_func->GetDiffFunction(component),
-                            BaseType::Pointer(
-                                new PowFunction(2, BaseType::Pointer( new InverseFunction(mp_func) ) )
+                            typename BaseType::Pointer(
+                                new PowFunction<TFunction>(2, typename BaseType::Pointer( new InverseFunction(mp_func) ) )
                             )
                         )
                     )
@@ -214,7 +214,7 @@ private:
     ///@name Member Variables
     ///@{
 
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -263,11 +263,13 @@ private:
 
 
 /// input stream InverseFunction
-inline std::istream& operator >> (std::istream& rIStream, InverseFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, InverseFunction<TFunction>& rThis)
 {}
 
 /// output stream InverseFunction
-inline std::ostream& operator << (std::ostream& rOStream, const InverseFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const InverseFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

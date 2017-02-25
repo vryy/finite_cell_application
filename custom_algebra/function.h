@@ -102,28 +102,16 @@ public:
     ///@{
 
 
-    TOutputType GetValue(const double& x, const double& y) const
-    {
-        TInputType P;
-        P[0] = x;
-        P[1] = y;
-        return GetValue(P);
-    }
-
-
-    TOutputType GetValue(const double& x, const double& y, const double& z) const
-    {
-        TInputType P;
-        P[0] = x;
-        P[1] = y;
-        P[2] = z;
-        return GetValue(P);
-    }
-
-
     virtual TOutputType GetValue(const TInputType& P) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+    }
+
+
+    virtual TOutputType GetDerivative(const int& component, const TInputType& P) const
+    {
+        Function::Pointer pDerivative = this->GetDiffFunction(component);
+        return pDerivative->GetValue(P);
     }
 
 
@@ -167,7 +155,9 @@ public:
     }
 
 
-    static double ComputeDetJ(GeometryType& r_geom, const GeometryType::IntegrationPointType& integration_point)
+    /// Helper function to compute determinant of Jacobian of a geometry at an integration point
+    static double ComputeDetJ(GeometryType& r_geom,
+            const GeometryType::IntegrationPointType& integration_point)
     {
         if(r_geom.WorkingSpaceDimension() == r_geom.LocalSpaceDimension())
         {
@@ -188,6 +178,7 @@ public:
     }
 
 
+    /// Helper function to compute determinant of Jacobian of a geometry at an array of integration points
     static void ComputeDetJ(std::vector<double>& DetJ,
             GeometryType& r_geom, const GeometryType::IntegrationPointsArrayType& integration_points)
     {
@@ -228,7 +219,7 @@ public:
     ///@{
 
 
-    static GeometryData::IntegrationMethod GetIntegrationMethod(const int integration_order)
+    static inline GeometryData::IntegrationMethod GetIntegrationMethod(const int& integration_order)
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod;
 
@@ -382,6 +373,17 @@ private:
 ///@}
 
 ///@name Type Definitions
+///@{
+
+typedef Function<double, double> FunctionR1R1;
+typedef Function<double, Element::GeometryType::PointType::PointType> FunctionR1R3;
+typedef Function<Element::GeometryType::PointType::PointType, double> FunctionR3R1;
+typedef Function<Element::GeometryType::PointType::PointType, Element::GeometryType::PointType::PointType> FunctionR3R3;
+typedef Function<Element::GeometryType::PointType::PointType, Vector> FunctionR3Rn;
+typedef Function<array_1d<double, 2>, Element::GeometryType::PointType::PointType> FunctionR2R3;
+typedef Function<array_1d<double, 2>, double> FunctionR2R1;
+    
+///@name Template Specialization
 ///@{
 
 template<>

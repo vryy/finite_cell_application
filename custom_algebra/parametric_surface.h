@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            24 Feb 2017
 //
 
 
-#if !defined(KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED )
-#define  KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_PARAMETRIC_SURFACE_H_INCLUDED )
+#define  KRATOS_PARAMETRIC_SURFACE_H_INCLUDED
 
 
 
@@ -27,9 +27,11 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "containers/array_1d.h"
+#include "geometries/geometry_data.h"
 #include "custom_algebra/function.h"
-#include "custom_algebra/zero_function.h"
-#include "custom_algebra/level_set.h"
 
 
 namespace Kratos
@@ -49,7 +51,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  HeavisideFunctions
+///@name  Functions
 ///@{
 
 ///@}
@@ -57,37 +59,35 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general HeavisideFunction
+/** Abstract class for a parametric curve in 3D
 */
-template<class TFunction>
-class HeavisideFunction : public TFunction
+class ParametricSurface : public FunctionR2R3
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of HeavisideFunction
-    KRATOS_CLASS_POINTER_DEFINITION(HeavisideFunction);
+    /// Pointer definition of ParametricSurface
+    KRATOS_CLASS_POINTER_DEFINITION(ParametricSurface);
 
-    typedef TFunction BaseType;
+    typedef FunctionR2R3 BaseType;
 
-    typedef typename BaseType::InputType InputType;
+    typedef BaseType::InputType InputType;
 
-    typedef typename BaseType::OutputType OutputType;
-
+    typedef BaseType::OutputType OutputType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    HeavisideFunction(const LevelSet& r_level_set)
-    : mr_level_set(r_level_set)
+    ParametricSurface(const FunctionR2R1::Pointer& p_func_x,
+        const FunctionR2R1::Pointer& p_func_y, const FunctionR2R1::Pointer& p_func_z)
+    : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
     /// Destructor.
-    virtual ~HeavisideFunction()
-    {}
+    virtual ~ParametricSurface() {}
 
 
     ///@}
@@ -100,24 +100,29 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    /// inherit from Function
+    virtual OutputType GetValue(const InputType& T) const
     {
-        if(mr_level_set.GetValue(P) < 0.0)
-            return 1.0;
-        else
-            return 0.0;
+        OutputType P;
+
+        P[0] = mp_func_x->GetValue(T);
+        P[1] = mp_func_y->GetValue(T);
+        P[2] = mp_func_z->GetValue(T);
+
+        return P;
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    /// inherit from Function
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return "H(L)";
-    }
-
-
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
-    {
-        return typename BaseType::Pointer(new ZeroFunction<TFunction>());
+        return BaseType::Pointer(
+                    new ParametricSurface(
+                        mp_func_x->GetDiffFunction(component),
+                        mp_func_y->GetDiffFunction(component),
+                        mp_func_z->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -138,7 +143,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Heaviside Function";
+        return "Parametric Surface";
     }
 
     /// Print information about this object.
@@ -206,7 +211,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    const LevelSet& mr_level_set;
+    FunctionR2R1::Pointer mp_func_x;
+    FunctionR2R1::Pointer mp_func_y;
+    FunctionR2R1::Pointer mp_func_z;
 
     ///@}
     ///@name Private Operators
@@ -233,15 +240,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    HeavisideFunction& operator=(HeavisideFunction const& rOther);
+    ParametricSurface& operator=(ParametricSurface const& rOther);
 
     /// Copy constructor.
-    HeavisideFunction(HeavisideFunction const& rOther);
+    ParametricSurface(ParametricSurface const& rOther);
 
 
     ///@}
 
-}; // Class HeavisideFunction
+}; // Class ParametricSurface
 
 ///@}
 
@@ -254,14 +261,12 @@ private:
 ///@{
 
 
-/// input stream HeavisideFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, HeavisideFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, ParametricSurface& rThis)
 {}
 
-/// output stream HeavisideFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const ParametricSurface& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -275,4 +280,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunctio
 
 }  // namespace Kratos.
 
-#endif // KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_PARAMETRIC_CURVE_H_INCLUDED  defined

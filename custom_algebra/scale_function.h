@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general ScaleFunction
 */
-
-class ScaleFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class ScaleFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of ScaleFunction
     KRATOS_CLASS_POINTER_DEFINITION(ScaleFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -79,8 +79,8 @@ public:
     ///@{
 
     /// Default constructor.
-    ScaleFunction(const double& a, const BaseType::Pointer& p_func)
-    : ma(a), mp_func(p_func)
+    ScaleFunction(const double& a, const typename BaseType::Pointer& p_func)
+    : BaseType(), ma(a), mp_func(p_func)
     {}
 
     /// Destructor.
@@ -114,9 +114,9 @@ public:
     }
 
 
-    virtual Function::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(new ScaleFunction(ma, mp_func->GetDiffFunction(component)));
+        return typename BaseType::Pointer(new ScaleFunction(ma, mp_func->GetDiffFunction(component)));
     }
 
 
@@ -206,7 +206,7 @@ private:
     ///@{
 
     double ma;
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -255,11 +255,13 @@ private:
 
 
 /// input stream ScaleFunction
-inline std::istream& operator >> (std::istream& rIStream, ScaleFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ScaleFunction<TFunction>& rThis)
 {}
 
 /// output stream ScaleFunction
-inline std::ostream& operator << (std::ostream& rOStream, const ScaleFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ScaleFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

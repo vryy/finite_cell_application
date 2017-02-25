@@ -49,7 +49,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ProductFunctions
+///@name  ProductFunction
 ///@{
 
 ///@}
@@ -59,8 +59,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general ProductFunction
 */
-
-class ProductFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class ProductFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -69,11 +69,11 @@ public:
     /// Pointer definition of ProductFunction
     KRATOS_CLASS_POINTER_DEFINITION(ProductFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -81,7 +81,7 @@ public:
     ///@{
 
     /// Default constructor.
-    ProductFunction(const BaseType::Pointer& p_func_1, const BaseType::Pointer& p_func_2)
+    ProductFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
     : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 
@@ -112,17 +112,17 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(
-                    new SumFunction(
-                        BaseType::Pointer(
+        return typename BaseType::Pointer(
+                    new SumFunction<BaseType>(
+                        typename BaseType::Pointer(
                             new ProductFunction(
                                 mp_func_1->GetDiffFunction(component),
                                 mp_func_2
                             )
                         ),
-                        BaseType::Pointer(
+                        typename BaseType::Pointer(
                             new ProductFunction(
                                 mp_func_1,
                                 mp_func_2->GetDiffFunction(component)
@@ -218,8 +218,8 @@ private:
     ///@name Member Variables
     ///@{
 
-    const BaseType::Pointer mp_func_1;
-    const BaseType::Pointer mp_func_2;
+    const typename BaseType::Pointer mp_func_1;
+    const typename BaseType::Pointer mp_func_2;
 
     ///@}
     ///@name Private Operators
@@ -268,11 +268,13 @@ private:
 
 
 /// input stream ProductFunction
-inline std::istream& operator >> (std::istream& rIStream, ProductFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ProductFunction<TFunction>& rThis)
 {}
 
 /// output stream ProductFunction
-inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

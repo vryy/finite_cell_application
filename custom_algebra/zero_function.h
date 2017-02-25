@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general ZeroFunction
 */
-
-class ZeroFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class ZeroFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of ZeroFunction
     KRATOS_CLASS_POINTER_DEFINITION(ZeroFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -109,9 +109,9 @@ public:
     }
 
 
-    virtual Function::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(new ZeroFunction());
+        return typename BaseType::Pointer(new ZeroFunction());
     }
 
 
@@ -248,11 +248,13 @@ private:
 
 
 /// input stream ZeroFunction
-inline std::istream& operator >> (std::istream& rIStream, ZeroFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ZeroFunction<TFunction>& rThis)
 {}
 
 /// output stream ZeroFunction
-inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -261,6 +263,7 @@ inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction& rT
     return rOStream;
 }
 ///@}
+
 
 ///@} addtogroup block
 

@@ -11,6 +11,7 @@
 
 // Project includes
 #include "includes/element.h"
+#include "containers/array_1d.h"
 #include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_algebra/function.h"
 #include "custom_algebra/heaviside_function.h"
@@ -32,6 +33,8 @@
 #include "custom_algebra/linear_level_set.h"
 #include "custom_algebra/planar_level_set.h"
 #include "custom_algebra/load_function_plate_with_the_hole.h"
+#include "custom_algebra/parametric_curve.h"
+#include "custom_algebra/parametric_surface.h"
 
 
 namespace Kratos
@@ -42,40 +45,205 @@ namespace Python
 
 using namespace boost::python;
 
+double Helper_FunctionR3R1_GetValue_1(FunctionR3R1& rDummy,
+        const double& x, const double& y)
+{
+    FunctionR3R1::InputType P;
+    P[0] = x;
+    P[1] = y;
+    return rDummy.GetValue(P);
+}
+
+double Helper_FunctionR3R1_GetValue_2(FunctionR3R1& rDummy,
+        const double& x, const double& y, const double& z)
+{
+    FunctionR3R1::InputType P;
+    P[0] = x;
+    P[1] = y;
+    P[2] = z;
+    return rDummy.GetValue(P);
+}
+
 void FiniteCellApplication_AddCustomAlgebraToPython()
 {
-    typedef Element::GeometryType::PointType NodeType;
+    typedef Element::GeometryType::PointType::PointType PointType;
 
-    typedef NodeType::PointType PointType;
+    /**************************************************************/
+    /************** EXPORT INTERFACE FOR FUNCTIONR1R1 *************/
+    /**************************************************************/
 
-    typedef Function<PointType, double> FunctionR3R1Type;
+    double(FunctionR1R1::*FunctionR1R1_pointer_to_GetValue)(const double&) const = &FunctionR1R1::GetValue;
+    double(FunctionR1R1::*FunctionR1R1_pointer_to_Integrate)(Element::Pointer&) const = &FunctionR1R1::Integrate;
+    double(FunctionR1R1::*FunctionR1R1_pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR1R1::Integrate;
 
-    typedef Function<PointType, PointType> FunctionR3R3Type;
-
-    typedef Function<PointType, Vector> FunctionR3RnType;
-
-    double(FunctionR3R1Type::*pointer_to_GetValue)(const double&, const double&) const = &FunctionR3R1Type::GetValue;
-    double(FunctionR3R1Type::*pointer_to_GetValue2)(const double&, const double&, const double&) const = &FunctionR3R1Type::GetValue;
-    double(FunctionR3R1Type::*pointer_to_GetValue3)(const PointType&) const = &FunctionR3R1Type::GetValue;
-    double(FunctionR3R1Type::*pointer_to_Integrate)(Element::Pointer&) const = &FunctionR3R1Type::Integrate;
-    double(FunctionR3R1Type::*pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR3R1Type::Integrate;
-
-    class_<FunctionR3R1Type, FunctionR3R1Type::Pointer, boost::noncopyable>
-    ("FunctionR3R1", init<>())
-    .def("Integrate", pointer_to_Integrate)
-    .def("Integrate", pointer_to_Integrate2)
-    .def("GetValue", pointer_to_GetValue)
-    .def("GetValue", pointer_to_GetValue2)
-    .def("GetValue", pointer_to_GetValue3)
-    .def("GetFormula", &FunctionR3R1Type::GetFormula)
-    .def("GetDiffFunction", &FunctionR3R1Type::GetDiffFunction)
+    class_<FunctionR1R1, FunctionR1R1::Pointer, boost::noncopyable>
+    ("FunctionR1R1", init<>())
+    .def("Integrate", FunctionR1R1_pointer_to_Integrate)
+    .def("Integrate", FunctionR1R1_pointer_to_Integrate2)
+    .def("GetValue", FunctionR1R1_pointer_to_GetValue)
+    .def("GetFormula", &FunctionR1R1::GetFormula)
+    .def("GetDiffFunction", &FunctionR1R1::GetDiffFunction)
     ;
 
-    class_<FunctionR3RnType, FunctionR3RnType::Pointer, boost::noncopyable>
+    typedef ProductFunction<FunctionR1R1> ProductFunctionR1R1;
+    class_<ProductFunctionR1R1, ProductFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("ProductFunctionR1R1", init<const FunctionR1R1::Pointer&, const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef SumFunction<FunctionR1R1> SumFunctionR1R1;
+    class_<SumFunctionR1R1, SumFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("SumFunctionR1R1", init<const FunctionR1R1::Pointer&, const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef ScaleFunction<FunctionR1R1> ScaleFunctionR1R1;
+    class_<ScaleFunctionR1R1, ScaleFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("ScaleFunctionR1R1", init<const double, const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef PowFunction<FunctionR1R1> PowFunctionR1R1;
+    class_<PowFunctionR1R1, PowFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("PowFunctionR1R1", init<const double, const FunctionR1R1::Pointer&>())
+    .def(init<const FunctionR1R1::Pointer&, const double>())
+    ;
+
+    typedef NegateFunction<FunctionR1R1> NegateFunctionR1R1;
+    class_<NegateFunctionR1R1, NegateFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("NegateFunctionR1R1", init<const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef InverseFunction<FunctionR1R1> InverseFunctionR1R1;
+    class_<InverseFunctionR1R1, InverseFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("InverseFunctionR1R1", init<const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef ScalarFunction<FunctionR1R1> ScalarFunctionR1R1;
+    class_<ScalarFunctionR1R1, ScalarFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("ScalarFunctionR1R1", init<const double&>())
+    ;
+
+    typedef ZeroFunction<FunctionR1R1> ZeroFunctionR1R1;
+    class_<ZeroFunctionR1R1, ZeroFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("ZeroFunctionR1R1", init<>())
+    ;
+
+    typedef SinFunction<FunctionR1R1> SinFunctionR1R1;
+    class_<SinFunctionR1R1, SinFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("SinFunctionR1R1", init<const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef CosFunction<FunctionR1R1> CosFunctionR1R1;
+    class_<CosFunctionR1R1, CosFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("CosFunctionR1R1", init<const FunctionR1R1::Pointer&>())
+    ;
+
+    typedef AcosFunction<FunctionR1R1> AcosFunctionR1R1;
+    class_<AcosFunctionR1R1, AcosFunctionR1R1::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("AcosFunctionR1R1", init<const FunctionR1R1::Pointer&>())
+    ;
+
+    class_<MonomialFunctionR1R1<1>, MonomialFunctionR1R1<1>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("MonomialFunctionR1R1X", init<>())
+    ;
+
+    class_<MonomialFunctionR1R1<2>, MonomialFunctionR1R1<2>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("MonomialFunctionR1R1X2", init<>())
+    ;
+
+    class_<MonomialFunctionR1R1<3>, MonomialFunctionR1R1<3>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("MonomialFunctionR1R1X3", init<>())
+    ;
+
+    class_<MonomialFunctionR1R1<4>, MonomialFunctionR1R1<4>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("MonomialFunctionR1R1X4", init<>())
+    ;
+
+    class_<MonomialFunctionR1R1<5>, MonomialFunctionR1R1<5>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("MonomialFunctionR1R1X5", init<>())
+    ;
+
+    /**************************************************************/
+    /************** EXPORT INTERFACE FOR FUNCTIONR1R3 *************/
+    /**************************************************************/
+
+    PointType(FunctionR1R3::*FunctionR1R3_pointer_to_GetValue)(const double&) const = &FunctionR1R3::GetValue;
+    PointType(FunctionR1R3::*FunctionR1R3_pointer_to_Integrate)(Element::Pointer&) const = &FunctionR1R3::Integrate;
+    PointType(FunctionR1R3::*FunctionR1R3_pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR1R3::Integrate;
+
+    class_<FunctionR1R3, FunctionR1R3::Pointer, boost::noncopyable>
+    ("FunctionR1R3", init<>())
+    .def("Integrate", FunctionR1R3_pointer_to_Integrate)
+    .def("Integrate", FunctionR1R3_pointer_to_Integrate2)
+    .def("GetValue", FunctionR1R3_pointer_to_GetValue)
+    .def("GetFormula", &FunctionR1R3::GetFormula)
+    .def("GetDiffFunction", &FunctionR1R3::GetDiffFunction)
+    ;
+
+    class_<ParametricCurve, ParametricCurve::Pointer, boost::noncopyable, bases<FunctionR1R3> >
+    ("ParametricCurve", init<const FunctionR1R1::Pointer&, const FunctionR1R1::Pointer&, const FunctionR1R1::Pointer&>())
+    ;
+
+    /**************************************************************/
+    /************** EXPORT INTERFACE FOR FUNCTIONR2R1 *************/
+    /**************************************************************/
+
+    double(FunctionR2R1::*FunctionR2R1_pointer_to_GetValue)(const array_1d<double, 2>&) const = &FunctionR2R1::GetValue;
+    double(FunctionR2R1::*FunctionR2R1_pointer_to_Integrate)(Element::Pointer&) const = &FunctionR2R1::Integrate;
+    double(FunctionR2R1::*FunctionR2R1_pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR2R1::Integrate;
+
+    class_<FunctionR2R1, FunctionR2R1::Pointer, boost::noncopyable>
+    ("FunctionR2R1", init<>())
+    .def("Integrate", FunctionR2R1_pointer_to_Integrate)
+    .def("Integrate", FunctionR2R1_pointer_to_Integrate2)
+    .def("GetValue", FunctionR2R1_pointer_to_GetValue)
+    .def("GetFormula", &FunctionR2R1::GetFormula)
+    .def("GetDiffFunction", &FunctionR2R1::GetDiffFunction)
+    ;
+
+    /**************************************************************/
+    /************** EXPORT INTERFACE FOR FUNCTIONR2R3 *************/
+    /**************************************************************/
+
+    PointType(FunctionR2R3::*FunctionR2R3_pointer_to_GetValue)(const array_1d<double, 2>&) const = &FunctionR2R3::GetValue;
+    PointType(FunctionR2R3::*FunctionR2R3_pointer_to_Integrate)(Element::Pointer&) const = &FunctionR2R3::Integrate;
+    PointType(FunctionR2R3::*FunctionR2R3_pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR2R3::Integrate;
+
+    class_<FunctionR2R3, FunctionR2R3::Pointer, boost::noncopyable>
+    ("FunctionR2R3", init<>())
+    .def("Integrate", FunctionR2R3_pointer_to_Integrate)
+    .def("Integrate", FunctionR2R3_pointer_to_Integrate2)
+    .def("GetValue", FunctionR2R3_pointer_to_GetValue)
+    .def("GetFormula", &FunctionR2R3::GetFormula)
+    .def("GetDiffFunction", &FunctionR2R3::GetDiffFunction)
+    ;
+
+    class_<ParametricSurface, ParametricSurface::Pointer, boost::noncopyable, bases<FunctionR2R3> >
+    ("ParametricSurface", init<const FunctionR2R1::Pointer&, const FunctionR2R1::Pointer&, const FunctionR2R1::Pointer&>())
+    ;
+
+    /**************************************************************/
+    /************* EXPORT INTERFACE FOR FUNCTIONR3R1 **************/
+    /**************************************************************/
+
+    double(FunctionR3R1::*FunctionR3R1_pointer_to_GetValue)(const PointType&) const = &FunctionR3R1::GetValue;
+    double(FunctionR3R1::*FunctionR3R1_pointer_to_Integrate)(Element::Pointer&) const = &FunctionR3R1::Integrate;
+    double(FunctionR3R1::*FunctionR3R1_pointer_to_Integrate2)(Element::Pointer&, const int) const = &FunctionR3R1::Integrate;
+
+    class_<FunctionR3R1, FunctionR3R1::Pointer, boost::noncopyable>
+    ("FunctionR3R1", init<>())
+    .def("Integrate", FunctionR3R1_pointer_to_Integrate)
+    .def("Integrate", FunctionR3R1_pointer_to_Integrate2)
+    .def("GetValue", FunctionR3R1_pointer_to_GetValue)
+    .def("GetValue", Helper_FunctionR3R1_GetValue_1)
+    .def("GetValue", Helper_FunctionR3R1_GetValue_2)
+    .def("GetFormula", &FunctionR3R1::GetFormula)
+    .def("GetDiffFunction", &FunctionR3R1::GetDiffFunction)
+    ;
+
+    class_<FunctionR3Rn, FunctionR3Rn::Pointer, boost::noncopyable>
     ("FunctionR3Rn", init<>())
     ;
 
-    class_<Variable<FunctionR3RnType::Pointer>, bases<VariableData>, boost::noncopyable>
+    class_<Variable<FunctionR3Rn::Pointer>, bases<VariableData>, boost::noncopyable>
     ( "FunctionR3RnVariable", no_init )
     ;
 
@@ -83,118 +251,134 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ( "PythonObject", no_init )
     ;
 
-    class_<HeavisideFunction, HeavisideFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("HeavisideFunction", init<const LevelSet&>())
+    typedef HeavisideFunction<FunctionR3R1> HeavisideFunctionR3R1;
+    class_<HeavisideFunctionR3R1, HeavisideFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("HeavisideFunctionR3R1", init<const LevelSet&>())
     ;
 
-    class_<ProductFunction, ProductFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("ProductFunction", init<const FunctionR3R1Type::Pointer&, const FunctionR3R1Type::Pointer&>())
+    typedef ProductFunction<FunctionR3R1> ProductFunctionR3R1;
+    class_<ProductFunctionR3R1, ProductFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("ProductFunctionR3R1", init<const FunctionR3R1::Pointer&, const FunctionR3R1::Pointer&>())
     ;
 
-    class_<SumFunction, SumFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("SumFunction", init<const FunctionR3R1Type::Pointer&, const FunctionR3R1Type::Pointer&>())
+    typedef SumFunction<FunctionR3R1> SumFunctionR3R1;
+    class_<SumFunctionR3R1, SumFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("SumFunctionR3R1", init<const FunctionR3R1::Pointer&, const FunctionR3R1::Pointer&>())
     ;
 
-    class_<ScaleFunction, ScaleFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("ScaleFunction", init<const double, const FunctionR3R1Type::Pointer&>())
+    typedef ScaleFunction<FunctionR3R1> ScaleFunctionR3R1;
+    class_<ScaleFunctionR3R1, ScaleFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("ScaleFunctionR3R1", init<const double, const FunctionR3R1::Pointer&>())
     ;
 
-    class_<PowFunction, PowFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("PowFunction", init<const double, const FunctionR3R1Type::Pointer&>())
-    .def(init<const FunctionR3R1Type::Pointer&, const double>())
+    typedef PowFunction<FunctionR3R1> PowFunctionR3R1;
+    class_<PowFunctionR3R1, PowFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("PowFunctionR3R1", init<const double, const FunctionR3R1::Pointer&>())
+    .def(init<const FunctionR3R1::Pointer&, const double>())
     ;
 
-    class_<NegateFunction, NegateFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("NegateFunction", init<const FunctionR3R1Type::Pointer&>())
+    typedef NegateFunction<FunctionR3R1> NegateFunctionR3R1;
+    class_<NegateFunctionR3R1, NegateFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("NegateFunctionR3R1", init<const FunctionR3R1::Pointer&>())
     ;
 
-    class_<InverseFunction, InverseFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("InverseFunction", init<const FunctionR3R1Type::Pointer&>())
+    typedef InverseFunction<FunctionR3R1> InverseFunctionR3R1;
+    class_<InverseFunctionR3R1, InverseFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("InverseFunctionR3R1", init<const FunctionR3R1::Pointer&>())
     ;
 
-    class_<ScalarFunction, ScalarFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("ScalarFunction", init<const double&>())
+    typedef ScalarFunction<FunctionR3R1> ScalarFunctionR3R1;
+    class_<ScalarFunctionR3R1, ScalarFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("ScalarFunctionR3R1", init<const double&>())
     ;
 
-    class_<ZeroFunction, ZeroFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("ZeroFunction", init<>())
+    typedef ZeroFunction<FunctionR3R1> ZeroFunctionR3R1;
+    class_<ZeroFunctionR3R1, ZeroFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("ZeroFunctionR3R1", init<>())
     ;
 
-    class_<SinFunction, SinFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("SinFunction", init<const FunctionR3R1Type::Pointer&>())
+    typedef SinFunction<FunctionR3R1> SinFunctionR3R1;
+    class_<SinFunctionR3R1, SinFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("SinFunctionR3R1", init<const FunctionR3R1::Pointer&>())
     ;
 
-    class_<CosFunction, CosFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("CosFunction", init<const FunctionR3R1Type::Pointer&>())
+    typedef CosFunction<FunctionR3R1> CosFunctionR3R1;
+    class_<CosFunctionR3R1, CosFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("CosFunctionR3R1", init<const FunctionR3R1::Pointer&>())
     ;
 
-    class_<AcosFunction, AcosFunction::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("AcosFunction", init<const FunctionR3R1Type::Pointer&>())
+    typedef AcosFunction<FunctionR3R1> AcosFunctionR3R1;
+    class_<AcosFunctionR3R1, AcosFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("AcosFunctionR3R1", init<const FunctionR3R1::Pointer&>())
     ;
 
-    class_<MonomialFunction<1, 0, 0>, MonomialFunction<1, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX", init<>())
+    class_<MonomialFunctionR3R1<1, 0, 0>, MonomialFunctionR3R1<1, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X", init<>())
     ;
 
-    class_<MonomialFunction<0, 1, 0>, MonomialFunction<0, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionY", init<>())
+    class_<MonomialFunctionR3R1<0, 1, 0>, MonomialFunctionR3R1<0, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Y", init<>())
     ;
 
-    class_<MonomialFunction<0, 0, 1>, MonomialFunction<0, 0, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionZ", init<>())
+    class_<MonomialFunctionR3R1<0, 0, 1>, MonomialFunctionR3R1<0, 0, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Z", init<>())
     ;
 
-    class_<MonomialFunction<2, 0, 0>, MonomialFunction<2, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX2", init<>())
+    class_<MonomialFunctionR3R1<2, 0, 0>, MonomialFunctionR3R1<2, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X2", init<>())
     ;
 
-    class_<MonomialFunction<1, 1, 0>, MonomialFunction<1, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionXY", init<>())
+    class_<MonomialFunctionR3R1<1, 1, 0>, MonomialFunctionR3R1<1, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XY", init<>())
     ;
 
-    class_<MonomialFunction<0, 2, 0>, MonomialFunction<0, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionY2", init<>())
+    class_<MonomialFunctionR3R1<0, 2, 0>, MonomialFunctionR3R1<0, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Y2", init<>())
     ;
 
-    class_<MonomialFunction<0, 1, 1>, MonomialFunction<0, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionYZ", init<>())
+    class_<MonomialFunctionR3R1<0, 1, 1>, MonomialFunctionR3R1<0, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1YZ", init<>())
     ;
 
-    class_<MonomialFunction<1, 0, 1>, MonomialFunction<1, 0, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionXZ", init<>())
+    class_<MonomialFunctionR3R1<1, 0, 1>, MonomialFunctionR3R1<1, 0, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XZ", init<>())
     ;
 
-    class_<MonomialFunction<3, 0, 0>, MonomialFunction<3, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX3", init<>())
+    class_<MonomialFunctionR3R1<3, 0, 0>, MonomialFunctionR3R1<3, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X3", init<>())
     ;
 
-    class_<MonomialFunction<2, 1, 0>, MonomialFunction<2, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX2Y", init<>())
+    class_<MonomialFunctionR3R1<2, 1, 0>, MonomialFunctionR3R1<2, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X2Y", init<>())
     ;
 
-    class_<MonomialFunction<1, 2, 0>, MonomialFunction<1, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionXY2", init<>())
+    class_<MonomialFunctionR3R1<1, 2, 0>, MonomialFunctionR3R1<1, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XY2", init<>())
     ;
 
-    class_<MonomialFunction<0, 3, 0>, MonomialFunction<0, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionY3", init<>())
+    class_<MonomialFunctionR3R1<0, 3, 0>, MonomialFunctionR3R1<0, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Y3", init<>())
     ;
 
-    class_<MonomialFunction<1, 1, 1>, MonomialFunction<1, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionXYZ", init<>())
+    class_<MonomialFunctionR3R1<1, 1, 1>, MonomialFunctionR3R1<1, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XYZ", init<>())
     ;
 
-    class_<MonomialFunction<2, 2, 0>, MonomialFunction<2, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1Type> >
-    ("MonomialFunctionX2Y2", init<>())
+    class_<MonomialFunctionR3R1<2, 2, 0>, MonomialFunctionR3R1<2, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X2Y2", init<>())
     ;
 
-    class_<LoadFunctionPlateWithTheHole<0>, LoadFunctionPlateWithTheHole<0>::Pointer, boost::noncopyable, bases<FunctionR3RnType> >
-    ("LoadFunctionPlateWithTheHoleX", init<const double, const double>())
+    class_<LoadFunctionR3RnPlateWithTheHole<0>, LoadFunctionR3RnPlateWithTheHole<0>::Pointer, boost::noncopyable, bases<FunctionR3Rn> >
+    ("LoadFunctionR3RnPlateWithTheHoleX", init<const double, const double>())
     ;
 
-    class_<LoadFunctionPlateWithTheHole<1>, LoadFunctionPlateWithTheHole<1>::Pointer, boost::noncopyable, bases<FunctionR3RnType> >
-    ("LoadFunctionPlateWithTheHoleY", init<const double, const double>())
+    class_<LoadFunctionR3RnPlateWithTheHole<1>, LoadFunctionR3RnPlateWithTheHole<1>::Pointer, boost::noncopyable, bases<FunctionR3Rn> >
+    ("LoadFunctionR3RnPlateWithTheHoleY", init<const double, const double>())
     ;
+
+    /**************************************************************/
+    /************* EXPORT INTERFACE FOR LEVEL SET *****************/
+    /**************************************************************/
 
     int(LevelSet::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &LevelSet::CutStatus;
 

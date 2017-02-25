@@ -26,8 +26,7 @@
 
 
 // Project includes
-#include "includes/define.h"
-#include "includes/element.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
 #include "geometries/line_2d_2.h"
@@ -67,7 +66,7 @@ namespace Kratos
 /** Detail class definition.
 REF: M. Gehrke, Implementierung und Untersuchung numerischer Quadraturverfahren für diskontinuierliche Integranden in der Finiten-Zell-Methode, MSc thesis
 */
-class DivFreeBasisUtility
+class DivFreeBasisUtility : public QuadratureUtility
 {
 public:
     ///@name Type Definitions

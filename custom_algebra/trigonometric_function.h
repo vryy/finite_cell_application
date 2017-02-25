@@ -50,7 +50,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  SinFunctions
+///@name  SinFunction
 ///@{
 
 ///@}
@@ -58,10 +58,10 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general SinFunction
+/** Class for a general CosFunction
 */
-
-class CosFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class CosFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -70,11 +70,11 @@ public:
     /// Pointer definition of CosFunction
     KRATOS_CLASS_POINTER_DEFINITION(CosFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -82,7 +82,7 @@ public:
     ///@{
 
     /// Default constructor.
-    CosFunction(const BaseType::Pointer& p_func)
+    CosFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
@@ -113,7 +113,7 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const;
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const;
 
     ///@}
     ///@name Access
@@ -201,7 +201,7 @@ private:
     ///@{
 
 
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
 
     ///@}
@@ -239,7 +239,10 @@ private:
 
 }; // Class CosFunction
 
-class SinFunction : public Function<Element::GeometryType::PointType::PointType, double>
+/** Class for a general SinFunction
+*/
+template<class TFunction>
+class SinFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -248,11 +251,11 @@ public:
     /// Pointer definition of SinFunction
     KRATOS_CLASS_POINTER_DEFINITION(SinFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -260,7 +263,7 @@ public:
     ///@{
 
     /// Default constructor.
-    SinFunction(const BaseType::Pointer& p_func)
+    SinFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
@@ -291,7 +294,7 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const;
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const;
 
 
     ///@}
@@ -380,7 +383,7 @@ private:
     ///@{
 
 
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
 
     ///@}
@@ -418,7 +421,10 @@ private:
 
 }; // Class SinFunction
 
-class AcosFunction : public Function<Element::GeometryType::PointType::PointType, double>
+/** Class for a general AcosFunction
+*/
+template<class TFunction>
+class AcosFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -427,11 +433,11 @@ public:
     /// Pointer definition of AcosFunction
     KRATOS_CLASS_POINTER_DEFINITION(AcosFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -439,7 +445,7 @@ public:
     ///@{
 
     /// Default constructor.
-    AcosFunction(const BaseType::Pointer& p_func)
+    AcosFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
@@ -470,7 +476,7 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const;
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const;
 
 
     ///@}
@@ -559,7 +565,7 @@ private:
     ///@{
 
 
-    const BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func;
 
 
     ///@}
@@ -609,11 +615,13 @@ private:
 
 
 /// input stream SinFunction
-inline std::istream& operator >> (std::istream& rIStream, SinFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, SinFunction<TFunction>& rThis)
 {}
 
 /// output stream SinFunction
-inline std::ostream& operator << (std::ostream& rOStream, const SinFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const SinFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -623,11 +631,13 @@ inline std::ostream& operator << (std::ostream& rOStream, const SinFunction& rTh
 }
 
 /// input stream CosFunction
-inline std::istream& operator >> (std::istream& rIStream, CosFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, CosFunction<TFunction>& rThis)
 {}
 
 /// output stream CosFunction
-inline std::ostream& operator << (std::ostream& rOStream, const CosFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const CosFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -637,11 +647,13 @@ inline std::ostream& operator << (std::ostream& rOStream, const CosFunction& rTh
 }
 
 /// input stream AcosFunction
-inline std::istream& operator >> (std::istream& rIStream, AcosFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, AcosFunction<TFunction>& rThis)
 {}
 
 /// output stream CosFunction
-inline std::ostream& operator << (std::ostream& rOStream, const AcosFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const AcosFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -653,14 +665,14 @@ inline std::ostream& operator << (std::ostream& rOStream, const AcosFunction& rT
 
 ///@} addtogroup block
 
-
-CosFunction::BaseType::Pointer CosFunction::GetDiffFunction(const int& component) const
+template<class TFunction>
+typename CosFunction<TFunction>::BaseType::Pointer CosFunction<TFunction>::GetDiffFunction(const int& component) const
 {
-    return BaseType::Pointer(
-                new NegateFunction(
-                    BaseType::Pointer(
-                        new ProductFunction(
-                            BaseType::Pointer(new SinFunction(mp_func)),
+    return typename BaseType::Pointer(
+                new NegateFunction<TFunction>(
+                    typename BaseType::Pointer(
+                        new ProductFunction<TFunction>(
+                            typename BaseType::Pointer(new SinFunction<TFunction>(mp_func)),
                             mp_func->GetDiffFunction(component)
                         )
                     )
@@ -668,32 +680,34 @@ CosFunction::BaseType::Pointer CosFunction::GetDiffFunction(const int& component
             );
 }
 
-SinFunction::BaseType::Pointer SinFunction::GetDiffFunction(const int& component) const
+template<class TFunction>
+typename SinFunction<TFunction>::BaseType::Pointer SinFunction<TFunction>::GetDiffFunction(const int& component) const
 {
-    return BaseType::Pointer(
-                new ProductFunction(
-                    BaseType::Pointer(new CosFunction(mp_func)),
+    return typename BaseType::Pointer(
+                new ProductFunction<TFunction>(
+                    typename BaseType::Pointer(new CosFunction<TFunction>(mp_func)),
                     mp_func->GetDiffFunction(component)
                 )
             );
 }
 
-AcosFunction::BaseType::Pointer AcosFunction::GetDiffFunction(const int& component) const
+template<class TFunction>
+typename AcosFunction<TFunction>::BaseType::Pointer AcosFunction<TFunction>::GetDiffFunction(const int& component) const
 {
-    return BaseType::Pointer(
-                new NegateFunction(
-                    BaseType::Pointer(
-                        new ProductFunction(
+    return typename BaseType::Pointer(
+                new NegateFunction<TFunction>(
+                    typename BaseType::Pointer(
+                        new ProductFunction<TFunction>(
                             mp_func->GetDiffFunction(component),
-                            BaseType::Pointer(
-                                new PowFunction(
+                            typename BaseType::Pointer(
+                                new PowFunction<TFunction>(
                                     -0.5,
-                                    BaseType::Pointer(
-                                        new SumFunction(
-                                            BaseType::Pointer( new ScalarFunction(1.0) ),
-                                            BaseType::Pointer(
-                                                new NegateFunction(
-                                                    BaseType::Pointer( new PowFunction(2.0, mp_func) )
+                                    typename BaseType::Pointer(
+                                        new SumFunction<TFunction>(
+                                            typename BaseType::Pointer( new ScalarFunction<TFunction>(1.0) ),
+                                            typename BaseType::Pointer(
+                                                new NegateFunction<TFunction>(
+                                                    typename BaseType::Pointer( new PowFunction<TFunction>(2.0, mp_func) )
                                                 )
                                             )
                                         )

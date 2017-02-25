@@ -30,14 +30,11 @@
 
 
 // Project includes
-#include "includes/define.h"
-#include "includes/element.h"
-#include "includes/ublas_interface.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "custom_algebra/function.h"
 #include "custom_algebra/product_function.h"
 #include "custom_algebra/heaviside_function.h"
 #include "custom_utilities/binary_tree.h"
-#include "custom_geometries/finite_cell_geometry.h"
 
 
 #define ESTIMATE_RCOND
@@ -71,7 +68,7 @@ namespace Kratos
 /// Short class definition.
 /** Abstract class to compute the quadrature weights for volume integration using the moment fitting technique
 */
-class MomentFittingUtility
+class MomentFittingUtility : public QuadratureUtility
 {
 public:
     ///@name Type Definitions
@@ -99,6 +96,16 @@ public:
 
     /// Destructor.
     virtual ~MomentFittingUtility() {}
+
+
+    ///@}
+    ///@name Operators
+    ///@{
+
+
+    ///@}
+    ///@name Operations
+    ///@{
 
 
     template<std::size_t TDimension>
@@ -158,11 +165,11 @@ KRATOS_WATCH(MA)
 
         // form the vector b
         Vector Mb(num_basis);
-        typename FunctionType::Pointer H = typename FunctionType::Pointer(new HeavisideFunction(r_level_set));
+        typename FunctionType::Pointer H = typename FunctionType::Pointer(new HeavisideFunction<FunctionType>(r_level_set));
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             Mb(i) = 0.0;
-            r_integrator.Integrate(ProductFunction(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
+            r_integrator.Integrate(ProductFunction<FunctionType>(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
         }
 KRATOS_WATCH(Mb)
 
@@ -203,75 +210,6 @@ KRATOS_WATCH(Mb)
 
         return Mw;
     }
-
-
-    void PyScaleQuadrature(Element::Pointer& p_elem,
-            const int quadrature_order, const double ScaleFactor) const
-    {
-        GeometryData::IntegrationMethod ElementalIntegrationMethod
-                = LevelSet::GetIntegrationMethod(quadrature_order);
-
-        this->ScaleQuadrature(p_elem->GetGeometry(), ElementalIntegrationMethod, ScaleFactor);
-    }
-
-
-    void ScaleQuadrature(GeometryType& r_geom,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
-            const double ScaleFactor) const
-    {
-        const GeometryType::IntegrationPointsArrayType& integration_points
-                = r_geom.IntegrationPoints( ElementalIntegrationMethod );
-
-        Vector Mw(integration_points.size());
-        for(std::size_t i = 0; i < integration_points.size(); ++i)
-        {
-            Mw(i) = integration_points[i].Weight() * ScaleFactor;
-        }
-
-        /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
-    }
-
-
-    void PySaveQuadrature(boost::python::list& pyElemList, const std::string& fileName) const
-    {
-        std::ofstream myFile;
-        myFile.open(fileName.c_str(), std::ios::out | std::ios::binary);
-
-        typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
-        BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
-                        std::make_pair(iterator_value_type(pyElemList), // begin
-                        iterator_value_type() ) ) // end
-        {
-            this->SaveQuadrature(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
-        }
-
-        myFile.close();
-    }
-
-
-    void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod) const
-    {
-        rOStream << p_elem->Id() << ElementalIntegrationMethod;
-        const GeometryType::IntegrationPointsArrayType& integration_points
-                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
-
-        for(std::size_t i = 0; i < integration_points.size(); ++i)
-        {
-            rOStream << integration_points[i].Weight();
-        }
-    }
-
-
-    ///@}
-    ///@name Operators
-    ///@{
-
-
-    ///@}
-    ///@name Operations
-    ///@{
 
 
     ///@}

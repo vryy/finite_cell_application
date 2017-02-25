@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ScalarFunctions
+///@name  ScalarFunction
 ///@{
 
 ///@}
@@ -57,8 +57,8 @@ namespace Kratos
 /// Short class definition.
 /** Class for a general ScalarFunction
 */
-
-class ScalarFunction : public Function<Element::GeometryType::PointType::PointType, double>
+template<class TFunction>
+class ScalarFunction : public TFunction
 {
 public:
     ///@name Type Definitions
@@ -67,11 +67,11 @@ public:
     /// Pointer definition of ScalarFunction
     KRATOS_CLASS_POINTER_DEFINITION(ScalarFunction);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
 
 
     ///@}
@@ -112,9 +112,9 @@ public:
     }
 
 
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return BaseType::Pointer(new ZeroFunction());
+        return typename BaseType::Pointer(new ZeroFunction<BaseType>());
     }
 
 
@@ -252,11 +252,13 @@ private:
 
 
 /// input stream ScalarFunction
-inline std::istream& operator >> (std::istream& rIStream, ScalarFunction& rThis)
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ScalarFunction<TFunction>& rThis)
 {}
 
 /// output stream ScalarFunction
-inline std::ostream& operator << (std::ostream& rOStream, const ScalarFunction& rThis)
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ScalarFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

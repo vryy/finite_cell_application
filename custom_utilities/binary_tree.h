@@ -27,9 +27,7 @@
 
 
 // Project includes
-#include "includes/define.h"
-#include "includes/element.h"
-#include "includes/ublas_interface.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "includes/model_part.h"
 #include "utilities/math_utils.h"
 #include "geometries/line_3d_2.h"
@@ -68,7 +66,7 @@ namespace Kratos
 /** A simple implementation of the binary tree concept in 1D (in 2D it would be quad tree and in 3D would be oct tree)
 */
 template<std::size_t TDegree>
-class BinaryTree
+class BinaryTree : public QuadratureUtility
 {
 public:
     ///@name Type Definitions

@@ -12,6 +12,7 @@
 // Project includes
 #include "includes/element.h"
 #include "custom_python/add_custom_utilities_to_python.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/binary_tree.h"
 #include "custom_utilities/div_free_basis_utility.h"
 #include "custom_utilities/moment_fitting_utility.h"
@@ -51,7 +52,13 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     typedef Function<PointType, double> FunctionR3R1Type;
     typedef Function<PointType, Vector> FunctionR3RnType;
 
-    class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable>
+    class_<QuadratureUtility, QuadratureUtility::Pointer, boost::noncopyable>
+    ("QuadratureUtility", init<>())
+    .def("ScaleQuadrature", &QuadratureUtility::PyScaleQuadrature)
+    .def("SaveQuadrature", &QuadratureUtility::PySaveQuadrature)
+    ;
+
+    class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("BinaryTree", init<Element::Pointer&>())
     .def(init<NodeType::Pointer&, NodeType::Pointer&>())
     .def("Refine", &BinaryTree<1>::Refine)
@@ -63,7 +70,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     Vector(QuadTreeType::*pointer_to_Integrate_Vector_quadtree)(const FunctionR3RnType&, const int) const = &QuadTreeType::Integrate<Vector>;
     void(QuadTreeType::*pointer_to_ConstructQuadrature_quadtree)(const LevelSet&, const int) const = &QuadTreeType::ConstructQuadrature;
 
-    class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable>
+    class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("QuadTree", init<Element::Pointer&>())
     .def(init<NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&>())
     .def("Refine", &QuadTreeType::Refine)
@@ -80,7 +87,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     typedef BinaryTree<3> OctTreeType;
     double(OctTreeType::*pointer_to_Integrate_double_octtree)(const FunctionR3R1Type&, const int) const = &OctTreeType::Integrate<double>;
 
-    class_<OctTreeType, OctTreeType::Pointer, boost::noncopyable>
+    class_<OctTreeType, OctTreeType::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("OctTree", init<Element::Pointer&>())
     .def(init<NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&, NodeType::Pointer&>())
     .def("Refine", &OctTreeType::Refine)
@@ -94,13 +101,13 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
 
     void(DivFreeBasisUtility::*pointer_to_AssignQuadrature2D)(Element::Pointer&, const LevelSet&, const unsigned int&, const unsigned int&) = &DivFreeBasisUtility::AssignQuadrature2D;
 
-    class_<DivFreeBasisUtility, DivFreeBasisUtility::Pointer, boost::noncopyable>
+    class_<DivFreeBasisUtility, DivFreeBasisUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("DivFreeBasisUtility", init<>() )
     .def("GetValues", &ComputeDivFreeBasis)
     .def("AssignQuadrature2D", pointer_to_AssignQuadrature2D)
     ;
 
-    class_<MomentFittingUtility, MomentFittingUtility::Pointer, boost::noncopyable>
+    class_<MomentFittingUtility, MomentFittingUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("MomentFittingUtility", init<>())
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<2>)
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<3>)

@@ -1,9 +1,9 @@
 // see finite_cell_application/LICENSE.txt
 //
 //   Project Name:        Kratos
-//   Last Modified by:    $Author: janosch $
-//   Date:                $Date: 2007-09-20 12:17:31 $
-//   Revision:            $Revision: 1.3 $
+//   Last Modified by:    $Author: hbui $
+//   Date:                $Date: 14 Feb 2017 $
+//   Revision:            $Revision: 1.0 $
 //
 //
 
