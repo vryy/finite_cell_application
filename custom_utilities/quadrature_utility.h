@@ -32,9 +32,12 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/element.h"
+#include "includes/model_part.h"
 #include "includes/ublas_interface.h"
+#include "includes/kratos_flags.h"
+#include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -90,6 +93,14 @@ public:
 
     /// Destructor.
     virtual ~QuadratureUtility() {}
+
+
+    template<class TEntityType>
+    int GetDefaultIntegrationMethod(typename TEntityType::Pointer p_elem) const
+    {
+        return p_elem->GetIntegrationMethod();
+//        return p_elem->GetGeometry().GetDefaultIntegrationMethod();
+    }
 
 
     void PyScaleQuadrature(Element::Pointer& p_elem,
@@ -236,6 +247,106 @@ public:
         }
     }
 
+
+    void PyCreateConditionFromQuadraturePoint(ModelPart& r_model_part,
+        boost::python::list& pyElemList,
+        const std::string& sample_cond_name,
+        const double& min_weight,
+        const double& max_weight) const
+    {
+        // find the maximum node Id
+        std::size_t lastNodeId = 0;
+        for(typename ModelPart::NodesContainerType::ptr_iterator it = r_model_part.Nodes().ptr_begin();
+                it != r_model_part.Nodes().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastNodeId)
+                lastNodeId = (*it)->Id();
+        }
+
+        // find the maximum condition Id
+        std::size_t lastCondId = 0;
+        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = r_model_part.Conditions().ptr_begin();
+                it != r_model_part.Conditions().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastCondId)
+                lastCondId = (*it)->Id();
+        }
+
+        // find the maximum properties Id
+        std::size_t lastPropId = 0;
+        for(typename ModelPart::PropertiesContainerType::ptr_iterator it = r_model_part.rProperties().ptr_begin();
+                it != r_model_part.rProperties().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastPropId)
+                lastPropId = (*it)->Id();
+        }
+
+        // create new properties
+        Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
+        r_model_part.AddProperties(pProperties);
+
+        // get the sample condition
+        if(!KratosComponents<Condition>::Has(sample_cond_name))
+            KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+
+        std::size_t num_conds = 0;
+        typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
+        BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
+                        std::make_pair(iterator_value_type(pyElemList), // begin
+                        iterator_value_type() ) ) // end
+        {
+            GeometryData::IntegrationMethod ThisIntegrationMethod = p_elem->GetGeometry().GetDefaultIntegrationMethod();
+            num_conds += this->CreateConditionFromQuadraturePoint(r_model_part, p_elem, ThisIntegrationMethod,
+                    r_clone_condition, pProperties, lastNodeId, lastCondId, min_weight, max_weight);
+        }
+
+        std::cout << num_conds << " conditions of type " << sample_cond_name << " is added to the model_part" << std::endl;
+    }
+
+
+    std::size_t CreateConditionFromQuadraturePoint(ModelPart& r_model_part,
+            const Element::Pointer& p_elem,
+            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
+            Condition const& r_sample_cond,
+            Properties::Pointer pProperties,
+            std::size_t& lastNodeId,
+            std::size_t& lastCondId,
+            const double& min_weight,
+            const double& max_weight
+            ) const
+    {
+        const GeometryType::IntegrationPointsArrayType& integration_points
+                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+
+        ModelPart::ConditionsContainerType NewConditions;
+
+        PointType GlobalCoords;
+        GeometryType::Pointer pTempGeometry;
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        {
+            if(integration_points[point].Weight() > min_weight && integration_points[point].Weight() < max_weight)
+            {
+                p_elem->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
+                NodeType::Pointer pNewNode(new NodeType(++lastNodeId, GlobalCoords));
+                pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+                pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+                r_model_part.AddNode(pNewNode);
+    //            NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++lastNodeId, GlobalCoords[0], GlobalCoords[1], GlobalCoords[2]);
+    //            KRATOS_WATCH(*pNewNode)
+                pTempGeometry = GeometryType::Pointer( new Point3D<NodeType>(pNewNode) );
+                Condition::Pointer pNewCond = r_sample_cond.Create(++lastCondId, pTempGeometry, pProperties);
+                pNewCond->Set(ACTIVE, true);
+                NewConditions.push_back(pNewCond);
+            }
+        }
+
+        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+                it != NewConditions.ptr_end(); ++it)
+            r_model_part.Conditions().push_back(*it);
+
+        return NewConditions.size();
+    }
 
     ///@}
     ///@name Operators

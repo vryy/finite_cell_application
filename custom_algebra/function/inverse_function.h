@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            22 Feb 2017
+//  Date:            23 Feb 2017
 //
 
 
-#if !defined(KRATOS_NEGATE_FUNCTION_H_INCLUDED )
-#define  KRATOS_NEGATE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_INVERSE_FUNCTION_H_INCLUDED )
+#define  KRATOS_INVERSE_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  NegateFunctions
+///@name  InverseFunctions
 ///@{
 
 ///@}
@@ -55,17 +55,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general NegateFunction
+/** Class for a general InverseFunction
 */
 template<class TFunction>
-class NegateFunction : public TFunction
+class InverseFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of NegateFunction
-    KRATOS_CLASS_POINTER_DEFINITION(NegateFunction);
+    /// Pointer definition of InverseFunction
+    KRATOS_CLASS_POINTER_DEFINITION(InverseFunction);
 
     typedef TFunction BaseType;
 
@@ -79,12 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    NegateFunction(const typename BaseType::Pointer& p_func)
+    InverseFunction(const typename BaseType::Pointer& p_func)
     : mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~NegateFunction()
+    virtual ~InverseFunction()
     {}
 
 
@@ -100,21 +100,32 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return -mp_func->GetValue(P);
+        return 1.0/mp_func->GetValue(P);
     }
 
 
     virtual std::string GetFormula(const std::string& Format) const
     {
         std::stringstream ss;
-        ss << "-" << mp_func->GetFormula(Format);
+        ss << "1.0/" << mp_func->GetFormula(Format);
         return ss.str();
     }
 
 
     virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return typename BaseType::Pointer(new NegateFunction(mp_func->GetDiffFunction(component)));
+        return typename BaseType::Pointer(
+                new NegateFunction<TFunction>(
+                    typename BaseType::Pointer(
+                        new ProductFunction<TFunction>(
+                            mp_func->GetDiffFunction(component),
+                            typename BaseType::Pointer(
+                                new PowFunction<TFunction>(2, typename BaseType::Pointer( new InverseFunction(mp_func) ) )
+                            )
+                        )
+                    )
+                )
+            );
     }
 
 
@@ -135,7 +146,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Negate Function of " + mp_func->Info();
+        return "Inverse Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
@@ -230,15 +241,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    NegateFunction& operator=(NegateFunction const& rOther);
+    InverseFunction& operator=(InverseFunction const& rOther);
 
     /// Copy constructor.
-    NegateFunction(NegateFunction const& rOther);
+    InverseFunction(InverseFunction const& rOther);
 
 
     ///@}
 
-}; // Class NegateFunction
+}; // Class InverseFunction
 
 ///@}
 
@@ -251,14 +262,14 @@ private:
 ///@{
 
 
-/// input stream NegateFunction
+/// input stream InverseFunction
 template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, NegateFunction<TFunction>& rThis)
+inline std::istream& operator >> (std::istream& rIStream, InverseFunction<TFunction>& rThis)
 {}
 
-/// output stream NegateFunction
+/// output stream InverseFunction
 template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const NegateFunction<TFunction>& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const InverseFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -272,4 +283,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const NegateFunction<T
 
 }  // namespace Kratos.
 
-#endif // KRATOS_NEGATE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_INVERSE_FUNCTION_H_INCLUDED  defined

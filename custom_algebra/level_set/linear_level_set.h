@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED )
-#define  KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_LINEAR_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_LINEAR_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,9 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
-#include "custom_algebra/zero_function.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos
@@ -49,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  HeavisideFunctions
+///@name  Functions
 ///@{
 
 ///@}
@@ -57,37 +55,30 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general HeavisideFunction
+/** Detail class definition.
 */
-template<class TFunction>
-class HeavisideFunction : public TFunction
+class LinearLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of HeavisideFunction
-    KRATOS_CLASS_POINTER_DEFINITION(HeavisideFunction);
+    /// Pointer definition of LinearLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(LinearLevelSet);
 
-    typedef TFunction BaseType;
-
-    typedef typename BaseType::InputType InputType;
-
-    typedef typename BaseType::OutputType OutputType;
-
+    typedef LevelSet BaseType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    HeavisideFunction(const LevelSet& r_level_set)
-    : mr_level_set(r_level_set)
+    LinearLevelSet(const double& A, const double& B, const double& C)
+    : BaseType(), mA(A), mB(B), mC(C)
     {}
 
     /// Destructor.
-    virtual ~HeavisideFunction()
-    {}
+    virtual ~LinearLevelSet() {}
 
 
     ///@}
@@ -100,24 +91,24 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        if(mr_level_set.GetValue(P) < 0.0)
-            return 1.0;
-        else
-            return 0.0;
+        return 2;
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    virtual double GetValue(const PointType& P) const
     {
-        return "H(L)";
+        return mA*P(0) + mB*P(1) + mC;
     }
 
 
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual Vector GetGradient(const PointType& P) const
     {
-        return typename BaseType::Pointer(new ZeroFunction<TFunction>());
+        Vector grad(2);
+        grad(0) = mA;
+        grad(1) = mB;
+        return grad;
     }
 
 
@@ -138,18 +129,16 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Heaviside Function";
+        return "Linear Level Set";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
-    {
-        rOStream << Info();
-    }
+//    virtual void PrintInfo(std::ostream& rOStream) const;
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << "A: " << mA << ", B: " << mB << ", C: " << mC;
     }
 
 
@@ -206,7 +195,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    const LevelSet& mr_level_set;
+
+    double mA, mB, mC;
+
 
     ///@}
     ///@name Private Operators
@@ -233,15 +224,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    HeavisideFunction& operator=(HeavisideFunction const& rOther);
+    LinearLevelSet& operator=(LinearLevelSet const& rOther);
 
     /// Copy constructor.
-    HeavisideFunction(HeavisideFunction const& rOther);
+    LinearLevelSet(LinearLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class HeavisideFunction
+}; // Class LinearLevelSet
 
 ///@}
 
@@ -254,14 +245,14 @@ private:
 ///@{
 
 
-/// input stream HeavisideFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, HeavisideFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream,
+                LinearLevelSet& rThis)
 {}
 
-/// output stream HeavisideFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream,
+                const LinearLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -275,4 +266,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunctio
 
 }  // namespace Kratos.
 
-#endif // KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_LINEAR_LEVEL_SET_H_INCLUDED  defined

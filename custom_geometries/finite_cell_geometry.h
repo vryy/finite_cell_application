@@ -338,8 +338,7 @@ public:
     /// + the finite cell geometry uses the same quadrature location as the base geometry, however the weight are passed to the finite cell geometry
     /// + the finite cell geometry only supports single integration rule, which is passed in the arguments
     /// + the shape function and local gradients are the same as the base geometry
-    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod,
-            Vector& rWeights)
+    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod, Vector& rWeights)
     {
         // copy the integration points data
         IntegrationPointsContainerType all_integration_points;

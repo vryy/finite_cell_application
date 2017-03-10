@@ -14,8 +14,10 @@
 #include "custom_python/add_custom_utilities_to_python.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/binary_tree.h"
+#include "custom_utilities/quad_tree.h"
 #include "custom_utilities/div_free_basis_utility.h"
 #include "custom_utilities/moment_fitting_utility.h"
+#include "custom_utilities/moment_fitted_quad_tree_garden.h"
 
 
 namespace Kratos
@@ -52,10 +54,16 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     typedef Function<PointType, double> FunctionR3R1Type;
     typedef Function<PointType, Vector> FunctionR3RnType;
 
+    void(QuadratureUtility::*pointer_to_CreateConditionFromQuadraturePoint)(ModelPart&, boost::python::list&,
+            const std::string&, const double&, const double&) const = &QuadratureUtility::PyCreateConditionFromQuadraturePoint;
+
     class_<QuadratureUtility, QuadratureUtility::Pointer, boost::noncopyable>
     ("QuadratureUtility", init<>())
+    .def("GetDefaultIntegrationMethod", &QuadratureUtility::GetDefaultIntegrationMethod<Element>)
+    .def("GetDefaultIntegrationMethod", &QuadratureUtility::GetDefaultIntegrationMethod<Condition>)
     .def("ScaleQuadrature", &QuadratureUtility::PyScaleQuadrature)
     .def("SaveQuadrature", &QuadratureUtility::PySaveQuadrature)
+    .def("CreateConditionFromQuadraturePoint", pointer_to_CreateConditionFromQuadraturePoint)
     ;
 
     class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable, bases<QuadratureUtility> >
@@ -99,6 +107,18 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def(self_ns::str(self))
     ;
 
+    double(QuadTree::*pointer_to_Integrate_double_quadtree_local)(const FunctionR3R1Type&, const int) const = &QuadTree::Integrate<double>;
+
+    class_<QuadTree, QuadTree::Pointer, boost::noncopyable, bases<QuadratureUtility> >
+    ("QuadTreeLocal", init<Element::Pointer&>())
+    .def("Refine", &QuadTree::Refine)
+    .def("RefineBy", &QuadTree::RefineBy)
+    .def("AddToModelPart", &QuadTree::PyAddToModelPart)
+    .def("Integrate", pointer_to_Integrate_double_quadtree_local)
+    .def("ConstructQuadrature", &QuadTree::ConstructQuadrature)
+    .def(self_ns::str(self))
+    ;
+
     void(DivFreeBasisUtility::*pointer_to_AssignQuadrature2D)(Element::Pointer&, const LevelSet&, const unsigned int&, const unsigned int&) = &DivFreeBasisUtility::AssignQuadrature2D;
 
     class_<DivFreeBasisUtility, DivFreeBasisUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
@@ -109,10 +129,15 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
 
     class_<MomentFittingUtility, MomentFittingUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("MomentFittingUtility", init<>())
-    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<2>)
-    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<3>)
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<2> >)
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<3> >)
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<QuadTree >)
     .def("ScaleQuadrature", &MomentFittingUtility::PyScaleQuadrature)
     .def("SaveQuadrature", &MomentFittingUtility::PySaveQuadrature)
+    ;
+
+    class_<MomentFittedQuadTreeGarden, MomentFittedQuadTreeGarden::Pointer, boost::noncopyable>
+    ("QuadTreeGarden", init<Element::Pointer&, const int&>())
     ;
 
 }

@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            24 Feb 2017
+//  Date:            22 Feb 2017
 //
 
 
-#if !defined(KRATOS_PARAMETRIC_CURVE_H_INCLUDED )
-#define  KRATOS_PARAMETRIC_CURVE_H_INCLUDED
+#if !defined(KRATOS_ZERO_FUNCTION_H_INCLUDED )
+#define  KRATOS_ZERO_FUNCTION_H_INCLUDED
 
 
 
@@ -27,10 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "includes/element.h"
-#include "includes/ublas_interface.h"
-#include "geometries/geometry_data.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -50,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  ZeroFunctions
 ///@{
 
 ///@}
@@ -58,35 +55,36 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Abstract class for a parametric curve in 3D
+/** Class for a general ZeroFunction
 */
-class ParametricCurve : public FunctionR1R3
+template<class TFunction>
+class ZeroFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ParametricCurve
-    KRATOS_CLASS_POINTER_DEFINITION(ParametricCurve);
+    /// Pointer definition of ZeroFunction
+    KRATOS_CLASS_POINTER_DEFINITION(ZeroFunction);
 
-    typedef FunctionR1R3 BaseType;
+    typedef TFunction BaseType;
 
-    typedef BaseType::InputType InputType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef BaseType::OutputType OutputType;
+    typedef typename BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    ParametricCurve(const FunctionR1R1::Pointer& p_func_x,
-        const FunctionR1R1::Pointer& p_func_y, const FunctionR1R1::Pointer& p_func_z)
-    : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
+    ZeroFunction()
     {}
 
     /// Destructor.
-    virtual ~ParametricCurve() {}
+    virtual ~ZeroFunction()
+    {}
 
 
     ///@}
@@ -99,29 +97,21 @@ public:
     ///@{
 
 
-    /// inherit from Function
-    virtual OutputType GetValue(const InputType& t) const
+    virtual double GetValue(const InputType& P) const
     {
-        OutputType P;
-
-        P[0] = mp_func_x->GetValue(t);
-        P[1] = mp_func_y->GetValue(t);
-        P[2] = mp_func_z->GetValue(t);
-
-        return P;
+        return 0.0;
     }
 
 
-    /// inherit from Function
-    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual std::string GetFormula(const std::string& Format) const
     {
-        return BaseType::Pointer(
-                    new ParametricCurve(
-                        mp_func_x->GetDiffFunction(component),
-                        mp_func_y->GetDiffFunction(component),
-                        mp_func_z->GetDiffFunction(component)
-                    )
-                );
+        return "0.0";
+    }
+
+
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return typename BaseType::Pointer(new ZeroFunction());
     }
 
 
@@ -142,7 +132,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Parametric Curve";
+        return "Zero Function";
     }
 
     /// Print information about this object.
@@ -210,9 +200,6 @@ private:
     ///@name Member Variables
     ///@{
 
-    FunctionR1R1::Pointer mp_func_x;
-    FunctionR1R1::Pointer mp_func_y;
-    FunctionR1R1::Pointer mp_func_z;
 
     ///@}
     ///@name Private Operators
@@ -239,15 +226,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ParametricCurve& operator=(ParametricCurve const& rOther);
+    ZeroFunction& operator=(ZeroFunction const& rOther);
 
     /// Copy constructor.
-    ParametricCurve(ParametricCurve const& rOther);
+    ZeroFunction(ZeroFunction const& rOther);
 
 
     ///@}
 
-}; // Class ParametricCurve
+}; // Class ZeroFunction
 
 ///@}
 
@@ -260,12 +247,14 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream, ParametricCurve& rThis)
+/// input stream ZeroFunction
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ZeroFunction<TFunction>& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const ParametricCurve& rThis)
+/// output stream ZeroFunction
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -275,8 +264,9 @@ inline std::ostream& operator << (std::ostream& rOStream, const ParametricCurve&
 }
 ///@}
 
+
 ///@} addtogroup block
 
 }  // namespace Kratos.
 
-#endif // KRATOS_EXPLICIT_CURVE_H_INCLUDED  defined
+#endif // KRATOS_ZERO_FUNCTION_H_INCLUDED  defined

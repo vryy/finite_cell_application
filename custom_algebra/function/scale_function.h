@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            22 Feb 2017
 //
 
 
-#if !defined(KRATOS_PLANAR_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_PLANAR_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_SCALE_FUNCTION_H_INCLUDED )
+#define  KRATOS_SCALE_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  ScaleFunctions
 ///@{
 
 ///@}
@@ -55,30 +55,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Detail class definition.
+/** Class for a general ScaleFunction
 */
-class PlanarLevelSet : public LevelSet
+template<class TFunction>
+class ScaleFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of PlanarLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(PlanarLevelSet);
+    /// Pointer definition of ScaleFunction
+    KRATOS_CLASS_POINTER_DEFINITION(ScaleFunction);
 
-    typedef LevelSet BaseType;
+    typedef TFunction BaseType;
+
+    typedef typename BaseType::InputType InputType;
+
+    typedef typename BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    PlanarLevelSet(const double& A, const double& B, const double& C, const double& D)
-    : BaseType(), mA(A), mB(B), mC(C), mD(D)
+    ScaleFunction(const double& a, const typename BaseType::Pointer& p_func)
+    : BaseType(), ma(a), mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~PlanarLevelSet() {}
+    virtual ~ScaleFunction()
+    {}
 
 
     ///@}
@@ -91,25 +98,25 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return 3;
+        return ma*mp_func->GetValue(P);
     }
 
 
-    virtual double GetValue(const PointType& P) const
+    virtual std::string GetFormula(const std::string& Format) const
     {
-        return mA*P(0) + mB*P(1) + mC*P(2) + mD;
+        std::stringstream ss;
+        if(ma != 1.0)
+            ss << ma << "*";
+        ss << mp_func->GetFormula(Format);
+        return ss.str();
     }
 
 
-    virtual Vector GetGradient(const PointType& P) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        Vector grad(this->WorkingSpaceDimension());
-        grad(0) = mA;
-        grad(1) = mB;
-        grad(2) = mC;
-        return grad;
+        return typename BaseType::Pointer(new ScaleFunction(ma, mp_func->GetDiffFunction(component)));
     }
 
 
@@ -130,16 +137,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Planar Level Set";
+        return "Scale Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "A: " << mA << ", B: " << mB << ", C: " << mC << ", D: " << mD;
     }
 
 
@@ -196,9 +205,8 @@ private:
     ///@name Member Variables
     ///@{
 
-
-    double mA, mB, mC, mD;
-
+    double ma;
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -225,15 +233,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    PlanarLevelSet& operator=(PlanarLevelSet const& rOther);
+    ScaleFunction& operator=(ScaleFunction const& rOther);
 
     /// Copy constructor.
-    PlanarLevelSet(PlanarLevelSet const& rOther);
+    ScaleFunction(ScaleFunction const& rOther);
 
 
     ///@}
 
-}; // Class PlanarLevelSet
+}; // Class ScaleFunction
 
 ///@}
 
@@ -246,14 +254,14 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                PlanarLevelSet& rThis)
+/// input stream ScaleFunction
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, ScaleFunction<TFunction>& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const PlanarLevelSet& rThis)
+/// output stream ScaleFunction
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const ScaleFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -267,4 +275,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_PLANAR_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_SCALE_FUNCTION_H_INCLUDED  defined

@@ -102,6 +102,18 @@ public:
     ///@{
 
 
+    virtual inline const std::size_t InputSize() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+    }
+
+
+    virtual inline const std::size_t OutputSize() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
+    }
+
+
     virtual TOutputType GetValue(const TInputType& P) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Call the base class", __FUNCTION__)
@@ -112,6 +124,17 @@ public:
     {
         Function::Pointer pDerivative = this->GetDiffFunction(component);
         return pDerivative->GetValue(P);
+    }
+
+
+    virtual boost::numeric::ublas::vector<TOutputType> GetGradient(const TInputType& P) const
+    {
+        boost::numeric::ublas::vector<TOutputType> Result(this->InputSize());
+        for(std::size_t c = 0; c < this->InputSize(); ++c)
+        {
+            Result(c) = this->GetDerivative(c, P);
+        }
+        return Result;
     }
 
 
@@ -164,6 +187,7 @@ public:
             Matrix J;
 
             J = r_geom.Jacobian( J, integration_point );
+
             return MathUtils<double>::Det(J);
         }
         else
@@ -172,6 +196,7 @@ public:
 
             J = r_geom.Jacobian( J, integration_point );
             JtJ = prod(trans(J), J);
+
             return sqrt(MathUtils<double>::Det(JtJ));
         }
         return 0.0; // to silence the compiler
@@ -386,8 +411,27 @@ typedef Function<array_1d<double, 2>, double> FunctionR2R1;
 ///@name Template Specialization
 ///@{
 
+template<> inline const std::size_t FunctionR1R1::InputSize() const {return 1;}
+template<> inline const std::size_t FunctionR1R1::OutputSize() const {return 1;}
+
+template<> inline const std::size_t FunctionR3R1::InputSize() const {return 3;}
+template<> inline const std::size_t FunctionR3R1::OutputSize() const {return 1;}
+
+template<> inline const std::size_t FunctionR1R3::InputSize() const {return 1;}
+template<> inline const std::size_t FunctionR1R3::OutputSize() const {return 3;}
+
+template<> inline const std::size_t FunctionR3R3::InputSize() const {return 3;}
+template<> inline const std::size_t FunctionR3R3::OutputSize() const {return 3;}
+
+template<> inline const std::size_t FunctionR2R3::InputSize() const {return 2;}
+template<> inline const std::size_t FunctionR2R3::OutputSize() const {return 3;}
+
+template<> inline const std::size_t FunctionR2R1::InputSize() const {return 2;}
+template<> inline const std::size_t FunctionR2R1::OutputSize() const {return 1;}
+
+
 template<>
-inline double Function<typename Element::GeometryType::PointType::PointType, double>::Integrate(GeometryType& r_geom,
+inline double FunctionR3R1::Integrate(GeometryType& r_geom,
         const GeometryData::IntegrationMethod ThisIntegrationMethod) const
 {
     const GeometryType::IntegrationPointsArrayType& integration_points

@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            24 Feb 2017
 //
 
 
-#if !defined(KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_PARAMETRIC_SURFACE_H_INCLUDED )
+#define  KRATOS_PARAMETRIC_SURFACE_H_INCLUDED
 
 
 
@@ -29,7 +29,9 @@
 #include "includes/define.h"
 #include "includes/element.h"
 #include "includes/ublas_interface.h"
-#include "custom_algebra/level_set.h"
+#include "containers/array_1d.h"
+#include "geometries/geometry_data.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -57,38 +59,35 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for product of two level sets
+/** Abstract class for a parametric curve in 3D
 */
-class ProductLevelSet : public LevelSet
+class ParametricSurface : public FunctionR2R3
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ProductLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(ProductLevelSet);
+    /// Pointer definition of ParametricSurface
+    KRATOS_CLASS_POINTER_DEFINITION(ParametricSurface);
 
-    typedef LevelSet BaseType;
+    typedef FunctionR2R3 BaseType;
 
-    typedef typename Element::GeometryType GeometryType;
+    typedef BaseType::InputType InputType;
 
-    typedef typename GeometryType::PointType NodeType;
-
-    typedef typename NodeType::PointType PointType;
-
-    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+    typedef BaseType::OutputType OutputType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    ProductLevelSet(const BaseType::Pointer& p_level_set_1, const BaseType::Pointer& p_level_set_2)
-    : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
+    ParametricSurface(const FunctionR2R1::Pointer& p_func_x,
+        const FunctionR2R1::Pointer& p_func_y, const FunctionR2R1::Pointer& p_func_z)
+    : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
     /// Destructor.
-    virtual ~ProductLevelSet() {}
+    virtual ~ParametricSurface() {}
 
 
     ///@}
@@ -101,34 +100,29 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    /// inherit from Function
+    virtual OutputType GetValue(const InputType& T) const
     {
-        return mp_level_set_1->WorkingSpaceDimension();
+        OutputType P;
+
+        P[0] = mp_func_x->GetValue(T);
+        P[1] = mp_func_y->GetValue(T);
+        P[2] = mp_func_z->GetValue(T);
+
+        return P;
     }
 
 
-    virtual double GetValue(const PointType& P) const
+    /// inherit from Function
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return mp_level_set_1->GetValue(P) * mp_level_set_2->GetValue(P);
-    }
-
-
-    virtual Vector GetGradient(const PointType& P) const
-    {
-        double phi_1 = mp_level_set_1->GetValue(P);
-        double phi_2 = mp_level_set_2->GetValue(P);
-
-        Vector grad_1 = mp_level_set_1->GetGradient(P);
-        Vector grad_2 = mp_level_set_2->GetGradient(P);
-
-        const std::size_t dim = WorkingSpaceDimension();
-
-        Vector result(dim);
-
-        for(std::size_t i = 0; i < dim; ++i)
-            result(i) = grad_1(i) * phi_2 + phi_1 * grad_2(i);
-
-        return result;
+        return BaseType::Pointer(
+                    new ParametricSurface(
+                        mp_func_x->GetDiffFunction(component),
+                        mp_func_y->GetDiffFunction(component),
+                        mp_func_z->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -149,7 +143,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Product Level Set";
+        return "Parametric Surface";
     }
 
     /// Print information about this object.
@@ -179,10 +173,6 @@ protected:
     ///@}
     ///@name Protected member Variables
     ///@{
-
-
-    const BaseType::Pointer mp_level_set_1;
-    const BaseType::Pointer mp_level_set_2;
 
 
     ///@}
@@ -221,6 +211,9 @@ private:
     ///@name Member Variables
     ///@{
 
+    FunctionR2R1::Pointer mp_func_x;
+    FunctionR2R1::Pointer mp_func_y;
+    FunctionR2R1::Pointer mp_func_z;
 
     ///@}
     ///@name Private Operators
@@ -247,15 +240,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ProductLevelSet& operator=(ProductLevelSet const& rOther);
+    ParametricSurface& operator=(ParametricSurface const& rOther);
 
     /// Copy constructor.
-    ProductLevelSet(ProductLevelSet const& rOther);
+    ParametricSurface(ParametricSurface const& rOther);
 
 
     ///@}
 
-}; // Class ProductLevelSet
+}; // Class ParametricSurface
 
 ///@}
 
@@ -269,11 +262,11 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, ProductLevelSet& rThis)
+inline std::istream& operator >> (std::istream& rIStream, ParametricSurface& rThis)
 {}
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const ProductLevelSet& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const ParametricSurface& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -287,4 +280,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ProductLevelSet&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_PARAMETRIC_CURVE_H_INCLUDED  defined

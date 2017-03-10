@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            22 Feb 2017
+//  Date:            10 Feb 2017
 //
 
 
-#if !defined(KRATOS_ZERO_FUNCTION_H_INCLUDED )
-#define  KRATOS_ZERO_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ZeroFunctions
+///@name  Functions
 ///@{
 
 ///@}
@@ -55,36 +55,30 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general ZeroFunction
+/** Detail class definition.
 */
-template<class TFunction>
-class ZeroFunction : public TFunction
+class CircularLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ZeroFunction
-    KRATOS_CLASS_POINTER_DEFINITION(ZeroFunction);
+    /// Pointer definition of CircularLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(CircularLevelSet);
 
-    typedef TFunction BaseType;
-
-    typedef typename BaseType::InputType InputType;
-
-    typedef typename BaseType::OutputType OutputType;
-
+    typedef LevelSet BaseType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    ZeroFunction()
+    CircularLevelSet(const double& cX, const double& cY, const double& R)
+    : BaseType(), mcX(cX), mcY(cY), mR(R)
     {}
 
     /// Destructor.
-    virtual ~ZeroFunction()
-    {}
+    virtual ~CircularLevelSet() {}
 
 
     ///@}
@@ -97,21 +91,24 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        return 0.0;
+        return 2;
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    virtual double GetValue(const PointType& P) const
     {
-        return "0.0";
+        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) - pow(mR, 2);
     }
 
 
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual Vector GetGradient(const PointType& P) const
     {
-        return typename BaseType::Pointer(new ZeroFunction());
+        Vector grad(2);
+        grad(0) = 2.0 * (P(0) - mcX);
+        grad(1) = 2.0 * (P(1) - mcY);
+        return grad;
     }
 
 
@@ -132,18 +129,16 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Zero Function";
+        return "Circular Level Set";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
-    {
-        rOStream << Info();
-    }
+//    virtual void PrintInfo(std::ostream& rOStream) const;
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << "cX: " << mcX << ", cY: " << mcY << ", R: " << mR;
     }
 
 
@@ -201,6 +196,9 @@ private:
     ///@{
 
 
+    double mcX, mcY, mR;
+
+
     ///@}
     ///@name Private Operators
     ///@{
@@ -226,15 +224,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ZeroFunction& operator=(ZeroFunction const& rOther);
+    CircularLevelSet& operator=(CircularLevelSet const& rOther);
 
     /// Copy constructor.
-    ZeroFunction(ZeroFunction const& rOther);
+    CircularLevelSet(CircularLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class ZeroFunction
+}; // Class CircularLevelSet
 
 ///@}
 
@@ -247,14 +245,14 @@ private:
 ///@{
 
 
-/// input stream ZeroFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, ZeroFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream,
+                CircularLevelSet& rThis)
 {}
 
-/// output stream ZeroFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream,
+                const CircularLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -264,9 +262,8 @@ inline std::ostream& operator << (std::ostream& rOStream, const ZeroFunction<TFu
 }
 ///@}
 
-
 ///@} addtogroup block
 
 }  // namespace Kratos.
 
-#endif // KRATOS_ZERO_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED  defined

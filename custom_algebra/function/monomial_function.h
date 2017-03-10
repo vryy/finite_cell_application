@@ -27,10 +27,10 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
-#include "custom_algebra/scale_function.h"
-#include "custom_algebra/zero_function.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/scale_function.h"
+#include "custom_algebra/function/zero_function.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos

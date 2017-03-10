@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            22 Feb 2017
+//  Date:            14 Feb 2017
 //
 
 
-#if !defined(KRATOS_SCALE_FUNCTION_H_INCLUDED )
-#define  KRATOS_SCALE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_PRODUCT_FUNCTION_H_INCLUDED )
+#define  KRATOS_PRODUCT_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,9 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/sum_function.h"
+#include "custom_algebra/function/product_function.h"
 
 
 namespace Kratos
@@ -47,7 +49,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ScaleFunctions
+///@name  ProductFunction
 ///@{
 
 ///@}
@@ -55,17 +57,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general ScaleFunction
+/** Class for a general ProductFunction
 */
 template<class TFunction>
-class ScaleFunction : public TFunction
+class ProductFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ScaleFunction
-    KRATOS_CLASS_POINTER_DEFINITION(ScaleFunction);
+    /// Pointer definition of ProductFunction
+    KRATOS_CLASS_POINTER_DEFINITION(ProductFunction);
 
     typedef TFunction BaseType;
 
@@ -79,12 +81,12 @@ public:
     ///@{
 
     /// Default constructor.
-    ScaleFunction(const double& a, const typename BaseType::Pointer& p_func)
-    : BaseType(), ma(a), mp_func(p_func)
+    ProductFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
+    : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 
     /// Destructor.
-    virtual ~ScaleFunction()
+    virtual ~ProductFunction()
     {}
 
 
@@ -100,23 +102,34 @@ public:
 
     virtual double GetValue(const InputType& P) const
     {
-        return ma*mp_func->GetValue(P);
+        return mp_func_1->GetValue(P) * mp_func_2->GetValue(P);
     }
 
 
     virtual std::string GetFormula(const std::string& Format) const
     {
-        std::stringstream ss;
-        if(ma != 1.0)
-            ss << ma << "*";
-        ss << mp_func->GetFormula(Format);
-        return ss.str();
+        return mp_func_1->GetFormula(Format) + "*" + mp_func_2->GetFormula(Format);
     }
 
 
     virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return typename BaseType::Pointer(new ScaleFunction(ma, mp_func->GetDiffFunction(component)));
+        return typename BaseType::Pointer(
+                    new SumFunction<BaseType>(
+                        typename BaseType::Pointer(
+                            new ProductFunction(
+                                mp_func_1->GetDiffFunction(component),
+                                mp_func_2
+                            )
+                        ),
+                        typename BaseType::Pointer(
+                            new ProductFunction(
+                                mp_func_1,
+                                mp_func_2->GetDiffFunction(component)
+                            )
+                        )
+                    )
+                );
     }
 
 
@@ -137,7 +150,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Scale Function of " + mp_func->Info();
+        return "Product Function of " + mp_func_1->Info() + " and " + mp_func_2->Info();
     }
 
     /// Print information about this object.
@@ -205,8 +218,8 @@ private:
     ///@name Member Variables
     ///@{
 
-    double ma;
-    const typename BaseType::Pointer mp_func;
+    const typename BaseType::Pointer mp_func_1;
+    const typename BaseType::Pointer mp_func_2;
 
     ///@}
     ///@name Private Operators
@@ -233,15 +246,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ScaleFunction& operator=(ScaleFunction const& rOther);
+    ProductFunction& operator=(ProductFunction const& rOther);
 
     /// Copy constructor.
-    ScaleFunction(ScaleFunction const& rOther);
+    ProductFunction(ProductFunction const& rOther);
 
 
     ///@}
 
-}; // Class ScaleFunction
+}; // Class ProductFunction
 
 ///@}
 
@@ -254,14 +267,14 @@ private:
 ///@{
 
 
-/// input stream ScaleFunction
+/// input stream ProductFunction
 template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, ScaleFunction<TFunction>& rThis)
+inline std::istream& operator >> (std::istream& rIStream, ProductFunction<TFunction>& rThis)
 {}
 
-/// output stream ScaleFunction
+/// output stream ProductFunction
 template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const ScaleFunction<TFunction>& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const ProductFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -275,4 +288,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ScaleFunction<TF
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SCALE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_PRODUCT_FUNCTION_H_INCLUDED  defined

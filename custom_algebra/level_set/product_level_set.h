@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            22 Feb 2017
+//  Date:            15 Feb 2017
 //
 
 
-#if !defined(KRATOS_POW_FUNCTION_H_INCLUDED )
-#define  KRATOS_POW_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,7 +27,9 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos
@@ -47,7 +49,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  PowFunctions
+///@name  Functions
 ///@{
 
 ///@}
@@ -55,41 +57,38 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general PowFunction
+/** Class for product of two level sets
 */
-template<class TFunction>
-class PowFunction : public TFunction
+class ProductLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of PowFunction
-    KRATOS_CLASS_POINTER_DEFINITION(PowFunction);
+    /// Pointer definition of ProductLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(ProductLevelSet);
 
-    typedef TFunction BaseType;
+    typedef LevelSet BaseType;
 
-    typedef typename BaseType::InputType InputType;
+    typedef typename Element::GeometryType GeometryType;
 
-    typedef typename BaseType::OutputType OutputType;
+    typedef typename GeometryType::PointType NodeType;
 
+    typedef typename NodeType::PointType PointType;
+
+    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    PowFunction(const double& a, const typename BaseType::Pointer& p_func)
-    : ma(a), mp_func(p_func)
-    {}
-
-    PowFunction(const typename BaseType::Pointer& p_func, const double& a)
-    : ma(a), mp_func(p_func)
+    ProductLevelSet(const BaseType::Pointer& p_level_set_1, const BaseType::Pointer& p_level_set_2)
+    : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
     {}
 
     /// Destructor.
-    virtual ~PowFunction()
-    {}
+    virtual ~ProductLevelSet() {}
 
 
     ///@}
@@ -102,45 +101,34 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        return pow(mp_func->GetValue(P), ma);
+        return mp_level_set_1->WorkingSpaceDimension();
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    virtual double GetValue(const PointType& P) const
     {
-        std::stringstream ss;
-        if(Format == "matlab")
-        {
-            if(ma == 1.0)
-                ss << mp_func->GetFormula(Format);
-            else if(ma == 0.0)
-                ss << "1.0";
-            else
-                ss << "(" << mp_func->GetFormula(Format) << ")^" << ma;
-        }
-        return ss.str();
+        return mp_level_set_1->GetValue(P) * mp_level_set_2->GetValue(P);
     }
 
 
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual Vector GetGradient(const PointType& P) const
     {
-        if(ma == 1.0)
-            return mp_func->GetDiffFunction(component);
-        else if(ma == 0.0)
-            return typename BaseType::Pointer(new ZeroFunction<TFunction>());
-        else
-            return typename BaseType::Pointer(
-                        new ProductFunction<TFunction>(
-                            typename BaseType::Pointer(
-                                new ScaleFunction<TFunction>(ma,
-                                    typename BaseType::Pointer(new PowFunction(ma-1, mp_func))
-                                )
-                            ),
-                            mp_func->GetDiffFunction(component)
-                        )
-                    );
+        double phi_1 = mp_level_set_1->GetValue(P);
+        double phi_2 = mp_level_set_2->GetValue(P);
+
+        Vector grad_1 = mp_level_set_1->GetGradient(P);
+        Vector grad_2 = mp_level_set_2->GetGradient(P);
+
+        const std::size_t dim = WorkingSpaceDimension();
+
+        Vector result(dim);
+
+        for(std::size_t i = 0; i < dim; ++i)
+            result(i) = grad_1(i) * phi_2 + phi_1 * grad_2(i);
+
+        return result;
     }
 
 
@@ -161,7 +149,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Pow Function of " + mp_func->Info();
+        return "Product Level Set";
     }
 
     /// Print information about this object.
@@ -191,6 +179,10 @@ protected:
     ///@}
     ///@name Protected member Variables
     ///@{
+
+
+    const BaseType::Pointer mp_level_set_1;
+    const BaseType::Pointer mp_level_set_2;
 
 
     ///@}
@@ -229,8 +221,6 @@ private:
     ///@name Member Variables
     ///@{
 
-    double ma;
-    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -257,15 +247,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    PowFunction& operator=(PowFunction const& rOther);
+    ProductLevelSet& operator=(ProductLevelSet const& rOther);
 
     /// Copy constructor.
-    PowFunction(PowFunction const& rOther);
+    ProductLevelSet(ProductLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class PowFunction
+}; // Class ProductLevelSet
 
 ///@}
 
@@ -278,14 +268,12 @@ private:
 ///@{
 
 
-/// input stream PowFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, PowFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, ProductLevelSet& rThis)
 {}
 
-/// output stream PowFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const PowFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const ProductLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -299,4 +287,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const PowFunction<TFun
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SCALE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_PRODUCT_LEVEL_SET_H_INCLUDED  defined

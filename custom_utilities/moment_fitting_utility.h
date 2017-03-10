@@ -31,9 +31,9 @@
 
 // Project includes
 #include "custom_utilities/quadrature_utility.h"
-#include "custom_algebra/function.h"
-#include "custom_algebra/product_function.h"
-#include "custom_algebra/heaviside_function.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/product_function.h"
+#include "custom_algebra/function/heaviside_function.h"
 #include "custom_utilities/binary_tree.h"
 
 
@@ -108,11 +108,11 @@ public:
     ///@{
 
 
-    template<std::size_t TDimension>
+    template<class TIntegratorType>
     void PyFitQuadrature(Element::Pointer& p_elem,
             boost::python::list& r_funcs,
             const LevelSet& r_level_set,
-            const BinaryTree<TDimension>& r_integrator,
+            const TIntegratorType& r_integrator,
             const int fit_quadrature_order, const int integrator_integration_order) const
     {
         std::vector<FunctionR3R1Type::Pointer> funcs;
@@ -130,16 +130,16 @@ public:
         GeometryData::IntegrationMethod IntegratorIntegrationMethod
                 = LevelSet::GetIntegrationMethod(integrator_integration_order);
 
-        this->FitQuadrature<FunctionR3R1Type, BinaryTree<TDimension> >(p_elem->GetGeometry(),
+        this->FitQuadrature<FunctionR3R1Type, TIntegratorType>(p_elem->GetGeometry(),
                 funcs, r_level_set, r_integrator, ElementalIntegrationMethod, IntegratorIntegrationMethod);
     }
 
 
-    template<class FunctionType, class IntegratorType>
+    template<class TFunctionType, class TIntegratorType>
     Vector FitQuadrature(GeometryType& r_geom,
-            const std::vector<typename FunctionType::Pointer>& r_funcs,
+            const std::vector<typename TFunctionType::Pointer>& r_funcs,
             const LevelSet& r_level_set,
-            const IntegratorType& r_integrator,
+            const TIntegratorType& r_integrator,
             const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
             const GeometryData::IntegrationMethod& IntegratorIntegrationMethod) const
     {
@@ -165,11 +165,11 @@ KRATOS_WATCH(MA)
 
         // form the vector b
         Vector Mb(num_basis);
-        typename FunctionType::Pointer H = typename FunctionType::Pointer(new HeavisideFunction<FunctionType>(r_level_set));
+        typename TFunctionType::Pointer H = typename TFunctionType::Pointer(new HeavisideFunction<TFunctionType>(r_level_set));
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             Mb(i) = 0.0;
-            r_integrator.Integrate(ProductFunction<FunctionType>(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
+            r_integrator.Integrate(ProductFunction<TFunctionType>(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
         }
 KRATOS_WATCH(Mb)
 
@@ -193,7 +193,7 @@ KRATOS_WATCH(Mb)
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
             LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
-    //            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
+//            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
         }
         KRATOS_WATCH(Mw)
         KRATOS_WATCH(sum(Mw))

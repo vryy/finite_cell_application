@@ -30,7 +30,7 @@
 #include "includes/element.h"
 #include "includes/ublas_interface.h"
 #include "geometries/geometry_data.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -60,7 +60,7 @@ namespace Kratos
 /// Short class definition.
 /** Abstract class for a level set in space, both for implicit level set or nodal interpolated level set
 */
-class LevelSet : public Function<typename Element::GeometryType::PointType::PointType, double>
+class LevelSet : public FunctionR3R1
 {
 public:
     ///@name Type Definitions
@@ -69,7 +69,7 @@ public:
     /// Pointer definition of LevelSet
     KRATOS_CLASS_POINTER_DEFINITION(LevelSet);
 
-    typedef Function<typename Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef typename Element::GeometryType GeometryType;
 
@@ -106,6 +106,14 @@ public:
     }
 
 
+    double GetValue(const double& X, const double& Y, const double& Z) const
+    {
+        PointType P;
+        P[0] = X; P[1] = Y; P[2] = Z;
+        return this->GetValue(P);
+    }
+
+
     /// inherit from Function
     virtual double GetValue(const PointType& P) const
     {
@@ -113,22 +121,31 @@ public:
     }
 
 
-    virtual double GetValue(GeometryType& rGeometry, const CoordinatesArrayType& rLocalPoint) const
+//    virtual double GetValue(GeometryType& rGeometry, const CoordinatesArrayType& rLocalPoint) const
+//    {
+//        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+//    }
+
+
+    Vector GetGradient(const double& X, const double& Y, const double& Z) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+        PointType P;
+        P[0] = X; P[1] = Y; P[2] = Z;
+        return this->GetGradient(P);
     }
 
 
+    /// inherit from Function
     virtual Vector GetGradient(const PointType& P) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
-    virtual Vector GetGradient(GeometryType& rGeometry, const CoordinatesArrayType& rLocalPoint) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
+//    virtual Vector GetGradient(GeometryType& rGeometry, const CoordinatesArrayType& rLocalPoint) const
+//    {
+//        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+//    }
 
 
     int CutStatus(Element::Pointer& p_elem) const

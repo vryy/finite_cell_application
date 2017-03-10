@@ -25,7 +25,7 @@
 #include "includes/variables.h"
 #include "includes/kratos_components.h"
 #include "includes/kratos_application.h"
-#include "custom_algebra/function.h"
+#include "custom_conditions/dummy_point_condition.h"
 
 
 namespace Kratos
@@ -181,6 +181,8 @@ namespace Kratos
         ///@name Member Variables
         ///@{
 
+        DummyPointCondition mDummyPointCondition2D;
+        DummyPointCondition mDummyPointCondition3D;
 
         ///@}
         ///@name Private Operators

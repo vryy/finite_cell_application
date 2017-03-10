@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            14 Feb 2017
 //
 
 
-#if !defined(KRATOS_SUM_FUNCTION_H_INCLUDED )
-#define  KRATOS_SUM_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  SumFunction
+///@name  Functions
 ///@{
 
 ///@}
@@ -55,37 +55,30 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general SumFunction
+/** Detail class definition.
 */
-template<class TFunction>
-class SumFunction : public TFunction
+class SphericalLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of SumFunction
-    KRATOS_CLASS_POINTER_DEFINITION(SumFunction);
+    /// Pointer definition of SphericalLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(SphericalLevelSet);
 
-    typedef TFunction BaseType;
-
-    typedef typename BaseType::InputType InputType;
-
-    typedef typename BaseType::OutputType OutputType;
-
+    typedef LevelSet BaseType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    SumFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
-    : mp_func_1(p_func_1), mp_func_2(p_func_2)
+    SphericalLevelSet(const double& cX, const double& cY, const double& cZ, const double& R)
+    : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
     {}
 
     /// Destructor.
-    virtual ~SumFunction()
-    {}
+    virtual ~SphericalLevelSet() {}
 
 
     ///@}
@@ -98,26 +91,25 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        return mp_func_1->GetValue(P) + mp_func_2->GetValue(P);
+        return 3;
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    virtual double GetValue(const PointType& P) const
     {
-        return mp_func_1->GetFormula(Format) + "+" + mp_func_2->GetFormula(Format);
+        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) + pow(P(2) - mcZ, 2) - pow(mR, 2);
     }
 
 
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    virtual Vector GetGradient(const PointType& P) const
     {
-        return typename BaseType::Pointer(
-                    new SumFunction(
-                        mp_func_1->GetDiffFunction(component),
-                        mp_func_2->GetDiffFunction(component)
-                    )
-                );
+        Vector grad(3);
+        grad(0) = 2.0 * (P(0) - mcX);
+        grad(1) = 2.0 * (P(1) - mcY);
+        grad(2) = 2.0 * (P(2) - mcZ);
+        return grad;
     }
 
 
@@ -138,18 +130,16 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Sum Function of " + mp_func_1->Info() + " and " + mp_func_2->Info();
+        return "Spherical Level Set";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
-    {
-        rOStream << Info();
-    }
+//    virtual void PrintInfo(std::ostream& rOStream) const;
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << "cX: " << mcX << ", cY: " << mcY << ", cZ: " << mcZ << ", R: " << mR;
     }
 
 
@@ -206,8 +196,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    const typename BaseType::Pointer mp_func_1;
-    const typename BaseType::Pointer mp_func_2;
+
+    double mcX, mcY, mcZ, mR;
+
 
     ///@}
     ///@name Private Operators
@@ -234,15 +225,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    SumFunction& operator=(SumFunction const& rOther);
+    SphericalLevelSet& operator=(SphericalLevelSet const& rOther);
 
     /// Copy constructor.
-    SumFunction(SumFunction const& rOther);
+    SphericalLevelSet(SphericalLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class SumFunction
+}; // Class SphericalLevelSet
 
 ///@}
 
@@ -255,14 +246,14 @@ private:
 ///@{
 
 
-/// input stream SumFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, SumFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream,
+                SphericalLevelSet& rThis)
 {}
 
-/// output stream SumFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const SumFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream,
+                const SphericalLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -276,4 +267,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const SumFunction<TFun
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SUM_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED  defined

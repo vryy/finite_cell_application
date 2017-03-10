@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            22 Feb 2017
 //
 
 
-#if !defined(KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_NEGATE_FUNCTION_H_INCLUDED )
+#define  KRATOS_NEGATE_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  NegateFunctions
 ///@{
 
 ///@}
@@ -55,30 +55,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Detail class definition.
+/** Class for a general NegateFunction
 */
-class SphericalLevelSet : public LevelSet
+template<class TFunction>
+class NegateFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of SphericalLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(SphericalLevelSet);
+    /// Pointer definition of NegateFunction
+    KRATOS_CLASS_POINTER_DEFINITION(NegateFunction);
 
-    typedef LevelSet BaseType;
+    typedef TFunction BaseType;
+
+    typedef typename BaseType::InputType InputType;
+
+    typedef typename BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    SphericalLevelSet(const double& cX, const double& cY, const double& cZ, const double& R)
-    : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
+    NegateFunction(const typename BaseType::Pointer& p_func)
+    : mp_func(p_func)
     {}
 
     /// Destructor.
-    virtual ~SphericalLevelSet() {}
+    virtual ~NegateFunction()
+    {}
 
 
     ///@}
@@ -91,25 +98,23 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return 3;
+        return -mp_func->GetValue(P);
     }
 
 
-    virtual double GetValue(const PointType& P) const
+    virtual std::string GetFormula(const std::string& Format) const
     {
-        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) + pow(P(2) - mcZ, 2) - pow(mR, 2);
+        std::stringstream ss;
+        ss << "-" << mp_func->GetFormula(Format);
+        return ss.str();
     }
 
 
-    virtual Vector GetGradient(const PointType& P) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        Vector grad(3);
-        grad(0) = 2.0 * (P(0) - mcX);
-        grad(1) = 2.0 * (P(1) - mcY);
-        grad(2) = 2.0 * (P(2) - mcZ);
-        return grad;
+        return typename BaseType::Pointer(new NegateFunction(mp_func->GetDiffFunction(component)));
     }
 
 
@@ -130,16 +135,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Spherical Level Set";
+        return "Negate Function of " + mp_func->Info();
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "cX: " << mcX << ", cY: " << mcY << ", cZ: " << mcZ << ", R: " << mR;
     }
 
 
@@ -196,9 +203,7 @@ private:
     ///@name Member Variables
     ///@{
 
-
-    double mcX, mcY, mcZ, mR;
-
+    const typename BaseType::Pointer mp_func;
 
     ///@}
     ///@name Private Operators
@@ -225,15 +230,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    SphericalLevelSet& operator=(SphericalLevelSet const& rOther);
+    NegateFunction& operator=(NegateFunction const& rOther);
 
     /// Copy constructor.
-    SphericalLevelSet(SphericalLevelSet const& rOther);
+    NegateFunction(NegateFunction const& rOther);
 
 
     ///@}
 
-}; // Class SphericalLevelSet
+}; // Class NegateFunction
 
 ///@}
 
@@ -246,14 +251,14 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                SphericalLevelSet& rThis)
+/// input stream NegateFunction
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, NegateFunction<TFunction>& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const SphericalLevelSet& rThis)
+/// output stream NegateFunction
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const NegateFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -267,4 +272,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SPHERICAL_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_NEGATE_FUNCTION_H_INCLUDED  defined

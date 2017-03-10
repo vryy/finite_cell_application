@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_INVERSE_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_INVERSE_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_SUM_FUNCTION_H_INCLUDED )
+#define  KRATOS_SUM_FUNCTION_H_INCLUDED
 
 
 
@@ -27,9 +27,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "includes/element.h"
-#include "includes/ublas_interface.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -49,7 +47,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  SumFunction
 ///@{
 
 ///@}
@@ -57,38 +55,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for product of two level sets
+/** Class for a general SumFunction
 */
-class InverseLevelSet : public LevelSet
+template<class TFunction>
+class SumFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of InverseLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(InverseLevelSet);
+    /// Pointer definition of SumFunction
+    KRATOS_CLASS_POINTER_DEFINITION(SumFunction);
 
-    typedef LevelSet BaseType;
+    typedef TFunction BaseType;
 
-    typedef typename Element::GeometryType GeometryType;
+    typedef typename BaseType::InputType InputType;
 
-    typedef typename GeometryType::PointType NodeType;
+    typedef typename BaseType::OutputType OutputType;
 
-    typedef typename NodeType::PointType PointType;
-
-    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    InverseLevelSet(const BaseType::Pointer& p_level_set)
-    : mp_level_set(p_level_set)
+    SumFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
+    : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 
     /// Destructor.
-    virtual ~InverseLevelSet() {}
+    virtual ~SumFunction()
+    {}
 
 
     ///@}
@@ -101,21 +98,26 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return mp_level_set->WorkingSpaceDimension();
+        return mp_func_1->GetValue(P) + mp_func_2->GetValue(P);
     }
 
 
-    virtual double GetValue(const PointType& P) const
+    virtual std::string GetFormula(const std::string& Format) const
     {
-        return -mp_level_set->GetValue(P);
+        return mp_func_1->GetFormula(Format) + "+" + mp_func_2->GetFormula(Format);
     }
 
 
-    virtual Vector GetGradient(const PointType& P) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        return -mp_level_set->GetGradient(P);
+        return typename BaseType::Pointer(
+                    new SumFunction(
+                        mp_func_1->GetDiffFunction(component),
+                        mp_func_2->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -136,7 +138,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Inverse Level Set";
+        return "Sum Function of " + mp_func_1->Info() + " and " + mp_func_2->Info();
     }
 
     /// Print information about this object.
@@ -166,9 +168,6 @@ protected:
     ///@}
     ///@name Protected member Variables
     ///@{
-
-
-    const BaseType::Pointer mp_level_set;
 
 
     ///@}
@@ -207,6 +206,8 @@ private:
     ///@name Member Variables
     ///@{
 
+    const typename BaseType::Pointer mp_func_1;
+    const typename BaseType::Pointer mp_func_2;
 
     ///@}
     ///@name Private Operators
@@ -233,15 +234,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    InverseLevelSet& operator=(InverseLevelSet const& rOther);
+    SumFunction& operator=(SumFunction const& rOther);
 
     /// Copy constructor.
-    InverseLevelSet(InverseLevelSet const& rOther);
+    SumFunction(SumFunction const& rOther);
 
 
     ///@}
 
-}; // Class InverseLevelSet
+}; // Class SumFunction
 
 ///@}
 
@@ -254,12 +255,14 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream, InverseLevelSet& rThis)
+/// input stream SumFunction
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, SumFunction<TFunction>& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet& rThis)
+/// output stream SumFunction
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const SumFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -273,4 +276,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_INVERSE_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_SUM_FUNCTION_H_INCLUDED  defined

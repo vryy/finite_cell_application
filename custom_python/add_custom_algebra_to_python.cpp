@@ -13,28 +13,28 @@
 #include "includes/element.h"
 #include "containers/array_1d.h"
 #include "custom_python/add_custom_algebra_to_python.h"
-#include "custom_algebra/function.h"
-#include "custom_algebra/heaviside_function.h"
-#include "custom_algebra/scalar_function.h"
-#include "custom_algebra/zero_function.h"
-#include "custom_algebra/monomial_function.h"
-#include "custom_algebra/trigonometric_function.h"
-#include "custom_algebra/product_function.h"
-#include "custom_algebra/sum_function.h"
-#include "custom_algebra/scale_function.h"
-#include "custom_algebra/pow_function.h"
-#include "custom_algebra/negate_function.h"
-#include "custom_algebra/inverse_function.h"
-#include "custom_algebra/level_set.h"
-#include "custom_algebra/product_level_set.h"
-#include "custom_algebra/inverse_level_set.h"
-#include "custom_algebra/circular_level_set.h"
-#include "custom_algebra/spherical_level_set.h"
-#include "custom_algebra/linear_level_set.h"
-#include "custom_algebra/planar_level_set.h"
-#include "custom_algebra/load_function_plate_with_the_hole.h"
-#include "custom_algebra/parametric_curve.h"
-#include "custom_algebra/parametric_surface.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/heaviside_function.h"
+#include "custom_algebra/function/scalar_function.h"
+#include "custom_algebra/function/zero_function.h"
+#include "custom_algebra/function/monomial_function.h"
+#include "custom_algebra/function/trigonometric_function.h"
+#include "custom_algebra/function/product_function.h"
+#include "custom_algebra/function/sum_function.h"
+#include "custom_algebra/function/scale_function.h"
+#include "custom_algebra/function/pow_function.h"
+#include "custom_algebra/function/negate_function.h"
+#include "custom_algebra/function/inverse_function.h"
+#include "custom_algebra/level_set/level_set.h"
+#include "custom_algebra/level_set/product_level_set.h"
+#include "custom_algebra/level_set/inverse_level_set.h"
+#include "custom_algebra/level_set/circular_level_set.h"
+#include "custom_algebra/level_set/spherical_level_set.h"
+#include "custom_algebra/level_set/linear_level_set.h"
+#include "custom_algebra/level_set/planar_level_set.h"
+#include "custom_algebra/function/load_function_plate_with_the_hole.h"
+#include "custom_algebra/curve/parametric_curve.h"
+#include "custom_algebra/surface/parametric_surface.h"
 
 
 namespace Kratos
@@ -268,13 +268,13 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     typedef ScaleFunction<FunctionR3R1> ScaleFunctionR3R1;
     class_<ScaleFunctionR3R1, ScaleFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("ScaleFunctionR3R1", init<const double, const FunctionR3R1::Pointer&>())
+    ("ScaleFunctionR3R1", init<const double&, const FunctionR3R1::Pointer&>())
     ;
 
     typedef PowFunction<FunctionR3R1> PowFunctionR3R1;
     class_<PowFunctionR3R1, PowFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("PowFunctionR3R1", init<const double, const FunctionR3R1::Pointer&>())
-    .def(init<const FunctionR3R1::Pointer&, const double>())
+    ("PowFunctionR3R1", init<const double&, const FunctionR3R1::Pointer&>())
+    .def(init<const FunctionR3R1::Pointer&, const double&>())
     ;
 
     typedef NegateFunction<FunctionR3R1> NegateFunctionR3R1;
@@ -328,12 +328,16 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ("MonomialFunctionR3R1X2", init<>())
     ;
 
-    class_<MonomialFunctionR3R1<1, 1, 0>, MonomialFunctionR3R1<1, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("MonomialFunctionR3R1XY", init<>())
-    ;
-
     class_<MonomialFunctionR3R1<0, 2, 0>, MonomialFunctionR3R1<0, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
     ("MonomialFunctionR3R1Y2", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<0, 0, 2>, MonomialFunctionR3R1<0, 0, 2>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Z2", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<1, 1, 0>, MonomialFunctionR3R1<1, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XY", init<>())
     ;
 
     class_<MonomialFunctionR3R1<0, 1, 1>, MonomialFunctionR3R1<0, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
@@ -348,6 +352,14 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ("MonomialFunctionR3R1X3", init<>())
     ;
 
+    class_<MonomialFunctionR3R1<0, 3, 0>, MonomialFunctionR3R1<0, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Y3", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<0, 0, 3>, MonomialFunctionR3R1<0, 0, 3>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Z3", init<>())
+    ;
+
     class_<MonomialFunctionR3R1<2, 1, 0>, MonomialFunctionR3R1<2, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
     ("MonomialFunctionR3R1X2Y", init<>())
     ;
@@ -356,17 +368,49 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ("MonomialFunctionR3R1XY2", init<>())
     ;
 
-    class_<MonomialFunctionR3R1<0, 3, 0>, MonomialFunctionR3R1<0, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("MonomialFunctionR3R1Y3", init<>())
+    //....More for third order
+
+    class_<MonomialFunctionR3R1<4, 0, 0>, MonomialFunctionR3R1<4, 0, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X4", init<>())
     ;
 
-    class_<MonomialFunctionR3R1<1, 1, 1>, MonomialFunctionR3R1<1, 1, 1>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("MonomialFunctionR3R1XYZ", init<>())
+    class_<MonomialFunctionR3R1<0, 4, 0>, MonomialFunctionR3R1<0, 4, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Y4", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<0, 0, 4>, MonomialFunctionR3R1<0, 0, 4>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1Z4", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<3, 1, 0>, MonomialFunctionR3R1<3, 1, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X3Y", init<>())
     ;
 
     class_<MonomialFunctionR3R1<2, 2, 0>, MonomialFunctionR3R1<2, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
     ("MonomialFunctionR3R1X2Y2", init<>())
     ;
+
+    class_<MonomialFunctionR3R1<1, 3, 0>, MonomialFunctionR3R1<1, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1XY3", init<>())
+    ;
+
+    //....More for fourth order
+
+    class_<MonomialFunctionR3R1<3, 2, 0>, MonomialFunctionR3R1<3, 2, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X3Y2", init<>())
+    ;
+
+    class_<MonomialFunctionR3R1<2, 3, 0>, MonomialFunctionR3R1<2, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X2Y3", init<>())
+    ;
+
+    //....More for fifth order
+
+    class_<MonomialFunctionR3R1<3, 3, 0>, MonomialFunctionR3R1<3, 3, 0>::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MonomialFunctionR3R1X3Y3", init<>())
+    ;
+
+    //....More for sixth order
 
     class_<LoadFunctionR3RnPlateWithTheHole<0>, LoadFunctionR3RnPlateWithTheHole<0>::Pointer, boost::noncopyable, bases<FunctionR3Rn> >
     ("LoadFunctionR3RnPlateWithTheHoleX", init<const double, const double>())
@@ -382,7 +426,7 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     int(LevelSet::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &LevelSet::CutStatus;
 
-    class_<LevelSet, LevelSet::Pointer, boost::noncopyable>
+    class_<LevelSet, LevelSet::Pointer, boost::noncopyable, bases<FunctionR3R1> >
     ( "LevelSet", init<>() )
     .def("CutStatus", pointer_to_CutStatus)
     .def(self_ns::str(self))

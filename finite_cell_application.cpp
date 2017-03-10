@@ -15,6 +15,8 @@
 
 
 // Project includes
+#include "geometries/point_2d.h"
+#include "geometries/point_3d.h"
 #include "finite_cell_application.h"
 
 
@@ -24,6 +26,8 @@ namespace Kratos
     KRATOS_CREATE_VARIABLE( boost::python::object, LOAD_FUNCTION )
 
     KratosFiniteCellApplication::KratosFiniteCellApplication()
+    : mDummyPointCondition2D( 0, Element::GeometryType::Pointer( new Point2D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
+    , mDummyPointCondition3D( 0, Element::GeometryType::Pointer( new Point3D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
     {}
 
     void KratosFiniteCellApplication::Register()
@@ -35,6 +39,9 @@ namespace Kratos
         // register variables to Kratos kernel
         KRATOS_REGISTER_VARIABLE( LOAD_FUNCTION )
 
+        // register conditions to Kratos kernel
+        KRATOS_REGISTER_CONDITION("DummyPointCondition2D", mDummyPointCondition2D)
+        KRATOS_REGISTER_CONDITION("DummyPointCondition3D", mDummyPointCondition3D)
     }
 
 } // namespace Kratos

@@ -31,7 +31,7 @@
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "geometries/line_3d_2.h"
-#include "custom_algebra/function.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -78,6 +78,31 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    struct SpatialKey
+    {
+        public:
+            SpatialKey(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
+            bool operator<(const SpatialKey& rOther) const
+            {
+                if(x == rOther.x)
+                {
+                    if(y == rOther.y)
+                    {
+                        return z < rOther.z;
+                    }
+                    else
+                        return y < rOther.y;
+                }
+                else
+                    return x < rOther.x;
+            }
+            int kx() const {return x;}
+            int ky() const {return y;}
+            int kz() const {return z;}
+        private:
+            int x, y, z;
+    };
+
     ///@}
     ///@name Life Cycle
     ///@{
@@ -99,6 +124,41 @@ public:
     ///@{
 
 
+    void InitializeBinning(ModelPart::ElementsContainerType& pElements,
+            const double& Dx, const double& Dy, const double& Dz)
+    {
+        mDx = Dx;
+        mDy = Dy;
+        mDz = Dz;
+
+        for( typename ModelPart::ElementsContainerType::ptr_iterator it = pElements.ptr_begin();
+                it != pElements.ptr_end(); ++it )
+        {
+            Element::GeometryType& r_geom = (*it)->GetGeometry();
+
+            for(std::size_t i = 0; i < r_geom.size(); ++i)
+            {
+                // find the cell containing point
+                int ix, iy, iz;
+                if(mDx != 0.0) ix = (int) floor(r_geom[i].X()) / mDx;
+                else ix = 0;
+                if(mDy != 0.0) iy = (int) floor(r_geom[i].Y()) / mDy;
+                else iy = 0;
+                if(mDz != 0.0) iz = (int) floor(r_geom[i].Z()) / mDz;
+                else iz = 0;
+
+                // create the spatial key
+                SpatialKey key(ix, iy, iz);
+
+                // insert the element to spatial bin
+                mBinElements[key].insert((*it)->Id());
+            }
+        }
+
+        std::cout << "Setup binning completed" << std::endl;
+    }
+
+
     /// Sampling along the parametric curve to provide a list of points and corresponding variational length and weight
     template<class TCurveType>
     static void SamplingCurve(const TCurveType& rCurve, const double& tmin, const double& tmax, const int& integration_order,
@@ -115,6 +175,9 @@ public:
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = SampleLine.IntegrationPoints( ThisIntegrationMethod );
 
+        if(rCoordinates.size() != integration_points.size())
+            rCoordinates.resize(integration_points.size());
+
         if(rPoints.size() != integration_points.size())
             rPoints.resize(integration_points.size());
 
@@ -124,10 +187,9 @@ public:
         if(rWeights.size() != integration_points.size())
             rWeights.resize(integration_points.size());
 
-        double t;
         for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            t = 0.5*(tmax+tmin) + 0.5*(tmax-tmin)*integration_points[point].X();
+            double t = 0.5*(tmax+tmin) + 0.5*(tmax-tmin)*integration_points[point].X();
 
             rCoordinates[point] = t;
 
@@ -136,12 +198,18 @@ public:
             PointType tangent = rCurve.GetDerivative(0, t);
             rDlength[point] = norm_2(tangent);
 
-            rWeights[point] = integration_points[point].Weight();
+            rWeights[point] = integration_points[point].Weight() * 0.5 * (tmax-tmin);
+//KRATOS_WATCH(t)
+//KRATOS_WATCH(integration_points[point].X())
+//KRATOS_WATCH(tangent)
+//KRATOS_WATCH(rDlength[point])
+//KRATOS_WATCH(rWeights[point])
         }
     }
 
 
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
+    /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     static bool SearchPartner( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
             Element::Pointer& pTargetElement, PointType& rLocalTargetPoint )
     {
@@ -181,6 +249,45 @@ public:
             {
                 pTargetElement = *it;
                 return true;
+            }
+        }
+
+        std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+        return false;
+    }
+
+
+    /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
+    /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
+    bool SearchPartnerWithBin( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
+            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint ) const
+    {
+        ModelPart::ElementsContainerType pMasterElementsCandidates;
+
+        // get the containing elements from the bin
+        int ix, iy, iz;
+        if(mDx != 0.0) ix = (int) floor(rSourcePoint.X()) / mDx;
+        else ix = 0;
+        if(mDy != 0.0) iy = (int) floor(rSourcePoint.Y()) / mDy;
+        else iy = 0;
+        if(mDz != 0.0) iz = (int) floor(rSourcePoint.Z()) / mDz;
+        else iz = 0;
+
+        SpatialKey key(ix, iy, iz);
+        std::map<SpatialKey, std::set<std::size_t> >::const_iterator it_bin_elements = mBinElements.find(key);
+
+        if(it_bin_elements != mBinElements.end())
+        {
+            for(std::set<std::size_t>::const_iterator it = it_bin_elements->second.begin(); it != it_bin_elements->second.end(); ++it )
+            {
+                Element::GeometryType& r_geom = pMasterElements[*it].GetGeometry();
+
+                bool is_inside = r_geom.IsInside( rSourcePoint, rLocalTargetPoint );
+                if( is_inside )
+                {
+                    pTargetElement = pMasterElements(*it);
+                    return true;
+                }
             }
         }
 
@@ -275,6 +382,10 @@ private:
     ///@{
 
 
+    double mDx, mDy, mDz;
+    std::map<SpatialKey, std::set<std::size_t> > mBinElements;
+
+
     ///@}
     ///@name Private Operators
     ///@{
@@ -323,7 +434,9 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream, ImmersedBoundaryUtility& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream, const ImmersedBoundaryUtility& rThis)

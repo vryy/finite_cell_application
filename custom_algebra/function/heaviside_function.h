@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            10 Feb 2017
+//  Date:            14 Feb 2017
 //
 
 
-#if !defined(KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED )
+#define  KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED
 
 
 
@@ -27,7 +27,9 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/level_set.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/zero_function.h"
+#include "custom_algebra/level_set/level_set.h"
 
 
 namespace Kratos
@@ -47,7 +49,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  Functions
+///@name  HeavisideFunctions
 ///@{
 
 ///@}
@@ -55,30 +57,37 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Detail class definition.
+/** Class for a general HeavisideFunction
 */
-class CircularLevelSet : public LevelSet
+template<class TFunction>
+class HeavisideFunction : public TFunction
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of CircularLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(CircularLevelSet);
+    /// Pointer definition of HeavisideFunction
+    KRATOS_CLASS_POINTER_DEFINITION(HeavisideFunction);
 
-    typedef LevelSet BaseType;
+    typedef TFunction BaseType;
+
+    typedef typename BaseType::InputType InputType;
+
+    typedef typename BaseType::OutputType OutputType;
+
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    CircularLevelSet(const double& cX, const double& cY, const double& R)
-    : BaseType(), mcX(cX), mcY(cY), mR(R)
+    HeavisideFunction(const LevelSet& r_level_set)
+    : mr_level_set(r_level_set)
     {}
 
     /// Destructor.
-    virtual ~CircularLevelSet() {}
+    virtual ~HeavisideFunction()
+    {}
 
 
     ///@}
@@ -91,24 +100,24 @@ public:
     ///@{
 
 
-    virtual std::size_t WorkingSpaceDimension() const
+    virtual double GetValue(const InputType& P) const
     {
-        return 2;
+        if(mr_level_set.GetValue(P) < 0.0)
+            return 1.0;
+        else
+            return 0.0;
     }
 
 
-    virtual double GetValue(const PointType& P) const
+    virtual std::string GetFormula(const std::string& Format) const
     {
-        return pow(P(0) - mcX, 2) + pow(P(1) - mcY, 2) - pow(mR, 2);
+        return "H(L)";
     }
 
 
-    virtual Vector GetGradient(const PointType& P) const
+    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        Vector grad(2);
-        grad(0) = 2.0 * (P(0) - mcX);
-        grad(1) = 2.0 * (P(1) - mcY);
-        return grad;
+        return typename BaseType::Pointer(new ZeroFunction<TFunction>());
     }
 
 
@@ -129,16 +138,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Circular Level Set";
+        return "Heaviside Function";
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        rOStream << "cX: " << mcX << ", cY: " << mcY << ", R: " << mR;
     }
 
 
@@ -195,9 +206,7 @@ private:
     ///@name Member Variables
     ///@{
 
-
-    double mcX, mcY, mR;
-
+    const LevelSet& mr_level_set;
 
     ///@}
     ///@name Private Operators
@@ -224,15 +233,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    CircularLevelSet& operator=(CircularLevelSet const& rOther);
+    HeavisideFunction& operator=(HeavisideFunction const& rOther);
 
     /// Copy constructor.
-    CircularLevelSet(CircularLevelSet const& rOther);
+    HeavisideFunction(HeavisideFunction const& rOther);
 
 
     ///@}
 
-}; // Class CircularLevelSet
+}; // Class HeavisideFunction
 
 ///@}
 
@@ -245,14 +254,14 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                CircularLevelSet& rThis)
+/// input stream HeavisideFunction
+template<class TFunction>
+inline std::istream& operator >> (std::istream& rIStream, HeavisideFunction<TFunction>& rThis)
 {}
 
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const CircularLevelSet& rThis)
+/// output stream HeavisideFunction
+template<class TFunction>
+inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunction<TFunction>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -266,4 +275,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_CIRCULAR_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED  defined

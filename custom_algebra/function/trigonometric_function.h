@@ -27,11 +27,11 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
-#include "custom_algebra/product_function.h"
-#include "custom_algebra/negate_function.h"
-#include "custom_algebra/pow_function.h"
-#include "custom_algebra/scalar_function.h"
+#include "custom_algebra/function/function.h"
+#include "custom_algebra/function/product_function.h"
+#include "custom_algebra/function/negate_function.h"
+#include "custom_algebra/function/pow_function.h"
+#include "custom_algebra/function/scalar_function.h"
 
 namespace Kratos
 {

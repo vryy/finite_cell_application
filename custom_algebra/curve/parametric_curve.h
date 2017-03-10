@@ -8,18 +8,17 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            20 Feb 2017
+//  Date:            24 Feb 2017
 //
 
 
-#if !defined(KRATOS_LOAD_FUNCTION_PLATE_WITH_THE_HOLE_H_INCLUDED )
-#define  KRATOS_LOAD_FUNCTION_PLATE_WITH_THE_HOLE_H_INCLUDED
+#if !defined(KRATOS_PARAMETRIC_CURVE_H_INCLUDED )
+#define  KRATOS_PARAMETRIC_CURVE_H_INCLUDED
 
 
 
 // System includes
 #include <string>
-#include <sstream>
 #include <iostream>
 
 
@@ -28,7 +27,10 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "geometries/geometry_data.h"
+#include "custom_algebra/function/function.h"
 
 
 namespace Kratos
@@ -48,7 +50,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  LoadFunctionR3RnPlateWithTheHoles
+///@name  Functions
 ///@{
 
 ///@}
@@ -56,37 +58,35 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for the load apply on the sides of the standard plate with the hole problem
+/** Abstract class for a parametric curve in 3D
 */
-template<std::size_t tload_side>
-class LoadFunctionR3RnPlateWithTheHole : public FunctionR3Rn
+class ParametricCurve : public FunctionR1R3
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of LoadFunctionR3RnPlateWithTheHole
-    KRATOS_CLASS_POINTER_DEFINITION(LoadFunctionR3RnPlateWithTheHole);
+    /// Pointer definition of ParametricCurve
+    KRATOS_CLASS_POINTER_DEFINITION(ParametricCurve);
 
-    typedef FunctionR3Rn BaseType;
+    typedef FunctionR1R3 BaseType;
 
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
-
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    LoadFunctionR3RnPlateWithTheHole(const double P, const double r)
-    : mP(P), mr(r)
+    ParametricCurve(const FunctionR1R1::Pointer& p_func_x,
+        const FunctionR1R1::Pointer& p_func_y, const FunctionR1R1::Pointer& p_func_z)
+    : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
     /// Destructor.
-    virtual ~LoadFunctionR3RnPlateWithTheHole()
-    {}
+    virtual ~ParametricCurve() {}
 
 
     ///@}
@@ -99,33 +99,29 @@ public:
     ///@{
 
 
-    virtual OutputType GetValue(const InputType& P) const
+    /// inherit from Function
+    virtual OutputType GetValue(const InputType& t) const
     {
-        double r = sqrt(pow(P[0], 2) + pow(P[1], 2));
-        double theta = acos(P[0]/r);
-//        KRATOS_WATCH(P)
+        OutputType P;
 
-        /// REF: Liu et al, Mesh Free Methods: Moving Beyond the Finite Element Method, example 6.11
-        double o_xx = mP * (1.0 - pow(mr/r, 2) * (1.5*cos(2.0*theta) + cos(4.0*theta)) + 1.5*pow(mr/r, 4)*cos(4.0*theta));
-        double o_yy = mP * (-pow(mr/r, 2) * (0.5*cos(2.0*theta) - cos(4.0*theta)) - 1.5*pow(mr/r, 4)*cos(4.0*theta));
-        double o_xy = mP * (-pow(mr/r, 2) * (0.5*sin(2.0*theta) + sin(4.0*theta)) + 1.5*pow(mr/r, 4)*sin(4.0*theta)); // here the equation in the book is wrong, I have to manually fix this
+        P[0] = mp_func_x->GetValue(t);
+        P[1] = mp_func_y->GetValue(t);
+        P[2] = mp_func_z->GetValue(t);
 
-        Vector Load(2);
-        double nx, ny;
-        if(tload_side == 0)
-        {
-            nx = 1.0;
-            ny = 0.0;
-        }
-        else if(tload_side == 1)
-        {
-            nx = 0.0;
-            ny = 1.0;
-        }
-        Load[0] = o_xx * nx + o_xy * ny;
-        Load[1] = o_xy * nx + o_yy * ny;
+        return P;
+    }
 
-        return Load;
+
+    /// inherit from Function
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(
+                    new ParametricCurve(
+                        mp_func_x->GetDiffFunction(component),
+                        mp_func_y->GetDiffFunction(component),
+                        mp_func_z->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -146,9 +142,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        std::stringstream ss;
-        ss << "Load Function for plate with the hole problem: P = " << mP << ", mr = " << mr;
-        return ss.str();
+        return "Parametric Curve";
     }
 
     /// Print information about this object.
@@ -216,7 +210,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    double mP, mr;
+    FunctionR1R1::Pointer mp_func_x;
+    FunctionR1R1::Pointer mp_func_y;
+    FunctionR1R1::Pointer mp_func_z;
 
     ///@}
     ///@name Private Operators
@@ -243,15 +239,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    LoadFunctionR3RnPlateWithTheHole& operator=(LoadFunctionR3RnPlateWithTheHole const& rOther);
+    ParametricCurve& operator=(ParametricCurve const& rOther);
 
     /// Copy constructor.
-    LoadFunctionR3RnPlateWithTheHole(LoadFunctionR3RnPlateWithTheHole const& rOther);
+    ParametricCurve(ParametricCurve const& rOther);
 
 
     ///@}
 
-}; // Class LoadFunctionR3RnPlateWithTheHole
+}; // Class ParametricCurve
 
 ///@}
 
@@ -264,14 +260,12 @@ private:
 ///@{
 
 
-/// input stream LoadFunctionR3RnPlateWithTheHole
-template<std::size_t tload_side>
-inline std::istream& operator >> (std::istream& rIStream, LoadFunctionR3RnPlateWithTheHole<tload_side>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, ParametricCurve& rThis)
 {}
 
-/// output stream LoadFunctionR3RnPlateWithTheHole
-template<std::size_t tload_side>
-inline std::ostream& operator << (std::ostream& rOStream, const LoadFunctionR3RnPlateWithTheHole<tload_side>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const ParametricCurve& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -285,4 +279,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const LoadFunctionR3Rn
 
 }  // namespace Kratos.
 
-#endif // KRATOS_LOAD_FUNCTION_PLATE_WITH_THE_HOLE_H_INCLUDED  defined
+#endif // KRATOS_EXPLICIT_CURVE_H_INCLUDED  defined
