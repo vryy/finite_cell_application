@@ -1,12 +1,12 @@
 //   
 //   Project Name:        Kratos       
 //   Last Modified by:    $Author: hbui $
-//   Date:                $Date: 1 Mar 17 $
+//   Date:                $Date: 17 Mar 17 $
 //   Revision:            $Revision: 1.0 $
 //
 //
-#if !defined(KRATOS_DUMMY_POINT_CONDITION_H_INCLUDED )
-#define  KRATOS_DUMMY_POINT_CONDITION_H_INCLUDED
+#if !defined(KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED )
+#define  KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED
 
 
 // External includes 
@@ -24,51 +24,51 @@ namespace Kratos
 {
 /**
  */
-class DummyPointCondition : public Condition
+class ElementWrapperCondition : public Condition
 {
     public:
-        // Counted pointer of DummyPointCondition
-        KRATOS_CLASS_POINTER_DEFINITION(DummyPointCondition);
+        // Counted pointer of ElementWrapperCondition
+        KRATOS_CLASS_POINTER_DEFINITION(ElementWrapperCondition);
         
         /** 
          * Default constructor.
          */
-        DummyPointCondition();
-        DummyPointCondition( IndexType NewId, GeometryType::Pointer pGeometry);
-        DummyPointCondition( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+        ElementWrapperCondition();
+        ElementWrapperCondition( IndexType NewId, Element::Pointer pElement);
+        ElementWrapperCondition( IndexType NewId, Element::Pointer pElement, PropertiesType::Pointer pProperties);
 
         /**
          * Destructor.
          */
-        virtual ~DummyPointCondition();
+        virtual ~ElementWrapperCondition();
   
         /**
          * Operations.
          */
 
-        virtual Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
-                                PropertiesType::Pointer pProperties) const;
+        virtual void InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo);
 
-        virtual Condition::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
-                                PropertiesType::Pointer pProperties) const;
+        virtual void InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
 
-        /**
-         * Calculates the local system contributions for this contact element
-         */
-        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
+        virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
                                    VectorType& rRightHandSideVector, 
                                    ProcessInfo& rCurrentProcessInfo);
 
-        void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+        virtual void CalculateRightHandSide( VectorType& rRightHandSideVector, 
                                      ProcessInfo& rCurrentProcessInfo);
 
-        void EquationIdVector( EquationIdVectorType& rResult, 
+        virtual void FinalizeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
+
+        virtual void FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo);
+
+        virtual void EquationIdVector( EquationIdVectorType& rResult, 
                                ProcessInfo& rCurrentProcessInfo);
 
-        void GetDofList( DofsVectorType& ConditionalDofList,
+        virtual void GetDofList( DofsVectorType& ConditionalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
-        void Initialize();
+        virtual void Initialize();
+
         /**
          * Turn back information as a string.
          * (DEACTIVATED)
@@ -87,10 +87,9 @@ class DummyPointCondition : public Condition
          */
         //virtual void PrintData(std::ostream& rOStream) const;
   
-    protected:
-    
-    
     private:
+
+        Element::Pointer mpElement;
 
         friend class Serializer;
 
@@ -104,16 +103,10 @@ class DummyPointCondition : public Condition
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }
 
-        void CalculateAll( MatrixType& rLeftHandSideMatrix, 
-                           VectorType& rRightHandSideVector,
-                           ProcessInfo& rCurrentProcessInfo,
-                           bool CalculateStiffnessMatrixFlag,
-                           bool CalculateResidualVectorFlag);
-
-}; // Class DummyPointCondition 
+}; // Class ElementWrapperCondition 
 
 }  // namespace Kratos.
   
 
-#endif // KRATOS_DUMMY_POINT_CONDITION_H_INCLUDED defined 
+#endif // KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED defined 
 

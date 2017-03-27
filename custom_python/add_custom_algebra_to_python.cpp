@@ -25,6 +25,7 @@
 #include "custom_algebra/function/pow_function.h"
 #include "custom_algebra/function/negate_function.h"
 #include "custom_algebra/function/inverse_function.h"
+#include "custom_algebra/brep.h"
 #include "custom_algebra/level_set/level_set.h"
 #include "custom_algebra/level_set/product_level_set.h"
 #include "custom_algebra/level_set/inverse_level_set.h"
@@ -421,14 +422,22 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ;
 
     /**************************************************************/
+    /************* EXPORT INTERFACE FOR BREP **********************/
+    /**************************************************************/
+
+    int(BRep::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &BRep::CutStatus;
+
+    class_<BRep, BRep::Pointer, boost::noncopyable>
+    ( "BRep", init<>() )
+    .def("CutStatus", pointer_to_CutStatus)
+    ;
+
+    /**************************************************************/
     /************* EXPORT INTERFACE FOR LEVEL SET *****************/
     /**************************************************************/
 
-    int(LevelSet::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &LevelSet::CutStatus;
-
-    class_<LevelSet, LevelSet::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    class_<LevelSet, LevelSet::Pointer, boost::noncopyable, bases<FunctionR3R1, BRep> >
     ( "LevelSet", init<>() )
-    .def("CutStatus", pointer_to_CutStatus)
     .def(self_ns::str(self))
     ;
 

@@ -25,7 +25,7 @@
 #include "includes/variables.h"
 #include "includes/kratos_components.h"
 #include "includes/kratos_application.h"
-#include "custom_conditions/dummy_point_condition.h"
+#include "custom_conditions/dummy_condition.h"
 
 
 namespace Kratos
@@ -35,6 +35,7 @@ namespace Kratos
     ///@{
 
     KRATOS_DEFINE_VARIABLE( boost::python::object, LOAD_FUNCTION )
+    KRATOS_DEFINE_VARIABLE( int, CUT_STATUS )
 
     ///@}
     ///@name Type Definitions
@@ -181,8 +182,20 @@ namespace Kratos
         ///@name Member Variables
         ///@{
 
-        DummyPointCondition mDummyPointCondition2D;
-        DummyPointCondition mDummyPointCondition3D;
+        const DummyCondition mDummyConditionPoint2D;
+        const DummyCondition mDummyConditionPoint3D;
+        const DummyCondition mDummyCondition2D3N;
+        const DummyCondition mDummyCondition2D4N;
+        const DummyCondition mDummyCondition2D6N;
+        const DummyCondition mDummyCondition2D8N;
+        const DummyCondition mDummyCondition2D9N;
+        const DummyCondition mDummyCondition3D4N;
+        const DummyCondition mDummyCondition3D10N;
+        const DummyCondition mDummyCondition3D8N;
+        const DummyCondition mDummyCondition3D20N;
+        const DummyCondition mDummyCondition3D27N;
+        const DummyCondition mDummyCondition3D6N;
+        const DummyCondition mDummyCondition3D15N;
 
         ///@}
         ///@name Private Operators

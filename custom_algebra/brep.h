@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            13 Mar 2017
 //
 
 
-#if !defined(KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED )
-#define  KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_BREP_H_INCLUDED )
+#define  KRATOS_BREP_H_INCLUDED
 
 
 
@@ -27,9 +27,9 @@
 
 // Project includes
 #include "includes/define.h"
-#include "custom_algebra/function/function.h"
-#include "custom_algebra/function/zero_function.h"
-#include "custom_algebra/brep.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "geometries/geometry_data.h"
 
 
 namespace Kratos
@@ -49,7 +49,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  HeavisideFunctions
+///@name  Functions
 ///@{
 
 ///@}
@@ -57,37 +57,36 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general HeavisideFunction
+/** Abstract class for a boundary representation
 */
-template<class TFunction>
-class HeavisideFunction : public TFunction
+class BRep
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of HeavisideFunction
-    KRATOS_CLASS_POINTER_DEFINITION(HeavisideFunction);
+    /// Pointer definition of BRep
+    KRATOS_CLASS_POINTER_DEFINITION(BRep);
 
-    typedef TFunction BaseType;
+    typedef FunctionR3R1 BaseType;
 
-    typedef typename BaseType::InputType InputType;
+    typedef typename Element::GeometryType GeometryType;
 
-    typedef typename BaseType::OutputType OutputType;
+    typedef typename GeometryType::PointType NodeType;
 
+    typedef typename NodeType::PointType PointType;
+
+    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    HeavisideFunction(const BRep& r_brep)
-    : mr_brep(r_brep)
-    {}
+    BRep() {}
 
     /// Destructor.
-    virtual ~HeavisideFunction()
-    {}
+    virtual ~BRep() {}
 
 
     ///@}
@@ -100,24 +99,55 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    // returns working space dimension
+    virtual std::size_t WorkingSpaceDimension() const
     {
-        if(mr_brep.IsInside(P))
-            return 1.0;
-        else
-            return 0.0;
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    // returns local space dimension
+    virtual std::size_t LocalSpaceDimension() const
     {
-        return "H(L)";
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
+    /// Check if a point is inside/outside of the BRep
+    virtual bool IsInside(const PointType& P) const
     {
-        return typename BaseType::Pointer(new ZeroFunction<TFunction>());
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+    }
+
+
+    /// Check if a point is on the boundary within a tolerance
+    virtual bool IsOnBoundary(const PointType& P, const double& tol) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+    }
+
+
+    /// Check if an element is cut by the level set
+    int CutStatus(Element::Pointer& p_elem) const
+    {
+        return CutStatus(p_elem->GetGeometry());
+    }
+
+
+    /// Check if a geometry is cut by the level set
+    /// 0: the cell is completely inside the domain bounded by level set
+    /// 1: completely outside
+    /// -1: the cell is cut by level set
+    virtual int CutStatus(GeometryType& r_geom) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+    }
+
+
+    /// Compute the intersection of the BRep with a line connect by 2 points.
+    virtual PointType Bisect(const PointType& P1, const PointType& P2, const double& tol) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
@@ -138,7 +168,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Heaviside Function";
+        return "BRep";
     }
 
     /// Print information about this object.
@@ -206,7 +236,6 @@ private:
     ///@name Member Variables
     ///@{
 
-    const BRep& mr_brep;
 
     ///@}
     ///@name Private Operators
@@ -233,15 +262,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    HeavisideFunction& operator=(HeavisideFunction const& rOther);
+    BRep& operator=(BRep const& rOther);
 
     /// Copy constructor.
-    HeavisideFunction(HeavisideFunction const& rOther);
+    BRep(BRep const& rOther);
 
 
     ///@}
 
-}; // Class HeavisideFunction
+}; // Class BRep
 
 ///@}
 
@@ -254,14 +283,12 @@ private:
 ///@{
 
 
-/// input stream HeavisideFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, HeavisideFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, BRep& rThis)
 {}
 
-/// output stream HeavisideFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const BRep& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -275,4 +302,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const HeavisideFunctio
 
 }  // namespace Kratos.
 
-#endif // KRATOS_HEAVISIDE_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_BREP_H_INCLUDED  defined

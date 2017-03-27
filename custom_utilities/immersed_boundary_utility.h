@@ -296,6 +296,29 @@ public:
     }
 
 
+    /// "Auxiliary method"
+    /// Clean the set of conditions from the model_part (for the most used case, that is the linking conditions)
+    void Clean(ModelPart& r_model_part, ModelPart::ConditionsContainerType& rConditions, const int& echo_level) const
+    {
+        // r_model_part.Conditions().erase(rConditions.begin(), rConditions.end());
+        unsigned int cnt = 0, first_id = 0, last_id = 0;
+        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = rConditions.ptr_begin();
+                it != rConditions.ptr_end(); ++it)
+        {
+            if(cnt == 0)
+                first_id = (*it)->Id();
+            last_id = (*it)->Id();
+
+            r_model_part.RemoveCondition(*it);
+
+            ++cnt;
+        }
+
+        if(echo_level > 0)
+            std::cout << cnt << " conditions: " << first_id << "->" << last_id << " is removed from model_part" << std::endl;
+    }
+
+
     ///@}
     ///@name Access
     ///@{

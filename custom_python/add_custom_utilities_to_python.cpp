@@ -17,7 +17,7 @@
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/div_free_basis_utility.h"
 #include "custom_utilities/moment_fitting_utility.h"
-#include "custom_utilities/moment_fitted_quad_tree_garden.h"
+#include "custom_utilities/moment_fitted_quad_tree_subcell.h"
 
 
 namespace Kratos
@@ -131,13 +131,24 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     ("MomentFittingUtility", init<>())
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<2> >)
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<3> >)
-    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<QuadTree >)
+    .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<QuadTree>)
     .def("ScaleQuadrature", &MomentFittingUtility::PyScaleQuadrature)
     .def("SaveQuadrature", &MomentFittingUtility::PySaveQuadrature)
     ;
 
-    class_<MomentFittedQuadTreeGarden, MomentFittedQuadTreeGarden::Pointer, boost::noncopyable>
-    ("QuadTreeGarden", init<Element::Pointer&, const int&>())
+    class_<MomentFittedQuadTreeSubCell, MomentFittedQuadTreeSubCell::Pointer, boost::noncopyable>
+    ("MomentFittedQuadTreeSubCell", init<Element::Pointer&, const std::string&, const int&>())
+    .def(init<Element::Pointer&, const std::string&, const std::size_t&, const std::size_t&>())
+    .def("Refine", &MomentFittedQuadTreeSubCell::Refine)
+    .def("RefineBy", &MomentFittedQuadTreeSubCell::RefineBy)
+    .def("ShallowAddToModelPart", &MomentFittedQuadTreeSubCell::PyAddToModelPart<true>) // only add the sub-cell
+    .def("DeepAddToModelPart", &MomentFittedQuadTreeSubCell::PyAddToModelPart<false>) // add the sub-cell and all the quad-trees
+    .def("FitQuadraturePhysicalPoints", &MomentFittedQuadTreeSubCell::PyFitQuadraturePhysicalPoints)
+    .def("CreateSubCellElements", &MomentFittedQuadTreeSubCell::PyCreateSubCellElements)
+    .def("CreateParasiteElement", &MomentFittedQuadTreeSubCell::CreateParasiteElement)
+    .def("GetLastElementId", &MomentFittedQuadTreeSubCell::GetLastElementId)
+    .def("GetLastConditionId", &MomentFittedQuadTreeSubCell::GetLastConditionId)
+    .def("GetLastNodeId", &MomentFittedQuadTreeSubCell::GetLastNodeId)
     ;
 
 }

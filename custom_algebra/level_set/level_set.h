@@ -31,6 +31,7 @@
 #include "includes/ublas_interface.h"
 #include "geometries/geometry_data.h"
 #include "custom_algebra/function/function.h"
+#include "custom_algebra/brep.h"
 
 
 namespace Kratos
@@ -60,7 +61,7 @@ namespace Kratos
 /// Short class definition.
 /** Abstract class for a level set in space, both for implicit level set or nodal interpolated level set
 */
-class LevelSet : public FunctionR3R1
+class LevelSet : public FunctionR3R1, public BRep
 {
 public:
     ///@name Type Definitions
@@ -100,7 +101,15 @@ public:
     ///@{
 
 
+    /// inherit from BRep
     virtual std::size_t WorkingSpaceDimension() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
+    }
+
+
+    /// inherit from BRep
+    virtual std::size_t LocalSpaceDimension() const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
@@ -148,17 +157,26 @@ public:
 //    }
 
 
-    int CutStatus(Element::Pointer& p_elem) const
+    /// inherit from BRep
+    virtual bool IsInside(const PointType& P) const
     {
-        return CutStatus(p_elem->GetGeometry());
+        return (this->GetValue(P) < 0.0);
     }
 
 
+    /// inherit from BRep
+    virtual bool IsOnBoundary(const PointType& P, const double& tol) const
+    {
+        return (fabs(this->GetValue(P)) < tol);
+    }
+
+
+    /// inherit from BRep
     /// Check if a geometry is cut by the level set
     /// 0: the cell is inside the domain bounded by level set
     /// 1: outside
     /// -1: the cell is cut by level set
-    int CutStatus(GeometryType& r_geom) const
+    virtual int CutStatus(GeometryType& r_geom) const
     {
         std::set<std::size_t> in_list, out_list;
         for(std::size_t v = 0; v < r_geom.size(); ++v)
@@ -187,8 +205,10 @@ public:
     }
 
 
-    /// Compute the intersection of the level set with a line connect by 2 points. Note that, the checking of the level set with the line is not performed. Hence one should ensure that before calling this function.
-    PointType Bisect(const PointType& P1, const PointType& P2, const double& tol) const
+    /// inherit from BRep
+    /// Compute the intersection of the level set with a line connect by 2 points.
+    /// Note that, the checking of the intersection of the level set with the line is not performed. Hence one should ensure that before calling this function.
+    virtual PointType Bisect(const PointType& P1, const PointType& P2, const double& tol) const
     {
         double f1 = this->GetValue(P1);
         double f2 = this->GetValue(P2);

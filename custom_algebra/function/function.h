@@ -243,9 +243,16 @@ public:
     ///@name Inquiry
     ///@{
 
+    static inline int GetMaxIntegrationOrder()
+    {
+        return 5;
+    }
 
     static inline GeometryData::IntegrationMethod GetIntegrationMethod(const int& integration_order)
     {
+        if(integration_order > GetMaxIntegrationOrder())
+            KRATOS_THROW_ERROR(std::logic_error, "Does not support for integration rule with order > ", GetMaxIntegrationOrder())
+
         GeometryData::IntegrationMethod ThisIntegrationMethod;
 
         if(integration_order == 1)
@@ -269,7 +276,7 @@ public:
             ThisIntegrationMethod = GeometryData::GI_GAUSS_5;
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "Does not support for more integration points", "")
+            ThisIntegrationMethod = GeometryData::NumberOfIntegrationMethods; // this will never be obtained, just to silence the compiler
 
         return ThisIntegrationMethod;
     }

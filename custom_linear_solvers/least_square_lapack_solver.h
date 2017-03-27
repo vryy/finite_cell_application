@@ -161,12 +161,12 @@ public:
         // estimate the size of working array
         dgelsy_(&M, &N, &NRHS, A, &LDA, b, &LDB, JPVT, &RCOND, &RANK, &WORKS, &LWORK, &INFO);
         LWORK = (int) WORKS;
-        KRATOS_WATCH(LWORK)
+//        KRATOS_WATCH(LWORK)
 
         double* WORK = new double[LWORK];
 
         dgelsy_(&M, &N, &NRHS, A, &LDA, b, &LDB, JPVT, &RCOND, &RANK, WORK, &LWORK, &INFO);
-        KRATOS_WATCH(RANK)
+//        KRATOS_WATCH(RANK)
 
         if(rX.size() != N)
             rX.resize(N, false);
@@ -201,12 +201,12 @@ public:
         // estimate the size of working array
         dgelss_(&M, &N, &NRHS, A, &LDA, b, &LDB, S, &RCOND, &RANK, &WORKS, &LWORK, &INFO);
         LWORK = (int) WORKS;
-        KRATOS_WATCH(LWORK)
+//        KRATOS_WATCH(LWORK)
 
         double* WORK = new double[LWORK];
 
         dgelss_(&M, &N, &NRHS, A, &LDA, b, &LDB, S, &RCOND, &RANK, WORK, &LWORK, &INFO);
-        KRATOS_WATCH(RANK)
+//        KRATOS_WATCH(RANK)
 
         if(rX.size() != N)
             rX.resize(N, false);

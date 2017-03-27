@@ -39,6 +39,7 @@ namespace Python
         FiniteCellApplication_AddCustomUtilitiesToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )
 
     }
 

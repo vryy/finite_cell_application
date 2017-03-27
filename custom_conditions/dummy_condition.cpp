@@ -10,24 +10,24 @@
 // External includes 
 
 // Project includes 
-#include "custom_conditions/dummy_point_condition.h"
+#include "custom_conditions/dummy_condition.h"
 
 namespace Kratos
 {
 
 //************************************************************************************
 //************************************************************************************
-DummyPointCondition::DummyPointCondition()
+DummyCondition::DummyCondition()
 {
 }
 
-DummyPointCondition::DummyPointCondition( IndexType NewId, 
+DummyCondition::DummyCondition( IndexType NewId, 
                               GeometryType::Pointer pGeometry)
 : Condition( NewId, pGeometry )
 {
 }
 
-DummyPointCondition::DummyPointCondition( IndexType NewId, 
+DummyCondition::DummyCondition( IndexType NewId, 
                               GeometryType::Pointer pGeometry,
                               PropertiesType::Pointer pProperties)
 : Condition( NewId, pGeometry, pProperties )
@@ -37,7 +37,7 @@ DummyPointCondition::DummyPointCondition( IndexType NewId,
 /**
  * Destructor. Never to be called manually
  */
-DummyPointCondition::~DummyPointCondition()
+DummyCondition::~DummyCondition()
 {
 }
 
@@ -46,19 +46,19 @@ DummyPointCondition::~DummyPointCondition()
 //**** Operations ****************************************
 //********************************************************
 
-Condition::Pointer DummyPointCondition::Create(IndexType NewId, NodesArrayType const& ThisNodes,
+Condition::Pointer DummyCondition::Create(IndexType NewId, NodesArrayType const& ThisNodes,
                                         PropertiesType::Pointer pProperties) const
 {
-    return Condition::Pointer(new DummyPointCondition(NewId, GetGeometry().Create(ThisNodes), pProperties));
+    return Condition::Pointer(new DummyCondition(NewId, GetGeometry().Create(ThisNodes), pProperties));
 }
 
-Condition::Pointer DummyPointCondition::Create(IndexType NewId, GeometryType::Pointer pGeom,
+Condition::Pointer DummyCondition::Create(IndexType NewId, GeometryType::Pointer pGeom,
                                         PropertiesType::Pointer pProperties) const
 {
-    return Condition::Pointer(new DummyPointCondition(NewId, pGeom, pProperties));
+    return Condition::Pointer(new DummyCondition(NewId, pGeom, pProperties));
 }
 
-void DummyPointCondition::Initialize()
+void DummyCondition::Initialize()
 {
     KRATOS_TRY
     KRATOS_CATCH("")
@@ -71,7 +71,7 @@ void DummyPointCondition::Initialize()
 /**
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
-void DummyPointCondition::CalculateRightHandSide( VectorType& rRightHandSideVector, 
+void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector, 
         ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
@@ -89,7 +89,7 @@ void DummyPointCondition::CalculateRightHandSide( VectorType& rRightHandSideVect
 /**
  * calculates this contact element's local contributions
  */
-void DummyPointCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
+void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
                                           VectorType& rRightHandSideVector, 
                                           ProcessInfo& rCurrentProcessInfo)
 {
@@ -106,7 +106,7 @@ void DummyPointCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
  * with regard to the current master and slave partners.
  * All Conditions are assumed to be defined in 2D/3D space and having 2/3 DOFs per node 
  */
-void DummyPointCondition::CalculateAll( MatrixType& rLeftHandSideMatrix, 
+void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix, 
                                   VectorType& rRightHandSideVector, 
                                   ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
@@ -127,7 +127,7 @@ void DummyPointCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
 * All conditions are assumed to be defined in 2D/3D space with 2/3 DOFs per node.
 * All Equation IDs are given Master first, Slave second
 */
-void DummyPointCondition::EquationIdVector( EquationIdVectorType& rResult, 
+void DummyCondition::EquationIdVector( EquationIdVectorType& rResult, 
                                       ProcessInfo& CurrentProcessInfo)
 {
     rResult.resize(0);
@@ -142,7 +142,7 @@ void DummyPointCondition::EquationIdVector( EquationIdVectorType& rResult,
  */
 //************************************************************************************
 //************************************************************************************
-void DummyPointCondition::GetDofList( DofsVectorType& ConditionalDofList, ProcessInfo& CurrentProcessInfo)
+void DummyCondition::GetDofList( DofsVectorType& ConditionalDofList, ProcessInfo& CurrentProcessInfo)
 {
     ConditionalDofList.resize(0);
 }

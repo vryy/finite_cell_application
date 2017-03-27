@@ -31,14 +31,11 @@
 
 // Project includes
 #include "custom_utilities/quadrature_utility.h"
+#include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_algebra/function/product_function.h"
 #include "custom_algebra/function/heaviside_function.h"
 #include "custom_utilities/binary_tree.h"
-
-
-#define ESTIMATE_RCOND
-#define CHECK_SOLUTION
 
 
 namespace Kratos
@@ -85,8 +82,6 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
-    typedef Function<PointType, double> FunctionR3R1Type;
-
     ///@}
     ///@name Life Cycle
     ///@{
@@ -108,15 +103,20 @@ public:
     ///@{
 
 
+    /// Python interface for FitQuadrature
+    /// REMARKS: this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
     template<class TIntegratorType>
     void PyFitQuadrature(Element::Pointer& p_elem,
             boost::python::list& r_funcs,
-            const LevelSet& r_level_set,
+            const BRep& r_brep,
             const TIntegratorType& r_integrator,
-            const int fit_quadrature_order, const int integrator_integration_order) const
+            const int fit_quadrature_order,
+            const int integrator_integration_order,
+            const std::string& solver_type,
+            const int& echo_level) const
     {
-        std::vector<FunctionR3R1Type::Pointer> funcs;
-        typedef boost::python::stl_input_iterator<FunctionR3R1Type::Pointer> iterator_value_type;
+        std::vector<FunctionR3R1::Pointer> funcs;
+        typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
         BOOST_FOREACH(const iterator_value_type::value_type& f,
                       std::make_pair(iterator_value_type(r_funcs), // begin
                         iterator_value_type() ) ) // end
@@ -125,28 +125,44 @@ public:
         }
 
         GeometryData::IntegrationMethod ElementalIntegrationMethod
-                = LevelSet::GetIntegrationMethod(fit_quadrature_order);
+                = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
 
         GeometryData::IntegrationMethod IntegratorIntegrationMethod
-                = LevelSet::GetIntegrationMethod(integrator_integration_order);
+                = Function<double, double>::GetIntegrationMethod(integrator_integration_order);
 
-        this->FitQuadrature<FunctionR3R1Type, TIntegratorType>(p_elem->GetGeometry(),
-                funcs, r_level_set, r_integrator, ElementalIntegrationMethod, IntegratorIntegrationMethod);
+        const GeometryType::IntegrationPointsArrayType& integration_points
+                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+
+        Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
+                funcs, r_brep, r_integrator, integration_points,
+                IntegratorIntegrationMethod, solver_type, echo_level);
+
+        /* create new quadrature and assign to the geometry */
+        FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
     }
 
 
+    /// Construct the quadrature-fitted for a set of functions on the geometry
+    /// r_geom: the geometry
+    /// r_funcs: the set of function needs to be fitted
+    /// r_brep: the BRep defined the cut boundary
+    /// r_integrator: to perform the integration on the cut domain
+    /// integration_points: list of integration points to compute the weight
+    /// IntegratorIntegrationMethod: the integration method of the integrator
     template<class TFunctionType, class TIntegratorType>
-    Vector FitQuadrature(GeometryType& r_geom,
+    static Vector FitQuadrature(GeometryType& r_geom,
             const std::vector<typename TFunctionType::Pointer>& r_funcs,
-            const LevelSet& r_level_set,
+            const BRep& r_brep,
             const TIntegratorType& r_integrator,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
-            const GeometryData::IntegrationMethod& IntegratorIntegrationMethod) const
+            const GeometryType::IntegrationPointsArrayType& integration_points,
+            const GeometryData::IntegrationMethod& IntegratorIntegrationMethod,
+            const std::string& solver_type,
+            const int& echo_level)
     {
-        std::size_t num_basis = r_funcs.size();
+        if(echo_level > -1)
+            std::cout << "#######begin moment-fitting####solver_type: " << solver_type << "################" << std::endl;
 
-        const GeometryType::IntegrationPointsArrayType& integration_points
-                = r_geom.IntegrationPoints( ElementalIntegrationMethod );
+        std::size_t num_basis = r_funcs.size();
 
         std::size_t num_fit_points = integration_points.size();
 
@@ -161,27 +177,37 @@ public:
                 MA(i, j) = r_funcs[i]->GetValue(GlobalCoords) * Function<double, double>::ComputeDetJ(r_geom, integration_points[j]);
             }
         }
-KRATOS_WATCH(MA)
+        if(echo_level > 4)
+            KRATOS_WATCH(MA)
 
         // form the vector b
         Vector Mb(num_basis);
-        typename TFunctionType::Pointer H = typename TFunctionType::Pointer(new HeavisideFunction<TFunctionType>(r_level_set));
+        typename TFunctionType::Pointer H = typename TFunctionType::Pointer(new HeavisideFunction<TFunctionType>(r_brep));
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             Mb(i) = 0.0;
             r_integrator.Integrate(ProductFunction<TFunctionType>(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
         }
-KRATOS_WATCH(Mb)
+        if(echo_level > 3)
+            KRATOS_WATCH(Mb)
 
-        // solve least square
-        #ifdef ESTIMATE_RCOND
-        double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
-        KRATOS_WATCH(rcond)
-        #endif
-
-        Vector Mw;
-        if(MA.size1() == MA.size2())
+        if(echo_level > 2)
         {
+            // estimate the condition number
+            if(MA.size1() == MA.size2())
+            {
+                double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
+                KRATOS_WATCH(rcond)
+            }
+        }
+
+        // solve for weights
+        Vector Mw;
+        if(solver_type == "direct")
+        {
+            if(MA.size1() != MA.size2())
+                KRATOS_THROW_ERROR(std::logic_error, "The matrix is not square. Direct solver cannot be used", "")
+
             /* the linear system is square, we can use a direct solver */
             boost::numeric::ublas::permutation_matrix<> pm(MA.size1());
             Matrix MAcopy = MA;
@@ -189,24 +215,34 @@ KRATOS_WATCH(Mb)
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
-        else
+        else if(solver_type == "dgelsy")
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
             LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
-//            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
         }
-        KRATOS_WATCH(Mw)
-        KRATOS_WATCH(sum(Mw))
-//        double pi = 3.141592653589793238462643;
-//        KRATOS_WATCH(sum(Mw) - pi/4)
+        else if(solver_type == "dgelss")
+        {
+            /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
+            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Unknown solver type:", solver_type)
 
-        #ifdef CHECK_SOLUTION
-        Vector Error = (Mb - prod(MA, Mw)) / norm_2(Mb);
-        KRATOS_WATCH(Error)
-        #endif
+        if(echo_level > 0)
+        {
+            KRATOS_WATCH(Mw)
+            KRATOS_WATCH(sum(Mw))
+        }
 
-        /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
+        if(echo_level > 1)
+        {
+            // check the error of the solution
+            Vector Error = (Mb - prod(MA, Mw)) / norm_2(Mb);
+            KRATOS_WATCH(Error)
+        }
+
+        if(echo_level > -1)
+            std::cout << "####################end moment-fitting####################" << std::endl;
 
         return Mw;
     }
@@ -362,8 +398,5 @@ inline std::ostream& operator << (std::ostream& rOStream, const MomentFittingUti
 ///@} addtogroup block
 
 }  // namespace Kratos.
-
-#undef ESTIMATE_RCOND
-#undef CHECK_SOLUTION
 
 #endif // KRATOS_MOMENT_FITTING_UTILITY_H_INCLUDED  defined
