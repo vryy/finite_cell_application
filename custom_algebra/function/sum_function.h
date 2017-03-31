@@ -16,7 +16,6 @@
 #define  KRATOS_SUM_FUNCTION_H_INCLUDED
 
 
-
 // System includes
 #include <string>
 #include <iostream>
@@ -79,7 +78,7 @@ public:
     ///@{
 
     /// Default constructor.
-    SumFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
+    SumFunction(const typename BaseType::Pointer p_func_1, const typename BaseType::Pointer p_func_2)
     : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 

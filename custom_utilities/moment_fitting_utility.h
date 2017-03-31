@@ -26,7 +26,9 @@
 // External includes
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include <boost/numeric/ublas/lu.hpp> 
+#include <boost/foreach.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+#include <boost/progress.hpp>
 
 
 // Project includes
@@ -36,6 +38,7 @@
 #include "custom_algebra/function/product_function.h"
 #include "custom_algebra/function/heaviside_function.h"
 #include "custom_utilities/binary_tree.h"
+#include "custom_utilities/finite_cell_auxilliary_utility.h"
 
 
 namespace Kratos
@@ -139,6 +142,107 @@ public:
 
         /* create new quadrature and assign to the geometry */
         FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
+    }
+
+
+    /// Python interface for FitQuadrature
+    /// REMARKS: this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
+    template<class TIntegratorType>
+    void PyMultithreadedFitQuadrature(boost::python::list& r_elements,
+            boost::python::list& r_funcs,
+            const BRep& r_brep,
+            boost::python::list& r_integrators,
+            const int fit_quadrature_order,
+            const int integrator_integration_order,
+            const std::string& solver_type,
+            const int& echo_level) const
+    {
+        std::vector<Element::Pointer> elements;
+        typedef boost::python::stl_input_iterator<Element::Pointer> iterator_element_type;
+        BOOST_FOREACH(const iterator_element_type::value_type& e,
+                      std::make_pair(iterator_element_type(r_elements), // begin
+                      iterator_element_type() ) ) // end
+        {
+            elements.push_back(e);
+        }
+//        KRATOS_WATCH(elements.size())
+
+        std::vector<FunctionR3R1::Pointer> funcs;
+        typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_func_type;
+        BOOST_FOREACH(const iterator_func_type::value_type& f,
+                      std::make_pair(iterator_func_type(r_funcs), // begin
+                      iterator_func_type() ) ) // end
+        {
+            funcs.push_back(f);
+        }
+//        KRATOS_WATCH(funcs.size())
+
+        typedef typename TIntegratorType::Pointer TIntegratorPointerType;
+        std::vector<TIntegratorPointerType> integrators;
+        typedef boost::python::stl_input_iterator<TIntegratorPointerType> iterator_integrator_type;
+        BOOST_FOREACH(const typename iterator_integrator_type::value_type& i,
+                      std::make_pair(iterator_integrator_type(r_integrators), // begin
+                      iterator_integrator_type() ) ) // end
+        {
+            integrators.push_back(i);
+        }
+//        KRATOS_WATCH(integrators.size())
+
+        GeometryData::IntegrationMethod ElementalIntegrationMethod
+                = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+
+        GeometryData::IntegrationMethod IntegratorIntegrationMethod
+                = Function<double, double>::GetIntegrationMethod(integrator_integration_order);
+
+        unsigned int number_of_threads = 1;
+        std::vector<unsigned int> element_partition;
+#ifdef _OPENMP
+        number_of_threads = omp_get_max_threads();
+#endif
+        KRATOS_WATCH(number_of_threads)
+        FiniteCellAuxilliaryUtility::CreatePartition(number_of_threads, elements.size(), element_partition);
+        std::cout << "element_partition:";
+        for(std::size_t i = 0; i < element_partition.size(); ++i)
+            std::cout << " " << element_partition[i];
+        std::cout << std::endl;
+
+        boost::progress_display* show_progress = NULL;
+
+        if(echo_level == -2)
+            show_progress = new boost::progress_display( elements.size() );
+
+#ifdef _OPENMP
+        #pragma omp parallel for
+#endif
+        for(int k = 0; k < number_of_threads; ++k)
+        {
+            std::vector<Element::Pointer>::iterator it_first_element = elements.begin() + element_partition[k];
+            std::vector<Element::Pointer>::iterator it_last_element = elements.begin() + element_partition[k+1];
+
+            typename std::vector<TIntegratorPointerType>::iterator it_integrator = integrators.begin() + element_partition[k];
+
+            for(std::vector<Element::Pointer>::iterator it = it_first_element; it != it_last_element; ++it, ++it_integrator)
+            {
+//                KRATOS_WATCH((*it)->Id())
+                const GeometryType::IntegrationPointsArrayType& integration_points
+                        = (*it)->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+
+                Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
+                        funcs, r_brep, *(*it_integrator), integration_points,
+                        IntegratorIntegrationMethod, solver_type, echo_level);
+
+                /* create new quadrature and assign to the geometry */
+                FiniteCellGeometry<GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
+
+                if(echo_level == -2)
+                    ++(*show_progress);
+            }
+        }
+        if(echo_level == -2)
+        {
+            delete show_progress;
+            std::cout << std::endl;
+        }
     }
 
 

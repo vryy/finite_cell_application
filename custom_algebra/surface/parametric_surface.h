@@ -59,7 +59,7 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Abstract class for a parametric curve in 3D
+/** Abstract class for a parametric surface in 3D
 */
 class ParametricSurface : public FunctionR2R3
 {
@@ -81,8 +81,8 @@ public:
     ///@{
 
     /// Default constructor.
-    ParametricSurface(const FunctionR2R1::Pointer& p_func_x,
-        const FunctionR2R1::Pointer& p_func_y, const FunctionR2R1::Pointer& p_func_z)
+    ParametricSurface(const FunctionR2R1::Pointer p_func_x,
+        const FunctionR2R1::Pointer p_func_y, const FunctionR2R1::Pointer p_func_z)
     : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
@@ -280,4 +280,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ParametricSurfac
 
 }  // namespace Kratos.
 
-#endif // KRATOS_PARAMETRIC_CURVE_H_INCLUDED  defined
+#endif // KRATOS_PARAMETRIC_SURFACE_H_INCLUDED  defined

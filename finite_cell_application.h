@@ -26,6 +26,7 @@
 #include "includes/kratos_components.h"
 #include "includes/kratos_application.h"
 #include "custom_conditions/dummy_condition.h"
+#include "custom_elements/dummy_element.h"
 
 
 namespace Kratos
@@ -182,6 +183,12 @@ namespace Kratos
         ///@name Member Variables
         ///@{
 
+        const DummyCondition mDummySurfaceCondition3D3N;
+        const DummyCondition mDummySurfaceCondition3D6N;
+        const DummyCondition mDummySurfaceCondition3D4N;
+        const DummyCondition mDummySurfaceCondition3D8N;
+        const DummyCondition mDummySurfaceCondition3D9N;
+
         const DummyCondition mDummyConditionPoint2D;
         const DummyCondition mDummyConditionPoint3D;
         const DummyCondition mDummyCondition2D3N;
@@ -196,6 +203,12 @@ namespace Kratos
         const DummyCondition mDummyCondition3D27N;
         const DummyCondition mDummyCondition3D6N;
         const DummyCondition mDummyCondition3D15N;
+
+        const DummyElement mDummySurfaceElement3D3N;
+        const DummyElement mDummySurfaceElement3D6N;
+        const DummyElement mDummySurfaceElement3D4N;
+        const DummyElement mDummySurfaceElement3D8N;
+        const DummyElement mDummySurfaceElement3D9N;
 
         ///@}
         ///@name Private Operators

@@ -81,7 +81,7 @@ public:
     ///@{
 
     /// Default constructor.
-    ProductFunction(const typename BaseType::Pointer& p_func_1, const typename BaseType::Pointer& p_func_2)
+    ProductFunction(const typename BaseType::Pointer p_func_1, const typename BaseType::Pointer p_func_2)
     : mp_func_1(p_func_1), mp_func_2(p_func_2)
     {}
 

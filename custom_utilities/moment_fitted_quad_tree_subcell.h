@@ -35,8 +35,9 @@
 #include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_geometries/finite_cell_geometry.h"
-#include "custom_utilities/quad_tree.h"
 #include "custom_conditions/element_wrapper_condition.h"
+#include "custom_utilities/quad_tree.h"
+#include "custom_utilities/finite_cell_auxilliary_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
 //#define DEBUG_SUBCELL
@@ -353,10 +354,10 @@ public:
         mpElement->Initialize();
 
         // find the last element id
-        std::size_t lastElementId = GetLastElementId(r_model_part);
+        std::size_t lastElementId = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
 
         // find the last condition id
-        std::size_t lastCondId = GetLastConditionId(r_model_part);
+        std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
         ModelPart::ElementsContainerType NewElements;
@@ -401,51 +402,6 @@ public:
         std::cout << NewElements.size() << " new element-wrapped conditions are added to the model_part" << std::endl;
 
         return NewElements;
-    }
-
-
-    /// Get the last node id of the model part
-    std::size_t GetLastNodeId(ModelPart& r_model_part) const
-    {
-        std::size_t lastNodeId = 0;
-        for(typename ModelPart::NodesContainerType::iterator it = r_model_part.Nodes().begin();
-                it != r_model_part.Nodes().end(); ++it)
-        {
-            if(it->Id() > lastNodeId)
-                lastNodeId = it->Id();
-        }
-
-        return lastNodeId;
-    }
-
-
-    /// Get the last element id of the model part
-    std::size_t GetLastElementId(ModelPart& r_model_part) const
-    {
-        std::size_t lastElementId = 0;
-        for(typename ModelPart::ElementsContainerType::ptr_iterator it = r_model_part.Elements().ptr_begin();
-                it != r_model_part.Elements().ptr_end(); ++it)
-        {
-            if((*it)->Id() > lastElementId)
-                lastElementId = (*it)->Id();
-        }
-
-        return lastElementId;
-    }
-
-
-    /// Get the last condition id of the model part
-    std::size_t GetLastConditionId(ModelPart& r_model_part) const
-    {
-        std::size_t lastCondId = 0;
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = r_model_part.Conditions().ptr_begin();
-                it != r_model_part.Conditions().ptr_end(); ++it)
-        {
-            if((*it)->Id() > lastCondId)
-                lastCondId = (*it)->Id();
-        }
-
-        return lastCondId;
     }
 
 

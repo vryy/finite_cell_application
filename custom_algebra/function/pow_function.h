@@ -79,11 +79,11 @@ public:
     ///@{
 
     /// Default constructor.
-    PowFunction(const double& a, const typename BaseType::Pointer& p_func)
+    PowFunction(const double a, const typename BaseType::Pointer p_func)
     : ma(a), mp_func(p_func)
     {}
 
-    PowFunction(const typename BaseType::Pointer& p_func, const double& a)
+    PowFunction(const typename BaseType::Pointer p_func, const double a)
     : ma(a), mp_func(p_func)
     {}
 

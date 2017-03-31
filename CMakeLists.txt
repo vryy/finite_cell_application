@@ -10,6 +10,7 @@ include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/ex
 
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/dummy_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/dummy_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/element_wrapper_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application.cpp 

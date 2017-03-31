@@ -21,9 +21,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <limits>
 
 
 // External includes
+#include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
+#include <boost/foreach.hpp>
 
 
 // Project includes
@@ -31,6 +35,8 @@
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "geometries/line_3d_2.h"
+#include "geometries/quadrilateral_3d_4.h"
+#include "utilities/math_utils.h"
 #include "custom_algebra/function/function.h"
 
 
@@ -78,31 +84,6 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
-    struct SpatialKey
-    {
-        public:
-            SpatialKey(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
-            bool operator<(const SpatialKey& rOther) const
-            {
-                if(x == rOther.x)
-                {
-                    if(y == rOther.y)
-                    {
-                        return z < rOther.z;
-                    }
-                    else
-                        return y < rOther.y;
-                }
-                else
-                    return x < rOther.x;
-            }
-            int kx() const {return x;}
-            int ky() const {return y;}
-            int kz() const {return z;}
-        private:
-            int x, y, z;
-    };
-
     ///@}
     ///@name Life Cycle
     ///@{
@@ -130,32 +111,55 @@ public:
         mDx = Dx;
         mDy = Dy;
         mDz = Dz;
+        // IMPORTANT REMARK: one should not choose a spacing align with element edge, because it can create missing points.
+
 
         for( typename ModelPart::ElementsContainerType::ptr_iterator it = pElements.ptr_begin();
                 it != pElements.ptr_end(); ++it )
         {
             Element::GeometryType& r_geom = (*it)->GetGeometry();
 
+            // find the minimum and maximum binning coordinates in each direction
+            int min_ix = std::numeric_limits<int>::max();
+            int max_ix = std::numeric_limits<int>::min();
+            int min_iy = std::numeric_limits<int>::max();
+            int max_iy = std::numeric_limits<int>::min();
+            int min_iz = std::numeric_limits<int>::max();
+            int max_iz = std::numeric_limits<int>::min();
+
             for(std::size_t i = 0; i < r_geom.size(); ++i)
             {
                 // find the cell containing point
-                int ix, iy, iz;
-                if(mDx != 0.0) ix = (int) floor(r_geom[i].X()) / mDx;
-                else ix = 0;
-                if(mDy != 0.0) iy = (int) floor(r_geom[i].Y()) / mDy;
-                else iy = 0;
-                if(mDz != 0.0) iz = (int) floor(r_geom[i].Z()) / mDz;
-                else iz = 0;
+                int ix = (mDx != 0.0) ? (int) floor(r_geom[i].X()) / mDx : 0;
+                int iy = (mDy != 0.0) ? (int) floor(r_geom[i].Y()) / mDy : 0;
+                int iz = (mDz != 0.0) ? (int) floor(r_geom[i].Z()) / mDz : 0;
 
-                // create the spatial key
-                SpatialKey key(ix, iy, iz);
+                // adjust the maximum and minimum value in each direction
+                if(ix < min_ix) min_ix = ix;
+                if(ix > max_ix) max_ix = ix;
+                if(iy < min_iy) min_iy = iy;
+                if(iy > max_iy) max_iy = iy;
+                if(iz < min_iz) min_iz = iz;
+                if(iz > max_iz) max_iz = iz;
+            }
 
-                // insert the element to spatial bin
-                mBinElements[key].insert((*it)->Id());
+            // add to the bin
+            for(int ix = min_ix; ix <= max_ix; ++ix)
+            {
+                for(int iy = min_iy; iy <= max_iy; ++iy)
+                {
+                    for(int iz = min_iz; iz <= max_iz; ++iz)
+                    {
+                        SpatialKey key(ix, iy, iz);
+
+                        // insert the element to spatial bin
+                        mBinElements[key].insert((*it)->Id());
+                    }
+                }
             }
         }
 
-        std::cout << "Setup binning completed" << std::endl;
+        std::cout << "Setup binning completed, number of binning keys = " << mBinElements.size() << std::endl;
     }
 
 
@@ -203,6 +207,67 @@ public:
 //KRATOS_WATCH(integration_points[point].X())
 //KRATOS_WATCH(tangent)
 //KRATOS_WATCH(rDlength[point])
+//KRATOS_WATCH(rWeights[point])
+        }
+    }
+
+
+    /// Sampling along the parametric surface to provide a list of points and corresponding variational area and weight
+    template<class TSurfaceType>
+    static void SamplingSurface(const TSurfaceType& rSurface,
+            const double& t1min, const double& t1max,
+            const double& t2min, const double& t2max,
+            const int& integration_order,
+            std::vector<typename TSurfaceType::InputType>& rCoordinates,
+            std::vector<PointType>& rPoints,
+            std::vector<double>& rDarea, std::vector<double>& rWeights)
+    {
+        GeometryData::IntegrationMethod ThisIntegrationMethod
+            = Function<double, double>::GetIntegrationMethod(integration_order);
+
+        NodeType DummyNode1;
+        NodeType DummyNode2;
+        NodeType DummyNode3;
+        NodeType DummyNode4;
+        Quadrilateral3D4<NodeType> SampleQuad(DummyNode1, DummyNode2, DummyNode3, DummyNode4);
+
+        const GeometryType::IntegrationPointsArrayType& integration_points
+                = SampleQuad.IntegrationPoints( ThisIntegrationMethod );
+
+        if(rCoordinates.size() != integration_points.size())
+            rCoordinates.resize(integration_points.size());
+
+        if(rPoints.size() != integration_points.size())
+            rPoints.resize(integration_points.size());
+
+        if(rDarea.size() != integration_points.size())
+            rDarea.resize(integration_points.size());
+
+        if(rWeights.size() != integration_points.size())
+            rWeights.resize(integration_points.size());
+
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        {
+            double t1 = 0.5*(t1max+t1min) + 0.5*(t1max-t1min)*integration_points[point].X();
+            double t2 = 0.5*(t2max+t2min) + 0.5*(t2max-t2min)*integration_points[point].Y();
+
+            rCoordinates[point][0] = t1;
+            rCoordinates[point][1] = t2;
+
+            rPoints[point] = rSurface.GetValue(rCoordinates[point]);
+
+            PointType tangent1 = rSurface.GetDerivative(0, rCoordinates[point]);
+            PointType tangent2 = rSurface.GetDerivative(1, rCoordinates[point]);
+            rDarea[point] = norm_2(MathUtils<double>::CrossProduct(tangent1, tangent2));
+
+            rWeights[point] = integration_points[point].Weight() * 0.25 * (t1max-t1min) * (t2max-t2min);
+//KRATOS_WATCH(t1)
+//KRATOS_WATCH(t2)
+//KRATOS_WATCH(integration_points[point].X())
+//KRATOS_WATCH(integration_points[point].Y())
+//KRATOS_WATCH(tangent1)
+//KRATOS_WATCH(tangent2)
+//KRATOS_WATCH(rDarea[point])
 //KRATOS_WATCH(rWeights[point])
         }
     }
@@ -265,13 +330,9 @@ public:
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
         // get the containing elements from the bin
-        int ix, iy, iz;
-        if(mDx != 0.0) ix = (int) floor(rSourcePoint.X()) / mDx;
-        else ix = 0;
-        if(mDy != 0.0) iy = (int) floor(rSourcePoint.Y()) / mDy;
-        else iy = 0;
-        if(mDz != 0.0) iz = (int) floor(rSourcePoint.Z()) / mDz;
-        else iz = 0;
+        int ix = (mDx != 0.0) ? (int) floor(rSourcePoint.X()) / mDx : 0;
+        int iy = (mDy != 0.0) ? (int) floor(rSourcePoint.Y()) / mDy : 0;
+        int iz = (mDz != 0.0) ? (int) floor(rSourcePoint.Z()) / mDz : 0;
 
         SpatialKey key(ix, iy, iz);
         std::map<SpatialKey, std::set<std::size_t> >::const_iterator it_bin_elements = mBinElements.find(key);
@@ -293,29 +354,6 @@ public:
 
         std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
         return false;
-    }
-
-
-    /// "Auxiliary method"
-    /// Clean the set of conditions from the model_part (for the most used case, that is the linking conditions)
-    void Clean(ModelPart& r_model_part, ModelPart::ConditionsContainerType& rConditions, const int& echo_level) const
-    {
-        // r_model_part.Conditions().erase(rConditions.begin(), rConditions.end());
-        unsigned int cnt = 0, first_id = 0, last_id = 0;
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = rConditions.ptr_begin();
-                it != rConditions.ptr_end(); ++it)
-        {
-            if(cnt == 0)
-                first_id = (*it)->Id();
-            last_id = (*it)->Id();
-
-            r_model_part.RemoveCondition(*it);
-
-            ++cnt;
-        }
-
-        if(echo_level > 0)
-            std::cout << cnt << " conditions: " << first_id << "->" << last_id << " is removed from model_part" << std::endl;
     }
 
 
@@ -396,6 +434,32 @@ protected:
     ///@}
 
 private:
+
+    struct SpatialKey
+    {
+        public:
+            SpatialKey(const int& ix, const int& iy, const int& iz) : x(ix), y(iy), z(iz) {}
+            bool operator<(const SpatialKey& rOther) const
+            {
+                if(x == rOther.x)
+                {
+                    if(y == rOther.y)
+                    {
+                        return z < rOther.z;
+                    }
+                    else
+                        return y < rOther.y;
+                }
+                else
+                    return x < rOther.x;
+            }
+            const int& kx() const {return x;}
+            const int& ky() const {return y;}
+            const int& kz() const {return z;}
+        private:
+            int x, y, z;
+    };
+
     ///@name Static Member Variables
     ///@{
 

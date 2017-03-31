@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            14 Feb 2017
+//  Date:            28 Mar 2017
 //
 
 
-#if !defined(KRATOS_SCALAR_FUNCTION_H_INCLUDED )
-#define  KRATOS_SCALAR_FUNCTION_H_INCLUDED
+#if !defined(KRATOS_PARAMETRIC_VOLUME_H_INCLUDED )
+#define  KRATOS_PARAMETRIC_VOLUME_H_INCLUDED
 
 
 
@@ -27,6 +27,10 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/element.h"
+#include "includes/ublas_interface.h"
+#include "containers/array_1d.h"
+#include "geometries/geometry_data.h"
 #include "custom_algebra/function/function.h"
 
 
@@ -47,7 +51,7 @@ namespace Kratos
 ///@{
 
 ///@}
-///@name  ScalarFunction
+///@name  Functions
 ///@{
 
 ///@}
@@ -55,37 +59,35 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for a general ScalarFunction
+/** Abstract class for a parametric volume in 3D
 */
-template<class TFunction>
-class ScalarFunction : public TFunction
+class ParametricVolume : public FunctionR3R3
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ScalarFunction
-    KRATOS_CLASS_POINTER_DEFINITION(ScalarFunction);
+    /// Pointer definition of ParametricVolume
+    KRATOS_CLASS_POINTER_DEFINITION(ParametricVolume);
 
-    typedef TFunction BaseType;
+    typedef FunctionR3R3 BaseType;
 
-    typedef typename BaseType::InputType InputType;
+    typedef BaseType::InputType InputType;
 
-    typedef typename BaseType::OutputType OutputType;
-
+    typedef BaseType::OutputType OutputType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    ScalarFunction(const double S)
-    : mS(S)
+    ParametricVolume(const FunctionR3R1::Pointer p_func_x,
+        const FunctionR3R1::Pointer p_func_y, const FunctionR3R1::Pointer p_func_z)
+    : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
     /// Destructor.
-    virtual ~ScalarFunction()
-    {}
+    virtual ~ParametricVolume() {}
 
 
     ///@}
@@ -98,23 +100,29 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    /// inherit from Function
+    virtual OutputType GetValue(const InputType& T) const
     {
-        return mS;
+        OutputType P;
+
+        P[0] = mp_func_x->GetValue(T);
+        P[1] = mp_func_y->GetValue(T);
+        P[2] = mp_func_z->GetValue(T);
+
+        return P;
     }
 
 
-    virtual std::string GetFormula(const std::string& Format) const
+    /// inherit from Function
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
     {
-        std::stringstream ss;
-        ss << mS;
-        return ss.str();
-    }
-
-
-    virtual typename BaseType::Pointer GetDiffFunction(const int& component) const
-    {
-        return typename BaseType::Pointer(new ZeroFunction<BaseType>());
+        return BaseType::Pointer(
+                    new ParametricVolume(
+                        mp_func_x->GetDiffFunction(component),
+                        mp_func_y->GetDiffFunction(component),
+                        mp_func_z->GetDiffFunction(component)
+                    )
+                );
     }
 
 
@@ -135,7 +143,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Scalar Function";
+        return "Parametric Volume";
     }
 
     /// Print information about this object.
@@ -203,7 +211,9 @@ private:
     ///@name Member Variables
     ///@{
 
-    const double mS;
+    FunctionR3R1::Pointer mp_func_x;
+    FunctionR3R1::Pointer mp_func_y;
+    FunctionR3R1::Pointer mp_func_z;
 
     ///@}
     ///@name Private Operators
@@ -230,15 +240,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ScalarFunction& operator=(ScalarFunction const& rOther);
+    ParametricVolume& operator=(ParametricVolume const& rOther);
 
     /// Copy constructor.
-    ScalarFunction(ScalarFunction const& rOther);
+    ParametricVolume(ParametricVolume const& rOther);
 
 
     ///@}
 
-}; // Class ScalarFunction
+}; // Class ParametricVolume
 
 ///@}
 
@@ -251,14 +261,12 @@ private:
 ///@{
 
 
-/// input stream ScalarFunction
-template<class TFunction>
-inline std::istream& operator >> (std::istream& rIStream, ScalarFunction<TFunction>& rThis)
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, ParametricVolume& rThis)
 {}
 
-/// output stream ScalarFunction
-template<class TFunction>
-inline std::ostream& operator << (std::ostream& rOStream, const ScalarFunction<TFunction>& rThis)
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const ParametricVolume& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -272,4 +280,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ScalarFunction<T
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SCALAR_FUNCTION_H_INCLUDED  defined
+#endif // KRATOS_PARAMETRIC_VOLUME_H_INCLUDED  defined

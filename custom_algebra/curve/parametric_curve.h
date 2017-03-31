@@ -80,8 +80,8 @@ public:
     ///@{
 
     /// Default constructor.
-    ParametricCurve(const FunctionR1R1::Pointer& p_func_x,
-        const FunctionR1R1::Pointer& p_func_y, const FunctionR1R1::Pointer& p_func_z)
+    ParametricCurve(const FunctionR1R1::Pointer p_func_x,
+        const FunctionR1R1::Pointer p_func_y, const FunctionR1R1::Pointer p_func_z)
     : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 

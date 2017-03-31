@@ -100,7 +100,7 @@ std::string GetFormulaMonomialFunctionR3R1(const std::string& Format)
 }
 
 template<std::size_t TDegreeX, std::size_t TDegreeY, std::size_t TDegreeZ>
-class MonomialFunctionR3R1 : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1 : public FunctionR3R1
 {
 public:
     ///@name Type Definitions
@@ -109,7 +109,7 @@ public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -293,13 +293,13 @@ private:
 
 
 template<std::size_t TDegreeY, std::size_t TDegreeZ>
-class MonomialFunctionR3R1<0, TDegreeY, TDegreeZ> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<0, TDegreeY, TDegreeZ> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -335,13 +335,13 @@ public:
 };
 
 template<std::size_t TDegreeX, std::size_t TDegreeZ>
-class MonomialFunctionR3R1<TDegreeX, 0, TDegreeZ> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<TDegreeX, 0, TDegreeZ> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -377,13 +377,13 @@ public:
 };
 
 template<std::size_t TDegreeX, std::size_t TDegreeY>
-class MonomialFunctionR3R1<TDegreeX, TDegreeY, 0> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<TDegreeX, TDegreeY, 0> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -419,13 +419,13 @@ public:
 };
 
 template<std::size_t TDegreeX>
-class MonomialFunctionR3R1<TDegreeX, 0, 0> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<TDegreeX, 0, 0> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -461,13 +461,13 @@ public:
 };
 
 template<std::size_t TDegreeY>
-class MonomialFunctionR3R1<0, TDegreeY, 0> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<0, TDegreeY, 0> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -503,13 +503,13 @@ public:
 };
 
 template<std::size_t TDegreeZ>
-class MonomialFunctionR3R1<0, 0, TDegreeZ> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<0, 0, TDegreeZ> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -545,13 +545,312 @@ public:
 };
 
 template<>
-class MonomialFunctionR3R1<0, 0, 0> : public Function<Element::GeometryType::PointType::PointType, double>
+class MonomialFunctionR3R1<0, 0, 0> : public FunctionR3R1
 {
 public:
     /// Pointer definition of MonomialFunctionR3R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR3R1);
 
-    typedef Function<Element::GeometryType::PointType::PointType, double> BaseType;
+    typedef FunctionR3R1 BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
+    virtual double GetValue(const InputType& P) const
+    {
+        return 1.0;
+    }
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return GetFormulaMonomialFunctionR3R1<0, 0, 0>(Format);
+    }
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        return BaseType::Pointer(new ZeroFunction<BaseType>());
+    }
+};
+
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+
+template<std::size_t TDegreeX, std::size_t TDegreeY>
+class MonomialFunctionR2R1 : public FunctionR2R1
+{
+public:
+    ///@name Type Definitions
+    ///@{
+
+    /// Pointer definition of MonomialFunctionR2R1
+    KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR2R1);
+
+    typedef FunctionR2R1 BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
+
+    ///@}
+    ///@name Life Cycle
+    ///@{
+
+    /// Default constructor.
+    MonomialFunctionR2R1()
+    {}
+
+    /// Destructor.
+    virtual ~MonomialFunctionR2R1()
+    {}
+
+
+    ///@}
+    ///@name Operators
+    ///@{
+
+
+    ///@}
+    ///@name Operations
+    ///@{
+
+
+    virtual double GetValue(const InputType& P) const
+    {
+        return pow(P[0], TDegreeX) * pow(P[1], TDegreeY);
+    }
+
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return GetFormulaMonomialFunctionR3R1<TDegreeX, TDegreeY, 0>(Format);
+    }
+
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        if(component == 0)
+        {
+            return BaseType::Pointer(new ScaleFunction<BaseType>(TDegreeX, BaseType::Pointer(new MonomialFunctionR2R1<TDegreeX-1, TDegreeY>())));
+        }
+        else if(component == 1)
+        {
+            return BaseType::Pointer(new ScaleFunction<BaseType>(TDegreeY, BaseType::Pointer(new MonomialFunctionR2R1<TDegreeX, TDegreeY-1>())));
+        }
+        else
+            return BaseType::Pointer(new ZeroFunction<BaseType>());
+    }
+
+
+    ///@}
+    ///@name Access
+    ///@{
+
+
+    ///@}
+    ///@name Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Input and output
+    ///@{
+
+    /// Turn back information as a string.
+    virtual std::string Info() const
+    {
+        return "Monomial Function R2R1";
+    }
+
+    /// Print information about this object.
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << Info();
+    }
+
+    /// Print object's data.
+    virtual void PrintData(std::ostream& rOStream) const
+    {
+    }
+
+
+    ///@}
+    ///@name Friends
+    ///@{
+
+
+    ///@}
+
+protected:
+    ///@name Protected static Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Protected member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Protected Operators
+    ///@{
+
+
+    ///@}
+    ///@name Protected Operations
+    ///@{
+
+
+    ///@}
+    ///@name Protected  Access
+    ///@{
+
+
+    ///@}
+    ///@name Protected Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Protected LifeCycle
+    ///@{
+
+
+    ///@}
+
+private:
+    ///@name Static Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Private Operators
+    ///@{
+
+
+    ///@}
+    ///@name Private Operations
+    ///@{
+
+
+    ///@}
+    ///@name Private  Access
+    ///@{
+
+
+    ///@}
+    ///@name Private Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Un accessible methods
+    ///@{
+
+    /// Assignment operator.
+    MonomialFunctionR2R1& operator=(MonomialFunctionR2R1 const& rOther);
+
+    /// Copy constructor.
+    MonomialFunctionR2R1(MonomialFunctionR2R1 const& rOther);
+
+
+    ///@}
+
+}; // Class MonomialFunctionR2R1
+
+template<std::size_t TDegreeX>
+class MonomialFunctionR2R1<TDegreeX, 0> : public FunctionR2R1
+{
+public:
+    /// Pointer definition of MonomialFunctionR2R1
+    KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR2R1);
+
+    typedef FunctionR2R1 BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
+    virtual double GetValue(const InputType& P) const
+    {
+        return pow(P[0], TDegreeX);
+    }
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return GetFormulaMonomialFunctionR3R1<TDegreeX, 0, 0>(Format);
+    }
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        if(component == 0)
+        {
+            return BaseType::Pointer(new ScaleFunction<BaseType>(TDegreeX, BaseType::Pointer(new MonomialFunctionR2R1<TDegreeX-1, 0>())));
+        }
+        else if(component == 1)
+        {
+            return BaseType::Pointer(new ZeroFunction<BaseType>());
+        }
+        else
+            return BaseType::Pointer(new ZeroFunction<BaseType>());
+    }
+};
+
+template<std::size_t TDegreeY>
+class MonomialFunctionR2R1<0, TDegreeY> : public FunctionR2R1
+{
+public:
+    /// Pointer definition of MonomialFunctionR2R1
+    KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR2R1);
+
+    typedef FunctionR2R1 BaseType;
+
+    typedef BaseType::InputType InputType;
+
+    typedef BaseType::OutputType OutputType;
+
+    virtual double GetValue(const InputType& P) const
+    {
+        return pow(P[1], TDegreeY);
+    }
+
+    virtual std::string GetFormula(const std::string& Format) const
+    {
+        return GetFormulaMonomialFunctionR3R1<0, TDegreeY, 0>(Format);
+    }
+
+    virtual BaseType::Pointer GetDiffFunction(const int& component) const
+    {
+        if(component == 0)
+        {
+            return BaseType::Pointer(new ZeroFunction<BaseType>());
+        }
+        else if(component == 1)
+        {
+            return BaseType::Pointer(new ScaleFunction<BaseType>(TDegreeY, BaseType::Pointer(new MonomialFunctionR2R1<0, TDegreeY-1>())));
+        }
+        else
+            return BaseType::Pointer(new ZeroFunction<BaseType>());
+    }
+};
+
+template<>
+class MonomialFunctionR2R1<0, 0> : public FunctionR2R1
+{
+public:
+    /// Pointer definition of MonomialFunctionR2R1
+    KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR2R1);
+
+    typedef FunctionR2R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -580,7 +879,7 @@ public:
 
 
 template<std::size_t TDegree>
-class MonomialFunctionR1R1 : public Function<double, double>
+class MonomialFunctionR1R1 : public FunctionR1R1
 {
 public:
     ///@name Type Definitions
@@ -589,7 +888,7 @@ public:
     /// Pointer definition of MonomialFunctionR1R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR1R1);
 
-    typedef Function<double, double> BaseType;
+    typedef FunctionR1R1 BaseType;
 
     typedef BaseType::InputType InputType;
 
@@ -764,13 +1063,13 @@ private:
 }; // Class MonomialFunctionR1R1
 
 template<>
-class MonomialFunctionR1R1<0> : public Function<double, double>
+class MonomialFunctionR1R1<0> : public FunctionR1R1
 {
 public:
     /// Pointer definition of MonomialFunctionR1R1
     KRATOS_CLASS_POINTER_DEFINITION(MonomialFunctionR1R1);
 
-    typedef Function<double, double> BaseType;
+    typedef FunctionR1R1 BaseType;
 
     typedef BaseType::InputType InputType;
 

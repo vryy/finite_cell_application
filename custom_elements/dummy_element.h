@@ -1,12 +1,12 @@
 //   
 //   Project Name:        Kratos       
 //   Last Modified by:    $Author: hbui $
-//   Date:                $Date: 1 Mar 17 $
+//   Date:                $Date: 28 Mar 17 $
 //   Revision:            $Revision: 1.0 $
 //
 //
-#if !defined(KRATOS_DUMMY_CONDITION_H_INCLUDED )
-#define  KRATOS_DUMMY_CONDITION_H_INCLUDED
+#if !defined(KRATOS_DUMMY_ELEMENT_H_INCLUDED )
+#define  KRATOS_DUMMY_ELEMENT_H_INCLUDED
 
 
 // External includes 
@@ -24,32 +24,32 @@ namespace Kratos
 {
 /**
  */
-class DummyCondition : public Condition
+class DummyElement : public Element
 {
     public:
-        // Counted pointer of DummyCondition
-        KRATOS_CLASS_POINTER_DEFINITION(DummyCondition);
+        // Counted pointer of DummyElement
+        KRATOS_CLASS_POINTER_DEFINITION(DummyElement);
         
         /** 
          * Default constructor.
          */
-        DummyCondition();
-        DummyCondition( IndexType NewId, GeometryType::Pointer pGeometry);
-        DummyCondition( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+        DummyElement();
+        DummyElement( IndexType NewId, GeometryType::Pointer pGeometry);
+        DummyElement( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
         /**
          * Destructor.
          */
-        virtual ~DummyCondition();
+        virtual ~DummyElement();
   
         /**
          * Operations.
          */
 
-        virtual Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
+        virtual Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
                                 PropertiesType::Pointer pProperties) const;
 
-        virtual Condition::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
+        virtual Element::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
                                 PropertiesType::Pointer pProperties) const;
 
         /**
@@ -65,7 +65,7 @@ class DummyCondition : public Condition
         void EquationIdVector( EquationIdVectorType& rResult, 
                                ProcessInfo& rCurrentProcessInfo);
 
-        void GetDofList( DofsVectorType& ConditionalDofList,
+        void GetDofList( DofsVectorType& ElementalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
         void Initialize();
@@ -96,12 +96,12 @@ class DummyCondition : public Condition
 
         virtual void save ( Serializer& rSerializer ) const
         {
-            KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Condition )
+            KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Element )
         }
 
         virtual void load ( Serializer& rSerializer )
         {
-            KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
+            KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Element )
         }
 
         void CalculateAll( MatrixType& rLeftHandSideMatrix, 
@@ -110,10 +110,10 @@ class DummyCondition : public Condition
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag);
 
-}; // Class DummyCondition 
+}; // Class DummyElement 
 
 }  // namespace Kratos.
   
 
-#endif // KRATOS_DUMMY_CONDITION_H_INCLUDED defined 
+#endif // KRATOS_DUMMY_ELEMENT_H_INCLUDED defined 
 

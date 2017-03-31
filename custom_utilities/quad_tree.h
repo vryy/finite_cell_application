@@ -118,7 +118,7 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<PointType, TOutputType>& rFunc,
+            const Function<array_1d<double, 3>, TOutputType>& rFunc,
             TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
@@ -154,7 +154,7 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<PointType, TOutputType>& rFunc,
+            const Function<array_1d<double, 3>, TOutputType>& rFunc,
             TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points) const
     {
@@ -1327,7 +1327,7 @@ public:
 
 
     template<class TOutputType>
-    TOutputType Integrate(const Function<PointType, TOutputType>& rFunc, const int integration_order) const
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
     {
         TOutputType Result = TOutputType(0.0);
 
@@ -1351,7 +1351,7 @@ public:
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
-    void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         mpTreeNode->Integrate(mpThisGeometry, rFunc, rOutput, ThisIntegrationMethod);
@@ -1361,7 +1361,7 @@ public:
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
-    void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points) const
     {
         mpTreeNode->Integrate(mpThisGeometry, rFunc, rOutput, integration_points);
@@ -1369,7 +1369,8 @@ public:
 
 
     /// Construct the finite cell quadrature
-    void ConstructQuadrature(const BRep& r_brep, const int integration_order,
+    /// Returns the number of quadrature points created
+    std::size_t ConstructQuadrature(const BRep& r_brep, const int integration_order,
             const double small_weight = 0.0) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
@@ -1391,6 +1392,8 @@ public:
 
         /* create new quadrature and assign to the geometry */
         FiniteCellGeometry<GeometryType>::AssignGeometryData(*mpThisGeometry, ThisIntegrationMethod, integration_points);
+
+        return integration_points.size();
     }
 
 
@@ -1563,7 +1566,7 @@ public:
 
 
     template<class TOutputType>
-    TOutputType Integrate(const Function<PointType, TOutputType>& rFunc, const int integration_order) const
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(integration_order);
@@ -1579,7 +1582,7 @@ public:
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
-    void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)

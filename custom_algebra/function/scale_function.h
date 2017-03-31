@@ -79,7 +79,7 @@ public:
     ///@{
 
     /// Default constructor.
-    ScaleFunction(const double& a, const typename BaseType::Pointer& p_func)
+    ScaleFunction(const double a, const typename BaseType::Pointer p_func)
     : BaseType(), ma(a), mp_func(p_func)
     {}
 
@@ -98,7 +98,7 @@ public:
     ///@{
 
 
-    virtual double GetValue(const InputType& P) const
+    virtual OutputType GetValue(const InputType& P) const
     {
         return ma*mp_func->GetValue(P);
     }

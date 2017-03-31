@@ -79,7 +79,7 @@ public:
     ///@{
 
     /// Default constructor.
-    NegateFunction(const typename BaseType::Pointer& p_func)
+    NegateFunction(const typename BaseType::Pointer p_func)
     : mp_func(p_func)
     {}
 

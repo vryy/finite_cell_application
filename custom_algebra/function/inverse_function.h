@@ -79,7 +79,7 @@ public:
     ///@{
 
     /// Default constructor.
-    InverseFunction(const typename BaseType::Pointer& p_func)
+    InverseFunction(const typename BaseType::Pointer p_func)
     : mp_func(p_func)
     {}
 

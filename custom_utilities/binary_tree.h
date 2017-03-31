@@ -287,7 +287,7 @@ public:
 
 
     template<class TOutputType>
-    TOutputType Integrate(const Function<PointType, TOutputType>& rFunc, const int integration_order) const
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
                 = LevelSet::GetIntegrationMethod(integration_order);
@@ -302,7 +302,7 @@ public:
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
-    void Integrate(const Function<PointType, TOutputType>& rFunc, TOutputType& rOutput,
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         if(this->IsLeaf())

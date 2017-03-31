@@ -131,6 +131,126 @@ public:
     }
 
 
+    void PySetQuadrature(Element::Pointer& p_elem,
+            const int& integration_order,
+            boost::python::list& quadrature_data) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        for(std::size_t i = 0; i < boost::python::len(quadrature_data); ++i)
+        {
+            boost::python::list point = boost::python::extract<boost::python::list>(quadrature_data[i]);
+
+            GeometryType::IntegrationPointType integration_point;
+            integration_point.X() = boost::python::extract<double>(point[0]);
+            integration_point.Y() = boost::python::extract<double>(point[1]);
+            integration_point.Z() = boost::python::extract<double>(point[2]);
+            integration_point.Weight() = boost::python::extract<double>(point[3]);
+
+            integration_points.push_back(integration_point);
+        }
+
+        GeometryType::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(integration_order);
+        FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
+//        std::cout << "set quadrature for element " << p_elem->Id() << " completed" << std::endl;
+    }
+
+
+    void PySaveQuadratureAdvanced(const std::string& fileName,
+            const std::string& fileType,
+            boost::python::list& pyCutElems,
+            boost::python::list& pyExcludeElems,
+            const int& accuracy) const
+    {
+        typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
+        std::ofstream myFile;
+
+        if(fileType == std::string("python"))
+        {
+            myFile.open(fileName.c_str(), std::ios::out);
+            myFile.precision(accuracy);
+
+            myFile << "def GetCutElements():\n";
+            myFile << "\tcut_elems = [";
+
+            int number_of_element_per_row = 20;
+
+            int cnt = 0;
+            BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
+                    std::make_pair(iterator_value_type(pyCutElems), // begin
+                    iterator_value_type() ) ) // end
+            {
+                if(cnt < number_of_element_per_row)
+                {
+                    ++cnt;
+                }
+                else
+                {
+                    cnt = 0;
+                    myFile << "\n\t";
+                }
+                myFile << p_elem->Id() << ", ";
+            }
+
+            myFile << "\t]\n";
+            myFile << "\treturn cut_elems\n";
+
+            /////////////////////////////////
+
+            myFile << "\ndef GetExcludeElements():\n";
+            myFile << "\texclude_elems = [";
+
+            cnt = 0;
+            BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
+                    std::make_pair(iterator_value_type(pyExcludeElems), // begin
+                    iterator_value_type() ) ) // end
+            {
+                if(cnt < number_of_element_per_row)
+                {
+                    ++cnt;
+                }
+                else
+                {
+                    cnt = 0;
+                    myFile << "\n\t";
+                }
+                myFile << p_elem->Id() << ", ";
+            }
+
+            myFile << "\t]\n";
+            myFile << "\treturn exclude_elems\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetCutCellQuadrature():\n";
+            myFile << "\tquad_data = {}\n";
+            BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
+                    std::make_pair(iterator_value_type(pyCutElems), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const GeometryType::IntegrationPointsArrayType& integration_points
+                    = p_elem->GetGeometry().IntegrationPoints( p_elem->GetGeometry().GetDefaultIntegrationMethod() );
+
+                myFile << "\tquad_data[" << p_elem->Id() << "] = [";
+                for(std::size_t i = 0; i < integration_points.size(); ++i)
+                {
+                    myFile << "\n\t\t[" << integration_points[i].X()
+                                 << ", " << integration_points[i].Y()
+                                 << ", " << integration_points[i].Z()
+                                 << ", " << integration_points[i].Weight() << "],";
+                }
+                myFile << "]\n";
+            }
+            myFile << "\treturn quad_data\n";
+
+            myFile.close();
+            std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
+    }
+
+
     void PySaveQuadrature(boost::python::list& pyElemList, const std::string& fileName,
             const std::string& writeMode) const
     {
@@ -164,7 +284,7 @@ public:
         else
             KRATOS_THROW_ERROR(std::logic_error, "Unknown write mode", writeMode)
 
-        myFile.precision(15);
+        myFile.precision(16);
 
         typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
         BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
@@ -189,6 +309,7 @@ public:
         }
 
         myFile.close();
+        std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
 
 

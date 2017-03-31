@@ -12,12 +12,14 @@
 // Project includes
 #include "includes/element.h"
 #include "custom_python/add_custom_utilities_to_python.h"
+#include "custom_algebra/brep.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/binary_tree.h"
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/div_free_basis_utility.h"
 #include "custom_utilities/moment_fitting_utility.h"
 #include "custom_utilities/moment_fitted_quad_tree_subcell.h"
+#include "custom_utilities/finite_cell_auxilliary_utility.h"
 
 
 namespace Kratos
@@ -45,14 +47,42 @@ Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, c
     }
 }
 
+std::size_t FiniteCellAuxilliaryUtility_GetLastNodeId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastNodeId(r_model_part);
+}
+
+std::size_t FiniteCellAuxilliaryUtility_GetLastElementId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastElementId(r_model_part);
+}
+
+std::size_t FiniteCellAuxilliaryUtility_GetLastConditionId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastConditionId(r_model_part);
+}
+
+std::size_t FiniteCellAuxilliaryUtility_GetLastPropertiesId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastPropertiesId(r_model_part);
+}
+
+void FiniteCellAuxilliaryUtility_AddElement(FiniteCellAuxilliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
+        Element::Pointer pElement)
+{
+    rDummy.AddElement(rpElements, pElement);
+}
+
+template<class TTreeType, class TBRepType>
+void FiniteCellAuxilliaryUtility_MultithreadedRefineBy(FiniteCellAuxilliaryUtility& rDummy, boost::python::list& r_trees,
+        const TBRepType& r_brep)
+{
+    rDummy.MultithreadedRefineBy<TTreeType, TBRepType>(r_trees, r_brep);
+}
+
 void FiniteCellApplication_AddCustomUtilitiesToPython()
 {
     typedef Element::GeometryType::PointType NodeType;
-
-    typedef NodeType::PointType PointType;
-
-    typedef Function<PointType, double> FunctionR3R1Type;
-    typedef Function<PointType, Vector> FunctionR3RnType;
 
     void(QuadratureUtility::*pointer_to_CreateConditionFromQuadraturePoint)(ModelPart&, boost::python::list&,
             const std::string&, const double&, const double&) const = &QuadratureUtility::PyCreateConditionFromQuadraturePoint;
@@ -63,6 +93,8 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("GetDefaultIntegrationMethod", &QuadratureUtility::GetDefaultIntegrationMethod<Condition>)
     .def("ScaleQuadrature", &QuadratureUtility::PyScaleQuadrature)
     .def("SaveQuadrature", &QuadratureUtility::PySaveQuadrature)
+    .def("SaveQuadrature", &QuadratureUtility::PySaveQuadratureAdvanced)
+    .def("SetQuadrature", &QuadratureUtility::PySetQuadrature)
     .def("CreateConditionFromQuadraturePoint", pointer_to_CreateConditionFromQuadraturePoint)
     ;
 
@@ -74,8 +106,8 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     ;
 
     typedef BinaryTree<2> QuadTreeType;
-    double(QuadTreeType::*pointer_to_Integrate_double_quadtree)(const FunctionR3R1Type&, const int) const = &QuadTreeType::Integrate<double>;
-    Vector(QuadTreeType::*pointer_to_Integrate_Vector_quadtree)(const FunctionR3RnType&, const int) const = &QuadTreeType::Integrate<Vector>;
+    double(QuadTreeType::*pointer_to_Integrate_double_quadtree)(const FunctionR3R1&, const int) const = &QuadTreeType::Integrate<double>;
+    Vector(QuadTreeType::*pointer_to_Integrate_Vector_quadtree)(const FunctionR3Rn&, const int) const = &QuadTreeType::Integrate<Vector>;
     void(QuadTreeType::*pointer_to_ConstructQuadrature_quadtree)(const LevelSet&, const int) const = &QuadTreeType::ConstructQuadrature;
 
     class_<QuadTreeType, QuadTreeType::Pointer, boost::noncopyable, bases<QuadratureUtility> >
@@ -93,7 +125,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     ;
 
     typedef BinaryTree<3> OctTreeType;
-    double(OctTreeType::*pointer_to_Integrate_double_octtree)(const FunctionR3R1Type&, const int) const = &OctTreeType::Integrate<double>;
+    double(OctTreeType::*pointer_to_Integrate_double_octtree)(const FunctionR3R1&, const int) const = &OctTreeType::Integrate<double>;
 
     class_<OctTreeType, OctTreeType::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("OctTree", init<Element::Pointer&>())
@@ -107,7 +139,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def(self_ns::str(self))
     ;
 
-    double(QuadTree::*pointer_to_Integrate_double_quadtree_local)(const FunctionR3R1Type&, const int) const = &QuadTree::Integrate<double>;
+    double(QuadTree::*pointer_to_Integrate_double_quadtree_local)(const FunctionR3R1&, const int) const = &QuadTree::Integrate<double>;
 
     class_<QuadTree, QuadTree::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("QuadTreeLocal", init<Element::Pointer&>())
@@ -132,8 +164,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<2> >)
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<BinaryTree<3> >)
     .def("FitQuadrature", &MomentFittingUtility::PyFitQuadrature<QuadTree>)
-    .def("ScaleQuadrature", &MomentFittingUtility::PyScaleQuadrature)
-    .def("SaveQuadrature", &MomentFittingUtility::PySaveQuadrature)
+    .def("MultithreadedFitQuadrature", &MomentFittingUtility::PyMultithreadedFitQuadrature<QuadTree>)
     ;
 
     class_<MomentFittedQuadTreeSubCell, MomentFittedQuadTreeSubCell::Pointer, boost::noncopyable>
@@ -146,9 +177,35 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("FitQuadraturePhysicalPoints", &MomentFittedQuadTreeSubCell::PyFitQuadraturePhysicalPoints)
     .def("CreateSubCellElements", &MomentFittedQuadTreeSubCell::PyCreateSubCellElements)
     .def("CreateParasiteElement", &MomentFittedQuadTreeSubCell::CreateParasiteElement)
-    .def("GetLastElementId", &MomentFittedQuadTreeSubCell::GetLastElementId)
-    .def("GetLastConditionId", &MomentFittedQuadTreeSubCell::GetLastConditionId)
-    .def("GetLastNodeId", &MomentFittedQuadTreeSubCell::GetLastNodeId)
+//    .def("GetLastElementId", &MomentFittedQuadTreeSubCell::GetLastElementId) // this is moved to FiniteCellAuxilliaryUtility
+//    .def("GetLastConditionId", &MomentFittedQuadTreeSubCell::GetLastConditionId) // this is moved to FiniteCellAuxilliaryUtility
+//    .def("GetLastNodeId", &MomentFittedQuadTreeSubCell::GetLastNodeId) // this is moved to FiniteCellAuxilliaryUtility
+    ;
+
+    Condition::Pointer(FiniteCellAuxilliaryUtility::*pointer_to_PyCreateCondition)(ModelPart&, const std::string&,
+            const std::size_t&, Properties::Pointer, boost::python::list&) const = &FiniteCellAuxilliaryUtility::PyCreateCondition;
+
+    ModelPart::ElementsContainerType(FiniteCellAuxilliaryUtility::*pointer_to_PyGetElements)(ModelPart&,
+            boost::python::list&) const = &FiniteCellAuxilliaryUtility::PyGetElements;
+
+    void(FiniteCellAuxilliaryUtility::*pointer_to_PyGetElements2)(ModelPart::ElementsContainerType&, ModelPart&,
+            boost::python::list&) const = &FiniteCellAuxilliaryUtility::PyGetElements;
+
+    void(FiniteCellAuxilliaryUtility::*pointer_to_Clean)(ModelPart&,
+            ModelPart::ConditionsContainerType&, const int&) const = &FiniteCellAuxilliaryUtility::Clean;
+
+    class_<FiniteCellAuxilliaryUtility, FiniteCellAuxilliaryUtility::Pointer, boost::noncopyable>
+    ("FiniteCellAuxilliaryUtility", init<>())
+    .def("CreateCondition", pointer_to_PyCreateCondition)
+    .def("GetElements", pointer_to_PyGetElements)
+    .def("GetElements", pointer_to_PyGetElements2)
+    .def("Clean", pointer_to_Clean)
+    .def("GetLastNodeId", &FiniteCellAuxilliaryUtility_GetLastNodeId)
+    .def("GetLastElementId", &FiniteCellAuxilliaryUtility_GetLastElementId)
+    .def("GetLastConditionId", &FiniteCellAuxilliaryUtility_GetLastConditionId)
+    .def("GetLastConditionId", &FiniteCellAuxilliaryUtility_GetLastPropertiesId)
+    .def("AddElement", &FiniteCellAuxilliaryUtility_AddElement)
+    .def("MultithreadedRefineBy", &FiniteCellAuxilliaryUtility_MultithreadedRefineBy<QuadTree, BRep>)
     ;
 
 }

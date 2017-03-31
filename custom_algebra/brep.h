@@ -68,8 +68,6 @@ public:
     /// Pointer definition of BRep
     KRATOS_CLASS_POINTER_DEFINITION(BRep);
 
-    typedef FunctionR3R1 BaseType;
-
     typedef typename Element::GeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;

@@ -82,7 +82,7 @@ public:
     ///@{
 
     /// Default constructor.
-    CosFunction(const typename BaseType::Pointer& p_func)
+    CosFunction(const typename BaseType::Pointer p_func)
     : mp_func(p_func)
     {}
 
@@ -263,7 +263,7 @@ public:
     ///@{
 
     /// Default constructor.
-    SinFunction(const typename BaseType::Pointer& p_func)
+    SinFunction(const typename BaseType::Pointer p_func)
     : mp_func(p_func)
     {}
 
@@ -445,7 +445,7 @@ public:
     ///@{
 
     /// Default constructor.
-    AcosFunction(const typename BaseType::Pointer& p_func)
+    AcosFunction(const typename BaseType::Pointer p_func)
     : mp_func(p_func)
     {}
 

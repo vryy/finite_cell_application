@@ -408,11 +408,11 @@ private:
 ///@{
 
 typedef Function<double, double> FunctionR1R1;
-typedef Function<double, Element::GeometryType::PointType::PointType> FunctionR1R3;
-typedef Function<Element::GeometryType::PointType::PointType, double> FunctionR3R1;
-typedef Function<Element::GeometryType::PointType::PointType, Element::GeometryType::PointType::PointType> FunctionR3R3;
-typedef Function<Element::GeometryType::PointType::PointType, Vector> FunctionR3Rn;
-typedef Function<array_1d<double, 2>, Element::GeometryType::PointType::PointType> FunctionR2R3;
+typedef Function<double, array_1d<double, 3> > FunctionR1R3;
+typedef Function<array_1d<double, 3>, double> FunctionR3R1;
+typedef Function<array_1d<double, 3>, array_1d<double, 3> > FunctionR3R3;
+typedef Function<array_1d<double, 3>, Vector> FunctionR3Rn;
+typedef Function<array_1d<double, 2>, array_1d<double, 3> > FunctionR2R3;
 typedef Function<array_1d<double, 2>, double> FunctionR2R1;
     
 ///@name Template Specialization
