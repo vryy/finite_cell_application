@@ -296,8 +296,9 @@ public:
 
 
     /// Create a partitioning for multithreaded parallelization
+    template<class TValueContainerType>
     static inline void CreatePartition(const unsigned int& number_of_threads,
-            const std::size_t& number_of_elements, std::vector<unsigned int>& partitions)
+            const std::size_t& number_of_elements, TValueContainerType& partitions)
     {
         partitions.resize(number_of_threads+1);
         int partition_size = number_of_elements / number_of_threads;
@@ -309,43 +310,33 @@ public:
 
 
     template<class TTreeType, class TBRepType>
-    static void MultithreadedRefineBy(boost::python::list& r_trees, const TBRepType& r_brep)
+    static void MultithreadedRefineBy(std::vector<typename TTreeType::Pointer>& r_trees, const TBRepType& r_brep)
     {
-        typedef typename TTreeType::Pointer TTreePointerType;
-        std::vector<TTreePointerType> trees;
-        typedef boost::python::stl_input_iterator<TTreePointerType> iterator_tree_type;
-        BOOST_FOREACH(const typename iterator_tree_type::value_type& t,
-                      std::make_pair(iterator_tree_type(r_trees), // begin
-                      iterator_tree_type() ) ) // end
-        {
-            trees.push_back(t);
-        }
-
         unsigned int number_of_threads = 1;
 #ifdef _OPENMP
         number_of_threads = omp_get_max_threads();
 #endif
         std::cout << "number_of_threads for MultithreadedRefineBy: " << number_of_threads << std::endl;
         std::vector<unsigned int> tree_partition;
-        CreatePartition(number_of_threads, trees.size(), tree_partition);
+        CreatePartition(number_of_threads, r_trees.size(), tree_partition);
 
-        boost::progress_display show_progress( trees.size() );
+        boost::progress_display show_progress( r_trees.size() );
 
 #ifdef _OPENMP
         #pragma omp parallel for
 #endif
         for(int k = 0; k < number_of_threads; ++k)
         {
-            typename std::vector<TTreePointerType>::iterator it_first_tree = trees.begin() + tree_partition[k];
-            typename std::vector<TTreePointerType>::iterator it_last_tree = trees.begin() + tree_partition[k+1];
+            typename std::vector<typename TTreeType::Pointer>::iterator it_first_tree = r_trees.begin() + tree_partition[k];
+            typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k+1];
 
-            for(typename std::vector<TTreePointerType>::iterator it = it_first_tree; it != it_last_tree; ++it)
+            for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
             {
                 (*it)->RefineBy(r_brep);
                 ++show_progress;
             }
         }
-        std::cout << "\nMultithreadedRefineBy completed for " << trees.size() << " trees" << std::endl;
+        std::cout << "\nMultithreadedRefineBy completed for " << r_trees.size() << " trees" << std::endl;
     }
 
 
@@ -362,6 +353,15 @@ public:
     ///@}
     ///@name Input and output
     ///@{
+
+    void Print(GeometryType::Pointer pGeometry) const
+    {
+        for(std::size_t i = 0; i < pGeometry->size(); ++i)
+            std::cout << " (" << (*pGeometry)[i].X()
+                     << ", " << (*pGeometry)[i].Y()
+                     << ", " << (*pGeometry)[i].Z() << "),";
+        std::cout << std::endl;
+    }
 
     /// Turn back information as a string.
     virtual std::string Info() const

@@ -37,6 +37,7 @@ namespace Kratos
 
     KRATOS_DEFINE_VARIABLE( boost::python::object, LOAD_FUNCTION )
     KRATOS_DEFINE_VARIABLE( int, CUT_STATUS )
+    KRATOS_DEFINE_VARIABLE( Matrix, SUBCELL_WEIGHTS )
 
     ///@}
     ///@name Type Definitions

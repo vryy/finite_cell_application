@@ -47,6 +47,7 @@ namespace Kratos
 
     KRATOS_CREATE_VARIABLE( boost::python::object, LOAD_FUNCTION )
     KRATOS_CREATE_VARIABLE( int, CUT_STATUS )
+    KRATOS_CREATE_VARIABLE( Matrix, SUBCELL_WEIGHTS )
 
     KratosFiniteCellApplication::KratosFiniteCellApplication()
     : mDummySurfaceCondition3D3N( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
@@ -84,6 +85,7 @@ namespace Kratos
         // register variables to Kratos kernel
         KRATOS_REGISTER_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_VARIABLE( CUT_STATUS )
+        KRATOS_REGISTER_VARIABLE( SUBCELL_WEIGHTS )
 
         // register conditions to Kratos kernel
         KRATOS_REGISTER_CONDITION("DummyConditionPoint2D", mDummyConditionPoint2D)

@@ -27,7 +27,6 @@
 
 
 // Project includes
-#include "custom_utilities/quadrature_utility.h"
 #include "includes/model_part.h"
 #include "includes/geometrical_object.h"
 #include "utilities/math_utils.h"
@@ -46,13 +45,17 @@
 #include "geometries/hexahedra_3d_8.h"
 #include "geometries/hexahedra_3d_20.h"
 #include "geometries/hexahedra_3d_27.h"
+#include "integration/quadrilateral_gauss_lobatto_integration_points.h"
+#include "integration/quadrilateral_gauss_legendre_integration_points.h"
+#include "integration/hexahedron_gauss_legendre_integration_points.h"
+#include "integration/hexahedron_gauss_lobatto_integration_points.h"
 #include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_algebra/function/monomial_function.h"
-#include "custom_algebra/function/scalar_function.h"
 #include "custom_algebra/function/heaviside_function.h"
 #include "custom_algebra/function/product_function.h"
 #include "custom_geometries/finite_cell_geometry.h"
+#include "custom_utilities/quadrature_utility.h"
 
 
 namespace Kratos
@@ -115,6 +118,30 @@ public:
     /*****************************************************************/
 
     /// Integrate a function using the sample geometry and integration rule
+    /// The caller has to manually set rOutput to zero before calling this function
+    template<typename TOutputType>
+    void Integrate(GeometryType::Pointer pParentGeometry,
+            const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            TOutputType& rOutput,
+            const int& integration_method) const
+    {
+        int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
+
+        if(quadrature_type == 0) // Kratos built-in
+        {
+            int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+            GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            this->Integrate(pParentGeometry, rFunc, rOutput, ThisIntegrationMethod);
+        }
+        else // use custom quadrature
+        {
+            int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+            GeometryType::IntegrationPointsArrayType integration_points = this->ConstructCustomQuadrature(quadrature_type, quadrature_order);
+            this->Integrate(pParentGeometry, rFunc, rOutput, integration_points);
+        }
+    }
+
+    /// Integrate a function using the sample geometry and the built-in Kratos integration rule (mainly Gauss Legendre for not-so-high order)
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(GeometryType::Pointer pParentGeometry,
@@ -186,13 +213,36 @@ public:
     /******* QUADRATURE GENERATION ***********************************/
     /*****************************************************************/
 
-    /// Construct a fixed quadrature based on order
-    virtual GeometryType::IntegrationPointsArrayType ConstructQuadrature(const int& integration_order) const
+    /// Construct a custom quadrature, i.e higher order Gauss Legendre or Gauss-Lobatto quadrature
+    /// type    type of the quadrature, i.e 1: Gauss-Legendre, 2: Gauss-Lobatto, 3: Gauss-Radau
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
-    /// Construct the recursive integration point array
+    /// Construct the recursive integration point array using Kratos built-in quadrature
+    /// REMARKS: the integration_points is in local coordinates system
+    void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
+            GeometryType::IntegrationPointsArrayType& integration_points,
+            const int& integration_method) const
+    {
+        int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
+
+        if(quadrature_type == 0) // Kratos built-in
+        {
+            int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+            GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+        }
+        else // use custom quadrature
+        {
+            int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+            GeometryType::IntegrationPointsArrayType sample_integration_points = this->ConstructCustomQuadrature(quadrature_type, quadrature_order);
+            this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+        }
+    }
+
+    /// Construct the recursive integration point array using Kratos built-in quadrature
     /// REMARKS: the integration_points is in local coordinates system
     void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
             GeometryType::IntegrationPointsArrayType& integration_points,
@@ -204,15 +254,15 @@ public:
 
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
-            const GeometryType::IntegrationPointsArrayType& sub_integration_points
+            const GeometryType::IntegrationPointsArrayType& sample_integration_points
                 = pThisReferenceGeometry->IntegrationPoints( ThisIntegrationMethod );
 
             Vector ShapeFunctionValuesOnReference;
-            for(std::size_t point = 0; point < sub_integration_points.size(); ++point)
+            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
             {
                 GeometryType::IntegrationPointType integration_point;
 
-                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sub_integration_points[point]);
+                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
 
                 noalias(integration_point) = ZeroVector(3);
                 for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
@@ -220,11 +270,11 @@ public:
                     noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
                 }
 
-                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sub_integration_points[point]);
+                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
 
                 double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
 
-                integration_point.SetWeight( DetJsmall/DetJbig * sub_integration_points[point].Weight() );
+                integration_point.SetWeight( DetJsmall/DetJbig * sample_integration_points[point].Weight() );
 
                 integration_points.push_back( integration_point );
             }
@@ -234,6 +284,49 @@ public:
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+            }
+        }
+    }
+
+    /// Construct the recursive integration point array using provided sample quadrature on a reference cell
+    /// REMARKS: the integration_points is in local coordinates system
+    void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
+            GeometryType::IntegrationPointsArrayType& integration_points,
+            const GeometryType::IntegrationPointsArrayType& sample_integration_points) const
+    {
+        if(this->IsLeaf())
+        {
+            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
+
+            GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
+
+            Vector ShapeFunctionValuesOnReference;
+            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            {
+                GeometryType::IntegrationPointType integration_point;
+
+                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
+
+                noalias(integration_point) = ZeroVector(3);
+                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
+                {
+                    noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
+                }
+
+                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
+
+                double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
+
+                integration_point.SetWeight( DetJsmall/DetJbig * sample_integration_points[point].Weight() );
+
+                integration_points.push_back( integration_point );
+            }
+        }
+        else
+        {
+            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
+                mpChildren[i]->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
             }
         }
     }
@@ -277,19 +370,18 @@ public:
 
     /// Compute the center of gravity in the domain defined by a parent geometry of this quad-tree node w.r.t a BRep
     /// Remarks: COG will be in global coordinates w.r.t pParentGeometry
-    bool CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep) const
+    bool CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int& integration_method) const
     {
         double X = 0.0, Y = 0.0, Z = 0.0, A = 0.0;
         FunctionR3R1::Pointer FX = FunctionR3R1::Pointer(new MonomialFunctionR3R1<1, 0, 0>());
         FunctionR3R1::Pointer FY = FunctionR3R1::Pointer(new MonomialFunctionR3R1<0, 1, 0>());
         FunctionR3R1::Pointer FZ = FunctionR3R1::Pointer(new MonomialFunctionR3R1<0, 0, 1>());
-        FunctionR3R1::Pointer FA = FunctionR3R1::Pointer(new ScalarFunction<FunctionR3R1>(1.0));
         FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
-        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FX, FH), X, pParentGeometry->GetDefaultIntegrationMethod());
-        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FY, FH), Y, pParentGeometry->GetDefaultIntegrationMethod());
-        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FZ, FH), Z, pParentGeometry->GetDefaultIntegrationMethod());
-        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FA, FH), A, pParentGeometry->GetDefaultIntegrationMethod());
-
+        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FX, FH), X, integration_method);
+        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FY, FH), Y, integration_method);
+        this->Integrate(pParentGeometry, ProductFunction<FunctionR3R1>(FZ, FH), Z, integration_method);
+        this->Integrate(pParentGeometry, *FH, A, integration_method);
+//        std::cout << "X: " << X << ", Y: " << Y << ", Z: " << Z << ", A: " << A << std::endl;
         if(A != 0.0)
         {
             // the quad-tree is able to integrate the COG
@@ -300,6 +392,15 @@ public:
         }
         else
             return false;
+    }
+
+    /// Compute the domain size covered by the quad tree node
+    double DomainSize(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int& integration_method) const
+    {
+        double A = 0.0;
+        FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
+        this->Integrate(pParentGeometry, *FH, A, integration_method);
+        return A;
     }
 
     virtual GeometryType::Pointer pCreateReferenceGeometry() const
@@ -339,6 +440,7 @@ public:
 
 protected:
     std::vector<QuadTreeNode::Pointer> mpChildren;
+    
 }; // class QuadTreeNode
 
 
@@ -460,30 +562,35 @@ public:
         }
     }
 
-    virtual GeometryType::IntegrationPointsArrayType ConstructQuadrature(const int& integration_order) const
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
     {
-        if(integration_order == 1)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints1, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 2)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints2, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 3)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints3, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 4)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 5)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 6)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 7)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints7, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 8)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints8, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 9)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-        else if(integration_order == 10)
-            return Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+        if(quadrature_type == 1) // Gauss-Legendre
+        {
+            if(integration_order == 1)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints1, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints2, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints3, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 6)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 7)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints7, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 8)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints8, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 9)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 10)
+                return Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
+        }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This integration_order is not supported:", integration_order);
+            KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
     }
 
     virtual GeometryType::Pointer pCreateReferenceGeometry() const
@@ -686,6 +793,40 @@ public:
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
                 mpChildren[i]->Refine();
         }
+    }
+
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        if(quadrature_type == 1) // Gauss-Legendre
+        {
+            if(integration_order == 1)
+                return Quadrature<HexahedronGaussLegendreIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                return Quadrature<HexahedronGaussLegendreIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                return Quadrature<HexahedronGaussLegendreIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                return Quadrature<HexahedronGaussLegendreIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                return Quadrature<HexahedronGaussLegendreIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Lobatto is not supported:", integration_order);
+        }
+        else if(quadrature_type == 2) // Gauss-Lobatto
+        {
+            if(integration_order == 1)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Lobatto is not supported:", integration_order);
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
     }
 
     virtual GeometryType::Pointer pCreateReferenceGeometry() const
@@ -1312,6 +1453,18 @@ public:
     QuadTreeNode::Pointer pGet() {return mpTreeNode;}
 
 
+    /// Access the underlying (operating) geometry
+    GeometryType& GetGeometry() const {return *mpThisGeometry;}
+    GeometryType::Pointer pGetGeometry() const {return mpThisGeometry;}
+
+
+    /// Create the occupied geometry
+    GeometryType::Pointer pCreateGeometry() const
+    {
+        return mpTreeNode->pCreateGeometry(mpThisGeometry);
+    }
+
+
     /// Create the sub-cells
     void Refine()
     {
@@ -1319,42 +1472,48 @@ public:
     }
 
 
-    /// Refine the tree by the level set
+    /// Refine the tree by the BRep
     void RefineBy(const BRep& r_brep)
     {
         mpTreeNode->RefineBy(mpThisGeometry, r_brep);
     }
 
 
+    /// Compute the domain size covered by this quadtree
+    double DomainSize(const BRep& r_brep, const int& integration_method) const
+    {
+        return mpTreeNode->DomainSize(mpThisGeometry, r_brep, integration_method);
+    }
+
+
+    /// Compute the center of gravity of this quadtree
+    PointType CenterOfGravity(const BRep& r_brep, const int& integration_method) const
+    {
+        PointType COG;
+        mpTreeNode->CenterOfGravity(COG, mpThisGeometry, r_brep, integration_method);
+        return COG;
+    }
+
+
+    /// Integrate a function using the underlying geometry of the quadtree with the provided integration method
     template<class TOutputType>
-    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int& integration_method) const
     {
         TOutputType Result = TOutputType(0.0);
 
-        if(integration_order <= Function<double, double>::GetMaxIntegrationOrder())
-        {
-            // use built-in quadrature
-            GeometryData::IntegrationMethod ThisIntegrationMethod
-                    = Function<double, double>::GetIntegrationMethod(integration_order);
-            mpTreeNode->Integrate(mpThisGeometry, rFunc, Result, ThisIntegrationMethod);
-        }
-        else
-        {
-            GeometryType::IntegrationPointsArrayType integration_points = mpTreeNode->ConstructQuadrature(integration_order);
-            mpTreeNode->Integrate(mpThisGeometry, rFunc, Result, integration_points);
-        }
+        mpTreeNode->Integrate(mpThisGeometry, rFunc, Result, integration_method);
 
         return Result;
     }
 
 
-    /// Integrate a function using the sample geometry and integration rule
+    /// Integrate a function using the underlying geometry of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+            const int& integration_method) const
     {
-        mpTreeNode->Integrate(mpThisGeometry, rFunc, rOutput, ThisIntegrationMethod);
+        mpTreeNode->Integrate(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
@@ -1370,16 +1529,13 @@ public:
 
     /// Construct the finite cell quadrature
     /// Returns the number of quadrature points created
-    std::size_t ConstructQuadrature(const BRep& r_brep, const int integration_order,
+    std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
             const double small_weight = 0.0) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        GeometryData::IntegrationMethod ThisIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(integration_order);
-
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, integration_points, ThisIntegrationMethod);
+        mpTreeNode->ConstructQuadrature(mpThisGeometry, integration_points, integration_method);
 
         // modify the weight if needed
         CoordinatesArrayType GlobalCoords;
@@ -1391,7 +1547,9 @@ public:
         }
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(*mpThisGeometry, ThisIntegrationMethod, integration_points);
+        int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        FiniteCellGeometry<GeometryType>::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return integration_points.size();
     }
@@ -1542,6 +1700,13 @@ public:
     }
 
 
+    /// Get the number of subcells
+    std::size_t NumberOfSubCells() const
+    {
+        return mpTreeNodes.size();
+    }
+
+
     /// Access the underlying quad-tree nodes
     const QuadTreeNode& Get(const std::size_t& i) const {return *mpTreeNodes[i];}
     QuadTreeNode& Get(const std::size_t& i) {return *mpTreeNodes[i];}
@@ -1549,7 +1714,7 @@ public:
     QuadTreeNode::Pointer pGet(const std::size_t& i) {return mpTreeNodes[i];}
 
 
-    /// Create the sub-cells
+    /// Refine the sub-cells
     void Refine()
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
@@ -1565,43 +1730,48 @@ public:
     }
 
 
-    template<class TOutputType>
-    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
+    /// Create a quadtree out from a subcell
+    /// Fundamentally we can use this function to extract out a subcell and refine it since it's a quadtree node
+    QuadTree::Pointer CreateQuadTree(const std::size_t& i) const
     {
-        GeometryData::IntegrationMethod ThisIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(integration_order);
+        return QuadTree::Pointer(new QuadTree(mpThisGeometry, mpTreeNodes[i]));
+    }
 
+
+    /// Integrate a function using the underlying geometry of the quadtree subcell with the integration order
+    template<class TOutputType>
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            const int& integration_method) const
+    {
         TOutputType Result = TOutputType(0.0);
+
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->Integrate(mpThisGeometry, rFunc, Result, ThisIntegrationMethod);
+            mpTreeNodes[i]->Integrate(mpThisGeometry, rFunc, Result, integration_method);
 
         return Result;
     }
 
 
-    /// Integrate a function using the sample geometry and integration rule
+    /// Integrate a function using the underlying geometry of the quadtree subcell and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+            const int& integration_method) const
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->Integrate(mpThisGeometry, rFunc, rOutput, ThisIntegrationMethod);
+            mpTreeNodes[i]->Integrate(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
     /// Construct the finite cell quadrature
-    void ConstructQuadrature(const BRep& r_brep, const int integration_order,
+    void ConstructQuadrature(const BRep& r_brep, const int& integration_method,
             const double small_weight = 0.0) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        GeometryData::IntegrationMethod ThisIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(integration_order);
-
         // firstly create an array of integration points of sub-trees of sub-cells
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->ConstructQuadrature(mpThisGeometry, integration_points, ThisIntegrationMethod);
+            mpTreeNodes[i]->ConstructQuadrature(mpThisGeometry, integration_points, integration_method);
 
         // modify the weight if needed
         CoordinatesArrayType GlobalCoords;
@@ -1613,7 +1783,9 @@ public:
         }
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(*mpThisGeometry, ThisIntegrationMethod, integration_points);
+        int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        FiniteCellGeometry<GeometryType>::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
     }
 
 
@@ -1682,8 +1854,8 @@ public:
 
 protected:
 
-    GeometryType::Pointer mpThisGeometry;
-    std::vector<QuadTreeNode::Pointer> mpTreeNodes;
+    GeometryType::Pointer mpThisGeometry; // the geometry covers all the subcells
+    std::vector<QuadTreeNode::Pointer> mpTreeNodes; // array of subcells
 
     /// Construct the sub-cells for Gauss Quadrature on the quadrilateral. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
     void ConstructSubCellsForQuadBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
@@ -1770,6 +1942,84 @@ protected:
             for(std::size_t j = 0; j < n; ++j)
             {
                 pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy)) );
+            }
+        }
+    }
+
+    /// Construct the sub-cells for Gauss Quadrature on the hexahedra. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
+    void ConstructSubCellsForHexBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+            const int& integration_order) const
+    {
+        if(integration_order == 1)
+        {
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)) );
+        }
+        else if(integration_order == 2)
+        {
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, -1.0, 0.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, -1.0, 0.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, 0.0, 1.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, 0.0, 1.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, -1.0, 0.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, -1.0, 0.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, 0.0, 1.0, 0.0, 1.0)) );
+        }
+        else if(integration_order == 3)
+        {
+            double b = 0.5 * std::sqrt(3.00/5.00);
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, -1.0, -b)) );    // 1
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, -1.0, -b)) );      // 2
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, -1.0, -b)) );        // 3
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, -1.0, -b)) );      // 4
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, b, 1.0)) );  // 5
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, b, 1.0)) );    // 6
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, b, 1.0)) );      // 7
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, b, 1.0)) );    // 8
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, -1.0, -b)) );   // 9
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, -1.0, -b)) );     // 10
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, -1.0, -b)) );     // 11
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, -1.0, -b)) );   // 12
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, -b, b)) );   // 13
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, -b, b)) );     // 14
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, -b, b)) );       // 15
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, -b, b)) );     // 16
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, b, 1.0)) );     // 17
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, b, 1.0)) );       // 18
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, b, 1.0)) );       // 19
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, b, 1.0)) );     // 20
+
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, -1.0, -b)) );     // 21
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, -b, b)) );     // 22
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, -b, b)) );       // 23
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, -b, b)) );       // 24
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, -b, b)) );     // 25
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, b, 1.0)) );       // 26
+            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, -b, b)) );        // 27
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
+    }
+
+    void ConstructSubCellsForHexBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+            const std::size_t& m, const std::size_t& n, const std::size_t& p) const
+    {
+        const double dx = 2.0/m;
+        const double dy = 2.0/n;
+        const double dz = 2.0/p;
+        for(std::size_t i = 0; i < m; ++i)
+        {
+            for(std::size_t j = 0; j < n; ++j)
+            {
+                for(std::size_t k = 0; k < p; ++k)
+                {
+                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy, -1.0+k*dz, -1.0+(k+1)*dz)) );
+                }
             }
         }
     }

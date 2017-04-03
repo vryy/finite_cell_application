@@ -81,7 +81,7 @@ public:
     ///@{
 
     /// Default constructor.
-    BRep() {}
+    BRep() : mTOL(1.0e-10) {}
 
     /// Destructor.
     virtual ~BRep() {}
@@ -96,6 +96,9 @@ public:
     ///@name Operations
     ///@{
 
+    /// Get & Set for geometric tolerance
+    void SetTolerance(const double& TOL) {mTOL = TOL;}
+    const double GetTolerance() const {return mTOL;}
 
     // returns working space dimension
     virtual std::size_t WorkingSpaceDimension() const
@@ -125,10 +128,17 @@ public:
     }
 
 
-    /// Check if an element is cut by the level set
+    /// Check if an element is cut by the brep
     int CutStatus(Element::Pointer& p_elem) const
     {
         return CutStatus(p_elem->GetGeometry());
+    }
+
+
+    /// Check if a geometry is cut by the brep
+    int CutStatus(GeometryType::Pointer& p_geom) const
+    {
+        return CutStatus(*p_geom);
     }
 
 
@@ -234,6 +244,7 @@ private:
     ///@name Member Variables
     ///@{
 
+    double mTOL;
 
     ///@}
     ///@name Private Operators

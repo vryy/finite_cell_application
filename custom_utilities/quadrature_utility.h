@@ -38,6 +38,8 @@
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_algebra/function/function.h"
+#include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "finite_cell_application/finite_cell_application.h"
 
 
 namespace Kratos
@@ -100,6 +102,26 @@ public:
     {
         return p_elem->GetIntegrationMethod();
 //        return p_elem->GetGeometry().GetDefaultIntegrationMethod();
+    }
+
+
+    /// The integration method is decoded as follow:
+    /// It is a hex number, i.e 0x02
+    /// The first hex digit is the quadrature method: i.e
+    ///     0: Kratos built-in quadrature (it's technically Gauss-Legendre)
+    ///     1: extended Gauss-Legendre
+    ///     2: Gauss-Lobatto quadrature
+    ///     3: Gauss-Radau quadrature
+    /// The second hex digit is the order of the quadrature
+    /// By default, there're 16 types of quadrature and order upto 15 is supported. Probably it's enough for conventional problem.
+    static inline int GetQuadratureType(const int& integration_method)
+    {
+        return (integration_method & 0xF0) >> 4;
+    }
+
+    static inline int GetQuadratureOrder(const int& integration_method)
+    {
+        return (integration_method & 0x0F);
     }
 
 
@@ -169,6 +191,7 @@ public:
         {
             myFile.open(fileName.c_str(), std::ios::out);
             myFile.precision(accuracy);
+            myFile << std::scientific;
 
             myFile << "def GetCutElements():\n";
             myFile << "\tcut_elems = [";
@@ -251,6 +274,155 @@ public:
     }
 
 
+    template<class TTreeType>
+    void PySaveQuadratureAdvancedSubCell(const std::string& fileName,
+            const std::string& fileType,
+            boost::python::list& pyCutTrees,
+            boost::python::list& pyExcludeTrees,
+            const int& accuracy) const
+    {
+        typedef typename TTreeType::Pointer TTreePointerType;
+        typedef boost::python::stl_input_iterator<TTreePointerType> iterator_value_type;
+        std::ofstream myFile;
+
+        if(fileType == std::string("python"))
+        {
+            myFile.open(fileName.c_str(), std::ios::out);
+            myFile.precision(accuracy);
+            myFile << std::scientific;
+
+            myFile << "def GetCutElements():\n";
+            myFile << "\tcut_elems = [";
+
+            int number_of_element_per_row = 20;
+
+            int cnt = 0;
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyCutTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                if(cnt < number_of_element_per_row)
+                {
+                    ++cnt;
+                }
+                else
+                {
+                    cnt = 0;
+                    myFile << "\n\t";
+                }
+                myFile << p_tree->pGetElement()->Id() << ", ";
+            }
+
+            myFile << "\t]\n";
+            myFile << "\treturn cut_elems\n";
+
+            /////////////////////////////////
+
+            myFile << "\ndef GetExcludeElements():\n";
+            myFile << "\texclude_elems = [";
+
+            cnt = 0;
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyExcludeTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                if(cnt < number_of_element_per_row)
+                {
+                    ++cnt;
+                }
+                else
+                {
+                    cnt = 0;
+                    myFile << "\n\t";
+                }
+                myFile << p_tree->pGetElement()->Id() << ", ";
+            }
+
+            myFile << "\t]\n";
+            myFile << "\treturn exclude_elems\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetCutCellQuadrature():\n";
+            myFile << "\tcq = {}\n";
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyCutTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const GeometryType::IntegrationPointsArrayType& integration_points
+                    = p_tree->pGetElement()->GetGeometry().IntegrationPoints( p_tree->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
+
+                myFile << "\tcq[" << p_tree->pGetElement()->Id() << "] = [";
+                for(std::size_t i = 0; i < integration_points.size(); ++i)
+                {
+                    myFile << "\n\t\t[" << integration_points[i].X()
+                                 << ", " << integration_points[i].Y()
+                                 << ", " << integration_points[i].Z()
+                                 << ", " << integration_points[i].Weight() << "],";
+                }
+                myFile << "]\n";
+            }
+
+            myFile << "\treturn cq\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetCutCellFullQuadrature():\n";
+            myFile << "\tfq = {}\n";
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyCutTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const GeometryType::IntegrationPointsArrayType& integration_points
+                    = p_tree->GetRepresentativeIntegrationPoints();
+
+                myFile << "\tfq[" << p_tree->pGetElement()->Id() << "] = [";
+                for(std::size_t i = 0; i < integration_points.size(); ++i)
+                {
+                    myFile << "\n\t\t[" << integration_points[i].X()
+                                 << ", " << integration_points[i].Y()
+                                 << ", " << integration_points[i].Z()
+                                 << ", " << integration_points[i].Weight() << "],";
+                }
+                myFile << "]\n";
+            }
+
+            myFile << "\treturn fq\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetCutCellSubCellWeights():\n";
+            myFile << "\tsw = {}\n";
+
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyCutTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const Matrix& Weights = p_tree->pGetElement()->GetValue(SUBCELL_WEIGHTS);
+
+                myFile << "\tsw[" << p_tree->pGetElement()->Id() << "] = [";
+                for(std::size_t i = 0; i < Weights.size1(); ++i)
+                {
+                    myFile << "\n\t\t[";
+                    for(std::size_t j = 0; j < Weights.size2(); ++j)
+                        myFile << Weights(i, j) << ", ";
+                    myFile << "],";
+                }
+                myFile << "]\n";
+            }
+
+            myFile << "\treturn sw\n";
+
+            ////////////////////////////////
+
+            myFile.close();
+            std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
+    }
+
+
     void PySaveQuadrature(boost::python::list& pyElemList, const std::string& fileName,
             const std::string& writeMode) const
     {
@@ -285,6 +457,7 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "Unknown write mode", writeMode)
 
         myFile.precision(16);
+        myFile << std::scientific;
 
         typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
         BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
@@ -376,31 +549,13 @@ public:
         const double& max_weight) const
     {
         // find the maximum node Id
-        std::size_t lastNodeId = 0;
-        for(typename ModelPart::NodesContainerType::ptr_iterator it = r_model_part.Nodes().ptr_begin();
-                it != r_model_part.Nodes().ptr_end(); ++it)
-        {
-            if((*it)->Id() > lastNodeId)
-                lastNodeId = (*it)->Id();
-        }
+        std::size_t lastNodeId = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
 
         // find the maximum condition Id
-        std::size_t lastCondId = 0;
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = r_model_part.Conditions().ptr_begin();
-                it != r_model_part.Conditions().ptr_end(); ++it)
-        {
-            if((*it)->Id() > lastCondId)
-                lastCondId = (*it)->Id();
-        }
+        std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
 
         // find the maximum properties Id
-        std::size_t lastPropId = 0;
-        for(typename ModelPart::PropertiesContainerType::ptr_iterator it = r_model_part.rProperties().ptr_begin();
-                it != r_model_part.rProperties().ptr_end(); ++it)
-        {
-            if((*it)->Id() > lastPropId)
-                lastPropId = (*it)->Id();
-        }
+        std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
 
         // create new properties
         Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
@@ -426,6 +581,15 @@ public:
     }
 
 
+    /// Create an array of condition (technically point condition) from quadrature point of the element
+    /// r_model_part    the conditions after creation will be added to the model_part
+    /// ElementalIntegrationMethod  the integration method of the element, which the quadrature points are read
+    /// r_sample_cond   the condition name in Kratos database
+    /// pProperties     the Properties used to create new condition
+    /// lastNodeId      starting node id to assign to new nodes
+    /// lastCondId      starting condition id to assign to new conditions
+    /// min_weight      minimum weight to create new condition
+    /// max_weight      maximum weight to create new condition
     std::size_t CreateConditionFromQuadraturePoint(ModelPart& r_model_part,
             const Element::Pointer& p_elem,
             const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
@@ -443,21 +607,12 @@ public:
         ModelPart::ConditionsContainerType NewConditions;
 
         PointType GlobalCoords;
-        GeometryType::Pointer pTempGeometry;
         for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
             if(integration_points[point].Weight() > min_weight && integration_points[point].Weight() < max_weight)
             {
                 p_elem->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
-                NodeType::Pointer pNewNode(new NodeType(++lastNodeId, GlobalCoords));
-                pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
-                pNewNode->SetBufferSize(r_model_part.GetBufferSize());
-                r_model_part.AddNode(pNewNode);
-    //            NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++lastNodeId, GlobalCoords[0], GlobalCoords[1], GlobalCoords[2]);
-    //            KRATOS_WATCH(*pNewNode)
-                pTempGeometry = GeometryType::Pointer( new Point3D<NodeType>(pNewNode) );
-                Condition::Pointer pNewCond = r_sample_cond.Create(++lastCondId, pTempGeometry, pProperties);
-                pNewCond->Set(ACTIVE, true);
+                Condition::Pointer pNewCond = CreateConditionFromPoint(r_model_part, GlobalCoords, r_sample_cond, pProperties, lastNodeId, lastCondId);
                 NewConditions.push_back(pNewCond);
             }
         }
@@ -467,6 +622,69 @@ public:
             r_model_part.Conditions().push_back(*it);
 
         return NewConditions.size();
+    }
+
+    /// Create a new condition from point
+    ModelPart::ConditionsContainerType PyCreateConditionFromPoint(ModelPart& r_model_part,
+            boost::python::list& pyPointList,
+            const std::string& sample_cond_name
+            ) const
+    {
+        // find the maximum node Id
+        std::size_t lastNodeId = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+
+        // find the maximum condition Id
+        std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
+
+        // find the maximum properties Id
+        std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
+
+        // create new properties
+        Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
+        r_model_part.AddProperties(pProperties);
+
+        // get the sample condition
+        if(!KratosComponents<Condition>::Has(sample_cond_name))
+            KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+
+        ModelPart::ConditionsContainerType NewConditions;
+
+        typedef boost::python::stl_input_iterator<PointType> iterator_value_type;
+        BOOST_FOREACH(const iterator_value_type::value_type& point,
+                        std::make_pair(iterator_value_type(pyPointList), // begin
+                        iterator_value_type() ) ) // end
+        {
+            Condition::Pointer pNewCond = CreateConditionFromPoint(r_model_part, point, r_clone_condition, pProperties, lastNodeId, lastCondId);
+            NewConditions.push_back(pNewCond);
+        }
+
+        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+                it != NewConditions.ptr_end(); ++it)
+            r_model_part.Conditions().push_back(*it);
+
+        return NewConditions;
+    }
+
+    /// Create a new condition from point
+    Condition::Pointer CreateConditionFromPoint(ModelPart& r_model_part,
+            const PointType& r_point,
+            Condition const& r_sample_cond,
+            Properties::Pointer pProperties,
+            std::size_t& lastNodeId,
+            std::size_t& lastCondId
+            ) const
+    {
+        NodeType::Pointer pNewNode(new NodeType(++lastNodeId, r_point));
+        pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+        pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+        r_model_part.AddNode(pNewNode);
+//            NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++lastNodeId, GlobalCoords[0], GlobalCoords[1], GlobalCoords[2]);
+//            KRATOS_WATCH(*pNewNode)
+        GeometryType::Pointer pTempGeometry = GeometryType::Pointer( new Point3D<NodeType>(pNewNode) );
+        Condition::Pointer pNewCond = r_sample_cond.Create(++lastCondId, pTempGeometry, pProperties);
+        pNewCond->Set(ACTIVE, true);
+        return pNewCond;
     }
 
     ///@}

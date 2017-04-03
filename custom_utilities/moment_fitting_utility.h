@@ -32,13 +32,13 @@
 
 
 // Project includes
-#include "custom_utilities/quadrature_utility.h"
 #include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_algebra/function/product_function.h"
 #include "custom_algebra/function/heaviside_function.h"
-#include "custom_utilities/binary_tree.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "finite_cell_application/finite_cell_application.h"
 
 
 namespace Kratos
@@ -107,14 +107,15 @@ public:
 
 
     /// Python interface for FitQuadrature
-    /// REMARKS: this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
+    /// REMARKS: if fit_quadrature_method = 0x0X, this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
+    /// Otherwise it will fit a custom quadrature, see quadrature_utility.h for decoding of the integration_method
     template<class TIntegratorType>
     void PyFitQuadrature(Element::Pointer& p_elem,
             boost::python::list& r_funcs,
             const BRep& r_brep,
             const TIntegratorType& r_integrator,
-            const int fit_quadrature_order,
-            const int integrator_integration_order,
+            const int& fit_quadrature_method,
+            const int& integrator_integration_method,
             const std::string& solver_type,
             const int& echo_level) const
     {
@@ -127,33 +128,54 @@ public:
             funcs.push_back(f);
         }
 
+        int fit_quadrature_type = QuadratureUtility::GetQuadratureType(fit_quadrature_method);
+
+        int fit_quadrature_order = QuadratureUtility::GetQuadratureOrder(fit_quadrature_method);
+
         GeometryData::IntegrationMethod ElementalIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
 
-        GeometryData::IntegrationMethod IntegratorIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(integrator_integration_order);
+        if(fit_quadrature_type == 0)
+        {
 
-        const GeometryType::IntegrationPointsArrayType& integration_points
-                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+            const GeometryType::IntegrationPointsArrayType& integration_points
+                    = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
 
-        Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
-                funcs, r_brep, r_integrator, integration_points,
-                IntegratorIntegrationMethod, solver_type, echo_level);
+            Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
+                    funcs, r_brep, r_integrator, integration_points,
+                    integrator_integration_method, solver_type, echo_level);
 
-        /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
+            /* create new quadrature and assign to the geometry */
+            FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);        
+        }
+        else
+        {
+            GeometryType::IntegrationPointsArrayType integration_points
+                    = r_integrator.Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
+
+            Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
+                    funcs, r_brep, r_integrator, integration_points,
+                    integrator_integration_method, solver_type, echo_level);
+
+            for(std::size_t i = 0; i < integration_points.size(); ++i)
+                integration_points[i].Weight() = Weight(i);
+
+            /* create new quadrature and assign to the geometry */
+            FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, integration_points);
+        }
     }
 
 
     /// Python interface for FitQuadrature
-    /// REMARKS: this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
+    /// REMARKS: if fit_quadrature_method = 0x0X, this function uses the standard Gauss quadrature rule on the element, defined by fit_quadrature_order
+    /// Otherwise it will fit a custom quadrature, see quadrature_utility.h for decoding of the integration_method
     template<class TIntegratorType>
     void PyMultithreadedFitQuadrature(boost::python::list& r_elements,
             boost::python::list& r_funcs,
             const BRep& r_brep,
             boost::python::list& r_integrators,
-            const int fit_quadrature_order,
-            const int integrator_integration_order,
+            const int& fit_quadrature_method,
+            const int& integrator_integration_method,
             const std::string& solver_type,
             const int& echo_level) const
     {
@@ -188,11 +210,12 @@ public:
         }
 //        KRATOS_WATCH(integrators.size())
 
+        int fit_quadrature_type = QuadratureUtility::GetQuadratureType(fit_quadrature_method);
+
+        int fit_quadrature_order = QuadratureUtility::GetQuadratureOrder(fit_quadrature_method);
+
         GeometryData::IntegrationMethod ElementalIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
-
-        GeometryData::IntegrationMethod IntegratorIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(integrator_integration_order);
 
         unsigned int number_of_threads = 1;
         std::vector<unsigned int> element_partition;
@@ -223,16 +246,33 @@ public:
 
             for(std::vector<Element::Pointer>::iterator it = it_first_element; it != it_last_element; ++it, ++it_integrator)
             {
-//                KRATOS_WATCH((*it)->Id())
-                const GeometryType::IntegrationPointsArrayType& integration_points
-                        = (*it)->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+                if(fit_quadrature_type == 0)
+                {
+                    const GeometryType::IntegrationPointsArrayType& integration_points
+                            = (*it)->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
 
-                Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
-                        funcs, r_brep, *(*it_integrator), integration_points,
-                        IntegratorIntegrationMethod, solver_type, echo_level);
+                    Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
+                            funcs, r_brep, *(*it_integrator), integration_points,
+                            integrator_integration_method, solver_type, echo_level);
 
-                /* create new quadrature and assign to the geometry */
-                FiniteCellGeometry<GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
+                    /* create new quadrature and assign to the geometry */
+                    FiniteCellGeometry<GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
+                }
+                else
+                {
+                    GeometryType::IntegrationPointsArrayType integration_points
+                            = (*it_integrator)->Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
+
+                    Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
+                            funcs, r_brep, *(*it_integrator), integration_points,
+                            integrator_integration_method, solver_type, echo_level);
+
+                    for(std::size_t i = 0; i < integration_points.size(); ++i)
+                        integration_points[i].Weight() = Weight(i);
+
+                    /* create new quadrature and assign to the geometry */
+                    FiniteCellGeometry<GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, integration_points);
+                }
 
                 if(echo_level == -2)
                     ++(*show_progress);
@@ -259,7 +299,7 @@ public:
             const BRep& r_brep,
             const TIntegratorType& r_integrator,
             const GeometryType::IntegrationPointsArrayType& integration_points,
-            const GeometryData::IntegrationMethod& IntegratorIntegrationMethod,
+            const int& integrator_integration_method,
             const std::string& solver_type,
             const int& echo_level)
     {
@@ -290,7 +330,7 @@ public:
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             Mb(i) = 0.0;
-            r_integrator.Integrate(ProductFunction<TFunctionType>(r_funcs[i], H), Mb(i), IntegratorIntegrationMethod);
+            r_integrator.Integrate(ProductFunction<TFunctionType>(r_funcs[i], H), Mb(i), integrator_integration_method);
         }
         if(echo_level > 3)
             KRATOS_WATCH(Mb)
@@ -349,6 +389,85 @@ public:
             std::cout << "####################end moment-fitting####################" << std::endl;
 
         return Mw;
+    }
+
+
+    template<class TTreeType> // = MomentFittedQuadTreeSubCell
+    void PyMultithreadedFitQuadratureSubCell(boost::python::list& r_trees,
+            boost::python::list& r_funcs,
+            const BRep& r_brep,
+            const int& integrator_integration_method,
+            const std::string& solver_type,
+            const int& echo_level) const
+    {
+        /* extract the tree with subcell */
+        typedef typename TTreeType::Pointer TTreePointerType;
+        std::vector<TTreePointerType> trees;
+        typedef boost::python::stl_input_iterator<TTreePointerType> iterator_tree_type;
+        BOOST_FOREACH(const typename iterator_tree_type::value_type& t,
+                      std::make_pair(iterator_tree_type(r_trees), // begin
+                      iterator_tree_type() ) ) // end
+        {
+            trees.push_back(t);
+        }
+
+        /* extract the fitting functions */
+        std::vector<FunctionR3R1::Pointer> funcs;
+        typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
+        BOOST_FOREACH(const iterator_value_type::value_type& f,
+                      std::make_pair(iterator_value_type(r_funcs), // begin
+                        iterator_value_type() ) ) // end
+        {
+            funcs.push_back(f);
+        }
+
+        /* multithreaded fit quadrature subcell */
+        unsigned int number_of_threads = 1;
+#ifdef _OPENMP
+        number_of_threads = omp_get_max_threads();
+#endif
+        std::cout << "number_of_threads for MultithreadedRefineBy: " << number_of_threads << std::endl;
+        std::vector<unsigned int> tree_partition;
+        FiniteCellAuxilliaryUtility::CreatePartition(number_of_threads, trees.size(), tree_partition);
+        std::cout << "tree_partition:";
+        for(std::size_t i = 0; i < tree_partition.size(); ++i)
+            std::cout << " " << tree_partition[i];
+        std::cout << std::endl;
+
+        boost::progress_display show_progress( trees.size() );
+
+#ifdef _OPENMP
+        #pragma omp parallel for
+#endif
+        for(int k = 0; k < number_of_threads; ++k)
+        {
+            typename std::vector<TTreePointerType>::iterator it_first_tree = trees.begin() + tree_partition[k];
+            typename std::vector<TTreePointerType>::iterator it_last_tree = trees.begin() + tree_partition[k+1];
+
+            for(typename std::vector<TTreePointerType>::iterator it = it_first_tree; it != it_last_tree; ++it)
+            {
+                /* firstly compute the physical integration point */
+                std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
+                        = (*it)->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
+                const std::vector<std::size_t>& subcell_index = Output.first;
+                const GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
+
+                /* secondly assign the physical integration points to the element */
+                GeometryData::IntegrationMethod RepresentativeIntegrationMethod = (*it)->GetRepresentativeIntegrationMethod();
+                FiniteCellGeometry<GeometryType>::AssignGeometryData(*(*it)->pGetGeometry(), RepresentativeIntegrationMethod, physical_integration_points);
+                Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+                (*it)->pGetElement()->SetValue(INTEGRATION_ORDER_var, (*it)->GetRepresentativeIntegrationOrder());
+                (*it)->pGetElement()->Initialize();
+
+                /* thirdly fit the subcell */
+                Matrix Weights = (*it)->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level);
+
+                (*it)->pGetElement()->SetValue(SUBCELL_WEIGHTS, Weights);
+
+                ++show_progress;
+            }
+        }
+        std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << trees.size() << " trees" << std::endl;
     }
 
 
@@ -486,7 +605,9 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream, MomentFittingUtility& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream, const MomentFittingUtility& rThis)

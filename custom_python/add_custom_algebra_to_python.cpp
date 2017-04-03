@@ -508,11 +508,15 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     /************* EXPORT INTERFACE FOR BREP **********************/
     /**************************************************************/
 
-    int(BRep::*pointer_to_CutStatus)(Element::Pointer& p_elem) const = &BRep::CutStatus;
+    int(BRep::*pointer_to_CutStatusElement)(Element::Pointer& p_elem) const = &BRep::CutStatus;
+    int(BRep::*pointer_to_CutStatusGeometry)(Element::GeometryType::Pointer& p_geom) const = &BRep::CutStatus;
 
     class_<BRep, BRep::Pointer, boost::noncopyable>
     ( "BRep", init<>() )
-    .def("CutStatus", pointer_to_CutStatus)
+    .def("SetTolerance", &BRep::SetTolerance)
+    .def("GetTolerance", &BRep::GetTolerance)
+    .def("CutStatus", pointer_to_CutStatusElement)
+    .def("CutStatus", pointer_to_CutStatusGeometry)
     ;
 
     /**************************************************************/
