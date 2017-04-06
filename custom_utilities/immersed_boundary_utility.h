@@ -84,6 +84,10 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    static const int _REPORT_NUMBER_OF_CREATED_CONDITIONS = 0x01;
+    static const int _WARNING_FOUND_NO_ELEMENT = 0x02;
+    static const int _REPORT_CONDITION_CREATED = 0x04;
+
     ///@}
     ///@name Life Cycle
     ///@{
@@ -276,7 +280,7 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     static bool SearchPartner( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint )
+            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const int& echo_level )
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
@@ -317,7 +321,9 @@ public:
             }
         }
 
-        std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+        if(echo_level & _WARNING_FOUND_NO_ELEMENT == _WARNING_FOUND_NO_ELEMENT)
+            std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+
         return false;
     }
 
@@ -325,7 +331,7 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     bool SearchPartnerWithBin( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint ) const
+            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const int& echo_level ) const
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
@@ -352,7 +358,9 @@ public:
             }
         }
 
-        std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+        if(echo_level & _WARNING_FOUND_NO_ELEMENT == _WARNING_FOUND_NO_ELEMENT)
+            std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+
         return false;
     }
 

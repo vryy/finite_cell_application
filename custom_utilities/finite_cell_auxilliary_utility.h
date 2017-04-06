@@ -309,6 +309,7 @@ public:
     }
 
 
+    /// Multithreaded refine the quadtree(-subcell) using a brep
     template<class TTreeType, class TBRepType>
     static void MultithreadedRefineBy(std::vector<typename TTreeType::Pointer>& r_trees, const TBRepType& r_brep)
     {

@@ -352,10 +352,11 @@ public:
         const int& echo_level) const
     {
         /* firstly compute the physical integration point */
-        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output = GetPhysicalInterationPoint(r_brep, integrator_integration_method);
+        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
+                = this->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
         const std::vector<std::size_t>& subcell_index = Output.first;
         const GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
-    
+
         /* secondly assign the quadrature for parent element based on physical integration_points of the previous step */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(mRepresentativeIntegrationOrder);
@@ -375,7 +376,7 @@ public:
             funcs.push_back(f);
         }
 
-        Matrix Weights = FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level);
+        Matrix Weights = this->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level);
 
         /* next create the sub-elements */
         // find the last element id
@@ -406,7 +407,7 @@ public:
             KRATOS_WATCH(*pSubCellGeometry)
             KRATOS_WATCH(*mpTreeNodes[i])
             #endif
-            if(status == 0)
+            if(status == BRep::_IN)
             {
                 #ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is completely inside the physical domain" << std::endl;
@@ -417,7 +418,7 @@ public:
                 physical_integration_points.push_back(integration_point);
                 subcell_index.push_back(i);
             }
-            else if(status == -1)
+            else if(status == BRep::_CUT)
             {
                 #ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is cut" << std::endl;
@@ -431,7 +432,6 @@ public:
                 if(found)
                 {
                     GeometryType::IntegrationPointType integration_point;
-//                    pGetGeometry()->PointLocalCoordinates(integration_point, COG);
                     bool is_inside = pGetGeometry()->IsInside(COG, integration_point);
                     if(!is_inside)
                     {
@@ -440,10 +440,6 @@ public:
                     integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
                     physical_integration_points.push_back(integration_point);
                     subcell_index.push_back(i);
-                }
-                else
-                {
-                    // we have to continue to refine here, in order to find at least a physical point
                 }
             }
             #ifdef DEBUG_SUBCELL

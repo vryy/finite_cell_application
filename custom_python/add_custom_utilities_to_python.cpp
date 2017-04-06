@@ -199,6 +199,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("SetQuadrature", &QuadratureUtility::PySetQuadrature)
     .def("CreateConditionFromQuadraturePoint", pointer_to_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", pointer_to_CreateConditionFromPoint)
+    .def("CreatePoint", &QuadratureUtility::CreatePoint)
     ;
 
 //    class_<BinaryTree<1>, BinaryTree<1>::Pointer, boost::noncopyable, bases<QuadratureUtility> >
@@ -263,6 +264,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     ("QuadTreeSubCell", init<Element::Pointer&>())
     .def(init<Condition::Pointer&>())
     .def("NumberOfSubCells", &QuadTreeSubCell::NumberOfSubCells)
+    .def("DomainSize", &QuadTreeSubCell::DomainSize)
     .def("Refine", &QuadTreeSubCell::Refine)
     .def("RefineBy", &QuadTreeSubCell::RefineBy)
     .def("CreateQuadTree", &QuadTreeSubCell::CreateQuadTree)

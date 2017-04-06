@@ -350,7 +350,11 @@ public:
         if(solver_type == "direct")
         {
             if(MA.size1() != MA.size2())
-                KRATOS_THROW_ERROR(std::logic_error, "The matrix is not square. Direct solver cannot be used", "")
+            {
+                std::stringstream ss;
+                ss << "The matrix size " << MA.size1() << "x" << MA.size2() << " is not square. Direct solver cannot be used";
+                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+            }
 
             /* the linear system is square, we can use a direct solver */
             boost::numeric::ublas::permutation_matrix<> pm(MA.size1());
@@ -435,6 +439,10 @@ public:
         std::cout << std::endl;
 
         boost::progress_display show_progress( trees.size() );
+
+//        int integrator_quadrature_type = QuadratureUtility::GetQuadratureType(integrator_integration_method);
+//        int integrator_quadrature_order = QuadratureUtility::GetQuadratureOrder(integrator_integration_method);
+//        int integrator_integration_method_physical_point = 0x20 + integrator_quadrature_order;
 
 #ifdef _OPENMP
         #pragma omp parallel for

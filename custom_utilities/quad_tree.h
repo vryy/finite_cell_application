@@ -99,7 +99,7 @@ public:
         {
             GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
             int stat = r_brep.CutStatus(*pThisGeometry);
-            if(stat == -1)
+            if(stat == BRep::_CUT)
             {
                 this->Refine();
             }
@@ -810,7 +810,7 @@ public:
             else if(integration_order == 5)
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else
-                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Lobatto is not supported:", integration_order);
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
         }
         else if(quadrature_type == 2) // Gauss-Lobatto
         {
@@ -822,6 +822,18 @@ public:
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 4)
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 6)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 7)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 8)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 9)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints9, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 10)
+                return Quadrature<HexahedronGaussLobattoIntegrationPoints10, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else
                 KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Lobatto is not supported:", integration_order);
         }
@@ -1727,6 +1739,16 @@ public:
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
             mpTreeNodes[i]->RefineBy(mpThisGeometry, r_brep);
+    }
+
+
+    /// Compute the domain size covered by this quadtree (including all subcells)
+    double DomainSize(const BRep& r_brep, const int& integration_method) const
+    {
+        double domain_size = 0.0;
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+            domain_size += mpTreeNodes[i]->DomainSize(mpThisGeometry, r_brep, integration_method);
+        return domain_size;
     }
 
 

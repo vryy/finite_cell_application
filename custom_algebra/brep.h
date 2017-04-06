@@ -76,6 +76,10 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    static const int _CUT = -1;
+    static const int _IN  = 0;
+    static const int _OUT = 1;
+
     ///@}
     ///@name Life Cycle
     ///@{

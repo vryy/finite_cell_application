@@ -160,10 +160,30 @@ class FiniteCellSimulator:
             f_x = MonomialFunctionR3R1X()
             f_y = MonomialFunctionR3R1Y()
             f_z = MonomialFunctionR3R1Z()
-            f_xy = MonomialFunctionR3R1XY()
             f_yz = MonomialFunctionR3R1YZ()
             f_xz = MonomialFunctionR3R1XZ()
+            f_xy = MonomialFunctionR3R1XY()
             f_xyz = MonomialFunctionR3R1XYZ()
+
+            f_x2 = MonomialFunctionR3R1X2()
+            f_y2 = MonomialFunctionR3R1Y2()
+            f_z2 = MonomialFunctionR3R1Z2()
+            f_y2z = MonomialFunctionR3R1Y2Z()
+            f_yz2 = MonomialFunctionR3R1YZ2()
+            f_x2z = MonomialFunctionR3R1X2Z()
+            f_xz2 = MonomialFunctionR3R1XZ2()
+            f_x2y = MonomialFunctionR3R1X2Y()
+            f_xy2 = MonomialFunctionR3R1XY2()
+            f_y2z2 = MonomialFunctionR3R1Y2Z2()
+            f_x2z2 = MonomialFunctionR3R1X2Z2()
+            f_x2y2 = MonomialFunctionR3R1X2Y2()
+            f_x2yz = MonomialFunctionR3R1X2YZ()
+            f_xy2z = MonomialFunctionR3R1XY2Z()
+            f_xyz2 = MonomialFunctionR3R1XYZ2()
+            f_xy2z2 = MonomialFunctionR3R1XY2Z2()
+            f_x2yz2 = MonomialFunctionR3R1X2YZ2()
+            f_x2y2z = MonomialFunctionR3R1X2Y2Z()
+            f_x2y2z2 = MonomialFunctionR3R1X2Y2Z2()
 
             if fit_degree >= 1:
                 fit_funcs.append(f_1)
@@ -174,8 +194,29 @@ class FiniteCellSimulator:
                 fit_funcs.append(f_yz)
                 fit_funcs.append(f_xz)
                 fit_funcs.append(f_xyz)
-            
+
             if fit_degree >= 2:
+                fit_funcs.append(f_x2)
+                fit_funcs.append(f_y2)
+                fit_funcs.append(f_z2)
+                fit_funcs.append(f_y2z)
+                fit_funcs.append(f_yz2)
+                fit_funcs.append(f_x2z)
+                fit_funcs.append(f_xz2)
+                fit_funcs.append(f_x2y)
+                fit_funcs.append(f_xy2)
+                fit_funcs.append(f_y2z2)
+                fit_funcs.append(f_x2z2)
+                fit_funcs.append(f_x2y2)
+                fit_funcs.append(f_x2yz)
+                fit_funcs.append(f_xy2z)
+                fit_funcs.append(f_xyz2)
+                fit_funcs.append(f_xy2z2)
+                fit_funcs.append(f_x2yz2)
+                fit_funcs.append(f_x2y2z)
+                fit_funcs.append(f_x2y2z2)
+
+            if fit_degree >= 3:
                 print("Unsupported fit_degree " + str(fit_degree))
 
         return fit_funcs
@@ -216,12 +257,12 @@ class FiniteCellSimulator:
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
                 stat = self.brep.CutStatus(elem)
-                if stat == -1:
+                if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
                     fit_util.FitQuadrature(elem, fit_funcs, self.brep, qt, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level)
                     cut_elems.append(elem)
-                elif stat == 1:
+                elif stat == self.brep._OUT:
                     exclude_elems.append(elem)
                 if echo_level == -2:
                     if cnt > 0.01*num_elems:
@@ -238,10 +279,10 @@ class FiniteCellSimulator:
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
                 stat = self.brep.CutStatus(elem)
-                if stat == -1:
+                if stat == self.brep._CUT:
                     cut_elems.append(elem)
                     integrators.append(qt)
-                elif stat == 1:
+                elif stat == self.brep._OUT:
                     exclude_elems.append(elem)
             aux_util = FiniteCellAuxilliaryUtility()
             for i in range(0, qt_depth):
@@ -260,8 +301,10 @@ class FiniteCellSimulator:
     def MomentFitSubCell(self, bulk_elements):
         print("fit parameters:")
         pprint.pprint(self.params)
-        min_qt_depth = self.params["min_qt_depth"]
+        qt_depth = self.params["qt_depth"]
         max_qt_depth = self.params["max_qt_depth"]
+        extra_qt_depth = self.params["extra_qt_depth"]
+        small_domain_size = self.params["small_domain_size"]
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
@@ -284,38 +327,65 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatus(elem)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == -1:
+            if stat == self.brep._CUT:
                 cut_elems.append(qs)
-            elif stat == 1:
+            elif stat == self.brep._OUT:
                 exclude_elems.append(qs)
         aux_util = FiniteCellAuxilliaryUtility()
-        for i in range(0, min_qt_depth):
+        for i in range(0, qt_depth):
             aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
         # recursive refine the subcell that are cut but not integrable by the quadtree # this is required if Gauss-Legendre quadrature is used
-#        for qs in cut_elems:
-#            for i in range(0, qs.NumberOfSubCells()):
-#                qt = qs.CreateQuadTree(i)
-#                stat = self.brep.CutStatus(qt.pGetGeometry())
-#                if stat == -1:
-#                    cnt = min_qt_depth
-#                    found = False
-#                    while cnt < max_qt_depth:
-#                        if qt.DomainSize(self.brep) == 0.0:
-#                            qt.RefineBy(self.brep)
-#                            cnt = cnt + 1
-#                        else:
-#                            found = True
-#                            break
-#                    if (not found) and (cnt >= max_qt_depth):
-#                        print("can't find the physical point within subcell " + str(i) + " at " + str(max_qt_depth) + " quadtree level")
-#                        sys.exit(0)
-        fit_util.MultithreadedFitQuadratureSubCell(cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level)
-
+        if max_qt_depth > qt_depth:
+            for qs in cut_elems:
+                for i in range(0, qs.NumberOfSubCells()):
+                    qt = qs.CreateQuadTree(i)
+                    stat = self.brep.CutStatus(qt.pCreateGeometry())
+                    if stat == self.brep._CUT:
+                        cnt = qt_depth
+                        found = False
+                        while cnt < max_qt_depth:
+                            if qt.DomainSize(self.brep, integrator_quadrature_method) == 0.0:
+                                qt.RefineBy(self.brep)
+                                cnt = cnt + 1
+                                print("subcell " + str(i) + " of element " + str(qs.GetElement().Id) + " is cut but domain size is zero, refine to level " + str(cnt))
+                            else:
+                                found = True
+                                if cnt > qt_depth:
+                                    for j in range(0, extra_qt_depth):
+                                        qt.RefineBy(self.brep)
+                                break
+                        if (not found) and (cnt >= max_qt_depth):
+                            print("can't find the physical point within subcell " + str(i) + " at " + str(max_qt_depth) + " quadtree level")
+                            sys.exit(0)
+        # check again, if any quadtree subcell is too small, we shall eliminate them
+        print("Refine completed")
+        if small_domain_size > 0.0:
+            proper_cut_elems = []
+            cnt = 0
+            for qs in cut_elems:
+                elem_id = qs.GetElement().Id
+                domain_size = qs.DomainSize(self.brep, integrator_quadrature_method)
+#                if elem_id == 14149:
+#                    print("element " + str(elem_id) + " has domain_size = " + str(domain_size))
+                if domain_size > small_domain_size:
+                    proper_cut_elems.append(qs)
+                else:
+                    cnt = cnt + 1
+                    print("the quadtree subcell of element " + str(elem_id) + " is too small, domain size = " + str(domain_size) + ". It will be skipped.")
+            print("Removal completed, " + str(cnt) + " quadtree subcell is removed")
+        else:
+            proper_cut_elems = cut_elems
+        fit_util.MultithreadedFitQuadratureSubCell(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level)
         print("construct quadrature using moment fitting for subcell successfully")
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
         accuracy = self.params["quad_accuracy"]
-        fit_util.SaveQuadratureSubCell(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
+        fit_util.SaveQuadratureSubCell(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, accuracy)
+        fid = open(quad_filename, "a")
+        fid.write("\ndef GetParameter():\n")
+        fid.write("    params = " + str(self.params) + "\n")
+        fid.write("    return params\n")
+        fid.close()
 
     ###SIMULATION DRIVER#############
     def Initialize(self, model, bulk_elements):
@@ -339,7 +409,7 @@ class FiniteCellSimulator:
             for qi, qt in self.forest.iteritems():
                 elem = model.model_part.Elements[qi]
                 stat = self.brep.CutStatus(elem)
-                if stat == -1:
+                if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
                     np = qt.ConstructQuadrature(self.brep, cut_cell_quadrature_method, small_weight)
@@ -400,8 +470,11 @@ class FiniteCellSimulator:
             cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
             cut_cell_full_quadrature = quadrature_data.GetCutCellFullQuadrature()
             subcell_weights = quadrature_data.GetCutCellSubCellWeights()
+            self.proper_cut_elems = ElementsArray()
             lastElementId = aux_util.GetLastElementId(model.model_part)
             lastCondId = aux_util.GetLastConditionId(model.model_part)
+            if self.params["export_physical_integration_point"]:
+                cog_points = []
             for elem in bulk_elements:
                 if elem.Id in cut_elems:
 #                    print("at cut element " + str(elem.Id))
@@ -410,6 +483,8 @@ class FiniteCellSimulator:
                         elem.SetValue(IS_INACTIVE, True)
                         elem.Set(ACTIVE, False)
                         continue
+
+                    aux_util.AddElement(self.proper_cut_elems, elem)
 
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
@@ -435,6 +510,10 @@ class FiniteCellSimulator:
                         sub_elem.SetValue(INTEGRATION_POINT_LOCAL, physical_integration_points[cnt])
                         cnt = cnt + 1
 #                    print("cut element " + str(elem.Id) + " completed")
+                    if self.params["export_physical_integration_point"]:
+                        points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                        for point in points:
+                            cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 elif elem.Id in exclude_elems:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
@@ -442,6 +521,9 @@ class FiniteCellSimulator:
                 else:
                     self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
             print("obtain moment-fit subcell quadrature successfully")
+            if self.params["export_physical_integration_point"]:
+                quad_util = QuadratureUtility()
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
         else:
             print("Unknown quadrature_method", self.quadrature_method)
             sys.exit(0)
@@ -456,7 +538,7 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatus(elem)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == -1:
+            if stat == self.brep._CUT:
                 cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -470,9 +552,9 @@ class FiniteCellSimulator:
                 qt = qs.CreateQuadTree(i)
                 stat = self.brep.CutStatus(qt.pGetGeometry())
                 print("    subcell " + str(i) + " info:")
-                if stat == -1:
+                if stat == self.brep._CUT:
                     print("        cut: yes")
-                elif stat == 1:
+                elif stat == self.brep._OUT:
                     print("        cut: out")
                 else:
                     print("        cut: in")
@@ -491,7 +573,7 @@ class FiniteCellSimulator:
                 elem = qs.GetElement()
                 stat = self.brep.CutStatus(elem)
                 elem.SetValue(CUT_STATUS, stat)
-                if stat == -1:
+                if stat == self.brep._CUT:
                     cut_elems.append(qs)
         else:
             for qi, qs in self.forest.iteritems():
@@ -499,7 +581,7 @@ class FiniteCellSimulator:
                 if elem.Id in selected_elems:
                     stat = self.brep.CutStatus(elem)
                     elem.SetValue(CUT_STATUS, stat)
-                    if stat == -1:
+                    if stat == self.brep._CUT:
                         cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -538,7 +620,7 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatus(elem)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == -1:
+            if stat == self.brep._CUT:
                 cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -552,7 +634,7 @@ class FiniteCellSimulator:
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
                 stat = self.brep.CutStatus(qt.pCreateGeometry())
-                if stat == -1:
+                if stat == self.brep._CUT:
 #                    domain_size = qt.DomainSize(self.brep)
 #                    domain_size = qt.Integrate(Hf, 0x12) # Gauss Legendre order 2
 #                    domain_size = qt.Integrate(Hf, 0x13) # Gauss Legendre order 3

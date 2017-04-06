@@ -687,6 +687,14 @@ public:
         return pNewCond;
     }
 
+    /// Create a point from coordinates
+    PointType CreatePoint(const double& rX, const double& rY, const double& rZ) const
+    {
+        PointType P(rX, rY, rZ);
+        return P;
+    }
+
+
     ///@}
     ///@name Operators
     ///@{

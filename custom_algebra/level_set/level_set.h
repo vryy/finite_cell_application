@@ -226,17 +226,17 @@ public:
         {
             if(in_list.size() == 0)
             {
-                stat = 1;
+                stat = BRep::_OUT;
                 return stat;
             }
 
             if(out_list.size() == 0)
             {
-                stat = 0;
+                stat = BRep::_IN;
                 return stat;
             }
 
-            stat = -1;
+            stat = BRep::_CUT;
             return stat;
         }
 
