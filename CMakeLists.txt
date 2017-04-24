@@ -2,11 +2,18 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 message("**** configuring KratosFiniteCellApplication ****")
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
+
 ######### add include directory here
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes )
 #######################################################################
+
+FIND_PACKAGE(MathPresso REQUIRED)
+IF(${MATHPRESSO_FOUND} MATCHES TRUE)
+    ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_MASHPRESSO)
+ENDIF()
 
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
@@ -24,6 +31,9 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
 add_library(KratosFiniteCellApplication SHARED ${KRATOS_FINITE_CELL_APPLICATION_SOURCES})
 target_link_libraries(KratosFiniteCellApplication KratosCore)
 target_link_libraries(KratosFiniteCellApplication ${LAPACK_LIBRARIES})
+IF(${MATHPRESSO_FOUND} MATCHES TRUE)
+    target_link_libraries(KratosFiniteCellApplication ${MATHPRESSO_LIBRARIES})
+ENDIF()
 set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFiniteCellApplication DESTINATION libs )
 #######################################################################
@@ -43,4 +53,5 @@ endif(${INSTALL_PYTHON_FILES} MATCHES ON)
 
 ## Add to the KratosMultiphysics Python module
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/FiniteCellApplication.py" DESTINATION KratosMultiphysics )
+install(FILES ${MATHPRESSO_LIBRARIES} DESTINATION libs )
 #######################################################################

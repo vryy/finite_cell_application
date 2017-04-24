@@ -1,0 +1,4 @@
+*.bak
+*.dev*
+*.swp
+test_examples

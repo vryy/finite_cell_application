@@ -249,7 +249,8 @@ public:
             const BRep& r_brep,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level) const
+            const int& echo_level,
+            const double& small_weight) const
     {
         std::vector<FunctionR3R1::Pointer> funcs;
         typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
@@ -260,7 +261,7 @@ public:
             funcs.push_back(f);
         }
 
-        FitQuadraturePhysicalPoints<FunctionR3R1>(funcs, r_brep, integrator_integration_method, solver_type, echo_level);
+        FitQuadraturePhysicalPoints<FunctionR3R1>(funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
     }
 
 
@@ -269,7 +270,8 @@ public:
             const BRep& r_brep,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level) const
+            const int& echo_level,
+            const double& small_weight) const
     {
         GeometryType& r_geom = *pGetGeometry();
 
@@ -330,7 +332,8 @@ public:
             physical_integration_points,
             integrator_integration_method,
             solver_type,
-            echo_level);
+            echo_level,
+            small_weight);
 
         for(std::size_t point = 0; point < physical_integration_points.size(); ++point)
             physical_integration_points[point].Weight() = Weight[point];
@@ -349,7 +352,8 @@ public:
         const BRep& r_brep,
         const int& integrator_integration_method,
         const std::string& solver_type,
-        const int& echo_level) const
+        const int& echo_level,
+        const double& small_weight) const
     {
         /* firstly compute the physical integration point */
         std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
@@ -376,7 +380,7 @@ public:
             funcs.push_back(f);
         }
 
-        Matrix Weights = this->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level);
+        Matrix Weights = this->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
 
         /* next create the sub-elements */
         // find the last element id
@@ -459,7 +463,8 @@ public:
         const BRep& r_brep,
         const int& integrator_integration_method,
         const std::string& solver_type,
-        const int& echo_level) const
+        const int& echo_level,
+        const double& small_weight) const
     {
         Matrix Weights(subcell_index.size(), mSubCellRepresentativeIntegrationPoints.size());
         for(std::size_t i = 0; i < subcell_index.size(); ++i)
@@ -471,7 +476,7 @@ public:
 
             noalias(row(Weights, i)) = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree>(*pGetGeometry(),
                     r_funcs, r_brep, *quad_tree, mSubCellRepresentativeIntegrationPoints,
-                    integrator_integration_method, solver_type, echo_level);
+                    integrator_integration_method, solver_type, echo_level, small_weight);
         }
 
         return Weights;
@@ -534,7 +539,8 @@ public:
             r_model_part.Conditions().push_back(pNewCond);
         }
 
-        std::cout << NewElements.size() << " new element-wrapped conditions are added to the model_part" << std::endl;
+        std::cout << NewElements.size() << " new element-wrapped conditions from parent element " << mpElement->Id()
+                  << " are added to the model_part" << std::endl;
 
         return NewElements;
     }

@@ -6,7 +6,7 @@ from KratosMultiphysics.FiniteCellApplication import *
 
 class FiniteCellSimulator:
 
-    def __init__(self, params):
+    def __init__(self, params = None):
         self.params = params
 
     ###COMPUTE GLOBAL DISPLACEMENT (L2) ERROR###
@@ -65,27 +65,6 @@ class FiniteCellSimulator:
         self.forest = {}
         for elem in elements:
             self.forest[elem.Id] = QuadTreeLocal(elem)
-
-        #######QUAD TREE POST PROCESSING###########
-#        qt_depth = self.params["qt_depth"]
-#        for qi, qt in self.forest.iteritems():
-#            for i in range(0, qt_depth):
-#                qt.RefineBy(self.brep)
-    #    sample_element = "KinematicLinear3D8N"
-    #    tmodel_part = ModelPart("QuadTree")
-    #    last_node_id = 0x0000000000000000 + len(model.model_part.Nodes)
-    #    last_element_id = 0x0000000000000000
-    #    for qi, qt in self.forest.iteritems():
-    #        last_ids = qt.AddToModelPart(tmodel_part, sample_element, last_node_id, last_element_id)
-    #        last_node_id = last_ids[0]
-    #        last_element_id = last_ids[1]
-    #    print(tmodel_part)
-    #    model.gid_io.InitializeMesh( 1234.0 )
-    #    mesh = tmodel_part.GetMesh()
-    #    model.gid_io.WriteMesh( mesh )
-    #    model.gid_io.FinalizeMesh()
-    #    sys.exit(0)
-        ###########################################
 
     def CreateForestSubCell(self, elements):
         self.forest = {}
@@ -153,7 +132,8 @@ class FiniteCellSimulator:
                 fit_funcs.append(f_x3y3)
 
             if fit_degree >= 4:
-                print("Unsupported fit_degree " + str(fit_degree))
+                fit_funcs = self.CreateTensorProductFittingFunctions(2, fit_degree)
+#                print("Unsupported fit_degree " + str(fit_degree))
 
         elif fit_space_dim == 3:
             f_1 = ScalarFunctionR3R1(1.0)
@@ -217,9 +197,49 @@ class FiniteCellSimulator:
                 fit_funcs.append(f_x2y2z2)
 
             if fit_degree >= 3:
-                print("Unsupported fit_degree " + str(fit_degree))
+                fit_funcs = self.CreateTensorProductFittingFunctions(3, fit_degree)
+#                print("Unsupported fit_degree " + str(fit_degree))
 
         return fit_funcs
+
+    ## Create the list of function used for fitting
+    ## if rank is 2 and degree 2 this subroutine will generate [1, x, x^2] x [1, y, y^2]
+    def CreateTensorProductFittingFunctions(self, rank, degree):
+        funcs = []
+        if rank == 2:
+            for i in range(0, degree+1):
+                if i > 0:
+                    expr1 = "pow(y, " + str(i) + ")"
+                else:
+                    expr1 = '1'
+                for j in range(0, degree+1):
+                    if j > 0:
+                        expr2 = "pow(x, " + str(j) + ")"
+                    else:
+                        expr2 = '1'
+                    funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2))
+        elif rank == 3:
+            for i in range(0, degree+1):
+                if i > 0:
+                    expr1 = "pow(z, " + str(i) + ")"
+                else:
+                    expr1 = '1'
+                for j in range(0, degree+1):
+                    if j > 0:
+                        expr2 = "pow(y, " + str(j) + ")"
+                    else:
+                        expr2 = '1'
+                    for k in range(0, degree+1):
+                        if k > 0:
+                            expr3 = "pow(x, " + str(k) + ")"
+                        else:
+                            expr3 = '1'
+                        funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2 + '*' + expr3))
+        else:
+            print("rank " + str(rank) + " is not supported")
+            sys.exit(1)
+
+        return funcs
 
     ###FITTING DRIVER#############
     def MomentFit(self, bulk_elements):
@@ -247,6 +267,7 @@ class FiniteCellSimulator:
         integrator_quadrature_method = self.params["integrator_quadrature_method"]
         solver_type = self.params["fit_solver_type"]
         echo_level = self.params["fit_echo_level"]
+        small_weight = self.params["fit_small_weight"]
 
         if fit_mode == "serial":
             if echo_level == -2:
@@ -260,7 +281,7 @@ class FiniteCellSimulator:
                 if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
-                    fit_util.FitQuadrature(elem, fit_funcs, self.brep, qt, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level)
+                    fit_util.FitQuadrature(elem, fit_funcs, self.brep, qt, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
                     cut_elems.append(elem)
                 elif stat == self.brep._OUT:
                     exclude_elems.append(elem)
@@ -286,8 +307,10 @@ class FiniteCellSimulator:
                     exclude_elems.append(elem)
             aux_util = FiniteCellAuxilliaryUtility()
             for i in range(0, qt_depth):
+                print("Refine level " + str(i+1) + " ...")
                 aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
-            fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level)
+                print("###################################################")
+            fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
         else:
             print("Unknown fit_mode", fit_mode)
             sys.exit(0)
@@ -297,6 +320,11 @@ class FiniteCellSimulator:
         quad_filetype = self.params["quad_filetype"]
         accuracy = self.params["quad_accuracy"]
         fit_util.SaveQuadrature(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
+        fid = open(quad_filename, "a")
+        fid.write("\ndef GetParameter():\n")
+        fid.write("    params = " + str(self.params) + "\n")
+        fid.write("    return params\n")
+        fid.close()
 
     def MomentFitSubCell(self, bulk_elements):
         print("fit parameters:")
@@ -322,6 +350,7 @@ class FiniteCellSimulator:
         integrator_quadrature_method = self.params["integrator_quadrature_method"]
         solver_type = self.params["fit_solver_type"]
         echo_level = self.params["fit_echo_level"]
+        small_weight = self.params["fit_small_weight"]
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
@@ -333,7 +362,9 @@ class FiniteCellSimulator:
                 exclude_elems.append(qs)
         aux_util = FiniteCellAuxilliaryUtility()
         for i in range(0, qt_depth):
+            print("Refine level " + str(i+1) + " ...")
             aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
+            print("###################################################")
         # recursive refine the subcell that are cut but not integrable by the quadtree # this is required if Gauss-Legendre quadrature is used
         if max_qt_depth > qt_depth:
             for qs in cut_elems:
@@ -359,9 +390,13 @@ class FiniteCellSimulator:
                             sys.exit(0)
         # check again, if any quadtree subcell is too small, we shall eliminate them
         print("Refine completed")
+        sys.stdout.flush()
         if small_domain_size > 0.0:
             proper_cut_elems = []
             cnt = 0
+            cnt2 = 0
+            cnt3 = 0
+            num_cut_elems = len(cut_elems)
             for qs in cut_elems:
                 elem_id = qs.GetElement().Id
                 domain_size = qs.DomainSize(self.brep, integrator_quadrature_method)
@@ -371,11 +406,19 @@ class FiniteCellSimulator:
                     proper_cut_elems.append(qs)
                 else:
                     cnt = cnt + 1
-                    print("the quadtree subcell of element " + str(elem_id) + " is too small, domain size = " + str(domain_size) + ". It will be skipped.")
-            print("Removal completed, " + str(cnt) + " quadtree subcell is removed")
+                    exclude_elems.append(qs)
+                    print("\nthe quadtree subcell of element " + str(elem_id) + " is too small, domain size = " + str(domain_size) + ". It will be skipped.")
+                if cnt2 > 0.01*num_cut_elems:
+                    cnt2 = 0
+                    sys.stdout.write(str(cnt3) + " ")
+                    sys.stdout.flush()
+                    cnt3 = cnt3 + 1
+                else:
+                    cnt2 = cnt2 + 1
+            print("\nRemoval completed, " + str(cnt) + " quadtree subcell is removed")
         else:
             proper_cut_elems = cut_elems
-        fit_util.MultithreadedFitQuadratureSubCell(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level)
+        fit_util.MultithreadedFitQuadratureSubCell(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, small_weight)
         print("construct quadrature using moment fitting for subcell successfully")
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
@@ -395,6 +438,7 @@ class FiniteCellSimulator:
         print("simulator parameters:")
         pprint.pprint(self.params)
         quad_util = QuadratureUtility()
+        aux_util = FiniteCellAuxilliaryUtility()
 
         if self.quadrature_method == "quadtree":
             qt_depth = self.params["qt_depth"]
@@ -406,6 +450,7 @@ class FiniteCellSimulator:
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
             cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             total_add_quadrature_pnts = 0
+            self.proper_cut_elems = ElementsArray()
             for qi, qt in self.forest.iteritems():
                 elem = model.model_part.Elements[qi]
                 stat = self.brep.CutStatus(elem)
@@ -416,6 +461,7 @@ class FiniteCellSimulator:
                     total_add_quadrature_pnts = total_add_quadrature_pnts + np
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize()
+                    aux_util.AddElement(self.proper_cut_elems, elem)
                 elif stat == 1:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
@@ -427,6 +473,15 @@ class FiniteCellSimulator:
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
             print("reading " + self.mat_type + " material completed")
+            if self.params["export_physical_integration_point"]:
+                cog_points = []
+                for elem in self.proper_cut_elems:
+                    points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                    for point in points:
+                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                print("len(cog_points):", len(cog_points))
+                quad_util = QuadratureUtility()
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
 
         elif self.quadrature_method == "moment-fit quadtree":
             cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
@@ -437,11 +492,13 @@ class FiniteCellSimulator:
             cut_elems = quadrature_data.GetCutElements()
             exclude_elems = quadrature_data.GetExcludeElements()
             cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
+            self.proper_cut_elems = ElementsArray()
             for elem_id in cut_elems:
                 elem = model.model_part.Elements[elem_id]
                 quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem_id])
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                 elem.Initialize()
+                aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
@@ -454,13 +511,20 @@ class FiniteCellSimulator:
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
             print("reading " + self.mat_type + " material completed")
+            if self.params["export_physical_integration_point"]:
+                cog_points = []
+                for elem in self.proper_cut_elems:
+                    points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                    for point in points:
+                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                print("len(cog_points):", len(cog_points))
+                quad_util = QuadratureUtility()
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
 
         elif self.quadrature_method == "moment-fit subcell":
             cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
             quadrature_data = self.params["quadrature_data"]
             subcell_element_type = self.params["subcell_element_type"]
-            quad_util = QuadratureUtility()
-            aux_util = FiniteCellAuxilliaryUtility()
             ###########################################
             ##QUADTREE
             ###########################################
@@ -529,6 +593,38 @@ class FiniteCellSimulator:
             sys.exit(0)
 
     ###CHECKING FUNCTIONS#############
+    def ExportQuadTree(self, model, sample_element):
+        self.CreateForest(model.model_part.Elements)
+        #######QUAD TREE POST PROCESSING###########
+        qt_depth = self.params["qt_depth"]
+        for qi, qt in self.forest.iteritems():
+            for i in range(0, qt_depth):
+                qt.RefineBy(self.brep)
+        tmodel_part = ModelPart("QuadTree")
+        last_node_id = 0x0000000000000000 + len(model.model_part.Nodes)
+        last_element_id = 0x0000000000000000
+        for qi, qt in self.forest.iteritems():
+            last_ids = qt.AddToModelPart(tmodel_part, sample_element, last_node_id, last_element_id)
+            last_node_id = last_ids[0]
+            last_element_id = last_ids[1]
+        print(tmodel_part)
+        model.gid_io.InitializeMesh( 1234.0 )
+        mesh = tmodel_part.GetMesh()
+        model.gid_io.WriteMesh( mesh )
+        model.gid_io.FinalizeMesh()
+        ###########################################
+
+    ## check if the moment fitting can reproduce the constant function
+    def IntegrateConstantFunction(self, elements, process_info):
+        domain_size = 0.0
+        for element in elements:
+            if element.GetValue(IS_INACTIVE) == False:
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                for i in range(0, len(W)):
+                    domain_size = domain_size + W[i][0] * J0[i][0]
+        return domain_size
+
     def InspectQuadTreeSubCell(self, bulk_elements, qt_depth):
         self.CreateForestSubCell(bulk_elements)
 
@@ -563,7 +659,7 @@ class FiniteCellSimulator:
                 print("        occupied geometry:")
                 aux_util.Print(qt.pCreateGeometry())
 
-    def ExportQuadTreeSubCell(self, model, bulk_elements, qt_depth, sample_element_name, sample_cond_name, selected_elems = "all"):
+    def ExportQuadTreeSubCell(self, model, bulk_elements, qt_depth, sample_element_name, sample_cond_name, integrator_quadrature_method, selected_elems = "all"):
         self.CreateForestSubCell(bulk_elements)
 
         cut_elems = []
@@ -596,7 +692,7 @@ class FiniteCellSimulator:
             qs.DeepAddToModelPart(model.model_part, sample_element_name, lastNodeId, lastElementId)
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
-                cog_points.append(qt.CenterOfGravity(self.brep, 0x22))
+                cog_points.append(qt.CenterOfGravity(self.brep, integrator_quadrature_method)) # remark: the zero cog still be exported, that happen when the integrator can't integrate deep enough to find the point
 
         print("len(cog_points):", len(cog_points))
         quad_util = QuadratureUtility()

@@ -321,7 +321,7 @@ public:
             }
         }
 
-        if(echo_level & _WARNING_FOUND_NO_ELEMENT == _WARNING_FOUND_NO_ELEMENT)
+        if((echo_level & _WARNING_FOUND_NO_ELEMENT) == _WARNING_FOUND_NO_ELEMENT)
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
 
         return false;
@@ -358,7 +358,7 @@ public:
             }
         }
 
-        if(echo_level & _WARNING_FOUND_NO_ELEMENT == _WARNING_FOUND_NO_ELEMENT)
+        if((echo_level & _WARNING_FOUND_NO_ELEMENT) == _WARNING_FOUND_NO_ELEMENT)
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
 
         return false;

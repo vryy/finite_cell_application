@@ -25,12 +25,16 @@
 #include "custom_algebra/function/pow_function.h"
 #include "custom_algebra/function/negate_function.h"
 #include "custom_algebra/function/inverse_function.h"
+#ifdef FINITE_CELL_APPLICATION_USE_MASHPRESSO
+#include "custom_algebra/function/mathpresso_function.h"
+#endif
 #include "custom_algebra/brep.h"
 #include "custom_algebra/level_set/level_set.h"
 #include "custom_algebra/level_set/product_level_set.h"
 #include "custom_algebra/level_set/inverse_level_set.h"
 #include "custom_algebra/level_set/circular_level_set.h"
 #include "custom_algebra/level_set/spherical_level_set.h"
+#include "custom_algebra/level_set/cylinder_level_set.h"
 #include "custom_algebra/level_set/linear_level_set.h"
 #include "custom_algebra/level_set/planar_level_set.h"
 #include "custom_algebra/function/load_function_plate_with_the_hole.h"
@@ -1730,8 +1734,15 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     ("LoadFunctionR3RnPlateWithTheHoleY", init<const double, const double>())
     ;
 
+    #ifdef FINITE_CELL_APPLICATION_USE_MASHPRESSO
+    class_<MathPressoFunctionR3R1, MathPressoFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
+    ("MathPressoFunctionR3R1", init<const std::string&>())
+    .def(self_ns::str(self))
+    ;
+    #endif
+
     /**************************************************************/
-    /************* EXPORT INTERFACE FOR FUNCTIONR3R1 **************/
+    /************* EXPORT INTERFACE FOR FUNCTIONR3R3 **************/
     /**************************************************************/
 
     array_1d<double, 3>(FunctionR3R3::*FunctionR3R3_pointer_to_GetValue)(const array_1d<double, 3>&) const = &FunctionR3R3::GetValue;
@@ -1800,6 +1811,11 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
 
     class_<SphericalLevelSet, SphericalLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "SphericalLevelSet", init<const double&, const double&, const double&, const double&>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<CylinderLevelSet, CylinderLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "CylinderLevelSet", init<const double&, const double&, const double&, const double&, const double&, const double&, const double&>() )
     .def(self_ns::str(self))
     ;
 

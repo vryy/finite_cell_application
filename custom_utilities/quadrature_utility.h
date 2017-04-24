@@ -297,6 +297,7 @@ public:
             int number_of_element_per_row = 20;
 
             int cnt = 0;
+            std::size_t number_of_cut_elems = 0;
             BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
                     std::make_pair(iterator_value_type(pyCutTrees), // begin
                     iterator_value_type() ) ) // end
@@ -310,10 +311,12 @@ public:
                     cnt = 0;
                     myFile << "\n\t";
                 }
+                ++number_of_cut_elems;
                 myFile << p_tree->pGetElement()->Id() << ", ";
             }
 
             myFile << "\t]\n";
+            myFile << "##number of cut elements: " << number_of_cut_elems << "\n";
             myFile << "\treturn cut_elems\n";
 
             /////////////////////////////////
@@ -322,6 +325,7 @@ public:
             myFile << "\texclude_elems = [";
 
             cnt = 0;
+            std::size_t number_of_exclude_elems = 0;
             BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
                     std::make_pair(iterator_value_type(pyExcludeTrees), // begin
                     iterator_value_type() ) ) // end
@@ -335,10 +339,12 @@ public:
                     cnt = 0;
                     myFile << "\n\t";
                 }
+                ++number_of_exclude_elems;
                 myFile << p_tree->pGetElement()->Id() << ", ";
             }
 
             myFile << "\t]\n";
+            myFile << "##number of exclude elements: " << number_of_exclude_elems << "\n";
             myFile << "\treturn exclude_elems\n";
 
             ////////////////////////////////

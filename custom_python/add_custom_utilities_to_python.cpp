@@ -243,7 +243,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
 //    .def(self_ns::str(self))
 //    ;
 
-    double(QuadTree::*pointer_to_Integrate_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTree::Integrate<double>;
+    double(QuadTree::*pointer_to_IntegrateGlobal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTree::IntegrateGlobal<double>;
 
     class_<QuadTree, QuadTree::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("QuadTreeLocal", init<Element::Pointer&>())
@@ -255,7 +255,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("Refine", &QuadTree::Refine)
     .def("RefineBy", &QuadTree::RefineBy)
     .def("AddToModelPart", &QuadTree::PyAddToModelPart)
-    .def("Integrate", pointer_to_Integrate_double_quadtree_local)
+    .def("IntegrateGlobal", pointer_to_IntegrateGlobal_double_quadtree_local)
     .def("ConstructQuadrature", &QuadTree::ConstructQuadrature)
     .def(self_ns::str(self))
     ;

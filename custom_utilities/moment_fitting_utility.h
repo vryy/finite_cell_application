@@ -20,6 +20,7 @@
 // System includes
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 
@@ -117,7 +118,8 @@ public:
             const int& fit_quadrature_method,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level) const
+            const int& echo_level,
+            const double& small_weight) const
     {
         std::vector<FunctionR3R1::Pointer> funcs;
         typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
@@ -143,7 +145,7 @@ public:
 
             Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
                     funcs, r_brep, r_integrator, integration_points,
-                    integrator_integration_method, solver_type, echo_level);
+                    integrator_integration_method, solver_type, echo_level, small_weight);
 
             /* create new quadrature and assign to the geometry */
             FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);        
@@ -155,7 +157,7 @@ public:
 
             Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>(p_elem->GetGeometry(),
                     funcs, r_brep, r_integrator, integration_points,
-                    integrator_integration_method, solver_type, echo_level);
+                    integrator_integration_method, solver_type, echo_level, small_weight);
 
             for(std::size_t i = 0; i < integration_points.size(); ++i)
                 integration_points[i].Weight() = Weight(i);
@@ -177,7 +179,8 @@ public:
             const int& fit_quadrature_method,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level) const
+            const int& echo_level,
+            const double& small_weight) const
     {
         std::vector<Element::Pointer> elements;
         typedef boost::python::stl_input_iterator<Element::Pointer> iterator_element_type;
@@ -253,7 +256,7 @@ public:
 
                     Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
                             funcs, r_brep, *(*it_integrator), integration_points,
-                            integrator_integration_method, solver_type, echo_level);
+                            integrator_integration_method, solver_type, echo_level, small_weight);
 
                     /* create new quadrature and assign to the geometry */
                     FiniteCellGeometry<GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
@@ -265,7 +268,7 @@ public:
 
                     Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
                             funcs, r_brep, *(*it_integrator), integration_points,
-                            integrator_integration_method, solver_type, echo_level);
+                            integrator_integration_method, solver_type, echo_level, small_weight);
 
                     for(std::size_t i = 0; i < integration_points.size(); ++i)
                         integration_points[i].Weight() = Weight(i);
@@ -301,10 +304,14 @@ public:
             const GeometryType::IntegrationPointsArrayType& integration_points,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level)
+            const int& echo_level,
+            const double& small_weight)
     {
         if(echo_level > -1)
+        {
+            std::cout << std::scientific << std::setprecision(16);
             std::cout << "#######begin moment-fitting####solver_type: " << solver_type << "################" << std::endl;
+        }
 
         std::size_t num_basis = r_funcs.size();
 
@@ -317,8 +324,7 @@ public:
         {
             for(std::size_t j = 0; j < num_fit_points; ++j)
             {
-                r_geom.GlobalCoordinates(GlobalCoords, integration_points[j]);
-                MA(i, j) = r_funcs[i]->GetValue(GlobalCoords) * Function<double, double>::ComputeDetJ(r_geom, integration_points[j]);
+                MA(i, j) = r_funcs[i]->GetValue(integration_points[j]) * Function<double, double>::ComputeDetJ(r_geom, integration_points[j]);
             }
         }
         if(echo_level > 4)
@@ -326,11 +332,10 @@ public:
 
         // form the vector b
         Vector Mb(num_basis);
-        typename TFunctionType::Pointer H = typename TFunctionType::Pointer(new HeavisideFunction<TFunctionType>(r_brep));
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             Mb(i) = 0.0;
-            r_integrator.Integrate(ProductFunction<TFunctionType>(r_funcs[i], H), Mb(i), integrator_integration_method);
+            r_integrator.IntegrateLocal(*(r_funcs[i]), r_brep, Mb(i), integrator_integration_method, small_weight);
         }
         if(echo_level > 3)
             KRATOS_WATCH(Mb)
@@ -360,6 +365,16 @@ public:
             boost::numeric::ublas::permutation_matrix<> pm(MA.size1());
             Matrix MAcopy = MA;
             Mw = Mb;
+            boost::numeric::ublas::lu_factorize(MAcopy, pm);
+            boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
+        }
+        else if(solver_type == "ata-direct")
+        {
+            /* form the linear system for least square problem */
+            boost::numeric::ublas::permutation_matrix<> pm(MA.size2());
+            Matrix MAcopy = prod(trans(MA), MA);
+            Vector Mbcopy = prod(trans(MA), Mb);
+            Mw = Mbcopy;
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
@@ -402,7 +417,8 @@ public:
             const BRep& r_brep,
             const int& integrator_integration_method,
             const std::string& solver_type,
-            const int& echo_level) const
+            const int& echo_level,
+            const double& small_weight) const
     {
         /* extract the tree with subcell */
         typedef typename TTreeType::Pointer TTreePointerType;
@@ -468,7 +484,7 @@ public:
                 (*it)->pGetElement()->Initialize();
 
                 /* thirdly fit the subcell */
-                Matrix Weights = (*it)->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level);
+                Matrix Weights = (*it)->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
 
                 (*it)->pGetElement()->SetValue(SUBCELL_WEIGHTS, Weights);
 
