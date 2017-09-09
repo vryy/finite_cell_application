@@ -28,53 +28,37 @@
 #ifdef FINITE_CELL_APPLICATION_USE_MASHPRESSO
 #include "custom_algebra/function/mathpresso_function.h"
 #endif
-#include "custom_algebra/brep.h"
-#include "custom_algebra/level_set/level_set.h"
-#include "custom_algebra/level_set/product_level_set.h"
-#include "custom_algebra/level_set/inverse_level_set.h"
-#include "custom_algebra/level_set/circular_level_set.h"
-#include "custom_algebra/level_set/spherical_level_set.h"
-#include "custom_algebra/level_set/cylinder_level_set.h"
-#include "custom_algebra/level_set/linear_level_set.h"
-#include "custom_algebra/level_set/planar_level_set.h"
 #include "custom_algebra/function/load_function_plate_with_the_hole.h"
-#include "custom_algebra/curve/parametric_curve.h"
-#include "custom_algebra/surface/parametric_surface.h"
-#include "custom_algebra/volume/parametric_volume.h"
 
 
 namespace Kratos
 {
-
-const int BRep::_CUT;
-const int BRep::_IN;
-const int BRep::_OUT;
 
 namespace Python
 {
 
 using namespace boost::python;
 
-double Helper_FunctionR3R1_GetValue_1(FunctionR3R1& rDummy,
+double Helper_FunctionR3R1_GetValue_1(FunctionR3R1::Pointer rDummy,
         const double& x, const double& y)
 {
     FunctionR3R1::InputType P;
     P[0] = x;
     P[1] = y;
-    return rDummy.GetValue(P);
+    return rDummy->GetValue(P);
 }
 
-double Helper_FunctionR3R1_GetValue_2(FunctionR3R1& rDummy,
+double Helper_FunctionR3R1_GetValue_2(FunctionR3R1::Pointer rDummy,
         const double& x, const double& y, const double& z)
 {
     FunctionR3R1::InputType P;
     P[0] = x;
     P[1] = y;
     P[2] = z;
-    return rDummy.GetValue(P);
+    return rDummy->GetValue(P);
 }
 
-void FiniteCellApplication_AddCustomAlgebraToPython()
+void FiniteCellApplication_AddFunctionsToPython()
 {
     /**************************************************************/
     /************** EXPORT INTERFACE FOR FUNCTIONR1R1 *************/
@@ -186,10 +170,6 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     .def("GetDiffFunction", &FunctionR1R3::GetDiffFunction)
     ;
 
-    class_<ParametricCurve, ParametricCurve::Pointer, boost::noncopyable, bases<FunctionR1R3> >
-    ("ParametricCurve", init<const FunctionR1R1::Pointer, const FunctionR1R1::Pointer, const FunctionR1R1::Pointer>())
-    ;
-
     /**************************************************************/
     /************** EXPORT INTERFACE FOR FUNCTIONR2R1 *************/
     /**************************************************************/
@@ -260,10 +240,6 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     .def("GetValue", FunctionR2R3_pointer_to_GetValue)
     .def("GetFormula", &FunctionR2R3::GetFormula)
     .def("GetDiffFunction", &FunctionR2R3::GetDiffFunction)
-    ;
-
-    class_<ParametricSurface, ParametricSurface::Pointer, boost::noncopyable, bases<FunctionR2R3> >
-    ("ParametricSurface", init<const FunctionR2R1::Pointer, const FunctionR2R1::Pointer, const FunctionR2R1::Pointer>())
     ;
 
     /**************************************************************/
@@ -1761,72 +1737,6 @@ void FiniteCellApplication_AddCustomAlgebraToPython()
     typedef ScaleFunction<FunctionR3R3> ScaleFunctionR3R3;
     class_<ScaleFunctionR3R3, ScaleFunctionR3R3::Pointer, boost::noncopyable, bases<FunctionR3R3> >
     ("ScaleFunctionR3R3", init<const double, const FunctionR3R3::Pointer>())
-    ;
-
-    class_<ParametricVolume, ParametricVolume::Pointer, boost::noncopyable, bases<FunctionR3R3> >
-    ("ParametricVolume", init<const FunctionR3R1::Pointer, const FunctionR3R1::Pointer, const FunctionR3R1::Pointer>())
-    ;
-
-    /**************************************************************/
-    /************* EXPORT INTERFACE FOR BREP **********************/
-    /**************************************************************/
-
-    int(BRep::*pointer_to_CutStatusElement)(Element::Pointer& p_elem) const = &BRep::CutStatus;
-    int(BRep::*pointer_to_CutStatusGeometry)(Element::GeometryType::Pointer& p_geom) const = &BRep::CutStatus;
-
-    class_<BRep, BRep::Pointer, boost::noncopyable>
-    ( "BRep", init<>() )
-    .def("SetTolerance", &BRep::SetTolerance)
-    .def("GetTolerance", &BRep::GetTolerance)
-    .def("CutStatus", pointer_to_CutStatusElement)
-    .def("CutStatus", pointer_to_CutStatusGeometry)
-    .def_readonly("_CUT", &BRep::_CUT)
-    .def_readonly("_IN", &BRep::_IN)
-    .def_readonly("_OUT", &BRep::_OUT)
-    ;
-
-    /**************************************************************/
-    /************* EXPORT INTERFACE FOR LEVEL SET *****************/
-    /**************************************************************/
-
-    class_<LevelSet, LevelSet::Pointer, boost::noncopyable, bases<FunctionR3R1, BRep> >
-    ( "LevelSet", init<>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<ProductLevelSet, ProductLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "ProductLevelSet", init<const LevelSet::Pointer&, const LevelSet::Pointer&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<InverseLevelSet, InverseLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "InverseLevelSet", init<const LevelSet::Pointer&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<CircularLevelSet, CircularLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "CircularLevelSet", init<const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<SphericalLevelSet, SphericalLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "SphericalLevelSet", init<const double&, const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<CylinderLevelSet, CylinderLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "CylinderLevelSet", init<const double&, const double&, const double&, const double&, const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<LinearLevelSet, LinearLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "LinearLevelSet", init<const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<PlanarLevelSet, PlanarLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "PlanarLevelSet", init<const double&, const double&, const double&, const double&>() )
-    .def(self_ns::str(self))
     ;
 
 }

@@ -38,6 +38,7 @@
 #include "custom_conditions/element_wrapper_condition.h"
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_geometry_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
 //#define DEBUG_SUBCELL
@@ -49,7 +50,8 @@ namespace Kratos
 /** A special type of quad tree w/ sub-cell. It uses quad-tree to compute the moment fitted quadrature of the element. For details see:
 Hoang-Giang Bui, D. Schillinger, G. Meschke, Finite Cell Method for Plasticity using Moment-Fitted Quadrature Technique, in preparation.
 */
-class MomentFittedQuadTreeSubCell : public QuadTreeSubCell
+template<std::size_t TNsampling>
+class MomentFittedQuadTreeSubCell : public QuadTreeSubCell<TNsampling>
 {
 public:
     ///@name Type Definitions
@@ -58,7 +60,7 @@ public:
     /// Pointer definition of  MomentFittedQuadTreeSubCell
     KRATOS_CLASS_POINTER_DEFINITION(MomentFittedQuadTreeSubCell);
 
-    typedef QuadTreeSubCell BaseType;
+    typedef QuadTreeSubCell<TNsampling> BaseType;
 
     typedef typename GeometricalObject::GeometryType GeometryType;
 
@@ -115,7 +117,7 @@ public:
             // do a check, to make sure the integration point is inside the sub-cell
             for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
             {
-                if(!mpTreeNodes[i]->IsInside(integration_points[i]))
+                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
                     KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
             }
         }
@@ -142,7 +144,7 @@ public:
             // do a check, to make sure the integration point is inside the sub-cell
             for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
             {
-                if(!mpTreeNodes[i]->IsInside(integration_points[i]))
+                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
                     KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
             }
         }
@@ -273,14 +275,14 @@ public:
             const int& echo_level,
             const double& small_weight) const
     {
-        GeometryType& r_geom = *pGetGeometry();
+        GeometryType& r_geom = *BaseType::pGetGeometry();
 
         // extract the physical integration points
         GeometryType::IntegrationPointsArrayType physical_integration_points;
         PointType COG;
-        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            GeometryType::Pointer pSubCellGeometry = mpTreeNodes[i]->pCreateGeometry(pGetGeometry());
+            GeometryType::Pointer pSubCellGeometry = BaseType::mpTreeNodes[i]->pCreateGeometry(BaseType::pGetGeometry());
 
             int status = r_brep.CutStatus(*pSubCellGeometry);
             if(status == 0)
@@ -294,7 +296,7 @@ public:
             else if(status == -1)
             {
                 // compute the center of gravity of the sub-cell bounded by boundary
-                bool found = mpTreeNodes[i]->CenterOfGravity(COG, pSubCellGeometry, r_brep, integrator_integration_method);
+                bool found = BaseType::mpTreeNodes[i]->CenterOfGravity(COG, pSubCellGeometry, r_brep, integrator_integration_method);
                 if(found)
                 {
                     #ifdef ENABLE_DEBUG_QUADRATURE
@@ -325,7 +327,7 @@ public:
         #endif
 
         // fit the quadrature on the physical points
-        Vector Weight = MomentFittingUtility::FitQuadrature<TFunctionType, QuadTreeSubCell>(r_geom,
+        Vector Weight = MomentFittingUtility::FitQuadrature<TFunctionType, BaseType>(r_geom,
             r_funcs,
             r_brep,
             *this,
@@ -341,7 +343,7 @@ public:
         /* create new quadrature and assign to the geometry */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(mRepresentativeIntegrationOrder);
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, RepresentativeIntegrationMethod, physical_integration_points);
+        FiniteCellGeometryUtility::AssignGeometryData(r_geom, RepresentativeIntegrationMethod, physical_integration_points);
     }
 
 
@@ -353,7 +355,8 @@ public:
         const int& integrator_integration_method,
         const std::string& solver_type,
         const int& echo_level,
-        const double& small_weight) const
+        const double& small_weight,
+        const bool& compute_subcell_domain_size) const
     {
         /* firstly compute the physical integration point */
         std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
@@ -365,7 +368,7 @@ public:
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(mRepresentativeIntegrationOrder);
 //        KRATOS_WATCH(RepresentativeIntegrationMethod)
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(*pGetGeometry(), RepresentativeIntegrationMethod, physical_integration_points);
+        FiniteCellGeometryUtility::AssignGeometryData(*BaseType::pGetGeometry(), RepresentativeIntegrationMethod, physical_integration_points);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
         mpElement->SetValue(INTEGRATION_ORDER_var, mRepresentativeIntegrationOrder);
         mpElement->Initialize();
@@ -389,7 +392,30 @@ public:
         // find the last condition id
         std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
 
-        return CreateSubCellElements(r_model_part, sample_element_name, Weights, lastElementId, lastCondId);
+        ModelPart::ElementsContainerType NewSubCellElements = CreateSubCellElements(r_model_part, sample_element_name, Weights, lastElementId, lastCondId);
+
+        // set the domain size for the subcell
+        if(compute_subcell_domain_size)
+        {
+            std::size_t cnt = 0;
+            for(typename ModelPart::ElementsContainerType::ptr_iterator it = NewSubCellElements.ptr_begin();
+                    it != NewSubCellElements.ptr_end(); ++it)
+            {
+                (*it)->SetValue(SUBCELL_DOMAIN_SIZE, this->DomainSize(subcell_index[cnt++], r_brep, integrator_integration_method));
+            }
+        }
+
+        return NewSubCellElements;
+    }
+
+
+    /// Get the number of physical quadrature point. One physical quadrature point represents a subcell.
+    std::size_t GetNumberOfPhysicalIntegrationPoint(const BRep& r_brep, const int& integrator_integration_method) const
+    {
+        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
+        = this->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
+
+        return Output.second.size();
     }
 
 
@@ -402,14 +428,14 @@ public:
         GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
 
         PointType COG;
-        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            GeometryType::Pointer pSubCellGeometry = mpTreeNodes[i]->pCreateGeometry(pGetGeometry());
+            GeometryType::Pointer pSubCellGeometry = BaseType::mpTreeNodes[i]->pCreateGeometry(BaseType::pGetGeometry());
 
             int status = r_brep.CutStatus(*pSubCellGeometry);
             #ifdef DEBUG_SUBCELL
             KRATOS_WATCH(*pSubCellGeometry)
-            KRATOS_WATCH(*mpTreeNodes[i])
+            KRATOS_WATCH(*BaseType::mpTreeNodes[i])
             #endif
             if(status == BRep::_IN)
             {
@@ -428,7 +454,7 @@ public:
                 std::cout << "sub-cell " << i << " is cut" << std::endl;
                 #endif
                 // the cell is cut
-                bool found = mpTreeNodes[i]->CenterOfGravity(COG, pGetGeometry(), r_brep, integrator_integration_method);
+                bool found = BaseType::mpTreeNodes[i]->CenterOfGravity(COG, BaseType::pGetGeometry(), r_brep, integrator_integration_method);
                 #ifdef DEBUG_SUBCELL
                 KRATOS_WATCH(found)
                 KRATOS_WATCH(COG)
@@ -436,7 +462,7 @@ public:
                 if(found)
                 {
                     GeometryType::IntegrationPointType integration_point;
-                    bool is_inside = pGetGeometry()->IsInside(COG, integration_point);
+                    bool is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point);
                     if(!is_inside)
                     {
                         std::cout << "!!WARNING!!The CenterOfGravity is not inside the domain of the subcell " << i << std::endl;
@@ -472,9 +498,10 @@ public:
             // perform the moment fit for the sub-cell
             std::size_t i_cell = subcell_index[i];
 
-            QuadTree::Pointer quad_tree = QuadTree::Pointer(new QuadTree(pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
+            typename QuadTree<TNsampling>::Pointer quad_tree = typename QuadTree<TNsampling>::Pointer(
+                    new QuadTree<TNsampling>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
 
-            noalias(row(Weights, i)) = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree>(*pGetGeometry(),
+            noalias(row(Weights, i)) = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree<TNsampling> >(*BaseType::pGetGeometry(),
                     r_funcs, r_brep, *quad_tree, mSubCellRepresentativeIntegrationPoints,
                     integrator_integration_method, solver_type, echo_level, small_weight);
         }
@@ -482,6 +509,70 @@ public:
         return Weights;
     }
 
+
+    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is given.
+    /// This is the python interface
+    boost::python::list PyCreateSubCellElements(ModelPart& r_model_part,
+            const std::string& subcell_element_type,
+            const int& cut_cell_quadrature_order,
+            boost::python::list& cut_cell_full_quadrature,
+            boost::python::list& subcell_weights,
+            std::size_t lastElementId,
+            std::size_t lastCondId)
+    {
+        typedef Element::GeometryType GeometryType;
+
+        ModelPart::ElementsContainerType NewElements;
+
+    //    if(!boost::python::list::is_empty(subcell_weights))
+    //    {
+        // TODO find a way to check if a list is empty
+            GeometryType::IntegrationPointsArrayType integration_points;
+            Matrix Weights;
+
+            std::size_t num_physical_point = boost::python::len(subcell_weights);
+            std::size_t weight_length = boost::python::len(subcell_weights[0]);
+            Weights.resize(num_physical_point, weight_length, false);
+
+            for(std::size_t i = 0; i < num_physical_point; ++i)
+            {
+                boost::python::list weights = boost::python::extract<boost::python::list>(subcell_weights[i]);
+                for(std::size_t j = 0; j < weight_length; ++j)
+                {
+                    Weights(i, j) = boost::python::extract<double>(weights[j]);
+                }
+            }
+    //        KRATOS_WATCH(Weights)
+
+            for(std::size_t i = 0; i < boost::python::len(cut_cell_full_quadrature); ++i)
+            {
+                boost::python::list point = boost::python::extract<boost::python::list>(cut_cell_full_quadrature[i]);
+                GeometryType::IntegrationPointType integration_point;
+                integration_point.X() = boost::python::extract<double>(point[0]);
+                integration_point.Y() = boost::python::extract<double>(point[1]);
+                integration_point.Z() = boost::python::extract<double>(point[2]);
+                integration_point.Weight() = boost::python::extract<double>(point[3]);
+    //            KRATOS_WATCH(integration_point)
+                integration_points.push_back(integration_point);
+            }
+
+            NewElements = this->CreateSubCellElements(r_model_part,
+                subcell_element_type,
+                cut_cell_quadrature_order,
+                integration_points,
+                Weights,
+                lastElementId,
+                lastCondId);
+    //        std::cout << "----------------------" << std::endl;
+    //    }
+
+        boost::python::list Output;
+        Output.append(lastElementId);
+        Output.append(lastCondId);
+        Output.append(NewElements);
+
+        return Output;
+    }
 
     /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is given.
     ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
@@ -509,7 +600,7 @@ public:
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
         ModelPart::ElementsContainerType NewElements;
-        GeometryType& r_geom = *pGetGeometry();
+        GeometryType& r_geom = *BaseType::pGetGeometry();
 
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
@@ -524,7 +615,7 @@ public:
 
             // create the new "parasite" elements from sub-cell
             Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, r_geom.Points(), mpElement->pGetProperties());
-            FiniteCellGeometry<GeometryType>::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
+            FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
             pNewElement->Initialize();
             NewElements.push_back(pNewElement);
@@ -539,7 +630,7 @@ public:
             r_model_part.Conditions().push_back(pNewCond);
         }
 
-        std::cout << NewElements.size() << " new element-wrapped conditions from parent element " << mpElement->Id()
+        std::cout << NewElements.size() << " new " << sample_element_name << "-wrapped conditions from parent element " << mpElement->Id()
                   << " are added to the model_part" << std::endl;
 
         return NewElements;
@@ -598,14 +689,15 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell& rThis)
+template<std::size_t TNsampling>
+inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell<TNsampling>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-template<std::size_t TDegree>
-inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell& rThis)
+template<std::size_t TNsampling>
+inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell<TNsampling>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

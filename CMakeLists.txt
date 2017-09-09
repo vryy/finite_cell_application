@@ -8,6 +8,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_c
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes )
+
+if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
+    include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
+    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
+endif()
+
 #######################################################################
 
 FIND_PACKAGE(MathPresso REQUIRED)
@@ -17,11 +23,13 @@ ENDIF()
 
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/quad_tree_node.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/dummy_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/dummy_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/element_wrapper_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_to_python.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_1_to_python.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_2_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )

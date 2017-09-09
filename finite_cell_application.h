@@ -38,6 +38,12 @@ namespace Kratos
     KRATOS_DEFINE_VARIABLE( boost::python::object, LOAD_FUNCTION )
     KRATOS_DEFINE_VARIABLE( int, CUT_STATUS )
     KRATOS_DEFINE_VARIABLE( Matrix, SUBCELL_WEIGHTS )
+    KRATOS_DEFINE_VARIABLE( double, SUBCELL_DOMAIN_SIZE )
+    KRATOS_DEFINE_VARIABLE( Vector, SUBCELL_DOMAIN_SIZES )
+    KRATOS_DEFINE_VARIABLE( Vector, PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
+    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(PHYSICAL_INTEGRATION_POINT_LOCAL)
+    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(PHYSICAL_INTEGRATION_POINT_GLOBAL)
+    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(PHYSICAL_INTEGRATION_POINT_DISPLACEMENT)
 
     ///@}
     ///@name Type Definitions
@@ -184,6 +190,12 @@ namespace Kratos
         ///@name Member Variables
         ///@{
 
+        const DummyCondition mDummySurfaceCondition2D3N;
+        const DummyCondition mDummySurfaceCondition2D6N;
+        const DummyCondition mDummySurfaceCondition2D4N;
+        const DummyCondition mDummySurfaceCondition2D8N;
+        const DummyCondition mDummySurfaceCondition2D9N;
+
         const DummyCondition mDummySurfaceCondition3D3N;
         const DummyCondition mDummySurfaceCondition3D6N;
         const DummyCondition mDummySurfaceCondition3D4N;
@@ -204,6 +216,12 @@ namespace Kratos
         const DummyCondition mDummyCondition3D27N;
         const DummyCondition mDummyCondition3D6N;
         const DummyCondition mDummyCondition3D15N;
+
+        const DummyElement mDummySurfaceElement2D3N;
+        const DummyElement mDummySurfaceElement2D6N;
+        const DummyElement mDummySurfaceElement2D4N;
+        const DummyElement mDummySurfaceElement2D8N;
+        const DummyElement mDummySurfaceElement2D9N;
 
         const DummyElement mDummySurfaceElement3D3N;
         const DummyElement mDummySurfaceElement3D6N;

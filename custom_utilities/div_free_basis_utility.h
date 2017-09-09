@@ -33,6 +33,7 @@
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
 #include "custom_algebra/level_set/level_set.h"
+#include "custom_utilities/finite_cell_geometry_utility.h"
 
 
 #define ESTIMATE_RCOND
@@ -383,7 +384,7 @@ public:
 
 
             /* create new quadrature and assign to the geometry */
-            FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ThisIntegrationMethod, Mw);
+            FiniteCellGeometryUtility::AssignGeometryData(r_geom, ThisIntegrationMethod, Mw);
         }
     }
 

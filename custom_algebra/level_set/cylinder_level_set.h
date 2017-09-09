@@ -81,12 +81,9 @@ public:
         if(norm_d == 0.0)
             KRATOS_THROW_ERROR(std::logic_error, "The director vector can't be null", "")
 
-        if(norm_d != 1.0)
-        {
-            mdX = dX / norm_d;
-            mdY = dY / norm_d;
-            mdZ = dZ / norm_d;
-        }
+        mdX = dX / norm_d;
+        mdY = dY / norm_d;
+        mdZ = dZ / norm_d;
     }
 
     /// Destructor.
@@ -111,22 +108,35 @@ public:
 
     virtual double GetValue(const PointType& P) const
     {
-        double pX = (P(0) - mcX) * mdX;
-        double pY = (P(1) - mcY) * mdY;
-        double pZ = (P(2) - mcZ) * mdZ;
+        double t = (P(0) - mcX) * mdX + (P(1) - mcY) * mdY + (P(2) - mcZ) * mdZ;
+        double pX = mcX + t*mdX;
+        double pY = mcY + t*mdY;
+        double pZ = mcZ + t*mdZ;
+//        double pX = (P(0) - mcX) * mdX;
+//        double pY = (P(1) - mcY) * mdY;
+//        double pZ = (P(2) - mcZ) * mdZ;
         return pow(P(0) - pX, 2) + pow(P(1) - pY, 2) + pow(P(2) - pZ, 2) - pow(mR, 2);
     }
 
 
     virtual Vector GetGradient(const PointType& P) const
     {
-        double pX = (P(0) - mcX) * mdX;
-        double pY = (P(1) - mcY) * mdY;
-        double pZ = (P(2) - mcZ) * mdZ;
+//        double pX = (P(0) - mcX) * mdX;
+//        double pY = (P(1) - mcY) * mdY;
+//        double pZ = (P(2) - mcZ) * mdZ;
+//        Vector grad(3);
+//        grad(0) = 2.0 * (P(0) - pX) * (1.0 - mdX);
+//        grad(1) = 2.0 * (P(1) - pY) * (1.0 - mdY);
+//        grad(2) = 2.0 * (P(2) - pZ) * (1.0 - mdZ);
+
+        double t = (P(0) - mcX) * mdX + (P(1) - mcY) * mdY + (P(2) - mcZ) * mdZ;
+        double pX = mcX + t*mdX;
+        double pY = mcY + t*mdY;
+        double pZ = mcZ + t*mdZ;
         Vector grad(3);
-        grad(0) = 2.0 * (P(0) - pX) * (1.0 - mdX);
-        grad(1) = 2.0 * (P(1) - pY) * (1.0 - mdY);
-        grad(2) = 2.0 * (P(2) - pZ) * (1.0 - mdZ);
+        grad(0) = 2.0 * (P(0) - pX) * (1.0 - mdX*mdX);
+        grad(1) = 2.0 * (P(1) - pY) * (1.0 - mdY*mdY);
+        grad(2) = 2.0 * (P(2) - pZ) * (1.0 - mdZ*mdZ);
         return grad;
     }
 

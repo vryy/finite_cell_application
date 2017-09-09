@@ -31,26 +31,6 @@
 #include "integration/integration_point.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
-#include "geometries/quadrilateral_2d_4.h"
-#include "geometries/quadrilateral_2d_8.h"
-#include "geometries/quadrilateral_2d_9.h"
-#include "geometries/triangle_2d_3.h"
-#include "geometries/triangle_2d_6.h"
-#include "geometries/triangle_3d_3.h"
-#include "geometries/tetrahedra_3d_4.h"
-#include "geometries/tetrahedra_3d_10.h"
-#include "geometries/prism_3d_6.h"
-#include "geometries/prism_3d_15.h"
-#include "geometries/quadrilateral_3d_4.h"
-#include "geometries/quadrilateral_3d_8.h"
-#include "geometries/quadrilateral_3d_9.h"
-#include "geometries/hexahedra_3d_8.h"
-#include "geometries/hexahedra_3d_20.h"
-#include "geometries/hexahedra_3d_27.h"
-#include "geometries/line_2d.h"
-#include "geometries/line_2d_2.h"
-#include "geometries/line_3d_2.h"
-#include "geometries/line_3d_3.h"
 
 
 namespace Kratos
@@ -378,85 +358,6 @@ public:
     }
 
 
-    /// Helper function to assign the geometry_data for finite_cell_geometry
-    static void AssignGeometryData(Geometry<PointType>& r_geom,
-            const GeometryData::IntegrationMethod ElementalIntegrationMethod,
-            Vector& rWeights)
-    {
-        try
-        {
-            if(r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D3)
-            {
-                typedef FiniteCellGeometry<Triangle2D3<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D6)
-            {
-                typedef FiniteCellGeometry<Triangle2D6<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D4<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D8<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D9<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
-            {
-                typedef FiniteCellGeometry<Tetrahedra3D4<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
-            {
-                typedef FiniteCellGeometry<Tetrahedra3D10<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D8<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D20<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D27<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
-            }
-            else
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", r_geom.GetGeometryType())
-            }
-        }
-        catch(const std::bad_cast& e)
-        {
-            std::cout << "WARNING: the input geometry is not the FiniteCellGeometry. Hence the quadrature is not assigned" << std::endl;
-        }
-    }
-
-
     /// Assign a list of integration points to the geometry. The ThisIntegrationMethod will
     /// ultimately becomes the default integration rule on the geometry.
     void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod,
@@ -505,85 +406,6 @@ public:
 
         // assign the geometry data back to the original geometry
         BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
-    }
-
-
-    /// Helper function to assign the geometry_data for finite_cell_geometry
-    static void AssignGeometryData(Geometry<PointType>& r_geom,
-            const GeometryData::IntegrationMethod ElementalIntegrationMethod,
-            const IntegrationPointsArrayType& integration_points)
-    {
-        try
-        {
-            if(r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D3)
-            {
-                typedef FiniteCellGeometry<Triangle2D3<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D6)
-            {
-                typedef FiniteCellGeometry<Triangle2D6<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D4<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D8<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
-            {
-                typedef FiniteCellGeometry<Quadrilateral2D9<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
-            {
-                typedef FiniteCellGeometry<Tetrahedra3D4<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
-            {
-                typedef FiniteCellGeometry<Tetrahedra3D10<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D8<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D20<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
-            {
-                typedef FiniteCellGeometry<Hexahedra3D27<PointType> > FiniteCellGeometryType;
-                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
-                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
-            }
-            else
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", r_geom.GetGeometryType())
-            }
-        }
-        catch(const std::bad_cast& e)
-        {
-            std::cout << "WARNING: the input geometry is not the FiniteCellGeometry. Hence the quadrature is not assigned" << std::endl;
-        }
     }
 
 

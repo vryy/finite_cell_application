@@ -23,17 +23,18 @@
 // Project includes
 #include "includes/define.h"
 
-
 namespace Kratos
 {
 
 namespace Python
 {
+
 using namespace boost::python;
 
 void  FiniteCellApplication_AddCustomUtilitiesToPython();
 
 }  // namespace Python.
+
 }  // namespace Kratos.
 
 #endif // KRATOS_FINITE_CELL_APPLICATION_ADD_CUSTOM_UTILITIES_TO_PYTHON_H_INCLUDED  defined 

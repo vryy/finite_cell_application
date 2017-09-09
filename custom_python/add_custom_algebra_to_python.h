@@ -31,7 +31,8 @@ namespace Python
 {
 using namespace boost::python;
 
-void  FiniteCellApplication_AddCustomAlgebraToPython();
+void  FiniteCellApplication_AddFunctionsToPython();
+void  FiniteCellApplication_AddBRepAndLevelSetToPython();
 
 }  // namespace Python.
 }  // namespace Kratos.

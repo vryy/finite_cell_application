@@ -35,6 +35,7 @@
 
 
 
+// template for LAPACK functions
 extern "C" void dgelsy_(int* M, int* N, int* NRHS, double* A, int* LDA,
         double* B, int* LDB, int* JPVT, double* RCOND, int* RANK,
         double* WORK, int* LWORK, int* INFO);

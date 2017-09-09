@@ -21,6 +21,7 @@
 #include "finite_cell_application.h"
 #include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_python/add_custom_utilities_to_python.h"
+#include "custom_python/add_quadtree_to_python.hpp"
 
 namespace Kratos
 {
@@ -35,11 +36,23 @@ namespace Python
         class_<KratosFiniteCellApplication, KratosFiniteCellApplication::Pointer, bases<KratosApplication>, boost::noncopyable>
         ("KratosFiniteCellApplication");
 
-        FiniteCellApplication_AddCustomAlgebraToPython();
+        FiniteCellApplication_AddFunctionsToPython();
+        FiniteCellApplication_AddBRepAndLevelSetToPython();
+        FiniteCellApplication_AddRefinableTreeToPython();
+        FiniteCellApplication_AddQuadTreeToPython<1>();
+        FiniteCellApplication_AddQuadTreeToPython<2>();
+        FiniteCellApplication_AddQuadTreeToPython<3>();
+        FiniteCellApplication_AddQuadTreeToPython<4>();
+        FiniteCellApplication_AddQuadTreeToPython<5>();
         FiniteCellApplication_AddCustomUtilitiesToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_DOMAIN_SIZE )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
+        KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
+        KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
+        KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )
 
     }
 

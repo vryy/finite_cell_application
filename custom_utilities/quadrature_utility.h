@@ -38,6 +38,7 @@
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_algebra/function/function.h"
+#include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
 #include "finite_cell_application/finite_cell_application.h"
 
@@ -149,7 +150,7 @@ public:
         }
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
+        FiniteCellGeometryUtility::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
     }
 
 
@@ -173,7 +174,7 @@ public:
         }
 
         GeometryType::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(integration_order);
-        FiniteCellGeometry<GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
+        FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
 //        std::cout << "set quadrature for element " << p_elem->Id() << " completed" << std::endl;
     }
 
@@ -262,7 +263,7 @@ public:
                                  << ", " << integration_points[i].Z()
                                  << ", " << integration_points[i].Weight() << "],";
                 }
-                myFile << "]\n";
+                myFile << "] # " << integration_points.size() << "\n";
             }
             myFile << "\treturn quad_data\n";
 
@@ -279,6 +280,7 @@ public:
             const std::string& fileType,
             boost::python::list& pyCutTrees,
             boost::python::list& pyExcludeTrees,
+            boost::python::list& pyQuadTreeTrees,
             const int& accuracy) const
     {
         typedef typename TTreeType::Pointer TTreePointerType;
@@ -349,6 +351,34 @@ public:
 
             ////////////////////////////////
 
+            myFile << "\ndef GetQuadTreeElements():\n";
+            myFile << "\tquadtree_elems = [";
+
+            cnt = 0;
+            std::size_t number_of_quadtree_elems = 0;
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyQuadTreeTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                if(cnt < number_of_element_per_row)
+                {
+                    ++cnt;
+                }
+                else
+                {
+                    cnt = 0;
+                    myFile << "\n\t";
+                }
+                ++number_of_quadtree_elems;
+                myFile << p_tree->pGetElement()->Id() << ", ";
+            }
+
+            myFile << "\t]\n";
+            myFile << "##number of quadtree elements: " << number_of_quadtree_elems << "\n";
+            myFile << "\treturn quadtree_elems\n";
+
+            ////////////////////////////////
+
             myFile << "\ndef GetCutCellQuadrature():\n";
             myFile << "\tcq = {}\n";
             BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
@@ -366,7 +396,7 @@ public:
                                  << ", " << integration_points[i].Z()
                                  << ", " << integration_points[i].Weight() << "],";
                 }
-                myFile << "]\n";
+                myFile << "] # " << integration_points.size() << "\n";
             }
 
             myFile << "\treturn cq\n";
@@ -418,6 +448,52 @@ public:
             }
 
             myFile << "\treturn sw\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetCutCellSubCellDomainSizes():\n";
+            myFile << "\tds = {}\n";
+
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyCutTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const Vector& DomainSizes = p_tree->pGetElement()->GetValue(SUBCELL_DOMAIN_SIZES);
+
+                myFile << "\tds[" << p_tree->pGetElement()->Id() << "] = [";
+                for(std::size_t i = 0; i < DomainSizes.size(); ++i)
+                {
+                    myFile << DomainSizes(i) << ", ";
+                }
+                myFile << "]\n";
+            }
+
+            myFile << "\treturn ds\n";
+
+            ////////////////////////////////
+
+            myFile << "\ndef GetQuadTreeQuadrature():\n";
+            myFile << "\tqq = {}\n";
+
+            BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                    std::make_pair(iterator_value_type(pyQuadTreeTrees), // begin
+                    iterator_value_type() ) ) // end
+            {
+                const GeometryType::IntegrationPointsArrayType& integration_points
+                    = p_tree->pGetElement()->GetGeometry().IntegrationPoints( p_tree->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
+
+                myFile << "\tqq[" << p_tree->pGetElement()->Id() << "] = [";
+                for(std::size_t i = 0; i < integration_points.size(); ++i)
+                {
+                    myFile << "\n\t\t[" << integration_points[i].X()
+                                 << ", " << integration_points[i].Y()
+                                 << ", " << integration_points[i].Z()
+                                 << ", " << integration_points[i].Weight() << "],";
+                }
+                myFile << "]\n";
+            }
+
+            myFile << "\treturn qq\n";
 
             ////////////////////////////////
 

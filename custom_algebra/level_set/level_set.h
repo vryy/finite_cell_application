@@ -173,74 +173,17 @@ public:
 
     /// inherit from BRep
     /// Check if a geometry is cut by the level set
-    /// 0: the cell is inside the domain bounded by level set
-    /// 1: outside
-    /// -1: the cell is cut by level set
-//    virtual int CutStatus(GeometryType& r_geom) const
-//    {
-//        std::set<std::size_t> in_list, out_list;
-//        for(std::size_t v = 0; v < r_geom.size(); ++v)
-//        {
-//            double phi = this->GetValue(r_geom[v]);
-//            if(phi <= 0.0)
-//                in_list.insert(v);
-//            else
-//                out_list.insert(v);
-//        }
-
-//        int stat;
-//        if(in_list.size() == r_geom.size())
-//        {
-//            stat = 0;
-//        }
-//        else
-//        {
-//            if(out_list.size() == r_geom.size())
-//                stat = 1;
-//            else
-//                stat = -1;
-//        }
-
-//        return stat;
-//    }
     virtual int CutStatus(GeometryType& r_geom) const
     {
-        std::vector<std::size_t> in_list, out_list, on_list;
-        for(std::size_t v = 0; v < r_geom.size(); ++v)
-        {
-            double phi = this->GetValue(r_geom[v]);
-            if(phi < -this->GetTolerance())
-                in_list.push_back(v);
-            else if(phi > this->GetTolerance())
-                out_list.push_back(v);
-            else
-                on_list.push_back(v);
-        }
+        return CutStatusOfPoints<GeometryType>(r_geom);
+    }
 
-        int stat;
-        if(in_list.size() == 0 && out_list.size() == 0)
-        {
-            KRATOS_THROW_ERROR(std::logic_error, "!!!FATAL ERROR!!!The geometry is degenerated. We won't handle it.", "")
-        }
-        else
-        {
-            if(in_list.size() == 0)
-            {
-                stat = BRep::_OUT;
-                return stat;
-            }
 
-            if(out_list.size() == 0)
-            {
-                stat = BRep::_IN;
-                return stat;
-            }
-
-            stat = BRep::_CUT;
-            return stat;
-        }
-
-        return -99; // can't come here. Just to silence the compiler.
+    /// inherit from BRep
+    /// Check if a set of points is cut by the level set
+    virtual int CutStatus(std::vector<PointType>& r_points) const
+    {
+        return CutStatusOfPoints(r_points);
     }
 
 
@@ -385,6 +328,48 @@ private:
     ///@}
     ///@name Private Operations
     ///@{
+
+
+    template<class PointsContainerType>
+    int CutStatusOfPoints(PointsContainerType& r_points) const
+    {
+        std::vector<std::size_t> in_list, out_list, on_list;
+        for(std::size_t v = 0; v < r_points.size(); ++v)
+        {
+            double phi = this->GetValue(r_points[v]);
+            if(phi < -this->GetTolerance())
+                in_list.push_back(v);
+            else if(phi > this->GetTolerance())
+                out_list.push_back(v);
+            else
+                on_list.push_back(v);
+        }
+
+        int stat;
+        if(in_list.size() == 0 && out_list.size() == 0)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "!!!FATAL ERROR!!!The geometry is degenerated. We won't handle it.", "")
+        }
+        else
+        {
+            if(in_list.size() == 0)
+            {
+                stat = BRep::_OUT;
+                return stat;
+            }
+
+            if(out_list.size() == 0)
+            {
+                stat = BRep::_IN;
+                return stat;
+            }
+
+            stat = BRep::_CUT;
+            return stat;
+        }
+
+        return -99; // can't come here. Just to silence the compiler.
+    }
 
 
     ///@}

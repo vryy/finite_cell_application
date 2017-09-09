@@ -35,9 +35,6 @@
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
-#include "geometries/line_3d_2.h"
-#include "geometries/quadrilateral_3d_4.h"
-#include "utilities/math_utils.h"
 #include "custom_algebra/function/function.h"
 
 
@@ -367,7 +364,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Immersed Boundary Utility";
+        return "Finite Cell Auxiliary Utility";
     }
 
     /// Print information about this object.
@@ -462,8 +459,8 @@ private:
     ///@{
 
 
-    double mDx, mDy, mDz;
-    std::map<SpatialKey, std::set<std::size_t> > mBinElements;
+//    double mDx, mDy, mDz;
+//    std::map<SpatialKey, std::set<std::size_t> > mBinElements;
 
 
     ///@}
