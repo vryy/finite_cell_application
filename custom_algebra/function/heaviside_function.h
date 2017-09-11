@@ -85,6 +85,10 @@ public:
     : mr_brep(r_brep)
     {}
 
+    HeavisideFunction(const BRep::Pointer p_brep)
+    : mr_brep(*p_brep)
+    {}
+
     /// Destructor.
     virtual ~HeavisideFunction()
     {}

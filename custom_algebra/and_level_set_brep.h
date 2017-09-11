@@ -99,6 +99,22 @@ public:
     ///@name Operations
     ///@{
 
+    virtual std::size_t WorkingSpaceDimension() const
+    {
+        return mpLS1->WorkingSpaceDimension();
+    }
+
+
+    virtual std::size_t LocalSpaceDimension() const
+    {
+        return mpLS1->WorkingSpaceDimension();
+    }
+
+    virtual bool IsInside(const PointType& P) const
+    {
+        return (mpLS1->IsInside(P) && mpLS2->IsInside(P));
+    }
+
     /// Check if a geometry is cut by the level set
     /// 0: the cell is completely inside the domain bounded by level set
     /// 1: completely outside

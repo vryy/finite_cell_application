@@ -25,6 +25,7 @@ void QuadTreeNode::AddToModelPart<false, Element>(GeometryType::Pointer pParentG
         std::size_t& lastElementId,
         const int level) const
 {
+    // std::cout << __FUNCTION__ << " is called" << std::endl;
     Properties::Pointer p_properties = r_model_part.pGetProperties(level);
     GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
     Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, pThisGeometry, p_properties);
@@ -48,6 +49,7 @@ void QuadTreeNode::AddToModelPart<false, Condition>(GeometryType::Pointer pParen
         std::size_t& lastCondId,
         const int level) const
 {
+    // std::cout << __FUNCTION__ << " is called" << std::endl;
     Properties::Pointer p_properties = r_model_part.pGetProperties(level);
     GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
     Condition::Pointer pNewCondition = r_clone_condition.Create(++lastCondId, pThisGeometry, p_properties);
@@ -71,6 +73,7 @@ void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGe
         std::size_t& lastElementId,
         const int level) const
 {
+    // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
         this->AddToModelPart<false, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, level);
@@ -82,7 +85,6 @@ void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGe
     }
 }
 
-
 template<>
 void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParentGeometry,
         ModelPart& r_model_part,
@@ -91,6 +93,7 @@ void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParent
         std::size_t& lastCondId,
         const int level) const
 {
+    // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
         this->AddToModelPart<false, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, level);

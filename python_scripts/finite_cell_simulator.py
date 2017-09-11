@@ -974,12 +974,13 @@ class FiniteCellSimulator:
         for qs in cut_elems:
             lastNodeId = aux_util.GetLastNodeId(model.model_part)
             lastElementId = aux_util.GetLastElementId(model.model_part)
+            # print("qs.NumberOfSubCells():", qs.NumberOfSubCells())
             qs.DeepAddToModelPart(model.model_part, sample_element_name, lastNodeId, lastElementId)
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
                 cog_points.append(qt.CenterOfGravity(self.brep, integrator_quadrature_method)) # remark: the zero cog still be exported, that happen when the integrator can't integrate deep enough to find the point
 
-        print("len(cog_points):", len(cog_points))
+        # print("len(cog_points):", len(cog_points))
         quad_util = QuadratureUtility()
         quad_util.CreateConditionFromPoint(model.model_part, cog_points, sample_cond_name)
 

@@ -194,7 +194,9 @@ public:
     PointType CenterOfGravity(const BRep& r_brep, const int& integration_method) const
     {
         PointType COG;
-        mpTreeNode->CenterOfGravity(COG, mpThisGeometry, r_brep, integration_method);
+        bool found = mpTreeNode->CenterOfGravity(COG, mpThisGeometry, r_brep, integration_method);
+        if(!found)
+            std::cout << "!!!WARNING!!! COG of " << *this << " is not found" << std::endl;
         return COG;
     }
 

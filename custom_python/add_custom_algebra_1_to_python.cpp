@@ -275,7 +275,7 @@ void FiniteCellApplication_AddFunctionsToPython()
 
     typedef HeavisideFunction<FunctionR3R1> HeavisideFunctionR3R1;
     class_<HeavisideFunctionR3R1, HeavisideFunctionR3R1::Pointer, boost::noncopyable, bases<FunctionR3R1> >
-    ("HeavisideFunctionR3R1", init<const LevelSet&>())
+    ("HeavisideFunctionR3R1", init<const BRep::Pointer>())
     ;
 
     typedef ProductFunction<FunctionR3R1> ProductFunctionR3R1;

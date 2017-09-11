@@ -84,6 +84,10 @@ public:
         return (mpChildren.size() == 0);
     }
 
+    // void DoNothing() const {}
+
+    // template<bool TRecursive, class TEntityType> void DoNothingWithTemplate() {}
+
     /*****************************************************************/
     /******* CONSTRUCTION ********************************************/
     /*****************************************************************/
@@ -568,6 +572,12 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
+    template<bool TRecursive, class TEntityType>
+    void AddToModelPart() const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
     /*****************************************************************/
     /******* AUXILIARY ROUTINES **************************************/
     /*****************************************************************/
@@ -673,6 +683,42 @@ protected:
     std::vector<QuadTreeNode::Pointer> mpChildren;
     
 }; // class QuadTreeNode
+
+
+template<>
+void QuadTreeNode::AddToModelPart<false, Element>(GeometryType::Pointer pParentGeometry,
+        ModelPart& r_model_part,
+        Element const& r_clone_element,
+        std::size_t& lastNodeId,
+        std::size_t& lastElementId,
+        const int level) const;
+
+
+template<>
+void QuadTreeNode::AddToModelPart<false, Condition>(GeometryType::Pointer pParentGeometry,
+        ModelPart& r_model_part,
+        Condition const& r_clone_condition,
+        std::size_t& lastNodeId,
+        std::size_t& lastCondId,
+        const int level) const;
+
+
+template<>
+void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGeometry,
+        ModelPart& r_model_part,
+        Element const& r_clone_element,
+        std::size_t& lastNodeId,
+        std::size_t& lastElementId,
+        const int level) const;
+
+template<>
+void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParentGeometry,
+        ModelPart& r_model_part,
+        Condition const& r_clone_condition,
+        std::size_t& lastNodeId,
+        std::size_t& lastCondId,
+        const int level) const;
+
 
 
 /// Quadrilateral quad-tree node in reference coordinates
