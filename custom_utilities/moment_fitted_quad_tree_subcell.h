@@ -83,7 +83,10 @@ public:
     }
 
 
-    /// Constructor to construct the sub-cells based on Gauss quadrature.
+    /**
+     * Constructor to construct the sub-cells based on Gauss quadrature.
+     * In this scheme, the number of sub-cells is equivalent to number of Gauss points on host finite cell. Therefore, in order to increase the number of sub-cells, one must increase the integration order on host cell
+     */
     MomentFittedQuadTreeSubCell(Element::Pointer p_elem, const std::string& construct_method,
             const int& gauss_integration_order)
     : BaseType(p_elem), mpElement(p_elem), mRepresentativeIntegrationOrder(gauss_integration_order)
@@ -160,7 +163,10 @@ public:
         #endif
     }
 
-    /// Constructor to construct the sub-cells based on equal distribution.
+    /**
+     * Constructor to construct the sub-cells based on equal distribution.
+     * In this scheme, the number of sub-cells can be arbitrarily
+     */
     MomentFittedQuadTreeSubCell(Element::Pointer p_elem, const std::string& construct_method,
             const std::size_t& m, const std::size_t& n)
     : BaseType(p_elem), mpElement(p_elem)
@@ -191,7 +197,10 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", p_elem->GetGeometry().GetGeometryType())
     }
 
-    /// Constructor to construct the sub-cells based on equal distribution.
+    /**
+     * Constructor to construct the sub-cells based on equal distribution.
+     * In this scheme, the number of sub-cells can be arbitrarily
+     */
     MomentFittedQuadTreeSubCell(Element::Pointer p_elem, const std::string& construct_method,
             const std::size_t& m, const std::size_t& n, const std::size_t& p)
     : BaseType(p_elem), mpElement(p_elem)
@@ -373,7 +382,7 @@ public:
         mpElement->SetValue(INTEGRATION_ORDER_var, mRepresentativeIntegrationOrder);
         mpElement->Initialize();
 
-        /* thirdly fit the subcell */
+        /* thirdly fit the sub-cell */
         std::vector<FunctionR3R1::Pointer> funcs;
         typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
         BOOST_FOREACH(const iterator_value_type::value_type& f,
@@ -394,7 +403,7 @@ public:
 
         ModelPart::ElementsContainerType NewSubCellElements = CreateSubCellElements(r_model_part, sample_element_name, Weights, lastElementId, lastCondId);
 
-        // set the domain size for the subcell
+        // set the domain size for the sub-cell
         if(compute_subcell_domain_size)
         {
             std::size_t cnt = 0;

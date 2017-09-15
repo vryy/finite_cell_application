@@ -316,8 +316,10 @@ public:
         }
 
         std::size_t num_basis = r_funcs.size();
+        if(echo_level > -1) KRATOS_WATCH(num_basis)
 
         std::size_t num_fit_points = integration_points.size();
+        if(echo_level > -1) KRATOS_WATCH(num_fit_points)
 
         // form the matrix A
         CoordinatesArrayType GlobalCoords;
