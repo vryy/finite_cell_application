@@ -55,16 +55,17 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
-    double(QuadTreeType::*pointer_to_IntegrateGlobal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template IntegrateGlobal<double>;
+    double(QuadTreeType::*pointer_to_IntegrateLocal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template Integrate<double, QuadTreeNode::LOCAL>;
+    double(QuadTreeType::*pointer_to_IntegrateGlobal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template Integrate<double, QuadTreeNode::GLOBAL>;
 
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree> >
     (QuadTreeName.str().c_str(), init<Element::Pointer&>())
     .def(init<Condition::Pointer&>())
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
-    .def("pCreateGeometry", &QuadTreeType::pCreateGeometry)
     .def("DomainSize", &QuadTreeType::DomainSize)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPart", &QuadTreeType::PyAddToModelPart)
+    .def("IntegrateLocal", pointer_to_IntegrateLocal_double_quadtree_local)
     .def("IntegrateGlobal", pointer_to_IntegrateGlobal_double_quadtree_local)
     .def("ConstructQuadrature", &QuadTreeType::ConstructQuadrature)
     .def(self_ns::str(self))
@@ -95,14 +96,16 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         MomentFittedQuadTreeSubCellName << TNsampling;
 
+    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution1)(const int&, const std::size_t&, const std::size_t&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
+    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution2)(const int&, const std::size_t&, const std::size_t&, const std::size_t&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
+
     class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType>, boost::noncopyable>
     (MomentFittedQuadTreeSubCellName.str().c_str(), init<Element::Pointer>())
-    .def(init<Element::Pointer, const std::string&, const int&>())
-    .def(init<Element::Pointer, const std::string&, const std::size_t&, const std::size_t&>())
-    .def(init<Element::Pointer, const std::string&, const std::size_t&, const std::size_t&, const std::size_t&>())
+    .def("ConstructSubCellsBasedOnGaussQuadrature", &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnGaussQuadrature)
+    .def("ConstructSubCellsBasedOnEqualDistribution", pointer_to_ConstructSubCellsBasedOnEqualDistribution1)
+    .def("ConstructSubCellsBasedOnEqualDistribution", pointer_to_ConstructSubCellsBasedOnEqualDistribution2)
     .def("GetElement", &MomentFittedQuadTreeSubCellType::pGetElement)
     .def("GetNumberOfPhysicalIntegrationPoint", &MomentFittedQuadTreeSubCellType::GetNumberOfPhysicalIntegrationPoint)
-    .def("FitQuadraturePhysicalPoints", &MomentFittedQuadTreeSubCellType::PyFitQuadraturePhysicalPoints)
     .def("FitAndCreateSubCellElements", &MomentFittedQuadTreeSubCellType::PyFitAndCreateSubCellElements)
     .def("CreateSubCellElements", &MomentFittedQuadTreeSubCellType::PyCreateSubCellElements)
     .def("CreateParasiteElement", &MomentFittedQuadTreeSubCellType::CreateParasiteElement)

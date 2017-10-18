@@ -66,6 +66,13 @@ namespace Kratos
 class QuadTreeNode
 {
 public:
+
+    enum FrameType
+    {
+        LOCAL = 0,
+        GLOBAL = 1
+    };
+
     KRATOS_CLASS_POINTER_DEFINITION(QuadTreeNode);
 
     typedef typename GeometricalObject::GeometryType GeometryType;
@@ -99,28 +106,6 @@ public:
     }
 
     /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
-    /// Since this routine only tests the inside/outside of the node, it's more suitable for standard finite element
-    void RefineBy(GeometryType::Pointer& pParentGeometry, const BRep& r_brep)
-    {
-        if(this->IsLeaf())
-        {
-            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-            int stat = r_brep.CutStatus(*pThisGeometry);
-            if(stat == BRep::_CUT)
-            {
-                this->Refine();
-            }
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
-            {
-                mpChildren[i]->RefineBy(pParentGeometry, r_brep);
-            }
-        }
-    }
-
-    /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
     /// This routine tests the inside/outside against a set of sampling points. It's more computationally expensive but is more robust and applicable to a large types of geometries.
     void RefineBySampling(GeometryType::Pointer& pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
     {
@@ -150,8 +135,10 @@ public:
 
     /// Integrate a function in the global frame using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateGlobal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             TOutputType& rOutput,
             const int& integration_method) const
@@ -162,47 +149,45 @@ public:
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
-            this->IntegrateGlobal(pParentGeometry, rFunc, rOutput, ThisIntegrationMethod);
+            this->Integrate<TOutputType, Frame>(pParentGeometry, rFunc, rOutput, ThisIntegrationMethod);
         }
         else // use custom quadrature
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryType::IntegrationPointsArrayType sample_integration_points = this->ConstructCustomQuadrature(quadrature_type, quadrature_order);
-            this->IntegrateGlobal(pParentGeometry, rFunc, rOutput, sample_integration_points);
+            this->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(pParentGeometry, rFunc, rOutput, sample_integration_points);
         }
     }
 
     /// Integrate a function in the global frame using the sample geometry and the built-in Kratos integration rule (mainly Gauss Legendre for not-so-high order)
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateGlobal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
-        if(this->IsLeaf())
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+
+        std::vector<double> DetJ;
+        Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
+
+        CoordinatesArrayType GlobalCoords;
+
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-            const GeometryType::IntegrationPointsArrayType& integration_points
-                = pThisGeometry->IntegrationPoints( ThisIntegrationMethod );
-
-            std::vector<double> DetJ;
-            Function<double, double>::ComputeDetJ(DetJ, *pThisGeometry, integration_points);
-
-            CoordinatesArrayType GlobalCoords;
-
-            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            if(Frame == LOCAL)
             {
-                pThisGeometry->GlobalCoordinates(GlobalCoords, integration_points[point]);
-                rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
+                rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
             }
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            else if(Frame == GLOBAL)
             {
-                mpChildren[i]->IntegrateGlobal(pParentGeometry, rFunc, rOutput, ThisIntegrationMethod);
+                pParentGeometry->GlobalCoordinates(GlobalCoords, integration_points[point]);
+                rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
             }
         }
     }
@@ -210,40 +195,43 @@ public:
     /// Integrate a function in the global frame using the sample geometry and a set of quadrature points. This allows for very
     /// high order quadrature rule, as well as arbitrary quadrature
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, typename TIntegrationPointsArrayType>
-    void IntegrateGlobal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, typename TIntegrationPointsArrayType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             TOutputType& rOutput,
             const TIntegrationPointsArrayType& sample_integration_points) const
     {
-        if(this->IsLeaf())
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+
+        std::vector<double> DetJ;
+        Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
+
+        CoordinatesArrayType GlobalCoords;
+
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-            std::vector<double> DetJ;
-            Function<double, double>::ComputeDetJ(DetJ, *pThisGeometry, sample_integration_points);
-
-            CoordinatesArrayType GlobalCoords;
-
-            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            if(Frame == LOCAL)
             {
-                pThisGeometry->GlobalCoordinates(GlobalCoords, sample_integration_points[point]);
-                rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * sample_integration_points[point].Weight();
+                rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
             }
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            else if(Frame == GLOBAL)
             {
-                mpChildren[i]->IntegrateGlobal(pParentGeometry, rFunc, rOutput, sample_integration_points);
+                pParentGeometry->GlobalCoordinates(GlobalCoords, integration_points[point]);
+                rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
             }
         }
     }
 
-    /// Integrate a function in the global frame using the sample geometry and integration rule
+    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateLocal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             const BRep& r_brep,
             TOutputType& rOutput,
@@ -256,122 +244,95 @@ public:
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
-            this->IntegrateLocal(pParentGeometry, rFunc, r_brep, rOutput, ThisIntegrationMethod, small_weight);
+            this->Integrate<TOutputType, Frame>(pParentGeometry, rFunc, r_brep, rOutput, ThisIntegrationMethod, small_weight);
         }
         else // use custom quadrature
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryType::IntegrationPointsArrayType sample_integration_points = this->ConstructCustomQuadrature(quadrature_type, quadrature_order);
-            this->IntegrateLocal(pParentGeometry, rFunc, r_brep, rOutput, sample_integration_points, small_weight);
+            this->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(pParentGeometry, rFunc, r_brep, rOutput, sample_integration_points, small_weight);
         }
     }
 
-    /// Integrate a function in the local frame using the sample geometry and the built-in Kratos integration rule (mainly Gauss Legendre for not-so-high order)
+    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and integration rule (mainly Gauss Legendre for not-so-high order)
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateLocal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             const BRep& r_brep,
             TOutputType& rOutput,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod,
             const double& small_weight) const
     {
-        if(this->IsLeaf())
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+
+        std::vector<double> DetJ;
+        Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
+
+        CoordinatesArrayType GlobalCoords;
+
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-            GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
-
-            const GeometryType::IntegrationPointsArrayType& sample_integration_points
-                = pThisReferenceGeometry->IntegrationPoints( ThisIntegrationMethod );
-
-            Vector ShapeFunctionValuesOnReference;
-            GeometryType::IntegrationPointType integration_point;
-            CoordinatesArrayType GlobalCoords;
-            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            pParentGeometry->GlobalCoordinates(GlobalCoords, integration_points[point]);
+            if(r_brep.IsInside(GlobalCoords))
             {
-                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
-
-                noalias(integration_point) = ZeroVector(3);
-                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
-                {
-                    noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
-                }
-
-                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
-
-                pParentGeometry->GlobalCoordinates(GlobalCoords, integration_point);
-                if(r_brep.IsInside(GlobalCoords))
-                {
-                    rOutput += rFunc.GetValue(integration_point) * DetJsmall * sample_integration_points[point].Weight();
-                }
-                else
-                {
-                    double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
-                    rOutput += rFunc.GetValue(integration_point) * small_weight * DetJbig;
-                }
+                if(Frame == LOCAL)
+                    rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
+                else if(Frame == GLOBAL)
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
             }
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            else
             {
-                mpChildren[i]->IntegrateLocal(pParentGeometry, rFunc, r_brep, rOutput, ThisIntegrationMethod, small_weight);
+                if(Frame == LOCAL)
+                    rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * small_weight;
+                else if(Frame == GLOBAL)
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * small_weight;
             }
         }
     }
 
-    /// Integrate a function in the local frame using the sample geometry and a set of quadrature points. This allows for very
-    /// high order quadrature rule, as well as arbitrary quadrature
+    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and a set of sample quadrature points.
+    /// This allows for very high order quadrature rule, as well as arbitrary quadrature
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, typename TIntegrationPointsArrayType>
-    void IntegrateLocal(GeometryType::Pointer pParentGeometry,
+    /// if Frame=0, the function is assumed to be defined in the local frame.
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    template<typename TOutputType, typename TIntegrationPointsArrayType, int Frame>
+    void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
             const BRep& r_brep,
             TOutputType& rOutput,
             const TIntegrationPointsArrayType& sample_integration_points,
             const double& small_weight) const
     {
-        if(this->IsLeaf())
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+
+        std::vector<double> DetJ;
+        Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
+
+        CoordinatesArrayType GlobalCoords;
+
+        for(std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-            GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
-
-            Vector ShapeFunctionValuesOnReference;
-            GeometryType::IntegrationPointType integration_point;
-            CoordinatesArrayType GlobalCoords;
-            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            pParentGeometry->GlobalCoordinates(GlobalCoords, integration_points[point]);
+            if(r_brep.IsInside(GlobalCoords))
             {
-                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
-
-                noalias(integration_point) = ZeroVector(3);
-                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
-                {
-                    noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
-                }
-
-                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
-
-//                double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
-
-                pParentGeometry->GlobalCoordinates(GlobalCoords, integration_point);
-                if(r_brep.IsInside(GlobalCoords))
-                {
-                    rOutput += rFunc.GetValue(integration_point) * DetJsmall * sample_integration_points[point].Weight();
-                }
-                else
-                {
-                    double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
-                    rOutput += rFunc.GetValue(integration_point) * small_weight * DetJbig;
-                }
+                if(Frame == LOCAL)
+                    rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
+                else if(Frame == GLOBAL)
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
             }
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            else
             {
-                mpChildren[i]->IntegrateLocal(pParentGeometry, rFunc, r_brep, rOutput, sample_integration_points, small_weight);
+                if(Frame == LOCAL)
+                    rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * small_weight;
+                else if(Frame == GLOBAL)
+                    rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * small_weight;
             }
         }
     }
@@ -420,38 +381,6 @@ public:
             /*
             TODO comment about this quadrature construction scheme
             */
-//            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-//            GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
-
-//            const GeometryType::IntegrationPointsArrayType& sample_integration_points
-//                = pThisReferenceGeometry->IntegrationPoints( ThisIntegrationMethod );
-
-//            Vector ShapeFunctionValuesOnReference;
-//            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
-//            {
-//                GeometryType::IntegrationPointType integration_point;
-
-//                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
-
-//                noalias(integration_point) = ZeroVector(3);
-//                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
-//                {
-//                    noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
-//                }
-
-//                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
-
-//                double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
-
-//                integration_point.SetWeight( DetJsmall/DetJbig * sample_integration_points[point].Weight() );
-
-//                integration_points.push_back( integration_point );
-//            }
-
-            /*
-            TODO comment about this quadrature construction scheme
-            */
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
             const GeometryType::IntegrationPointsArrayType& sample_integration_points
@@ -494,35 +423,6 @@ public:
     {
         if(this->IsLeaf())
         {
-            /*
-            TODO comment about this quadrature construction scheme
-            */
-//            GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
-
-//            GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
-
-//            Vector ShapeFunctionValuesOnReference;
-//            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
-//            {
-//                GeometryType::IntegrationPointType integration_point;
-
-//                ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
-
-//                noalias(integration_point) = ZeroVector(3);
-//                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
-//                {
-//                    noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
-//                }
-
-//                double DetJsmall = Function<double, double>::ComputeDetJ(*pThisGeometry, sample_integration_points[point]);
-
-//                double DetJbig = Function<double, double>::ComputeDetJ(*pParentGeometry, integration_point);
-
-//                integration_point.SetWeight( DetJsmall/DetJbig * sample_integration_points[point].Weight() );
-
-//                integration_points.push_back( integration_point );
-//            }
-
             /*
             TODO comment about this quadrature construction scheme
             */
@@ -609,10 +509,10 @@ public:
         FunctionR3R1::Pointer FY = FunctionR3R1::Pointer(new MonomialFunctionR3R1<0, 1, 0>());
         FunctionR3R1::Pointer FZ = FunctionR3R1::Pointer(new MonomialFunctionR3R1<0, 0, 1>());
         FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
-        this->IntegrateGlobal(pParentGeometry, ProductFunction<FunctionR3R1>(FX, FH), X, integration_method);
-        this->IntegrateGlobal(pParentGeometry, ProductFunction<FunctionR3R1>(FY, FH), Y, integration_method);
-        this->IntegrateGlobal(pParentGeometry, ProductFunction<FunctionR3R1>(FZ, FH), Z, integration_method);
-        this->IntegrateGlobal(pParentGeometry, *FH, A, integration_method);
+        this->Integrate<double, GLOBAL>(pParentGeometry, ProductFunction<FunctionR3R1>(FX, FH), X, integration_method);
+        this->Integrate<double, GLOBAL>(pParentGeometry, ProductFunction<FunctionR3R1>(FY, FH), Y, integration_method);
+        this->Integrate<double, GLOBAL>(pParentGeometry, ProductFunction<FunctionR3R1>(FZ, FH), Z, integration_method);
+        this->Integrate<double, GLOBAL>(pParentGeometry, *FH, A, integration_method);
 //        std::cout << "X: " << X << ", Y: " << Y << ", Z: " << Z << ", A: " << A << std::endl;
         if(A != 0.0)
         {
@@ -631,7 +531,7 @@ public:
     {
         double A = 0.0;
         FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
-        this->IntegrateGlobal(pParentGeometry, *FH, A, integration_method);
+        this->Integrate<double, GLOBAL>(pParentGeometry, *FH, A, integration_method);
         return A;
     }
 
@@ -681,7 +581,7 @@ public:
 
 protected:
     std::vector<QuadTreeNode::Pointer> mpChildren;
-    
+
 }; // class QuadTreeNode
 
 
@@ -891,6 +791,13 @@ public:
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
                 pNewGeometry = GeometryType::Pointer(new Quadrilateral3D9<BaseType::NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
         }
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D)
+        {
+            // TODO
+            KRATOS_THROW_ERROR(std::logic_error, "The Bezier2D geometry type is not supported:", pParentGeometry->GetGeometryType())
+        }
+        #endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
 

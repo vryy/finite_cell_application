@@ -83,7 +83,7 @@ public:
     ///@{
 
     /// Default constructor.
-    InverseLevelSet(const BaseType::Pointer& p_level_set)
+    InverseLevelSet(const BaseType::Pointer p_level_set)
     : mp_level_set(p_level_set)
     {}
 

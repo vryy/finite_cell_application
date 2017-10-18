@@ -153,13 +153,6 @@ public:
     GeometryType::Pointer pGetGeometry() const {return mpThisGeometry;}
 
 
-    /// Create the occupied geometry
-    GeometryType::Pointer pCreateGeometry() const
-    {
-        return mpTreeNode->pCreateGeometry(mpThisGeometry);
-    }
-
-
     /// Create the sub-cells
     /// Implement function from abstract class RefinableTree
     virtual void Refine()
@@ -172,14 +165,7 @@ public:
     /// Implement function from abstract class RefinableTree
     virtual void RefineBy(const BRep& r_brep)
     {
-        if(TNsampling == 0 || TNsampling == 1)
-        {
-            mpTreeNode->RefineBy(mpThisGeometry, r_brep);
-        }
-        else
-        {
-            mpTreeNode->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
-        }
+        mpTreeNode->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
     }
 
 
@@ -201,68 +187,68 @@ public:
     }
 
 
-    /// Integrate a function in the global frame using the underlying geometry of the quadtree with the provided integration method
-    template<class TOutputType>
-    TOutputType IntegrateGlobal(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int& integration_method) const
+    /// Integrate a function using the underlying geometry of the quadtree with the provided integration method
+    template<class TOutputType, int Frame>
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int& integration_method) const
     {
         TOutputType Result = TOutputType(0.0);
 
-        mpTreeNode->IntegrateGlobal(mpThisGeometry, rFunc, Result, integration_method);
+        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, Result, integration_method);
 
         return Result;
     }
 
 
-    /// Integrate a function in the global frame using the underlying geometry of the quadtree and integration rule
+    /// Integrate a function using the underlying geometry of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateGlobal(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const int& integration_method) const
     {
-        mpTreeNode->IntegrateGlobal(mpThisGeometry, rFunc, rOutput, integration_method);
+        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
-    /// Integrate a function in the global frame using the sample geometry and integration rule
+    /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateGlobal(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points) const
     {
-        mpTreeNode->IntegrateGlobal(mpThisGeometry, rFunc, rOutput, integration_points);
+        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(mpThisGeometry, rFunc, rOutput, integration_points);
     }
 
 
-    /// Integrate a function in the local frame using the underlying geometry of the quadtree with the provided integration method
-    template<class TOutputType>
-    TOutputType IntegrateLocal(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+    /// Integrate a function using the underlying geometry limited by a BRep of the quadtree with the provided integration method
+    template<class TOutputType, int Frame>
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
             const BRep& r_brep, const int& integration_method, const double& small_weight) const
     {
         TOutputType Result = TOutputType(0.0);
 
-        mpTreeNode->IntegrateLocal(mpThisGeometry, rFunc, r_brep, Result, integration_method, small_weight);
+        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, Result, integration_method, small_weight);
 
         return Result;
     }
 
 
-    /// Integrate a function in the local frame using the underlying geometry of the quadtree and integration rule
+    /// Integrate a function using the underlying geometry limited by a BRep of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateLocal(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
             const int& integration_method, const double& small_weight) const
     {
-        mpTreeNode->IntegrateLocal(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
 
 
-    /// Integrate a function in the local frame using the sample geometry and integration rule
+    /// Integrate a function using the underlying geometry limited by a BRep and a set of sample integration points
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateLocal(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points, const double& small_weight) const
     {
-        mpTreeNode->IntegrateLocal(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
+        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
 
 
@@ -501,16 +487,8 @@ public:
     /// Implement function from abstract class RefinableTree
     virtual void RefineBy(const BRep& r_brep)
     {
-        if(TNsampling == 0 || TNsampling == 1)
-        {
-            for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-                mpTreeNodes[i]->RefineBy(mpThisGeometry, r_brep);
-        }
-        else
-        {
-            for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-                mpTreeNodes[i]->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
-        }
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+            mpTreeNodes[i]->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
     }
 
 
@@ -539,53 +517,28 @@ public:
     }
 
 
-    /// Integrate a function in the global frame using the underlying geometry of the quadtree subcell with the integration order
-    template<class TOutputType>
-    TOutputType IntegrateGlobal(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+    /// Integrate a function using the underlying geometry of the quadtree subcell with the integration order
+    template<class TOutputType, int Frame>
+    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
             const int& integration_method) const
     {
         TOutputType Result = TOutputType(0.0);
 
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->IntegrateGlobal(mpThisGeometry, rFunc, Result, integration_method);
+            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, Result, integration_method);
 
         return Result;
     }
 
 
-    /// Integrate a function in the global frame using the underlying geometry of the quadtree subcell and integration rule
+    /// Integrate a function using the underlying geometry of the quadtree subcell and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateGlobal(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
             const int& integration_method) const
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->IntegrateGlobal(mpThisGeometry, rFunc, rOutput, integration_method);
-    }
-
-
-    /// Integrate a function in the local frame using the underlying geometry of the quadtree subcell with the integration order
-    template<class TOutputType>
-    TOutputType IntegrateLocal(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep,
-            const int& integration_method, const double& small_weight) const
-    {
-        TOutputType Result = TOutputType(0.0);
-
-        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->IntegrateLocal(mpThisGeometry, rFunc, r_brep, Result, integration_method, small_weight);
-
-        return Result;
-    }
-
-
-    /// Integrate a function in the local frame using the underlying geometry of the quadtree subcell and integration rule
-    /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType>
-    void IntegrateLocal(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
-            const int& integration_method, const double& small_weight) const
-    {
-        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->IntegrateLocal(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 

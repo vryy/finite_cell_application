@@ -502,11 +502,11 @@ class FiniteCellSimulator:
         elif action_on_small_subcell == 'replace by quadtree':
             # perform quadtree refinement for "eliminated" cell
             total_add_quadrature_pnts = 0
-            cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
+            small_cut_cell_quadrature_method = self.params["small_cut_cell_quadrature_method"]
             quadtree_small_weight = self.params["quadtree_small_weight"]
             valid_quadtree_elems = []
             for qs in quadtree_elems:
-                np = qs.ConstructQuadrature(self.brep, cut_cell_quadrature_method, quadtree_small_weight)
+                np = qs.ConstructQuadrature(self.brep, small_cut_cell_quadrature_method, quadtree_small_weight)
                 total_add_quadrature_pnts = total_add_quadrature_pnts + np
                 if np == 0:
                     exclude_elems.append(qs)
@@ -560,6 +560,7 @@ class FiniteCellSimulator:
                 elif stat == 1:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
+                    elem.Set(ACTIVE, False)
                     exclude_elems.append(elem)
             print("construct quadrature using quad-tree successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             for elem in bulk_elements:
@@ -610,6 +611,7 @@ class FiniteCellSimulator:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
                 elem.SetValue(IS_INACTIVE, True)
+                elem.Set(ACTIVE, False)
             print("obtain moment-fit quadrature successfully")
             for elem in bulk_elements:
                 self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
@@ -736,7 +738,7 @@ class FiniteCellSimulator:
         nom = 0.0
         denom = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
@@ -766,7 +768,7 @@ class FiniteCellSimulator:
         nom = 0.0
         denom = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
@@ -776,7 +778,7 @@ class FiniteCellSimulator:
                     nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
                     denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
         for element in all_subcell_elems:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 u = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_DISPLACEMENT, process_info)
 #                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_GLOBAL, process_info)
@@ -800,7 +802,7 @@ class FiniteCellSimulator:
         nom = 0.0
         denom = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, process_info)
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
@@ -823,7 +825,7 @@ class FiniteCellSimulator:
         nom = 0.0
         denom = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, process_info)
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
@@ -833,7 +835,7 @@ class FiniteCellSimulator:
                     nom = nom + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
                     denom = denom + (pow(ana_o[0], 2) + pow(ana_o[1], 2) + pow(ana_o[2], 2) + 2.0*(pow(ana_o[3], 2) + pow(ana_o[4], 2) + pow(ana_o[5], 2))) * W[i][0] * J0[i][0]
         for element in all_subcell_elems:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 o = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_THREED_STRESSES, process_info)
 #                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_GLOBAL, process_info)
@@ -856,7 +858,7 @@ class FiniteCellSimulator:
     def compute_domain_size(self, elements, process_info):
         domain_size = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
                 for i in range(0, len(W)):
@@ -866,7 +868,7 @@ class FiniteCellSimulator:
     def compute_domain_size_subcell(self, all_subcell_elems, process_info):
         domain_size = 0.0
         for element in all_subcell_elems:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 W = element.GetValuesOnIntegrationPoints(SUBCELL_DOMAIN_SIZE, process_info)
                 for i in range(0, len(W)):
                     domain_size = domain_size + W[i][0]
@@ -899,7 +901,7 @@ class FiniteCellSimulator:
     def IntegrateConstantFunction(self, elements, process_info):
         domain_size = 0.0
         for element in elements:
-            if element.GetValue(IS_INACTIVE) == False:
+            if element.Is(ACTIVE):
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
                 for i in range(0, len(W)):

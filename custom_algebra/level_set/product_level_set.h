@@ -83,7 +83,7 @@ public:
     ///@{
 
     /// Default constructor.
-    ProductLevelSet(const BaseType::Pointer& p_level_set_1, const BaseType::Pointer& p_level_set_2)
+    ProductLevelSet(const BaseType::Pointer p_level_set_1, const BaseType::Pointer p_level_set_2)
     : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
     {}
 

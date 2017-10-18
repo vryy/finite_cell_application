@@ -133,14 +133,14 @@ public:
 
 
     /// Check if an element is cut by the brep
-    int CutStatus(Element::Pointer& p_elem) const
+    int CutStatus(Element::Pointer p_elem) const
     {
         return CutStatus(p_elem->GetGeometry());
     }
 
 
     /// Check if a geometry is cut by the brep
-    int CutStatus(GeometryType::Pointer& p_geom) const
+    int CutStatus(GeometryType::Pointer p_geom) const
     {
         return CutStatus(*p_geom);
     }
@@ -160,21 +160,21 @@ public:
     /// 0: the cell is completely inside the domain bounded by level set
     /// 1: completely outside
     /// -1: the cell is cut by level set
-    virtual int CutStatus(std::vector<PointType>& r_points) const
+    virtual int CutStatus(const std::vector<PointType>& r_points) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
     /// Check if an element is cut by the brep by sampling the elemental geometry
-    int CutStatusBySampling(Element::Pointer& p_elem, const std::size_t& nsampling) const
+    int CutStatusBySampling(Element::Pointer p_elem, const std::size_t& nsampling) const
     {
         return CutStatusBySampling(p_elem->GetGeometry(), nsampling);
     }
 
 
     /// Check if a geometry is cut by the brep by sampling the geometry
-    int CutStatusBySampling(GeometryType::Pointer& p_geom, const std::size_t& nsampling) const
+    int CutStatusBySampling(GeometryType::Pointer p_geom, const std::size_t& nsampling) const
     {
         return CutStatusBySampling(*p_geom, nsampling);
     }
@@ -187,7 +187,7 @@ public:
     virtual int CutStatusBySampling(GeometryType& r_geom, const std::size_t& nsampling) const
     {
         std::vector<PointType> SamplingPoints;
-        this->CreateSamplingPoints(SamplingPoints, r_geom, nsampling);
+        CreateSamplingPoints(SamplingPoints, r_geom, nsampling);
         return this->CutStatus(SamplingPoints);
     }
 

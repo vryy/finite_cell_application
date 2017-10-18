@@ -51,6 +51,7 @@
 #include "custom_geometries/finite_cell_geometry.h"
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
 #include "custom_geometries/finite_cell_geo_2d_bezier.h"
+#include "custom_geometries/finite_cell_geo_2d_bezier_3.h"
 #include "custom_geometries/finite_cell_geo_3d_bezier.h"
 #endif
 
@@ -275,6 +276,12 @@ public:
             else if(r_geom.GetGeometryType() == GeometryData::Kratos_Bezier2D)
             {
                 typedef FiniteCellGeo2dBezier<NodeType> FiniteCellGeometryType;
+                FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
+                r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
+            }
+            else if(r_geom.GetGeometryType() == GeometryData::Kratos_Bezier2D3)
+            {
+                typedef FiniteCellGeo2dBezier3<NodeType> FiniteCellGeometryType;
                 FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
                 r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, integration_points);
             }

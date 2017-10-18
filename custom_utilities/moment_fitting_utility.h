@@ -150,7 +150,7 @@ public:
                     integrator_integration_method, solver_type, echo_level, small_weight);
 
             /* create new quadrature and assign to the geometry */
-            FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);        
+            FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
         }
         else
         {
@@ -267,7 +267,9 @@ public:
                 {
                     GeometryType::IntegrationPointsArrayType integration_points
                             = (*it_integrator)->Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
-
+KRATOS_WATCH(fit_quadrature_type)
+KRATOS_WATCH(fit_quadrature_order)
+KRATOS_WATCH(integration_points.size())
                     Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
                             funcs, r_brep, *(*it_integrator), integration_points,
                             integrator_integration_method, solver_type, echo_level, small_weight);
@@ -293,7 +295,7 @@ public:
 
     /// Construct the quadrature-fitted for a set of functions on the geometry
     /// r_geom: the geometry
-    /// r_funcs: the set of function needs to be fitted
+    /// r_funcs: the set of function needs to be fitted; this function is assumed to be defined in the local frame
     /// r_brep: the BRep defined the cut boundary
     /// r_integrator: to perform the integration on the cut domain
     /// integration_points: list of integration points to compute the weight
@@ -338,8 +340,10 @@ public:
         Vector Mb(num_basis);
         for(std::size_t i = 0; i < num_basis; ++i)
         {
-            Mb(i) = 0.0;
-            r_integrator.IntegrateLocal(*(r_funcs[i]), r_brep, Mb(i), integrator_integration_method, small_weight);
+            // because the fitting functions is defined in the local frame, the integration in local scheme must be used
+            double aux = 0.0;
+            r_integrator.template Integrate<double, 0>(*(r_funcs[i]), r_brep, aux, integrator_integration_method, small_weight);
+            Mb(i) = aux;
         }
         if(echo_level > 3)
             KRATOS_WATCH(Mb)
@@ -450,7 +454,7 @@ public:
 #ifdef _OPENMP
         number_of_threads = omp_get_max_threads();
 #endif
-        std::cout << "number_of_threads for MultithreadedRefineBy: " << number_of_threads << std::endl;
+        std::cout << "number_of_threads for MultithreadedFitQuadratureSubCell: " << number_of_threads << std::endl;
         std::vector<unsigned int> tree_partition;
         FiniteCellAuxilliaryUtility::CreatePartition(number_of_threads, trees.size(), tree_partition);
         std::cout << "tree_partition:";

@@ -414,7 +414,7 @@ typedef Function<array_1d<double, 3>, array_1d<double, 3> > FunctionR3R3;
 typedef Function<array_1d<double, 3>, Vector> FunctionR3Rn;
 typedef Function<array_1d<double, 2>, array_1d<double, 3> > FunctionR2R3;
 typedef Function<array_1d<double, 2>, double> FunctionR2R1;
-    
+
 ///@name Template Specialization
 ///@{
 

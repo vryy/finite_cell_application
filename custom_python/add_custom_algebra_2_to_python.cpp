@@ -47,10 +47,10 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
     /************* EXPORT INTERFACE FOR BREP **********************/
     /**************************************************************/
 
-    int(BRep::*pointer_to_CutStatusElement)(Element::Pointer&) const = &BRep::CutStatus;
-    int(BRep::*pointer_to_CutStatusGeometry)(Element::GeometryType::Pointer&) const = &BRep::CutStatus;
-    int(BRep::*pointer_to_CutStatusBySamplingElement)(Element::Pointer&, const std::size_t&) const = &BRep::CutStatusBySampling;
-    int(BRep::*pointer_to_CutStatusBySamplingGeometry)(Element::GeometryType::Pointer&, const std::size_t&) const = &BRep::CutStatusBySampling;
+    int(BRep::*pointer_to_CutStatusElement)(Element::Pointer) const = &BRep::CutStatus;
+    int(BRep::*pointer_to_CutStatusGeometry)(Element::GeometryType::Pointer) const = &BRep::CutStatus;
+    int(BRep::*pointer_to_CutStatusBySamplingElement)(Element::Pointer, const std::size_t&) const = &BRep::CutStatusBySampling;
+    int(BRep::*pointer_to_CutStatusBySamplingGeometry)(Element::GeometryType::Pointer, const std::size_t&) const = &BRep::CutStatusBySampling;
 
     class_<BRep, BRep::Pointer, boost::noncopyable>
     ( "BRep", init<>() )
@@ -90,12 +90,12 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
     ;
 
     class_<ProductLevelSet, ProductLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "ProductLevelSet", init<const LevelSet::Pointer&, const LevelSet::Pointer&>() )
+    ( "ProductLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
     .def(self_ns::str(self))
     ;
 
     class_<InverseLevelSet, InverseLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "InverseLevelSet", init<const LevelSet::Pointer&>() )
+    ( "InverseLevelSet", init<const LevelSet::Pointer>() )
     .def(self_ns::str(self))
     ;
 

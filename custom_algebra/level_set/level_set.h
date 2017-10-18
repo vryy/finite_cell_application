@@ -181,7 +181,7 @@ public:
 
     /// inherit from BRep
     /// Check if a set of points is cut by the level set
-    virtual int CutStatus(std::vector<PointType>& r_points) const
+    virtual int CutStatus(const std::vector<PointType>& r_points) const
     {
         return CutStatusOfPoints(r_points);
     }
@@ -330,8 +330,8 @@ private:
     ///@{
 
 
-    template<class PointsContainerType>
-    int CutStatusOfPoints(PointsContainerType& r_points) const
+    template<class TPointsContainerType>
+    int CutStatusOfPoints(const TPointsContainerType& r_points) const
     {
         std::vector<std::size_t> in_list, out_list, on_list;
         for(std::size_t v = 0; v < r_points.size(); ++v)
