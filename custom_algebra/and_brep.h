@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_AND_LEVEL_SET_ANDLevelSetBRep_H_INCLUDED )
-#define  KRATOS_AND_LEVEL_SET_ANDLevelSetBRep_H_INCLUDED
+#if !defined(KRATOS_AND_BREP_H_INCLUDED )
+#define  KRATOS_AND_BREP_H_INCLUDED
 
 
 
@@ -30,7 +30,6 @@
 #include "includes/element.h"
 #include "includes/ublas_interface.h"
 #include "geometries/geometry_data.h"
-#include "level_set/level_set.h"
 
 
 namespace Kratos
@@ -57,17 +56,15 @@ namespace Kratos
 ///@name Kratos Classes
 ///@{
 
-/// Short class definition.
-/** BRep representing by AND of two level sets
-*/
-class ANDLevelSetBRep : public BRep
+/// BRep representing by AND operation of two level sets
+class AndBRep : public BRep
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of ANDLevelSetBRep
-    KRATOS_CLASS_POINTER_DEFINITION(ANDLevelSetBRep);
+    /// Pointer definition of AndBRep
+    KRATOS_CLASS_POINTER_DEFINITION(AndBRep);
 
     typedef typename Element::GeometryType GeometryType;
 
@@ -82,12 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    ANDLevelSetBRep(LevelSet::Pointer pLS1, LevelSet::Pointer pLS2)
+    AndBRep(BRep::Pointer pLS1, BRep::Pointer pLS2)
     : mpLS1(pLS1), mpLS2(pLS2)
     {}
 
     /// Destructor.
-    virtual ~ANDLevelSetBRep() {}
+    virtual ~AndBRep() {}
 
 
     ///@}
@@ -101,13 +98,17 @@ public:
 
     virtual std::size_t WorkingSpaceDimension() const
     {
+        if(mpLS1->WorkingSpaceDimension() != mpLS2->WorkingSpaceDimension())
+            KRATOS_THROW_ERROR(std::logic_error, "The working space dimension is not compatible", "")
         return mpLS1->WorkingSpaceDimension();
     }
 
 
     virtual std::size_t LocalSpaceDimension() const
     {
-        return mpLS1->WorkingSpaceDimension();
+        if(mpLS1->LocalSpaceDimension() != mpLS2->LocalSpaceDimension())
+            KRATOS_THROW_ERROR(std::logic_error, "The local space dimension is not compatible", "")
+        return mpLS1->LocalSpaceDimension();
     }
 
     virtual bool IsInside(const PointType& P) const
@@ -155,7 +156,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "ANDLevelSetBRep";
+        return "AND operation of two BReps";
     }
 
     /// Print information about this object.
@@ -223,8 +224,8 @@ private:
     ///@name Member Variables
     ///@{
 
-    LevelSet::Pointer mpLS1;
-    LevelSet::Pointer mpLS2;
+    BRep::Pointer mpLS1;
+    BRep::Pointer mpLS2;
 
     ///@}
     ///@name Private Operators
@@ -251,15 +252,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    ANDLevelSetBRep& operator=(ANDLevelSetBRep const& rOther);
+    AndBRep& operator=(AndBRep const& rOther);
 
     /// Copy constructor.
-    ANDLevelSetBRep(ANDLevelSetBRep const& rOther);
+    AndBRep(AndBRep const& rOther);
 
 
     ///@}
 
-}; // Class ANDLevelSetBRep
+}; // Class AndBRep
 
 ///@}
 
@@ -273,11 +274,11 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, ANDLevelSetBRep& rThis)
+inline std::istream& operator >> (std::istream& rIStream, AndBRep& rThis)
 {}
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const ANDLevelSetBRep& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const AndBRep& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -291,4 +292,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const ANDLevelSetBRep&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_AND_LEVEL_SET_BREP_H_INCLUDED  defined
+#endif // KRATOS_AND_BREP_H_INCLUDED  defined

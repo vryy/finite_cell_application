@@ -2,3 +2,6 @@
 *.dev*
 *.swp
 test_examples
+doc
+*.now
+*.old

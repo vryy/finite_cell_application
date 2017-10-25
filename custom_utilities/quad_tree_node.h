@@ -62,7 +62,7 @@ namespace Kratos
 {
 
 
-/// Representing an abstract quad tree node in reference coordinates
+/// Abstract quad tree node description in reference coordinates
 class QuadTreeNode
 {
 public:
@@ -83,23 +83,23 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    /// Default constructor
     QuadTreeNode() {}
+
+    /// Destructor
     virtual ~QuadTreeNode() {}
 
+    /// Check if the quadtree node is a leaf node or not.
     bool IsLeaf() const
     {
         return (mpChildren.size() == 0);
     }
 
-    // void DoNothing() const {}
-
-    // template<bool TRecursive, class TEntityType> void DoNothingWithTemplate() {}
-
     /*****************************************************************/
     /******* CONSTRUCTION ********************************************/
     /*****************************************************************/
 
-    /// Refine this quadtree unconditionally
+    /// Refine this quadtree unconditionally.
     virtual void Refine()
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
@@ -133,10 +133,10 @@ public:
     /******* COMPUTATION *********************************************/
     /*****************************************************************/
 
-    /// Integrate a function in the global frame using the sample geometry and integration rule
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function using the sample geometry and integration rule.
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -159,10 +159,10 @@ public:
         }
     }
 
-    /// Integrate a function in the global frame using the sample geometry and the built-in Kratos integration rule (mainly Gauss Legendre for not-so-high order)
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function using the sample geometry and the built-in Kratos integration rule (mainly Gauss Legendre for not-so-high order).
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -192,11 +192,11 @@ public:
         }
     }
 
-    /// Integrate a function in the global frame using the sample geometry and a set of quadrature points. This allows for very
-    /// high order quadrature rule, as well as arbitrary quadrature
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function using the sample geometry and a set of quadrature points. This allows for very
+    /// high order quadrature rule, as well as arbitrary quadrature.
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, typename TIntegrationPointsArrayType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -226,10 +226,10 @@ public:
         }
     }
 
-    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and integration rule
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function on the domain limited by a BRep using the sample geometry and integration rule.
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -254,10 +254,10 @@ public:
         }
     }
 
-    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and integration rule (mainly Gauss Legendre for not-so-high order)
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function on the domain limited by a BRep using the sample geometry and integration rule (mainly Gauss Legendre for not-so-high order).
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -295,11 +295,11 @@ public:
         }
     }
 
-    /// Integrate a function on the domain limited by a BRep in the global frame using the sample geometry and a set of sample quadrature points.
-    /// This allows for very high order quadrature rule, as well as arbitrary quadrature
-    /// The caller has to manually set rOutput to zero before calling this function
+    /// Integrate a function on the domain limited by a BRep using the sample geometry and a set of sample quadrature points.
+    /// This allows for very high order quadrature rule, as well as arbitrary quadrature.
+    /// The caller has to manually set rOutput to zero before calling this function.
     /// if Frame=0, the function is assumed to be defined in the local frame.
-    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the IntegrateLocal method must be used
+    /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, typename TIntegrationPointsArrayType, int Frame>
     void Integrate(GeometryType::Pointer pParentGeometry,
             const Function<array_1d<double, 3>, TOutputType>& rFunc,
@@ -341,14 +341,14 @@ public:
     /******* QUADRATURE GENERATION ***********************************/
     /*****************************************************************/
 
-    /// Construct a custom quadrature, i.e higher order Gauss Legendre or Gauss-Lobatto quadrature
-    /// type    type of the quadrature, i.e 1: Gauss-Legendre, 2: Gauss-Lobatto, 3: Gauss-Radau
+    /// Construct a custom quadrature, i.e higher order Gauss Legendre or Gauss-Lobatto quadrature.
+    /// @param quadrature_type  type of the quadrature, i.e 1: Gauss-Legendre, 2: Gauss-Lobatto, 3: Gauss-Radau
     virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
-    /// Construct the recursive integration point array using Kratos built-in quadrature
+    /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system
     void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
             GeometryType::IntegrationPointsArrayType& integration_points,
@@ -370,17 +370,14 @@ public:
         }
     }
 
-    /// Construct the recursive integration point array using Kratos built-in quadrature
-    /// REMARKS: the integration_points is in local coordinates system
+    /// Construct the recursive integration point array using Kratos built-in quadrature.
+    /// REMARKS: the integration_points is in local coordinates system.
     void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
             GeometryType::IntegrationPointsArrayType& integration_points,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         if(this->IsLeaf())
         {
-            /*
-            TODO comment about this quadrature construction scheme
-            */
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
             const GeometryType::IntegrationPointsArrayType& sample_integration_points
@@ -423,9 +420,6 @@ public:
     {
         if(this->IsLeaf())
         {
-            /*
-            TODO comment about this quadrature construction scheme
-            */
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
             Vector ShapeFunctionValuesOnReference;
@@ -794,8 +788,7 @@ public:
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D)
         {
-            // TODO
-            KRATOS_THROW_ERROR(std::logic_error, "The Bezier2D geometry type is not supported:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier2D geometry is not supported:", pParentGeometry->GetGeometryType())
         }
         #endif
         else
@@ -809,7 +802,8 @@ public:
 
     virtual bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const
     {
-        bool is_onboundary =             ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
+        bool is_onboundary = false;
+        is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
         if(is_onboundary) return true;
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmax) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
         if(is_onboundary) return true;

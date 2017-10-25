@@ -15,7 +15,7 @@
 #include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_algebra/function/function.h"
 #include "custom_algebra/brep.h"
-#include "custom_algebra/and_level_set_brep.h"
+#include "custom_algebra/and_brep.h"
 #include "custom_algebra/level_set/level_set.h"
 #include "custom_algebra/level_set/product_level_set.h"
 #include "custom_algebra/level_set/inverse_level_set.h"
@@ -128,8 +128,8 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
     /************* EXPORT INTERFACE FOR PARTICULAR BREP ***********/
     /**************************************************************/
 
-    class_<ANDLevelSetBRep, ANDLevelSetBRep::Pointer, bases<BRep>, boost::noncopyable>
-    ( "ANDLevelSetBRep", init<LevelSet::Pointer, LevelSet::Pointer>() )
+    class_<AndBRep, AndBRep::Pointer, bases<BRep>, boost::noncopyable>
+    ( "AndBRep", init<BRep::Pointer, BRep::Pointer>() )
     ;
 
 }

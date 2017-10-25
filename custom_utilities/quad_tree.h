@@ -296,7 +296,7 @@ public:
     }
 
 
-    /// construct the element out from quad-tree and add to model_part
+    /// construct the element out from quad-tree and add to model_part.
     /// This is mainly for post-processing
     boost::python::list PyAddToModelPart(ModelPart& r_model_part, const std::string sample_entity_name,
             std::size_t lastNodeId, std::size_t lastEntityId) const
