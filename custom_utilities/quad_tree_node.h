@@ -107,7 +107,7 @@ public:
 
     /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
     /// This routine tests the inside/outside against a set of sampling points. It's more computationally expensive but is more robust and applicable to a large types of geometries.
-    void RefineBySampling(GeometryType::Pointer& pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
+    void RefineBySampling(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
     {
         if(this->IsLeaf())
         {

@@ -113,13 +113,13 @@ public:
     ///@{
 
     /// Constructor taking the element geometry and initialize the quad tree as reference coordinates of the element
-    QuadTree(Element::Pointer& p_elem)
+    QuadTree(Element::Pointer p_elem)
     {
         this->Initialize(p_elem->pGetGeometry());
     }
 
     /// Constructor taking the condition geometry and initialize the quad tree as reference coordinates of the condition
-    QuadTree(Condition::Pointer& p_cond)
+    QuadTree(Condition::Pointer p_cond)
     {
         this->Initialize(p_cond->pGetGeometry());
     }

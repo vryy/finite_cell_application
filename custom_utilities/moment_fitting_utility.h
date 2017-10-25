@@ -341,9 +341,8 @@ KRATOS_WATCH(integration_points.size())
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             // because the fitting functions is defined in the local frame, the integration in local scheme must be used
-            double aux = 0.0;
-            r_integrator.template Integrate<double, 0>(*(r_funcs[i]), r_brep, aux, integrator_integration_method, small_weight);
-            Mb(i) = aux;
+            Mb(i) = 0.0;
+            r_integrator.template Integrate<double, 0>(*(r_funcs[i]), r_brep, Mb(i), integrator_integration_method, small_weight);
         }
         if(echo_level > 3)
             KRATOS_WATCH(Mb)

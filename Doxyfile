@@ -1,0 +1,19 @@
+PROJECT_NAME           = "finite_cell_application"
+PROJECT_BRIEF          = "Documentation and manual for finite_cell_application"
+OUTPUT_DIRECTORY       = "doc"
+INPUT                  = custom_utilities/ custom_conditions/ custom_elements/ custom_geometries/ custom_algebra/
+FILE_PATTERNS          = *.py *.cpp *.h
+RECURSIVE              = YES
+
+MULTILINE_CPP_IS_BRIEF = YES
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+SHOW_DIRECTORIES       = YES
+SOURCE_BROWSER         = YES
+HTML_DYNAMIC_SECTIONS  = YES
+USE_MATHJAX            = YES
+PAPER_TYPE             = letter
+HIDE_UNDOC_RELATIONS   = NO
+HAVE_DOT               = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES

@@ -59,8 +59,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     double(QuadTreeType::*pointer_to_IntegrateGlobal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template Integrate<double, QuadTreeNode::GLOBAL>;
 
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree> >
-    (QuadTreeName.str().c_str(), init<Element::Pointer&>())
-    .def(init<Condition::Pointer&>())
+    (QuadTreeName.str().c_str(), init<Element::Pointer>())
+    .def(init<Condition::Pointer>())
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
     .def("DomainSize", &QuadTreeType::DomainSize)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)

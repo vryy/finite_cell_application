@@ -100,18 +100,20 @@ public:
     ///@name Operations
     ///@{
 
-    /// Get & Set for geometric tolerance
+    /// Set for geometric tolerance
     void SetTolerance(const double& TOL) {mTOL = TOL;}
+
+    /// Get for geometric tolerance
     const double GetTolerance() const {return mTOL;}
 
-    // returns working space dimension
+    /// Get working space dimension
     virtual std::size_t WorkingSpaceDimension() const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
     }
 
 
-    // returns local space dimension
+    /// Get local space dimension
     virtual std::size_t LocalSpaceDimension() const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
