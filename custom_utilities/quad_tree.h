@@ -318,6 +318,56 @@ public:
         return list;
     }
 
+    static QuadTreeNode::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
+    {
+        QuadTreeNode::Pointer pTreeNode;
+
+        if(    ThisGeometryType == GeometryData::Kratos_Quadrilateral2D4
+            || ThisGeometryType == GeometryData::Kratos_Quadrilateral2D8
+            || ThisGeometryType == GeometryData::Kratos_Quadrilateral2D9
+            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D4
+            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D8
+            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D9 )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 1.0, -1.0, 1.0));
+        }
+        else if(ThisGeometryType == GeometryData::Kratos_Triangle2D3
+             || ThisGeometryType == GeometryData::Kratos_Triangle2D6
+             || ThisGeometryType == GeometryData::Kratos_Triangle3D3
+             || ThisGeometryType == GeometryData::Kratos_Triangle3D6 )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT3(0.0, 0.0, 1.0, 0.0, 0.0, 1.0));
+        }
+        else if(ThisGeometryType == GeometryData::Kratos_Hexahedra3D8
+             || ThisGeometryType == GeometryData::Kratos_Hexahedra3D20
+             || ThisGeometryType == GeometryData::Kratos_Hexahedra3D27 )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+        }
+        else if(ThisGeometryType == GeometryData::Kratos_Tetrahedra3D4
+             || ThisGeometryType == GeometryData::Kratos_Tetrahedra3D10 )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT4(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0));
+        }
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if(ThisGeometryType == GeometryData::Kratos_Bezier2D
+             || ThisGeometryType == GeometryData::Kratos_Bezier2D3 )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeBezier2D(0.0, 1.0, 0.0, 1.0));
+        }
+        else if(ThisGeometryType == GeometryData::Kratos_Bezier3D )
+        {
+            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeBezier3D(0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
+        }
+        #endif
+        else
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", ThisGeometryType)
+        }
+
+        return pTreeNode;
+    }
+
 
     /// Turn back information as a string.
     virtual std::string Info() const
@@ -353,48 +403,7 @@ private:
     void Initialize(GeometryType::Pointer pGeometry)
     {
         mpThisGeometry = pGeometry;
-        if(    mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 1.0, -1.0, 1.0));
-        }
-        else if(mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6 )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT3(0.0, 0.0, 1.0, 0.0, 0.0, 1.0));
-        }
-        else if(mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
-        }
-        else if(mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10 )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT4(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0));
-        }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D
-            || mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeQ4(0.0, 1.0, 0.0, 1.0));
-        }
-        else if(mpThisGeometry->GetGeometryType() == GeometryData::Kratos_Bezier3D )
-        {
-            mpTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
-        }
-        #endif
-        else
-        {
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpThisGeometry->GetGeometryType())
-        }
+        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType());
     }
 
     /// Assignment operator.
