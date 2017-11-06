@@ -785,12 +785,6 @@ public:
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
                 pNewGeometry = GeometryType::Pointer(new Quadrilateral3D9<BaseType::NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
         }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D)
-        {
-            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier2D geometry is not supported:", pParentGeometry->GetGeometryType())
-        }
-        #endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
 
@@ -871,6 +865,87 @@ private:
     double mXmin, mXmax;
     double mYmin, mYmax;
 };
+
+
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+/// Bezier quad-tree node in reference coordinates
+/// TODO generalize quad tree node for Bezier geometry for different order
+class QuadTreeNodeBezier2D : public QuadTreeNodeQ4
+{
+public:
+    KRATOS_CLASS_POINTER_DEFINITION(QuadTreeNodeBezier2D);
+
+    typedef QuadTreeNodeQ4 BaseType;
+
+    typedef BaseType::GeometryType GeometryType;
+
+    QuadTreeNodeBezier2D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    : BaseType(Xmin, Xmax, Ymin, Ymax)
+    {}
+
+    virtual ~QuadTreeNodeBezier2D() {}
+
+    virtual GeometryType::Pointer pCreateGeometry(GeometryType::Pointer pParentGeometry) const
+    {
+        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D
+        || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D3)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier2D or Bezier2D3 geometry is not supported:", pParentGeometry->GetGeometryType())
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+    }
+
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        if(quadrature_type == 1) // Gauss-Legendre
+        {
+            GeometryType::IntegrationPointsArrayType integration_points;
+
+            if(integration_order == 1)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints1, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints2, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints3, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 6)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 7)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints7, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 8)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints8, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 9)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 10)
+                integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
+
+            // map the integration points from [-1, 1] x [-1, 1] to [0, 1] x [0, 1]
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
+            {
+                integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
+                integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
+                integration_points[i].Weight() = 0.25*integration_points[i].Weight();
+            }
+
+            return integration_points;
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
+    }
+
+    /// Turn back information as a string.
+    virtual std::string Info() const
+    {
+        return "QuadTreeNodeBezier2D";
+    }
+};
+#endif
 
 
 /// Haxehedral quad-tree node in reference coordinates
@@ -1256,6 +1331,121 @@ private:
     double mYmin, mYmax;
     double mZmin, mZmax;
 };
+
+
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+/// Bezier oct-tree node in reference coordinates
+/// TODO generalize quad tree node for Bezier geometry for different order
+class QuadTreeNodeBezier3D : public QuadTreeNodeH8
+{
+public:
+    KRATOS_CLASS_POINTER_DEFINITION(QuadTreeNodeBezier3D);
+
+    typedef QuadTreeNodeH8 BaseType;
+
+    typedef BaseType::GeometryType GeometryType;
+
+    QuadTreeNodeBezier3D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    : BaseType(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
+    {}
+
+    virtual ~QuadTreeNodeBezier3D() {}
+
+    virtual GeometryType::Pointer pCreateGeometry(GeometryType::Pointer pParentGeometry) const
+    {
+        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier3D)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier3D geometry is not supported:", pParentGeometry->GetGeometryType())
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+    }
+
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        if(quadrature_type == 1) // Gauss-Legendre
+        {
+            GeometryType::IntegrationPointsArrayType integration_points;
+
+            if(integration_order == 1)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 6)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 7)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 8)
+                integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
+
+            // map the integration points from [-1, 1] x [-1, 1] x [-1, 1] to [0, 1] x [0, 1] x [0, 1]
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
+            {
+                integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
+                integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
+                integration_points[i].Z() = 0.5 * (integration_points[i].Z() + 1);
+                integration_points[i].Weight() = 0.125*integration_points[i].Weight();
+            }
+
+            return integration_points;
+        }
+        else if(quadrature_type == 2) // Gauss-Lobatto
+        {
+            GeometryType::IntegrationPointsArrayType integration_points;
+
+            if(integration_order == 1)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 2)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 3)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 4)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 5)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 6)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 7)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 8)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 9)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints9, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else if(integration_order == 10)
+                integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints10, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Lobatto is not supported:", integration_order);
+
+            // map the integration points from [-1, 1] x [-1, 1] x [-1, 1] to [0, 1] x [0, 1] x [0, 1]
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
+            {
+                integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
+                integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
+                integration_points[i].Z() = 0.5 * (integration_points[i].Z() + 1);
+                integration_points[i].Weight() = 0.125*integration_points[i].Weight();
+            }
+
+            return integration_points;
+        }
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
+    }
+
+    /// Turn back information as a string.
+    virtual std::string Info() const
+    {
+        return "QuadTreeNodeBezier3D";
+    }
+};
+#endif
 
 
 /// Triangular quad-tree node in reference coordinates
