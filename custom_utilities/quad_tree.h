@@ -784,6 +784,15 @@ protected:
             KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
     }
 
+    #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+    /// Construct the sub-cells for Gauss Quadrature on the Bezier 2D geometry.
+    void ConstructSubCellsForBezier2DBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+            const int& integration_order) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
+    }
+    #endif
+
     void ConstructSubCellsForQuadBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
             const std::size_t& m, const std::size_t& n) const
     {
@@ -797,6 +806,22 @@ protected:
             }
         }
     }
+
+    #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+    void ConstructSubCellsForBezier2DBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+            const std::size_t& m, const std::size_t& n) const
+    {
+        const double dx = 1.0/m;
+        const double dy = 1.0/n;
+        for(std::size_t i = 0; i < m; ++i)
+        {
+            for(std::size_t j = 0; j < n; ++j)
+            {
+                pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeBezier2D(i*dx, (i+1)*dx, j*dy, (j+1)*dy)) );
+            }
+        }
+    }
+    #endif
 
     /// Construct the sub-cells for Gauss Quadrature on the hexahedra. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
     void ConstructSubCellsForHexBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
@@ -933,6 +958,26 @@ protected:
             }
         }
     }
+
+    #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+    void ConstructSubCellsForBezier3DBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+            const std::size_t& m, const std::size_t& n, const std::size_t& p) const
+    {
+        const double dx = 1.0/m;
+        const double dy = 1.0/n;
+        const double dz = 1.0/p;
+        for(std::size_t i = 0; i < m; ++i)
+        {
+            for(std::size_t j = 0; j < n; ++j)
+            {
+                for(std::size_t k = 0; k < p; ++k)
+                {
+                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeBezier3D(i*dx, (i+1)*dx, j*dy, (j+1)*dy, k*dz, (k+1)*dz)) );
+                }
+            }
+        }
+    }
+    #endif
 
 private:
 

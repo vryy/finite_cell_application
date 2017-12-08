@@ -245,7 +245,7 @@ public:
 
     static inline int GetMaxIntegrationOrder()
     {
-        return 5;
+        return GeometryData::NumberOfIntegrationMethods;
     }
 
     static inline GeometryData::IntegrationMethod GetIntegrationMethod(const int& integration_order)
@@ -275,6 +275,26 @@ public:
         {
             ThisIntegrationMethod = GeometryData::GI_GAUSS_5;
         }
+//        else if(integration_order == 6)
+//        {
+//            ThisIntegrationMethod = GeometryData::GI_GAUSS_6;
+//        }
+//        else if(integration_order == 7)
+//        {
+//            ThisIntegrationMethod = GeometryData::GI_GAUSS_7;
+//        }
+//        else if(integration_order == 8)
+//        {
+//            ThisIntegrationMethod = GeometryData::GI_GAUSS_8;
+//        }
+//        else if(integration_order == 9)
+//        {
+//            ThisIntegrationMethod = GeometryData::GI_GAUSS_9;
+//        }
+//        else if(integration_order == 10)
+//        {
+//            ThisIntegrationMethod = GeometryData::GI_GAUSS_10;
+//        }
         else
             ThisIntegrationMethod = GeometryData::NumberOfIntegrationMethods; // this will never be obtained, just to silence the compiler
 

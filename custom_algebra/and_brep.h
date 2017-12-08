@@ -139,6 +139,29 @@ public:
         }
     }
 
+    /// Check if a set of points is cut by the level set
+    /// 0: the cell is completely inside the domain bounded by level set
+    /// 1: completely outside
+    /// -1: the cell is cut by level set
+    virtual int CutStatus(const std::vector<PointType>& r_points) const
+    {
+        if(mpLS1->CutStatus(r_points) == _OUT || mpLS2->CutStatus(r_points) == _OUT)
+        {
+            return _OUT;
+        }
+        else
+        {
+            if(mpLS1->CutStatus(r_points) == _IN && mpLS2->CutStatus(r_points) == _IN)
+            {
+                return _IN;
+            }
+            else
+            {
+                return _CUT;
+            }
+        }
+    }
+
     ///@}
     ///@name Access
     ///@{

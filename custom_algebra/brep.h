@@ -137,14 +137,14 @@ public:
     /// Check if an element is cut by the brep
     int CutStatus(Element::Pointer p_elem) const
     {
-        return CutStatus(p_elem->GetGeometry());
+        return this->CutStatus(p_elem->GetGeometry());
     }
 
 
     /// Check if a geometry is cut by the brep
     int CutStatus(GeometryType::Pointer p_geom) const
     {
-        return CutStatus(*p_geom);
+        return this->CutStatus(*p_geom);
     }
 
 
@@ -171,14 +171,14 @@ public:
     /// Check if an element is cut by the brep by sampling the elemental geometry
     int CutStatusBySampling(Element::Pointer p_elem, const std::size_t& nsampling) const
     {
-        return CutStatusBySampling(p_elem->GetGeometry(), nsampling);
+        return this->CutStatusBySampling(p_elem->GetGeometry(), nsampling);
     }
 
 
     /// Check if a geometry is cut by the brep by sampling the geometry
     int CutStatusBySampling(GeometryType::Pointer p_geom, const std::size_t& nsampling) const
     {
-        return CutStatusBySampling(*p_geom, nsampling);
+        return this->CutStatusBySampling(*p_geom, nsampling);
     }
 
 

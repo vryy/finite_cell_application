@@ -232,7 +232,7 @@ public:
     }
 
 
-        /// Get the last node id of the model part
+    /// Get the last node id of the model part
     static std::size_t GetLastNodeId(ModelPart& r_model_part)
     {
         std::size_t lastNodeId = 0;

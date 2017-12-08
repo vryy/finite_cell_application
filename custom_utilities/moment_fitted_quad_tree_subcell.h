@@ -41,7 +41,7 @@
 #include "custom_utilities/finite_cell_geometry_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
-//#define DEBUG_SUBCELL
+#define DEBUG_SUBCELL
 
 namespace Kratos
 {
@@ -85,8 +85,12 @@ public:
      * Constructor to construct the sub-cells based on Gauss quadrature.
      * In this scheme, the number of sub-cells is equivalent to number of Gauss points on host finite cell. Therefore, in order to increase the number of sub-cells, one must increase the integration order on host cell
      */
-    void ConstructSubCellsBasedOnGaussQuadrature(const int& gauss_integration_order)
+    void ConstructSubCellsBasedOnGaussQuadrature(const int& gauss_integration_method)
     {
+        int gauss_quadrature_type = QuadratureUtility::GetQuadratureType(gauss_integration_method);
+
+        int gauss_quadrature_order = QuadratureUtility::GetQuadratureOrder(gauss_integration_method);
+
         if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
@@ -95,35 +99,77 @@ public:
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
         {
             // create the sub-cells
-            BaseType::ConstructSubCellsForQuadBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_integration_order);
+            BaseType::ConstructSubCellsForQuadBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if(mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
+             || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+        }
+        #endif
         else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
               || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
               || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
         {
             // create the sub-cells
-            BaseType::ConstructSubCellsForHexBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_integration_order);
+            BaseType::ConstructSubCellsForHexBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if(mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+        }
+        #endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpElement->GetGeometry().GetGeometryType())
 
         // using the standard Gauss quadrature as moment fitting integration points
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(gauss_integration_order);
+            = Function<double, double>::GetIntegrationMethod(gauss_quadrature_order);
 
-        mRepresentativeIntegrationOrder = gauss_integration_order;
+        mRepresentativeIntegrationOrder = gauss_quadrature_order;
 
-        const GeometryType::IntegrationPointsArrayType& integration_points
-            = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
-
-        mMomentFittingIntegrationPoints = integration_points;
-        mRepresentativeIntegrationPoints = integration_points;
-
-        // do a check, to make sure the integration point is inside the sub-cell
-        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+        if(gauss_quadrature_type == 0)
         {
-            if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
-                KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
+            const GeometryType::IntegrationPointsArrayType& integration_points
+                = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
+
+            mMomentFittingIntegrationPoints = integration_points;
+            mRepresentativeIntegrationPoints = integration_points;
+
+            // do a check, to make sure the integration point is inside the sub-cell
+            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+            {
+                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
+                    KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
+            }
+        }
+        else
+        {
+            // create a big quadtree node for quadrature points generation
+            QuadTreeNode::Pointer pTreeNode = QuadTree<TNsampling>::pCreateQuadTreeNode(mpElement->GetGeometry().GetGeometryType());
+
+            const GeometryType::IntegrationPointsArrayType integration_points
+                = pTreeNode->ConstructCustomQuadrature(gauss_quadrature_type, gauss_quadrature_order);
+
+            mMomentFittingIntegrationPoints = integration_points;
+            mRepresentativeIntegrationPoints = integration_points;
+
+            // do a check, to make sure the integration point is inside the sub-cell
+            KRATOS_WATCH(BaseType::mpTreeNodes.size())
+            KRATOS_WATCH(integration_points.size())
+            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+            {
+                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
+                {
+                    KRATOS_WATCH(typeid(*pTreeNode).name())
+                    KRATOS_WATCH(typeid(*BaseType::mpTreeNodes[i]).name())
+                    KRATOS_WATCH(*BaseType::mpTreeNodes[i])
+                    KRATOS_WATCH(integration_points[i])
+                    KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
+                }
+            }
         }
     }
 
@@ -132,8 +178,7 @@ public:
      * In this scheme, the number of sub-cells can be arbitrarily
      * In addition, the moment fitting quadrature is chosen based on provided order. It gives maximum control on choosing the fitting functions
      */
-    void ConstructSubCellsBasedOnEqualDistribution(const int& gauss_integration_order,
-            const std::size_t& m, const std::size_t& n)
+    void ConstructSubCellsBasedOnEqualDistribution(const int& integration_order)
     {
         if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
@@ -142,61 +187,58 @@ public:
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
         {
+            std::size_t nsegments = integration_order;
+
             // create the sub-cells
-            BaseType::ConstructSubCellsForQuadBasedOnEqualDistribution(BaseType::mpTreeNodes, m, n);
-
-            // using the standard Gauss quadrature as moment fitting integration points
-            GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(gauss_integration_order);
-
-            mRepresentativeIntegrationOrder = gauss_integration_order;
-
-            const GeometryType::IntegrationPointsArrayType& integration_points
-                = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
-
-            mMomentFittingIntegrationPoints = integration_points;
-
-            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
-            {
-                mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
-            }
+            BaseType::ConstructSubCellsForQuadBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpElement->GetGeometry().GetGeometryType())
-    }
-
-    /**
-     * Constructor to construct the sub-cells based on equal distribution.
-     * In this scheme, the number of sub-cells can be arbitrarily
-     */
-    void ConstructSubCellsBasedOnEqualDistribution(const int& gauss_integration_order,
-            const std::size_t& m, const std::size_t& n, const std::size_t& p)
-    {
-        if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
+              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
         {
+            std::size_t nsegments = integration_order;
+
             // create the sub-cells
-            BaseType::ConstructSubCellsForHexBasedOnEqualDistribution(BaseType::mpTreeNodes, m, n, p);
-
-            // using the standard Gauss quadrature as moment fitting integration points
-            GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(gauss_integration_order);
-
-            mRepresentativeIntegrationOrder = gauss_integration_order;
-
-            const GeometryType::IntegrationPointsArrayType& integration_points
-                = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
-
-            mMomentFittingIntegrationPoints = integration_points;
-
-            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
-            {
-                mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
-            }
+            BaseType::ConstructSubCellsForBezier2DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
+        #endif
+        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
+              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
+              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
+        {
+            std::size_t nsegments = integration_order;
+
+            // create the sub-cells
+            BaseType::ConstructSubCellsForHexBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
+        }
+        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D )
+        {
+            std::size_t nsegments = integration_order;
+
+            // create the sub-cells
+            BaseType::ConstructSubCellsForBezier3DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
+        }
+        #endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpElement->GetGeometry().GetGeometryType())
+
+        // using the standard Gauss quadrature as moment fitting integration points
+        GeometryData::IntegrationMethod RepresentativeIntegrationMethod
+            = Function<double, double>::GetIntegrationMethod(integration_order);
+
+        mRepresentativeIntegrationOrder = integration_order;
+
+        const GeometryType::IntegrationPointsArrayType& integration_points
+            = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
+KRATOS_WATCH(__LINE__)
+KRATOS_WATCH(integration_points.size())
+        mMomentFittingIntegrationPoints = integration_points;
+
+        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+        {
+            mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
+        }
     }
 
     /// Destructor.
@@ -310,13 +352,22 @@ public:
         PointType COG;
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            GeometryType::Pointer pSubCellGeometry = BaseType::mpTreeNodes[i]->pCreateGeometry(BaseType::pGetGeometry());
-
-            int status = r_brep.CutStatus(*pSubCellGeometry);
             #ifdef DEBUG_SUBCELL
-            KRATOS_WATCH(*pSubCellGeometry)
+            KRATOS_WATCH(typeid(*BaseType::mpTreeNodes[i]).name())
             KRATOS_WATCH(*BaseType::mpTreeNodes[i])
+            KRATOS_WATCH(typeid(*BaseType::pGetGeometry()).name())
             #endif
+
+            // GeometryType::Pointer pSubCellGeometry = BaseType::mpTreeNodes[i]->pCreateGeometry(BaseType::pGetGeometry()); // this can be expensive and does not work with Bezier element
+            // int status = r_brep.CutStatus(*pSubCellGeometry);
+            // #ifdef DEBUG_SUBCELL
+            // KRATOS_WATCH(*pSubCellGeometry)
+            // #endif
+
+            std::vector<PointType> SamplingPoints;
+            BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), TNsampling);
+            int status = r_brep.CutStatus(SamplingPoints);
+
             if(status == BRep::_IN)
             {
                 #ifdef DEBUG_SUBCELL
@@ -494,7 +545,17 @@ public:
                 new_integration_points[j].Weight() = rWeights(i, j);
 
             // create the new "parasite" elements from sub-cell
-            Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, r_geom.Points(), mpElement->pGetProperties());
+            Element::Pointer pNewElement;
+            if (r_geom.GetGeometryType() != GeometryData::Kratos_Bezier2D
+                && r_geom.GetGeometryType() != GeometryData::Kratos_Bezier3D)
+            {
+                pNewElement = r_clone_element.Create(++lastElementId, r_geom.Points(), mpElement->pGetProperties());
+            }
+            else
+            {
+                pNewElement = r_clone_element.Create(++lastElementId, BaseType::pGetGeometry(), mpElement->pGetProperties());
+            }
+
             FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
             pNewElement->Initialize();

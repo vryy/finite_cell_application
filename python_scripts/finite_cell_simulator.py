@@ -5,6 +5,164 @@ from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.FiniteCellApplication import *
 CheckForPreviousImport()
 
+###FITTING FUNCTIONS#############
+
+## Create the list of function used for fitting
+## if rank is 2 and degree 2 this subroutine will generate [1, x, x^2] x [1, y, y^2]
+## if rank is 3 and degree 3 this subroutine will generate [1, x, x^2, x^3] x [1, y, y^2, y^3] x [1, z, z^2, z^3]
+def CreateTensorProductFittingFunctions(rank, degree):
+    funcs = []
+    if rank == 2:
+        for i in range(0, degree+1):
+            if i > 0:
+                expr1 = "pow(y, " + str(i) + ")"
+            else:
+                expr1 = '1'
+            for j in range(0, degree+1):
+                if j > 0:
+                    expr2 = "pow(x, " + str(j) + ")"
+                else:
+                    expr2 = '1'
+                funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2))
+    elif rank == 3:
+        for i in range(0, degree+1):
+            if i > 0:
+                expr1 = "pow(z, " + str(i) + ")"
+            else:
+                expr1 = '1'
+            for j in range(0, degree+1):
+                if j > 0:
+                    expr2 = "pow(y, " + str(j) + ")"
+                else:
+                    expr2 = '1'
+                for k in range(0, degree+1):
+                    if k > 0:
+                        expr3 = "pow(x, " + str(k) + ")"
+                    else:
+                        expr3 = '1'
+                    funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2 + '*' + expr3))
+    else:
+        print("rank " + str(rank) + " is not supported")
+        sys.exit(1)
+
+    return funcs
+
+def CreateFittingFunctions(fit_space_dim, fit_degree):
+    fit_funcs = []
+
+    if fit_space_dim == 2:
+        f_1 = ScalarFunctionR3R1(1.0)
+        f_x = MonomialFunctionR3R1X()
+        f_y = MonomialFunctionR3R1Y()
+        f_xy = MonomialFunctionR3R1XY()
+
+        f_x2 = MonomialFunctionR3R1X2()
+        f_y2 = MonomialFunctionR3R1Y2()
+        f_x2y = MonomialFunctionR3R1X2Y()
+        f_xy2 = MonomialFunctionR3R1XY2()
+        f_x2y2 = MonomialFunctionR3R1X2Y2()
+
+        f_x3 = MonomialFunctionR3R1X3()
+        f_y3 = MonomialFunctionR3R1Y3()
+        f_x3y = MonomialFunctionR3R1X3Y()
+        f_xy3 = MonomialFunctionR3R1XY3()
+        f_x3y2 = MonomialFunctionR3R1X3Y2()
+        f_x2y3 = MonomialFunctionR3R1X2Y3()
+        f_x3y3 = MonomialFunctionR3R1X3Y3()
+
+        if fit_degree >= 1:
+            fit_funcs.append(f_1)
+            fit_funcs.append(f_x)
+            fit_funcs.append(f_y)
+            fit_funcs.append(f_xy)
+
+        if fit_degree >= 2:
+            fit_funcs.append(f_x2)
+            fit_funcs.append(f_y2)
+            fit_funcs.append(f_x2y)
+            fit_funcs.append(f_xy2)
+            fit_funcs.append(f_x2y2)
+
+#            if fit_degree >= 3:
+#                fit_funcs.append(f_x3)
+#                fit_funcs.append(f_y3)
+#                fit_funcs.append(f_x3y)
+#                fit_funcs.append(f_xy3)
+#                fit_funcs.append(f_x3y2)
+#                fit_funcs.append(f_x2y3)
+#                fit_funcs.append(f_x3y3)
+
+        if fit_degree >= 3:
+            fit_funcs = CreateTensorProductFittingFunctions(2, fit_degree)
+#                print("Unsupported fit_degree " + str(fit_degree))
+
+    elif fit_space_dim == 3:
+        f_1 = ScalarFunctionR3R1(1.0)
+        f_x = MonomialFunctionR3R1X()
+        f_y = MonomialFunctionR3R1Y()
+        f_z = MonomialFunctionR3R1Z()
+        f_yz = MonomialFunctionR3R1YZ()
+        f_xz = MonomialFunctionR3R1XZ()
+        f_xy = MonomialFunctionR3R1XY()
+        f_xyz = MonomialFunctionR3R1XYZ()
+
+        f_x2 = MonomialFunctionR3R1X2()
+        f_y2 = MonomialFunctionR3R1Y2()
+        f_z2 = MonomialFunctionR3R1Z2()
+        f_y2z = MonomialFunctionR3R1Y2Z()
+        f_yz2 = MonomialFunctionR3R1YZ2()
+        f_x2z = MonomialFunctionR3R1X2Z()
+        f_xz2 = MonomialFunctionR3R1XZ2()
+        f_x2y = MonomialFunctionR3R1X2Y()
+        f_xy2 = MonomialFunctionR3R1XY2()
+        f_y2z2 = MonomialFunctionR3R1Y2Z2()
+        f_x2z2 = MonomialFunctionR3R1X2Z2()
+        f_x2y2 = MonomialFunctionR3R1X2Y2()
+        f_x2yz = MonomialFunctionR3R1X2YZ()
+        f_xy2z = MonomialFunctionR3R1XY2Z()
+        f_xyz2 = MonomialFunctionR3R1XYZ2()
+        f_xy2z2 = MonomialFunctionR3R1XY2Z2()
+        f_x2yz2 = MonomialFunctionR3R1X2YZ2()
+        f_x2y2z = MonomialFunctionR3R1X2Y2Z()
+        f_x2y2z2 = MonomialFunctionR3R1X2Y2Z2()
+
+        if fit_degree >= 1:
+            fit_funcs.append(f_1)
+            fit_funcs.append(f_x)
+            fit_funcs.append(f_y)
+            fit_funcs.append(f_z)
+            fit_funcs.append(f_xy)
+            fit_funcs.append(f_yz)
+            fit_funcs.append(f_xz)
+            fit_funcs.append(f_xyz)
+
+        if fit_degree >= 2:
+            fit_funcs.append(f_x2)
+            fit_funcs.append(f_y2)
+            fit_funcs.append(f_z2)
+            fit_funcs.append(f_y2z)
+            fit_funcs.append(f_yz2)
+            fit_funcs.append(f_x2z)
+            fit_funcs.append(f_xz2)
+            fit_funcs.append(f_x2y)
+            fit_funcs.append(f_xy2)
+            fit_funcs.append(f_y2z2)
+            fit_funcs.append(f_x2z2)
+            fit_funcs.append(f_x2y2)
+            fit_funcs.append(f_x2yz)
+            fit_funcs.append(f_xy2z)
+            fit_funcs.append(f_xyz2)
+            fit_funcs.append(f_xy2z2)
+            fit_funcs.append(f_x2yz2)
+            fit_funcs.append(f_x2y2z)
+            fit_funcs.append(f_x2y2z2)
+
+        if fit_degree >= 3:
+            fit_funcs = CreateTensorProductFittingFunctions(3, fit_degree)
+#                print("Unsupported fit_degree " + str(fit_degree))
+
+    return fit_funcs
+
 class FiniteCellSimulator:
 
     def __init__(self, params = None):
@@ -31,182 +189,26 @@ class FiniteCellSimulator:
     def CreateForestSubCell(self, elements, nsampling = 1):
         self.forest = {}
         subcell_fit_mode = self.params["subcell_fit_mode"]
-        cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
+        cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
+        quad_util = QuadratureUtility()
         if nsampling > 1:
             subcell_class = getattr(FiniteCellApplication, "MomentFittedQuadTreeSubCell" + str(nsampling))
         else:
             subcell_class = getattr(FiniteCellApplication, "MomentFittedQuadTreeSubCell")
         for elem in elements:
+            self.forest[elem.Id] = subcell_class(elem)
             if   subcell_fit_mode == "subcell fit gauss":
-                self.forest[elem.Id] = subcell_class(elem, "gauss", cut_cell_quadrature_order)
-#            elif subcell_fit_mode == "subcell fit equal-dist":
-#                self.forest[elem.Id] = subcell_class(elem, "equal-dist", 3, 3)
-            elif subcell_fit_mode == "subcell fit two-layer":
-                self.forest[elem.Id] = subcell_class(elem, "gauss", cut_cell_quadrature_order)
-            elif subcell_fit_mode == "subcell nonfit":
-                self.forest[elem.Id] = subcell_class(elem)
+                self.forest[elem.Id].ConstructSubCellsBasedOnGaussQuadrature(cut_cell_quadrature_method)
+            elif subcell_fit_mode == "subcell fit equal-dist":
+                cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+                self.forest[elem.Id].ConstructSubCellsBasedOnEqualDistribution(cut_cell_quadrature_order)
+            elif subcell_fit_mode == "subcell fit two-layer": # for backward compatibility
+                self.forest[elem.Id].ConstructSubCellsBasedOnGaussQuadrature(cut_cell_quadrature_method)
+            elif subcell_fit_mode == "subcell nonfit": # for backward compatibility
+                pass
             else:
                 print("unknown subcell_fit_mode", subcell_fit_mode)
                 sys.exit(0)
-
-    ###FITTING FUNCTIONS#############
-    def CreateFittingFunctions(self):
-        fit_funcs = []
-        fit_space_dim = self.params["fitting_space_dimension"]
-        fit_degree = self.params["fitting_function_degree"]
-
-        if fit_space_dim == 2:
-            f_1 = ScalarFunctionR3R1(1.0)
-            f_x = MonomialFunctionR3R1X()
-            f_y = MonomialFunctionR3R1Y()
-            f_xy = MonomialFunctionR3R1XY()
-
-            f_x2 = MonomialFunctionR3R1X2()
-            f_y2 = MonomialFunctionR3R1Y2()
-            f_x2y = MonomialFunctionR3R1X2Y()
-            f_xy2 = MonomialFunctionR3R1XY2()
-            f_x2y2 = MonomialFunctionR3R1X2Y2()
-
-            f_x3 = MonomialFunctionR3R1X3()
-            f_y3 = MonomialFunctionR3R1Y3()
-            f_x3y = MonomialFunctionR3R1X3Y()
-            f_xy3 = MonomialFunctionR3R1XY3()
-            f_x3y2 = MonomialFunctionR3R1X3Y2()
-            f_x2y3 = MonomialFunctionR3R1X2Y3()
-            f_x3y3 = MonomialFunctionR3R1X3Y3()
-
-            if fit_degree >= 1:
-                fit_funcs.append(f_1)
-                fit_funcs.append(f_x)
-                fit_funcs.append(f_y)
-                fit_funcs.append(f_xy)
-
-            if fit_degree >= 2:
-                fit_funcs.append(f_x2)
-                fit_funcs.append(f_y2)
-                fit_funcs.append(f_x2y)
-                fit_funcs.append(f_xy2)
-                fit_funcs.append(f_x2y2)
-
-#            if fit_degree >= 3:
-#                fit_funcs.append(f_x3)
-#                fit_funcs.append(f_y3)
-#                fit_funcs.append(f_x3y)
-#                fit_funcs.append(f_xy3)
-#                fit_funcs.append(f_x3y2)
-#                fit_funcs.append(f_x2y3)
-#                fit_funcs.append(f_x3y3)
-
-            if fit_degree >= 3:
-                fit_funcs = self.CreateTensorProductFittingFunctions(2, fit_degree)
-#                print("Unsupported fit_degree " + str(fit_degree))
-
-        elif fit_space_dim == 3:
-            f_1 = ScalarFunctionR3R1(1.0)
-            f_x = MonomialFunctionR3R1X()
-            f_y = MonomialFunctionR3R1Y()
-            f_z = MonomialFunctionR3R1Z()
-            f_yz = MonomialFunctionR3R1YZ()
-            f_xz = MonomialFunctionR3R1XZ()
-            f_xy = MonomialFunctionR3R1XY()
-            f_xyz = MonomialFunctionR3R1XYZ()
-
-            f_x2 = MonomialFunctionR3R1X2()
-            f_y2 = MonomialFunctionR3R1Y2()
-            f_z2 = MonomialFunctionR3R1Z2()
-            f_y2z = MonomialFunctionR3R1Y2Z()
-            f_yz2 = MonomialFunctionR3R1YZ2()
-            f_x2z = MonomialFunctionR3R1X2Z()
-            f_xz2 = MonomialFunctionR3R1XZ2()
-            f_x2y = MonomialFunctionR3R1X2Y()
-            f_xy2 = MonomialFunctionR3R1XY2()
-            f_y2z2 = MonomialFunctionR3R1Y2Z2()
-            f_x2z2 = MonomialFunctionR3R1X2Z2()
-            f_x2y2 = MonomialFunctionR3R1X2Y2()
-            f_x2yz = MonomialFunctionR3R1X2YZ()
-            f_xy2z = MonomialFunctionR3R1XY2Z()
-            f_xyz2 = MonomialFunctionR3R1XYZ2()
-            f_xy2z2 = MonomialFunctionR3R1XY2Z2()
-            f_x2yz2 = MonomialFunctionR3R1X2YZ2()
-            f_x2y2z = MonomialFunctionR3R1X2Y2Z()
-            f_x2y2z2 = MonomialFunctionR3R1X2Y2Z2()
-
-            if fit_degree >= 1:
-                fit_funcs.append(f_1)
-                fit_funcs.append(f_x)
-                fit_funcs.append(f_y)
-                fit_funcs.append(f_z)
-                fit_funcs.append(f_xy)
-                fit_funcs.append(f_yz)
-                fit_funcs.append(f_xz)
-                fit_funcs.append(f_xyz)
-
-            if fit_degree >= 2:
-                fit_funcs.append(f_x2)
-                fit_funcs.append(f_y2)
-                fit_funcs.append(f_z2)
-                fit_funcs.append(f_y2z)
-                fit_funcs.append(f_yz2)
-                fit_funcs.append(f_x2z)
-                fit_funcs.append(f_xz2)
-                fit_funcs.append(f_x2y)
-                fit_funcs.append(f_xy2)
-                fit_funcs.append(f_y2z2)
-                fit_funcs.append(f_x2z2)
-                fit_funcs.append(f_x2y2)
-                fit_funcs.append(f_x2yz)
-                fit_funcs.append(f_xy2z)
-                fit_funcs.append(f_xyz2)
-                fit_funcs.append(f_xy2z2)
-                fit_funcs.append(f_x2yz2)
-                fit_funcs.append(f_x2y2z)
-                fit_funcs.append(f_x2y2z2)
-
-            if fit_degree >= 3:
-                fit_funcs = self.CreateTensorProductFittingFunctions(3, fit_degree)
-#                print("Unsupported fit_degree " + str(fit_degree))
-
-        return fit_funcs
-
-    ## Create the list of function used for fitting
-    ## if rank is 2 and degree 2 this subroutine will generate [1, x, x^2] x [1, y, y^2]
-    ## if rank is 3 and degree 3 this subroutine will generate [1, x, x^2, x^3] x [1, y, y^2, y^3] x [1, z, z^2, z^3]
-    def CreateTensorProductFittingFunctions(self, rank, degree):
-        funcs = []
-        if rank == 2:
-            for i in range(0, degree+1):
-                if i > 0:
-                    expr1 = "pow(y, " + str(i) + ")"
-                else:
-                    expr1 = '1'
-                for j in range(0, degree+1):
-                    if j > 0:
-                        expr2 = "pow(x, " + str(j) + ")"
-                    else:
-                        expr2 = '1'
-                    funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2))
-        elif rank == 3:
-            for i in range(0, degree+1):
-                if i > 0:
-                    expr1 = "pow(z, " + str(i) + ")"
-                else:
-                    expr1 = '1'
-                for j in range(0, degree+1):
-                    if j > 0:
-                        expr2 = "pow(y, " + str(j) + ")"
-                    else:
-                        expr2 = '1'
-                    for k in range(0, degree+1):
-                        if k > 0:
-                            expr3 = "pow(x, " + str(k) + ")"
-                        else:
-                            expr3 = '1'
-                        funcs.append(MathPressoFunctionR3R1(expr1 + '*' + expr2 + '*' + expr3))
-        else:
-            print("rank " + str(rank) + " is not supported")
-            sys.exit(1)
-
-        return funcs
 
     ###FITTING DRIVER#############
     def MomentFit(self, bulk_elements):
@@ -226,7 +228,9 @@ class FiniteCellSimulator:
         ##MOMENT FIT
         ###########################################
         fit_util = MomentFittingUtility()
-        fit_funcs = self.CreateFittingFunctions()
+        fit_space_dim = self.params["fitting_space_dimension"]
+        fit_degree = self.params["fitting_function_degree"]
+        fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
 
         cut_elems = []
         exclude_elems = []
@@ -279,7 +283,16 @@ class FiniteCellSimulator:
 #                aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
                 aux_util.MultithreadedRefineBy(integrators, self.brep)
                 print("###################################################")
-            fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            if nsampling == 1:
+                fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            elif nsampling == 2:
+                fit_util.MultithreadedFitQuadrature2(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            elif nsampling == 3:
+                fit_util.MultithreadedFitQuadrature3(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            elif nsampling == 4:
+                fit_util.MultithreadedFitQuadrature4(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            elif nsampling == 5:
+                fit_util.MultithreadedFitQuadrature5(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
         else:
             print("Unknown fit_mode", fit_mode)
             sys.exit(0)
@@ -312,7 +325,9 @@ class FiniteCellSimulator:
         ##MOMENT FIT
         ###########################################
         fit_util = MomentFittingUtility()
-        fit_funcs = self.CreateFittingFunctions()
+        fit_space_dim = self.params["fitting_space_dimension"]
+        fit_degree = self.params["fitting_function_degree"]
+        fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
 
         cut_elems = []
         exclude_elems = []
@@ -327,8 +342,10 @@ class FiniteCellSimulator:
 
         if nsampling > 1:
             fit_func_action = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
+            save_quadrature_subcell_action = getattr(fit_util, "SaveQuadratureSubCell" + str(nsampling))
         else:
             fit_func_action = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+            save_quadrature_subcell_action = getattr(fit_util, "SaveQuadratureSubCell")
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
@@ -498,7 +515,7 @@ class FiniteCellSimulator:
         accuracy = self.params["quad_accuracy"]
 
         if action_on_small_subcell == 'eliminate':
-            fit_util.SaveQuadratureSubCell(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, quadtree_elems, accuracy)
+            save_quadrature_subcell_action(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, quadtree_elems, accuracy)
         elif action_on_small_subcell == 'replace by quadtree':
             # perform quadtree refinement for "eliminated" cell
             total_add_quadrature_pnts = 0
@@ -512,7 +529,7 @@ class FiniteCellSimulator:
                     exclude_elems.append(qs)
                 else:
                     valid_quadtree_elems.append(qs)
-            fit_util.SaveQuadratureSubCell(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
+            save_quadrature_subcell_action(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
             print("generate quadtree quadrature for small subcell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
 
         fid = open(quad_filename, "a")
@@ -630,7 +647,8 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
 
         elif self.quadrature_method == "moment-fit subcell":
-            cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
+            cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
+            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             quadrature_data = self.params["quadrature_data"]
             extrapolation_mode = self.params["extrapolation_mode"]
             if extrapolation_mode == "extrapolated constant stress element":
@@ -735,6 +753,7 @@ class FiniteCellSimulator:
 
     ###COMPUTE GLOBAL DISPLACEMENT (L2) ERROR###
     def compute_L2_error(self, elements, process_info, solution, P):
+        print("!!!compute_L2_error:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
         for element in elements:
@@ -765,6 +784,7 @@ class FiniteCellSimulator:
             return math.sqrt(abs(nom / denom))
 
     def compute_L2_error_mfsc(self, elements, all_subcell_elems, process_info, solution, P):
+        print("!!!compute_L2_error_mfsc:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
         for element in elements:
@@ -799,6 +819,7 @@ class FiniteCellSimulator:
 
     ###COMPUTE GLOBAL DISPLACEMENT (H1) ERROR###
     def compute_H1_error(self, elements, process_info, solution, P):
+        print("!!!compute_H1_error:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
         for element in elements:
@@ -822,6 +843,7 @@ class FiniteCellSimulator:
             return math.sqrt(abs(nom / denom))
 
     def compute_H1_error_mfsc(self, elements, all_subcell_elems, process_info, solution, P):
+        print("!!!compute_H1_error_mfsc:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
         for element in elements:
@@ -875,14 +897,15 @@ class FiniteCellSimulator:
         return domain_size
 
     ###CHECKING FUNCTIONS#############
-    def ExportQuadTree(self, model, sample_element):
+    def ExportQuadTree(self, model, sample_element, group = None):
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
         self.CreateForest(model.model_part.Elements, nsampling)
         #######QUAD TREE POST PROCESSING###########
         qt_depth = self.params["qt_depth"]
         for qi, qt in self.forest.iteritems():
-            for i in range(0, qt_depth):
-                qt.RefineBy(self.brep)
+            if qi in group:
+                for i in range(0, qt_depth):
+                    qt.RefineBy(self.brep)
         tmodel_part = ModelPart("QuadTree")
         last_node_id = 0x0000000000000000 + len(model.model_part.Nodes)
         last_element_id = 0x0000000000000000

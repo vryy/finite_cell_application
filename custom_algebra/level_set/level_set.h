@@ -197,7 +197,7 @@ public:
         if(f1*f2 > 0.0)
             KRATOS_THROW_ERROR(std::logic_error, "Bisect does not work with two end at the same side", "")
 
-        double left = 0.0; 
+        double left = 0.0;
         double right = 1.0;
 
         bool converged = false;

@@ -96,8 +96,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         MomentFittedQuadTreeSubCellName << TNsampling;
 
-    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution1)(const int&, const std::size_t&, const std::size_t&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
-    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution2)(const int&, const std::size_t&, const std::size_t&, const std::size_t&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
+    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution1)(const int&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
+    void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution2)(const int&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
 
     class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType>, boost::noncopyable>
     (MomentFittedQuadTreeSubCellName.str().c_str(), init<Element::Pointer>())

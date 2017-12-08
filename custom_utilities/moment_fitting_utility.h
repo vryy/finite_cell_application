@@ -154,6 +154,7 @@ public:
         }
         else
         {
+            // TODO this quadrature is not compatible with Bezier element; check this again
             GeometryType::IntegrationPointsArrayType integration_points
                     = r_integrator.Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
 
@@ -219,9 +220,6 @@ public:
 
         int fit_quadrature_order = QuadratureUtility::GetQuadratureOrder(fit_quadrature_method);
 
-        GeometryData::IntegrationMethod ElementalIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
-
         unsigned int number_of_threads = 1;
         std::vector<unsigned int> element_partition;
 #ifdef _OPENMP
@@ -253,6 +251,9 @@ public:
             {
                 if(fit_quadrature_type == 0)
                 {
+                    GeometryData::IntegrationMethod ElementalIntegrationMethod
+                        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+
                     const GeometryType::IntegrationPointsArrayType& integration_points
                             = (*it)->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
 
@@ -276,6 +277,12 @@ KRATOS_WATCH(integration_points.size())
 
                     for(std::size_t i = 0; i < integration_points.size(); ++i)
                         integration_points[i].Weight() = Weight(i);
+
+//                    GeometryData::IntegrationMethod ElementalIntegrationMethod
+//                        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+
+                    // it is a hack here, since the integration method can be larger than Kratos can accomodate. We set to minimum value. In the element this information is not important anyway.
+                    GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::GI_GAUSS_1;
 
                     /* create new quadrature and assign to the geometry */
                     FiniteCellGeometryUtility::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, integration_points);

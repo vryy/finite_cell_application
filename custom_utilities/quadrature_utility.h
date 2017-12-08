@@ -26,7 +26,7 @@
 // External includes
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include <boost/numeric/ublas/lu.hpp> 
+#include <boost/numeric/ublas/lu.hpp>
 
 
 // Project includes
