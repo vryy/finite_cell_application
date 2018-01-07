@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            5 Jan 2017
 //
 
 
-#if !defined(KRATOS_INVERSE_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_INVERSE_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_DIFFERENCE_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_DIFFERENCE_LEVEL_SET_H_INCLUDED
 
 
 
@@ -57,17 +57,17 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for inverse of one level set
+/** Class for intersection of two level sets, i.e LS1 \ LS2
  * REF: Massing et al, CutFEM: Discretizing geometry and partial differential equations
 */
-class InverseLevelSet : public LevelSet
+class DifferenceLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of InverseLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(InverseLevelSet);
+    /// Pointer definition of DifferenceLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(DifferenceLevelSet);
 
     typedef LevelSet BaseType;
 
@@ -84,12 +84,12 @@ public:
     ///@{
 
     /// Default constructor.
-    InverseLevelSet(const BaseType::Pointer p_level_set)
-    : mp_level_set(p_level_set)
+    DifferenceLevelSet(const BaseType::Pointer p_level_set_1, const BaseType::Pointer p_level_set_2)
+    : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
     {}
 
     /// Destructor.
-    virtual ~InverseLevelSet() {}
+    virtual ~DifferenceLevelSet() {}
 
 
     ///@}
@@ -104,19 +104,22 @@ public:
 
     virtual std::size_t WorkingSpaceDimension() const
     {
-        return mp_level_set->WorkingSpaceDimension();
+        return mp_level_set_1->WorkingSpaceDimension();
     }
 
 
     virtual double GetValue(const PointType& P) const
     {
-        return -mp_level_set->GetValue(P);
+        return std::max(mp_level_set_1->GetValue(P), -mp_level_set_2->GetValue(P));
     }
 
 
     virtual Vector GetGradient(const PointType& P) const
     {
-        return -mp_level_set->GetGradient(P);
+        if (mp_level_set_1->GetValue(P) > -mp_level_set_2->GetValue(P))
+            return mp_level_set_1->GetGradient(P);
+        else
+            return -mp_level_set_2->GetGradient(P);
     }
 
 
@@ -137,7 +140,7 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Inverse Level Set";
+        return "Difference Level Set";
     }
 
     /// Print information about this object.
@@ -169,7 +172,8 @@ protected:
     ///@{
 
 
-    const BaseType::Pointer mp_level_set;
+    const BaseType::Pointer mp_level_set_1;
+    const BaseType::Pointer mp_level_set_2;
 
 
     ///@}
@@ -234,15 +238,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    InverseLevelSet& operator=(InverseLevelSet const& rOther);
+    DifferenceLevelSet& operator=(DifferenceLevelSet const& rOther);
 
     /// Copy constructor.
-    InverseLevelSet(InverseLevelSet const& rOther);
+    DifferenceLevelSet(DifferenceLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class InverseLevelSet
+}; // Class DifferenceLevelSet
 
 ///@}
 
@@ -256,11 +260,11 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, InverseLevelSet& rThis)
+inline std::istream& operator >> (std::istream& rIStream, DifferenceLevelSet& rThis)
 {}
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const DifferenceLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -274,4 +278,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_INVERSE_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_DIFFERENCE_LEVEL_SET_H_INCLUDED  defined

@@ -17,13 +17,17 @@
 #include "custom_algebra/brep.h"
 #include "custom_algebra/and_brep.h"
 #include "custom_algebra/level_set/level_set.h"
-#include "custom_algebra/level_set/product_level_set.h"
-#include "custom_algebra/level_set/inverse_level_set.h"
 #include "custom_algebra/level_set/circular_level_set.h"
+#include "custom_algebra/level_set/doughnut_level_set.h"
 #include "custom_algebra/level_set/spherical_level_set.h"
 #include "custom_algebra/level_set/cylinder_level_set.h"
 #include "custom_algebra/level_set/linear_level_set.h"
 #include "custom_algebra/level_set/planar_level_set.h"
+#include "custom_algebra/level_set/product_level_set.h"
+#include "custom_algebra/level_set/inverse_level_set.h"
+#include "custom_algebra/level_set/union_level_set.h"
+#include "custom_algebra/level_set/intersection_level_set.h"
+#include "custom_algebra/level_set/difference_level_set.h"
 #include "custom_algebra/curve/parametric_curve.h"
 #include "custom_algebra/surface/parametric_surface.h"
 #include "custom_algebra/volume/parametric_volume.h"
@@ -89,16 +93,6 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
     .def(self_ns::str(self))
     ;
 
-    class_<ProductLevelSet, ProductLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "ProductLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
-    .def(self_ns::str(self))
-    ;
-
-    class_<InverseLevelSet, InverseLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
-    ( "InverseLevelSet", init<const LevelSet::Pointer>() )
-    .def(self_ns::str(self))
-    ;
-
     class_<CircularLevelSet, CircularLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "CircularLevelSet", init<const double&, const double&, const double&>() )
     .def(self_ns::str(self))
@@ -106,6 +100,11 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<SphericalLevelSet, SphericalLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "SphericalLevelSet", init<const double&, const double&, const double&, const double&>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<DoughnutLevelSet, DoughnutLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "DoughnutLevelSet", init<const double&, const double&>() )
     .def(self_ns::str(self))
     ;
 
@@ -121,6 +120,31 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<PlanarLevelSet, PlanarLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "PlanarLevelSet", init<const double&, const double&, const double&, const double&>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<ProductLevelSet, ProductLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "ProductLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<InverseLevelSet, InverseLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "InverseLevelSet", init<const LevelSet::Pointer>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<UnionLevelSet, UnionLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "UnionLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<IntersectionLevelSet, IntersectionLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "IntersectionLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<DifferenceLevelSet, DifferenceLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "DifferenceLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
     .def(self_ns::str(self))
     ;
 

@@ -8,12 +8,12 @@
 //                   Kratos default license: kratos/license.txt
 //
 //  Main authors:    Hoang-Giang Bui
-//  Date:            15 Feb 2017
+//  Date:            5 Jan 2018
 //
 
 
-#if !defined(KRATOS_INVERSE_LEVEL_SET_H_INCLUDED )
-#define  KRATOS_INVERSE_LEVEL_SET_H_INCLUDED
+#if !defined(KRATOS_DOUGHNUT_LEVEL_SET_H_INCLUDED )
+#define  KRATOS_DOUGHNUT_LEVEL_SET_H_INCLUDED
 
 
 
@@ -27,8 +27,6 @@
 
 // Project includes
 #include "includes/define.h"
-#include "includes/element.h"
-#include "includes/ublas_interface.h"
 #include "custom_algebra/level_set/level_set.h"
 
 
@@ -57,39 +55,32 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Class for inverse of one level set
+/** Detail class definition.
  * REF: Massing et al, CutFEM: Discretizing geometry and partial differential equations
 */
-class InverseLevelSet : public LevelSet
+class DoughnutLevelSet : public LevelSet
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of InverseLevelSet
-    KRATOS_CLASS_POINTER_DEFINITION(InverseLevelSet);
+    /// Pointer definition of DoughnutLevelSet
+    KRATOS_CLASS_POINTER_DEFINITION(DoughnutLevelSet);
 
     typedef LevelSet BaseType;
-
-    typedef typename Element::GeometryType GeometryType;
-
-    typedef typename GeometryType::PointType NodeType;
-
-    typedef typename NodeType::PointType PointType;
-
-    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    InverseLevelSet(const BaseType::Pointer p_level_set)
-    : mp_level_set(p_level_set)
-    {}
+    DoughnutLevelSet(const double& R, const double& r)
+    : BaseType(), mR(R), mr(r)
+    {
+    }
 
     /// Destructor.
-    virtual ~InverseLevelSet() {}
+    virtual ~DoughnutLevelSet() {}
 
 
     ///@}
@@ -104,19 +95,24 @@ public:
 
     virtual std::size_t WorkingSpaceDimension() const
     {
-        return mp_level_set->WorkingSpaceDimension();
+        return 3;
     }
 
 
     virtual double GetValue(const PointType& P) const
     {
-        return -mp_level_set->GetValue(P);
+        return pow(mR - sqrt(pow(P(0), 2) + pow(P(1), 2)), 2) + pow(P(2), 2) - pow(mr, 2);
     }
 
 
     virtual Vector GetGradient(const PointType& P) const
     {
-        return -mp_level_set->GetGradient(P);
+        Vector grad(3);
+        double aux = pow(mR - sqrt(pow(P(0), 2) + pow(P(1), 2)), 2);
+        grad(0) = 2.0 * aux * ( -P(0) / sqrt(pow(P(0), 2) + pow(P(1), 2)) );
+        grad(1) = 2.0 * aux * ( -P(1) / sqrt(pow(P(0), 2) + pow(P(1), 2)) );
+        grad(2) = 2.0 * P(2);
+        return grad;
     }
 
 
@@ -137,18 +133,16 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        return "Inverse Level Set";
+        return "Doughnut Level Set";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
-    {
-        rOStream << Info();
-    }
+//    virtual void PrintInfo(std::ostream& rOStream) const;
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << ", R: " << mR << ", r: " << mr;
     }
 
 
@@ -167,9 +161,6 @@ protected:
     ///@}
     ///@name Protected member Variables
     ///@{
-
-
-    const BaseType::Pointer mp_level_set;
 
 
     ///@}
@@ -209,6 +200,9 @@ private:
     ///@{
 
 
+    double mR, mr;
+
+
     ///@}
     ///@name Private Operators
     ///@{
@@ -234,15 +228,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    InverseLevelSet& operator=(InverseLevelSet const& rOther);
+    DoughnutLevelSet& operator=(DoughnutLevelSet const& rOther);
 
     /// Copy constructor.
-    InverseLevelSet(InverseLevelSet const& rOther);
+    DoughnutLevelSet(DoughnutLevelSet const& rOther);
 
 
     ///@}
 
-}; // Class InverseLevelSet
+}; // Class DoughnutLevelSet
 
 ///@}
 
@@ -256,11 +250,13 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, InverseLevelSet& rThis)
+inline std::istream& operator >> (std::istream& rIStream,
+                DoughnutLevelSet& rThis)
 {}
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet& rThis)
+inline std::ostream& operator << (std::ostream& rOStream,
+                const DoughnutLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -274,4 +270,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const InverseLevelSet&
 
 }  // namespace Kratos.
 
-#endif // KRATOS_INVERSE_LEVEL_SET_H_INCLUDED  defined
+#endif // KRATOS_DOUGHNUT_LEVEL_SET_H_INCLUDED  defined

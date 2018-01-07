@@ -60,7 +60,12 @@ namespace Kratos
 
 /// Short class definition.
 /** Abstract class for a level set in space, both for implicit level set or nodal interpolated level set
-*/
+ * A level set is characterized by mapping phi: R^3 -> R, and partitions the space to 3 domains by criteria:
+ *   phi(x) < 0  <=>   x is inside of \Omega
+ *   phi(x) = 0  <=>   x is on \Gamma
+ *   phi(x) > 0  <=>   x is outside of \Gamma
+ * REF: Massing et al, CutFEM: Discretizing geometry and partial differential equations
+ */
 class LevelSet : public FunctionR3R1, public BRep
 {
 public:
