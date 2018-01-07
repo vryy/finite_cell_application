@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 1 Mar 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_DUMMY_CONDITION_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 // Project includes
@@ -29,8 +29,8 @@ class DummyCondition : public Condition
     public:
         // Counted pointer of DummyCondition
         KRATOS_CLASS_POINTER_DEFINITION(DummyCondition);
-        
-        /** 
+
+        /**
          * Default constructor.
          */
         DummyCondition();
@@ -41,7 +41,7 @@ class DummyCondition : public Condition
          * Destructor.
          */
         virtual ~DummyCondition();
-  
+
         /**
          * Operations.
          */
@@ -55,14 +55,14 @@ class DummyCondition : public Condition
         /**
          * Calculates the local system contributions for this contact element
          */
-        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                   VectorType& rRightHandSideVector, 
+        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                   VectorType& rRightHandSideVector,
                                    ProcessInfo& rCurrentProcessInfo);
 
-        void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+        void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                      ProcessInfo& rCurrentProcessInfo);
 
-        void EquationIdVector( EquationIdVectorType& rResult, 
+        void EquationIdVector( EquationIdVectorType& rResult,
                                ProcessInfo& rCurrentProcessInfo);
 
         void GetDofList( DofsVectorType& ConditionalDofList,
@@ -74,7 +74,7 @@ class DummyCondition : public Condition
          * (DEACTIVATED)
          */
         //std::string Info();
-  
+
         /**
          * Print information about this object.
          * (DEACTIVATED)
@@ -86,10 +86,10 @@ class DummyCondition : public Condition
          * (DEACTIVATED)
          */
         //virtual void PrintData(std::ostream& rOStream) const;
-  
+
     protected:
-    
-    
+
+
     private:
 
         friend class Serializer;
@@ -104,16 +104,16 @@ class DummyCondition : public Condition
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }
 
-        void CalculateAll( MatrixType& rLeftHandSideMatrix, 
+        void CalculateAll( MatrixType& rLeftHandSideMatrix,
                            VectorType& rRightHandSideVector,
                            ProcessInfo& rCurrentProcessInfo,
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag);
 
-}; // Class DummyCondition 
+}; // Class DummyCondition
 
 }  // namespace Kratos.
-  
 
-#endif // KRATOS_DUMMY_CONDITION_H_INCLUDED defined 
+
+#endif // KRATOS_DUMMY_CONDITION_H_INCLUDED defined
 

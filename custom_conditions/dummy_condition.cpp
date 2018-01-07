@@ -1,15 +1,15 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 1 Mar 2017$
 //   Revision:            $Revision: 1.0 $
 //
 //
-// System includes 
+// System includes
 
-// External includes 
+// External includes
 
-// Project includes 
+// Project includes
 #include "custom_conditions/dummy_condition.h"
 
 namespace Kratos
@@ -21,13 +21,13 @@ DummyCondition::DummyCondition()
 {
 }
 
-DummyCondition::DummyCondition( IndexType NewId, 
+DummyCondition::DummyCondition( IndexType NewId,
                               GeometryType::Pointer pGeometry)
 : Condition( NewId, pGeometry )
 {
 }
 
-DummyCondition::DummyCondition( IndexType NewId, 
+DummyCondition::DummyCondition( IndexType NewId,
                               GeometryType::Pointer pGeometry,
                               PropertiesType::Pointer pProperties)
 : Condition( NewId, pGeometry, pProperties )
@@ -64,23 +64,23 @@ void DummyCondition::Initialize()
     KRATOS_CATCH("")
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 //************************************************************************************
 //************************************************************************************
 /**
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
-void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector, 
+void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
         ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
     bool CalculateResidualVectorFlag = true;
     MatrixType matrix = Matrix();
-    CalculateAll( matrix, rRightHandSideVector, 
+    CalculateAll( matrix, rRightHandSideVector,
                   rCurrentProcessInfo,
-                  CalculateStiffnessMatrixFlag, 
+                  CalculateStiffnessMatrixFlag,
                   CalculateResidualVectorFlag);
 }
 
@@ -89,8 +89,8 @@ void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
 /**
  * calculates this contact element's local contributions
  */
-void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                          VectorType& rRightHandSideVector, 
+void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                          VectorType& rRightHandSideVector,
                                           ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
@@ -104,10 +104,10 @@ void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
 /**
  * This function calculates all system contributions due to the contact problem
  * with regard to the current master and slave partners.
- * All Conditions are assumed to be defined in 2D/3D space and having 2/3 DOFs per node 
+ * All Conditions are assumed to be defined in 2D/3D space and having 2/3 DOFs per node
  */
-void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix, 
-                                  VectorType& rRightHandSideVector, 
+void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
+                                  VectorType& rRightHandSideVector,
                                   ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
                                   bool CalculateResidualVectorFlag)
@@ -123,11 +123,11 @@ void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
 //************************************************************************************
 //************************************************************************************
 /**
-* Setting up the EquationIdVector for the current partners.    
+* Setting up the EquationIdVector for the current partners.
 * All conditions are assumed to be defined in 2D/3D space with 2/3 DOFs per node.
 * All Equation IDs are given Master first, Slave second
 */
-void DummyCondition::EquationIdVector( EquationIdVectorType& rResult, 
+void DummyCondition::EquationIdVector( EquationIdVectorType& rResult,
                                       ProcessInfo& CurrentProcessInfo)
 {
     rResult.resize(0);

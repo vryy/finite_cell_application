@@ -268,9 +268,9 @@ public:
                 {
                     GeometryType::IntegrationPointsArrayType integration_points
                             = (*it_integrator)->Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
-KRATOS_WATCH(fit_quadrature_type)
-KRATOS_WATCH(fit_quadrature_order)
-KRATOS_WATCH(integration_points.size())
+//KRATOS_WATCH(fit_quadrature_type)
+//KRATOS_WATCH(fit_quadrature_order)
+//KRATOS_WATCH(integration_points.size())
                     Vector Weight = this->FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
                             funcs, r_brep, *(*it_integrator), integration_points,
                             integrator_integration_method, solver_type, echo_level, small_weight);

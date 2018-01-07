@@ -41,7 +41,7 @@
 #include "custom_utilities/finite_cell_geometry_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
-#define DEBUG_SUBCELL
+//#define DEBUG_SUBCELL
 
 namespace Kratos
 {
@@ -231,8 +231,8 @@ public:
 
         const GeometryType::IntegrationPointsArrayType& integration_points
             = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
-KRATOS_WATCH(__LINE__)
-KRATOS_WATCH(integration_points.size())
+//        KRATOS_WATCH(integration_points.size())
+
         mMomentFittingIntegrationPoints = integration_points;
 
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)

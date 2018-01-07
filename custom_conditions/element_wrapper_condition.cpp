@@ -1,15 +1,15 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 17 Mar 2017$
 //   Revision:            $Revision: 1.0 $
 //
 //
-// System includes 
+// System includes
 
-// External includes 
+// External includes
 
-// Project includes 
+// Project includes
 #include "custom_conditions/element_wrapper_condition.h"
 
 namespace Kratos
@@ -21,13 +21,13 @@ ElementWrapperCondition::ElementWrapperCondition()
 {
 }
 
-ElementWrapperCondition::ElementWrapperCondition( IndexType NewId, 
+ElementWrapperCondition::ElementWrapperCondition( IndexType NewId,
                               Element::Pointer pElement)
 : Condition( NewId, pElement->pGetGeometry() ), mpElement(pElement)
 {
 }
 
-ElementWrapperCondition::ElementWrapperCondition( IndexType NewId, 
+ElementWrapperCondition::ElementWrapperCondition( IndexType NewId,
                               Element::Pointer pElement,
                               PropertiesType::Pointer pProperties)
 : Condition( NewId, pElement->pGetGeometry(), pProperties ), mpElement(pElement)
@@ -51,7 +51,7 @@ void ElementWrapperCondition::Initialize()
     mpElement->Initialize();
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 
 void ElementWrapperCondition::InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo)
@@ -59,21 +59,21 @@ void ElementWrapperCondition::InitializeSolutionStep(ProcessInfo& rCurrentProces
     mpElement->InitializeSolutionStep(rCurrentProcessInfo);
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 
 void ElementWrapperCondition::InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->InitializeNonLinearIteration(rCurrentProcessInfo);
 }
-        
-//************************************************************************************ 
+
+//************************************************************************************
 //************************************************************************************
 
 /**
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
-void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSideVector, 
+void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
         ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->CalculateRightHandSide( rRightHandSideVector, rCurrentProcessInfo );
@@ -84,8 +84,8 @@ void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSide
 /**
  * calculates this element's local contributions
  */
-void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                          VectorType& rRightHandSideVector, 
+void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                          VectorType& rRightHandSideVector,
                                           ProcessInfo& rCurrentProcessInfo)
 {
 //    std::cout << "---------------------start condition " << Id() << "---------------------------" << std::endl;
@@ -99,7 +99,7 @@ void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMat
 //    std::cout << "----------------------end condition " << Id() << "--------------------------" << std::endl;
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 
 void ElementWrapperCondition::FinalizeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
@@ -107,7 +107,7 @@ void ElementWrapperCondition::FinalizeNonLinearIteration(ProcessInfo& rCurrentPr
     mpElement->FinalizeNonLinearIteration(rCurrentProcessInfo);
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 
 void ElementWrapperCondition::FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo)
@@ -118,11 +118,11 @@ void ElementWrapperCondition::FinalizeSolutionStep(ProcessInfo& rCurrentProcessI
 //************************************************************************************
 //************************************************************************************
 /**
-* Setting up the EquationIdVector for the current partners.    
+* Setting up the EquationIdVector for the current partners.
 * All conditions are assumed to be defined in 2D/3D space with 2/3 DOFs per node.
 * All Equation IDs are given Master first, Slave second
 */
-void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult, 
+void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult,
                                       ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->EquationIdVector( rResult, rCurrentProcessInfo );

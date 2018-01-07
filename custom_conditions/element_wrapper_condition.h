@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 17 Mar 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 // Project includes
@@ -29,8 +29,8 @@ class ElementWrapperCondition : public Condition
     public:
         // Counted pointer of ElementWrapperCondition
         KRATOS_CLASS_POINTER_DEFINITION(ElementWrapperCondition);
-        
-        /** 
+
+        /**
          * Default constructor.
          */
         ElementWrapperCondition();
@@ -41,7 +41,7 @@ class ElementWrapperCondition : public Condition
          * Destructor.
          */
         virtual ~ElementWrapperCondition();
-  
+
         /**
          * Operations.
          */
@@ -50,18 +50,18 @@ class ElementWrapperCondition : public Condition
 
         virtual void InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
 
-        virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                   VectorType& rRightHandSideVector, 
+        virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                   VectorType& rRightHandSideVector,
                                    ProcessInfo& rCurrentProcessInfo);
 
-        virtual void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+        virtual void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                      ProcessInfo& rCurrentProcessInfo);
 
         virtual void FinalizeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
 
         virtual void FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo);
 
-        virtual void EquationIdVector( EquationIdVectorType& rResult, 
+        virtual void EquationIdVector( EquationIdVectorType& rResult,
                                ProcessInfo& rCurrentProcessInfo);
 
         virtual void GetDofList( DofsVectorType& ConditionalDofList,
@@ -74,7 +74,7 @@ class ElementWrapperCondition : public Condition
          * (DEACTIVATED)
          */
         //std::string Info();
-  
+
         /**
          * Print information about this object.
          * (DEACTIVATED)
@@ -86,7 +86,7 @@ class ElementWrapperCondition : public Condition
          * (DEACTIVATED)
          */
         //virtual void PrintData(std::ostream& rOStream) const;
-  
+
     private:
 
         Element::Pointer mpElement;
@@ -103,10 +103,10 @@ class ElementWrapperCondition : public Condition
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }
 
-}; // Class ElementWrapperCondition 
+}; // Class ElementWrapperCondition
 
 }  // namespace Kratos.
-  
 
-#endif // KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED defined 
+
+#endif // KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED defined
 
