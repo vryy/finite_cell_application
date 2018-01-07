@@ -341,11 +341,11 @@ class FiniteCellSimulator:
         action_on_small_subcell = self.params["action_on_small_subcell"]
 
         if nsampling > 1:
-            fit_func_action = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
-            save_quadrature_subcell_action = getattr(fit_util, "SaveQuadratureSubCell" + str(nsampling))
+            fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
+            save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell" + str(nsampling))
         else:
-            fit_func_action = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
-            save_quadrature_subcell_action = getattr(fit_util, "SaveQuadratureSubCell")
+            fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+            save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
@@ -508,14 +508,14 @@ class FiniteCellSimulator:
 #            else:
 #                proper_cut_elems = cut_elems
 
-        fit_func_action(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+        fit_func_callback(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
         print("construct quadrature using moment fitting for subcell successfully")
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
         accuracy = self.params["quad_accuracy"]
 
         if action_on_small_subcell == 'eliminate':
-            save_quadrature_subcell_action(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, quadtree_elems, accuracy)
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, quadtree_elems, accuracy)
         elif action_on_small_subcell == 'replace by quadtree':
             # perform quadtree refinement for "eliminated" cell
             total_add_quadrature_pnts = 0
@@ -529,7 +529,7 @@ class FiniteCellSimulator:
                     exclude_elems.append(qs)
                 else:
                     valid_quadtree_elems.append(qs)
-            save_quadrature_subcell_action(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
             print("generate quadtree quadrature for small subcell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
 
         fid = open(quad_filename, "a")
