@@ -19,6 +19,7 @@
 #include "custom_utilities/moment_fitting_utility.h"
 #include "custom_utilities/moment_fitted_quad_tree_subcell.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/ghost_penalty_utility.h"
 
 
 namespace Kratos
@@ -97,6 +98,17 @@ void FiniteCellAuxilliaryUtility_MultithreadedRefineBy(FiniteCellAuxilliaryUtili
     }
 
     rDummy.MultithreadedRefineBy<TTreeType, TBRepType>(trees, r_brep);
+}
+
+void GhostPenaltyUtility_ProbeNeighbourElements(GhostPenaltyUtility& rDummy, Element::Pointer p_elem)
+{
+    rDummy.ProbeNeighbourElements(p_elem);
+}
+
+ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyConditions(GhostPenaltyUtility& rDummy,
+        Element::Pointer p_elem, GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t lastCondId, Properties::Pointer pProperties)
+{
+    return rDummy.SetUpSurfacePenaltyConditions(p_elem, p_sample_condition, r_brep, lastCondId, pProperties);
 }
 
 void FiniteCellApplication_AddCustomUtilitiesToPython()
@@ -180,6 +192,12 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("AddElement", &FiniteCellAuxilliaryUtility_AddElement)
     .def("MultithreadedRefineBy", &FiniteCellAuxilliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
     .def("Print", pointer_to_PrintGeometry)
+    ;
+
+    class_<GhostPenaltyUtility, GhostPenaltyUtility::Pointer, boost::noncopyable>
+    ("GhostPenaltyUtility", init<>())
+    .def("ProbeNeighbourElements", &GhostPenaltyUtility_ProbeNeighbourElements)
+    .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions)
     ;
 }
 
