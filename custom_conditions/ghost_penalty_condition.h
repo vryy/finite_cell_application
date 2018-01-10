@@ -123,19 +123,33 @@ class GhostPenaltyCondition : public Condition
          * Turn back information as a string.
          * (DEACTIVATED)
          */
-        //std::string Info();
+        virtual std::string Info() const
+        {
+            std::stringstream buffer;
+            buffer << "GhostPenaltyCondition #" << Id();
+            return buffer.str();
+        }
 
         /**
          * Print information about this object.
-         * (DEACTIVATED)
          */
-        //virtual void PrintInfo(std::ostream& rOStream) const;
+        virtual void PrintInfo(std::ostream& rOStream) const
+        {
+            rOStream << Info();
+        }
 
         /**
          * Print object's data.
-         * (DEACTIVATED)
          */
-        //virtual void PrintData(std::ostream& rOStream) const;
+        virtual void PrintData(std::ostream& rOStream) const
+        {
+            rOStream << " faces:";
+            for (std::size_t i = 0; i < GetGeometry().size(); ++i)
+                rOStream << " " << GetGeometry()[i].Id();
+            rOStream << ", slave: " << mpSlaveElement->Id()
+                     << ", master: " << mpMasterElement->Id()
+                     << std::endl;
+        }
 
     protected:
 

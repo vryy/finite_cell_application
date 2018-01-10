@@ -32,6 +32,7 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_1_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_2_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_conditions_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )
 #######################################################################

@@ -3,6 +3,7 @@ import pprint
 from KratosMultiphysics import *
 from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.FiniteCellApplication import *
+#from KratosMultiphysics.FiniteCellStructuralApplication import *
 CheckForPreviousImport()
 
 ###FITTING FUNCTIONS#############
@@ -750,6 +751,22 @@ class FiniteCellSimulator:
         else:
             print("Unknown quadrature_method", self.quadrature_method)
             sys.exit(0)
+
+        if self.params["enable_ghost_penalty"] == True:
+            ghost_penalty_util = GhostPenaltyUtility()
+            space_dim = self.params["space_dim"]
+            estimated_neighbours = self.params["estimated_number_of_neighbours"]
+
+            FindElementalNeighboursProcess(model.model_part, space_dim, estimated_neighbours).Execute()
+
+            sample_cond = self.params["sample_ghost_penalty_condition"]
+            ghost_prop = self.params["ghost_penalty_properties"]
+            lastCondId = aux_util.GetLastConditionId(model.model_part)
+            ghost_penalty_conds = ghost_penalty_util.SetUpSurfacePenaltyConditions(model.model_part, bulk_elements, sample_cond, self.brep, lastCondId, ghost_prop)
+            for cond in ghost_penalty_conds:
+                cond.SetValue(INITIAL_PENALTY, params["ghost_penalty"])
+
+    # end Initialize
 
     ###COMPUTE GLOBAL DISPLACEMENT (L2) ERROR###
     def compute_L2_error(self, elements, process_info, solution, P):

@@ -21,6 +21,7 @@
 #include "finite_cell_application.h"
 #include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_python/add_custom_utilities_to_python.h"
+#include "custom_python/add_custom_conditions_to_python.h"
 #include "custom_python/add_quadtree_to_python.hpp"
 
 namespace Kratos
@@ -45,6 +46,7 @@ namespace Python
         FiniteCellApplication_AddQuadTreeToPython<4>();
         FiniteCellApplication_AddQuadTreeToPython<5>();
         FiniteCellApplication_AddCustomUtilitiesToPython();
+        FiniteCellApplication_AddCustomConditionsToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )

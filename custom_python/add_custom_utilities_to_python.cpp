@@ -105,10 +105,26 @@ void GhostPenaltyUtility_ProbeNeighbourElements(GhostPenaltyUtility& rDummy, Ele
     rDummy.ProbeNeighbourElements(p_elem);
 }
 
-ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyConditions(GhostPenaltyUtility& rDummy,
-        Element::Pointer p_elem, GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t lastCondId, Properties::Pointer pProperties)
+ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyConditions1(GhostPenaltyUtility& rDummy,
+        Element::Pointer p_elem, GhostPenaltyCondition::Pointer p_sample_condition,
+        const BRep& r_brep, std::size_t lastCondId, Properties::Pointer pProperties)
 {
     return rDummy.SetUpSurfacePenaltyConditions(p_elem, p_sample_condition, r_brep, lastCondId, pProperties);
+}
+
+ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyConditions2(GhostPenaltyUtility& rDummy,
+        ModelPart& r_model_part, GhostPenaltyCondition::Pointer p_sample_condition,
+        const BRep& r_brep, std::size_t lastCondId, Properties::Pointer pProperties)
+{
+    return rDummy.SetUpSurfacePenaltyConditions(r_model_part, p_sample_condition, r_brep, lastCondId, pProperties);
+}
+
+ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyConditions3(GhostPenaltyUtility& rDummy,
+        ModelPart& r_model_part, ModelPart::ElementsContainerType& pElements,
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
+        std::size_t lastCondId, Properties::Pointer pProperties)
+{
+    return rDummy.SetUpSurfacePenaltyConditions(r_model_part, pElements, p_sample_condition, r_brep, lastCondId, pProperties);
 }
 
 void FiniteCellApplication_AddCustomUtilitiesToPython()
@@ -197,7 +213,9 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     class_<GhostPenaltyUtility, GhostPenaltyUtility::Pointer, boost::noncopyable>
     ("GhostPenaltyUtility", init<>())
     .def("ProbeNeighbourElements", &GhostPenaltyUtility_ProbeNeighbourElements)
-    .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions)
+    .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions1)
+    .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions2)
+    .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions3)
     ;
 }
 

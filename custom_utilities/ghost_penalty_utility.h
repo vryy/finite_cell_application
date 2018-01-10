@@ -127,73 +127,34 @@ public:
     ///@{
 
 
+    /// Setup the ghost penalty conditions for the model_part
+    static ConditionsContainerType SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
+        std::size_t& lastCondId, Properties::Pointer pProperties);
+
+    /// Setup the ghost penalty conditions for the model_part on a subset of elements
+    static ConditionsContainerType SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
+        ModelPart::ElementsContainerType& pElements,
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
+        std::size_t& lastCondId, Properties::Pointer pProperties);
+
     /// Setup the ghost penalty conditions between an element and its neighbour
+    /// Note: user must call FindElementalNeighboursProcess(model.model_part, 2, 10).Execute() to setup first the neighbour elements
     static ConditionsContainerType SetUpSurfacePenaltyConditions(Element::Pointer p_element,
         GhostPenaltyCondition::Pointer p_sample_condition,
-        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties)
-    {
-        // firstly obtain all neighbour elements of the current element
-        WeakPointerVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
+        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
 
-        ConditionsContainerType pNewConditions;
+    /// Setup the ghost penalty conditions between two elements
+    static Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
+        Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
+        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
 
-        // for each neighbour, find the common edge
-        for (std::size_t i = 0; i < rNeighbours.size(); ++i)
-        {
-            if (rNeighbours[i].Id() != p_element->Id())
-            {
-                std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > edge = FindCommonEdge(*p_element, rNeighbours[i]);
-
-                if (edge.first == GeometryData::Kratos_generic_type)
-                    continue;
-
-                KRATOS_WATCH(edge.second.size())
-                // create the edge geometry
-                typename Element::NodesArrayType temp_nodes;
-                for (std::size_t j = 0; j < edge.second.size(); ++j)
-                    temp_nodes.push_back(p_element->GetGeometry().pGetPoint(edge.second[j]));
-
-                GeometryType::Pointer p_temp_geometry;
-
-                if (edge.first == GeometryData::Kratos_Line2D2)
-                    p_temp_geometry = GeometryType::Pointer(new Line2D2<NodeType>(temp_nodes));
-                else if (edge.first == GeometryData::Kratos_Line2D3)
-                    p_temp_geometry = GeometryType::Pointer(new Line2D3<NodeType>(temp_nodes));
-                else
-                    KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", edge.first)
-
-                // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
-                int stat = r_brep.CutStatus(*p_temp_geometry);
-                std::cout << "edge " << (*p_temp_geometry)[0].Id() << " " << (*p_temp_geometry)[1].Id() << std::endl;
-                KRATOS_WATCH(stat)
-                if (stat == BRep::_CUT || stat == BRep::_IN)
-                {
-                    // create the ghost penalty condition
-                    Condition::Pointer pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element, rNeighbours(i).lock(), pProperties);
-                    pNewCond->SetValue(IS_INACTIVE, false);
-                    pNewCond->Set(ACTIVE, true);
-                    pNewConditions.push_back(pNewCond);
-                }
-            }
-        }
-
-        std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions are created" << std::endl;
-
-        return pNewConditions;
-    }
-
+    /// Compute the shape function gradient in the normal direction, the edge geometry must be on the edge of the element
+    static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
     /// Probe the neighbour elements of an element
-    static void ProbeNeighbourElements(Element::Pointer p_element)
-    {
-        WeakPointerVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
-        std::cout << "Neighbour elements of element " << p_element->Id() << ":";
-        for (std::size_t i = 0; i < rNeighbours.size(); ++i)
-        {
-            std::cout << " " << rNeighbours[i].Id();
-        }
-        std::cout << std::endl;
-    }
+    static void ProbeNeighbourElements(Element::Pointer p_element);
 
 
     ///@}
@@ -294,242 +255,62 @@ private:
 
 
     /// Find the common edge between the two geometries, the index of the nodes on the edge are the local index w.r.t geometry 1
-    static std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > FindCommonEdge(Element& r_elem_1, Element& r_elem_2)
-    {
-        if (r_elem_1.GetGeometry().GetGeometryType() != r_elem_2.GetGeometry().GetGeometryType())
-            KRATOS_THROW_ERROR(std::logic_error, "The geometry type is not the same", "")
+    static std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > FindCommonEdge(Element& r_elem_1, Element& r_elem_2);
 
-        if (r_elem_1.GetGeometry().GetGeometryType() == GeometryData::Kratos_Triangle2D3)
-        {
-            return std::make_pair(GeometryData::Kratos_Line2D2, FindCommonEdgeT3(r_elem_1, r_elem_2));
-        }
-        else if (r_elem_1.GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
-        {
-            return std::make_pair(GeometryData::Kratos_Line2D2, FindCommonEdgeQ4(r_elem_1, r_elem_2));
-        }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+    static std::vector<std::size_t> FindCommonEdgeT3(Element& r_elem_1, Element& r_elem_2);
 
-        return std::make_pair(GeometryData::Kratos_generic_type, std::vector<std::size_t>{});
-    }
+    static std::vector<std::size_t> FindCommonEdgeT6(Element& r_elem_1, Element& r_elem_2);
 
-    static std::vector<std::size_t> FindCommonEdgeT3(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-            const std::size_t& i1 = msEdgesT3[i][0];
-            const std::size_t& i2 = msEdgesT3[i][1];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
+    static std::vector<std::size_t> FindCommonEdgeQ4(Element& r_elem_1, Element& r_elem_2);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static std::vector<std::size_t> FindCommonEdgeQ8(Element& r_elem_1, Element& r_elem_2);
 
-    static std::vector<std::size_t> FindCommonEdgeT6(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-            const std::size_t& i1 = msEdgesT6[i][0];
-            const std::size_t& i2 = msEdgesT6[i][1];
-            const std::size_t& i3 = msEdgesT6[i][2];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
+    static std::vector<std::size_t> FindCommonFaceT4(Element& r_elem_1, Element& r_elem_2);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static std::vector<std::size_t> FindCommonFaceT10(Element& r_elem_1, Element& r_elem_2);
 
-    static std::vector<std::size_t> FindCommonEdgeQ4(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 4; ++i)
-        {
-            const std::size_t& i1 = msEdgesQ4[i][0];
-            const std::size_t& i2 = msEdgesQ4[i][1];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
+    static std::vector<std::size_t> FindCommonFaceH8(Element& r_elem_1, Element& r_elem_2);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static std::vector<std::size_t> FindCommonFaceH20(Element& r_elem_1, Element& r_elem_2);
 
-    static std::vector<std::size_t> FindCommonEdgeQ8(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 4; ++i)
-        {
-            const std::size_t& i1 = msEdgesQ8[i][0];
-            const std::size_t& i2 = msEdgesQ8[i][1];
-            const std::size_t& i3 = msEdgesQ8[i][2];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
+    static std::vector<std::size_t> FindCommonFaceH27(Element& r_elem_1, Element& r_elem_2);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static bool IsBelongedToGeometry(const std::size_t& node_id, GeometryType& r_geom);
 
-    static std::vector<std::size_t> FindCommonFaceT4(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 4; ++i)
-        {
-            const std::size_t& i1 = msFacesT4[i][0];
-            const std::size_t& i2 = msFacesT4[i][1];
-            const std::size_t& i3 = msFacesT4[i][2];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
+    static bool BuildMapEdgeNodeIndexToElementNodeIndex(std::map<std::size_t, std::size_t>& map_edge_node_index_to_element_node_index,
+        GeometryType& r_edge_geometry, GeometryType& r_element_geometry, const int* nodes_on_edge);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static void ComputeShapeFunctionNormalGradientT3(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-    static std::vector<std::size_t> FindCommonFaceT10(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 4; ++i)
-        {
-            const std::size_t& i1 = msFacesT10[i][0];
-            const std::size_t& i2 = msFacesT10[i][1];
-            const std::size_t& i3 = msFacesT10[i][2];
-            const std::size_t& i4 = msFacesT10[i][3];
-            const std::size_t& i5 = msFacesT10[i][4];
-            const std::size_t& i6 = msFacesT10[i][5];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
-            const std::size_t& n4 = r_elem_1.GetGeometry()[i4].Id();
-            const std::size_t& n5 = r_elem_1.GetGeometry()[i5].Id();
-            const std::size_t& n6 = r_elem_1.GetGeometry()[i6].Id();
+    static void ComputeShapeFunctionNormalGradientT6(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n4, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n5, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n6, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3, i4, i5, i6};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static void ComputeShapeFunctionNormalGradientQ4(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-    static std::vector<std::size_t> FindCommonFaceH8(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 8; ++i)
-        {
-            const std::size_t& i1 = msFacesH8[i][0];
-            const std::size_t& i2 = msFacesH8[i][1];
-            const std::size_t& i3 = msFacesH8[i][2];
-            const std::size_t& i4 = msFacesH8[i][3];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
-            const std::size_t& n4 = r_elem_1.GetGeometry()[i4].Id();
+    static void ComputeShapeFunctionNormalGradientQ8(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n4, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3, i4};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static void ComputeShapeFunctionNormalGradientQ9(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-    static std::vector<std::size_t> FindCommonFaceH20(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 8; ++i)
-        {
-            const std::size_t& i1 = msFacesH20[i][0];
-            const std::size_t& i2 = msFacesH20[i][1];
-            const std::size_t& i3 = msFacesH20[i][2];
-            const std::size_t& i4 = msFacesH20[i][3];
-            const std::size_t& i5 = msFacesH20[i][4];
-            const std::size_t& i6 = msFacesH20[i][5];
-            const std::size_t& i7 = msFacesH20[i][6];
-            const std::size_t& i8 = msFacesH20[i][7];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
-            const std::size_t& n4 = r_elem_1.GetGeometry()[i4].Id();
-            const std::size_t& n5 = r_elem_1.GetGeometry()[i5].Id();
-            const std::size_t& n6 = r_elem_1.GetGeometry()[i6].Id();
-            const std::size_t& n7 = r_elem_1.GetGeometry()[i7].Id();
-            const std::size_t& n8 = r_elem_1.GetGeometry()[i8].Id();
+    static void ComputeShapeFunctionNormalGradientT4(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n4, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n5, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n6, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n7, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n8, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3, i4, i5, i6, i7, i8};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static void ComputeShapeFunctionNormalGradientT10(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-    static std::vector<std::size_t> FindCommonFaceH27(Element& r_elem_1, Element& r_elem_2)
-    {
-        for (std::size_t i = 0; i < 8; ++i)
-        {
-            const std::size_t& i1 = msFacesH27[i][0];
-            const std::size_t& i2 = msFacesH27[i][1];
-            const std::size_t& i3 = msFacesH27[i][2];
-            const std::size_t& i4 = msFacesH27[i][3];
-            const std::size_t& i5 = msFacesH27[i][4];
-            const std::size_t& i6 = msFacesH27[i][5];
-            const std::size_t& i7 = msFacesH27[i][6];
-            const std::size_t& i8 = msFacesH27[i][7];
-            const std::size_t& i9 = msFacesH27[i][8];
-            const std::size_t& n1 = r_elem_1.GetGeometry()[i1].Id();
-            const std::size_t& n2 = r_elem_1.GetGeometry()[i2].Id();
-            const std::size_t& n3 = r_elem_1.GetGeometry()[i3].Id();
-            const std::size_t& n4 = r_elem_1.GetGeometry()[i4].Id();
-            const std::size_t& n5 = r_elem_1.GetGeometry()[i5].Id();
-            const std::size_t& n6 = r_elem_1.GetGeometry()[i6].Id();
-            const std::size_t& n7 = r_elem_1.GetGeometry()[i7].Id();
-            const std::size_t& n8 = r_elem_1.GetGeometry()[i8].Id();
-            const std::size_t& n9 = r_elem_1.GetGeometry()[i9].Id();
+    static void ComputeShapeFunctionNormalGradientH8(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-            if (IsBelongedToGeometry(n1, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n2, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n3, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n4, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n5, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n6, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n7, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n8, r_elem_2.GetGeometry())
-                && IsBelongedToGeometry(n9, r_elem_2.GetGeometry()))
-                return std::vector<std::size_t>{i1, i2, i3, i4, i5, i6, i7, i8, i9};
-        }
-        return std::vector<std::size_t>{};
-    }
+    static void ComputeShapeFunctionNormalGradientH20(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
 
-    static bool IsBelongedToGeometry(const std::size_t& node_id, GeometryType& r_geom)
-    {
-        for (std::size_t i = 0; i < r_geom.size(); ++i)
-            if (r_geom[i].Id() == node_id)
-                return true;
-        return false;
-    }
+    static void ComputeShapeFunctionNormalGradientH27(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points);
+
+    static bool IsSame(GeometryType& r_geom, const std::vector<std::size_t>& nodes);
 
     ///@}
     ///@name Private  Access
