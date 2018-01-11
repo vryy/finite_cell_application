@@ -763,8 +763,6 @@ class FiniteCellSimulator:
             ghost_prop = self.params["ghost_penalty_properties"]
             lastCondId = aux_util.GetLastConditionId(model.model_part)
             ghost_penalty_conds = ghost_penalty_util.SetUpSurfacePenaltyConditions(model.model_part, bulk_elements, sample_cond, self.brep, lastCondId, ghost_prop)
-            for cond in ghost_penalty_conds:
-                cond.SetValue(INITIAL_PENALTY, params["ghost_penalty"])
 
     # end Initialize
 

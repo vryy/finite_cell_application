@@ -116,6 +116,63 @@ class GhostPenaltyCondition : public Condition
         virtual void Initialize()
         {
             KRATOS_TRY
+
+            Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+
+            // integration rule
+            if(this->Has( INTEGRATION_ORDER_var ))
+            {
+                if(this->GetValue(INTEGRATION_ORDER_var) == 1)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
+                }
+                else if(this->GetValue(INTEGRATION_ORDER_var) == 2)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+                }
+                else if(this->GetValue(INTEGRATION_ORDER_var) == 3)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
+                }
+                else if(this->GetValue(INTEGRATION_ORDER_var) == 4)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
+                }
+                else if(this->GetValue(INTEGRATION_ORDER_var) == 5)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
+                }
+                else
+                    KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration rule", this->GetValue(INTEGRATION_ORDER_var))
+            }
+            else if(GetProperties().Has( INTEGRATION_ORDER_var ))
+            {
+                if(GetProperties()[INTEGRATION_ORDER_var] == 1)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
+                }
+                else if(GetProperties()[INTEGRATION_ORDER_var] == 2)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+                }
+                else if(GetProperties()[INTEGRATION_ORDER_var] == 3)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
+                }
+                else if(GetProperties()[INTEGRATION_ORDER_var] == 4)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
+                }
+                else if(GetProperties()[INTEGRATION_ORDER_var] == 5)
+                {
+                    mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
+                }
+                else
+                    KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration points", GetProperties()[INTEGRATION_ORDER_var])
+            }
+            else
+                mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod(); // default method
+
             KRATOS_CATCH("")
         }
 
@@ -155,6 +212,8 @@ class GhostPenaltyCondition : public Condition
 
         Element::Pointer pSlave() const {return mpSlaveElement;}
         Element::Pointer pMaster() const {return mpMasterElement;}
+
+        IntegrationMethod mThisIntegrationMethod;
 
     private:
 
