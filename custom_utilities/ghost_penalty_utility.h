@@ -98,6 +98,18 @@ struct GhostPenalty_Helper
     /// Compute the local frame at point on face geometry
     static void ComputeLocalFrame(Vector& t1, Vector& t2, Vector& n, GeometryType& r_face_geometry, const IntegrationPointType& integration_point);
 
+    /// Compute the integration point on side of triangle based on the sample integration point on edge
+    static IntegrationPointType ComputeIntegrationPointOnTriSide(const int& side, const IntegrationPointType& edge_integration_point);
+
+    /// Compute the integration point on side of quadrilateral based on the sample integration point on edge
+    static IntegrationPointType ComputeIntegrationPointOnQuadSide(const int& side, const IntegrationPointType& edge_integration_point);
+
+    /// Compute the integration point on side of tetrahedra based on the sample integration point on edge
+    static IntegrationPointType ComputeIntegrationPointOnTetSide(const int& side, const IntegrationPointType& face_integration_point);
+
+    /// Compute the integration point on side of tetrahedra based on the sample integration point on edge
+    static IntegrationPointType ComputeIntegrationPointOnHexSide(const int& side, const IntegrationPointType& face_integration_point);
+
     /// Compute the shape function gradient, w.r.t global coordinates of the geometry, in the reference frame
     static Matrix& ComputeShapeFunctionGradient(Matrix& DN_DX, GeometryType& r_element_geometry, const IntegrationPointType& integration_point);
 };
@@ -111,35 +123,41 @@ struct GhostPenalty_Geometry_Helper
     typedef Element::GeometryType GeometryType;
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    /// Get the number of sides associated with a geometry
+    static int NumberOfSides()
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+    }
+
     /// Find the side of the edge geometry on the element geometry. If not found, return -1.
     static int FindSide(GeometryType& r_element_geometry, GeometryType& r_edge_geometry)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
     }
 
     /// Find the common edge/face between two geometries
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
     }
 
     /// Get the local index of nodes on the side of the geometry
     static const int* Faces(const std::size_t& side)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
     }
 
     /// Compute the integration point in the element given the integration point on the edge and the side
     static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
     }
 
     /// Compute the shape function local gradient along the edge of the elemental geometry, in the reference frame
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
     }
 };
 
@@ -205,10 +223,15 @@ public:
         GhostPenaltyCondition::Pointer p_sample_condition,
         const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
 
-    /// Setup the ghost penalty conditions between two elements
+    /// Setup the ghost penalty conditions between two elements. The BRep is to check the validity of the ghost penalty condition
     static Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
         Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
         const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
+
+    /// Merely setup the ghost penalty conditions between two elements. This is useful to debug the ghost penalties.
+    static Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
+        Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
+        std::size_t& lastCondId, Properties::Pointer pProperties);
 
     /// Compute the shape function gradient in the normal direction, the edge geometry must be on the edge of the element.
     /// The dir variable indicates which direction the edge/face is on the element geometry. This can be determined internally but to
@@ -358,8 +381,33 @@ private:
 
 ///@}
 
-///@name Type Definitions
+///@name Traits Definitions
 ///@{
+
+
+/**
+ * Trait class to perform FindSide operation
+ */
+template<class TClassType>
+struct FindSide_Helper
+{
+
+    typedef typename TClassType::GeometryType GeometryType;
+
+    static int Execute(GeometryType& r_element_geometry, GeometryType& r_edge_geometry)
+    {
+        bool found;
+        for (int side = 0; side < TClassType::NumberOfSides(); ++side)
+        {
+            found = GhostPenalty_Helper::IsSame(r_edge_geometry, r_element_geometry, TClassType::Faces(side));
+
+            if (found)
+                return side;
+        }
+        return -1;
+    }
+
+};
 
 template<>
 struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>
@@ -368,9 +416,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 3;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msEdges[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points);
@@ -385,9 +437,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 3;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msEdges[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points);
@@ -402,7 +458,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
-    static int FindSide(GeometryType& r_element_geometry, GeometryType& r_edge_geometry);
+    static int NumberOfSides() {return 4;}
 
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
@@ -423,9 +479,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 4;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msEdges[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points);
@@ -440,11 +500,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
-    static int FindSide(GeometryType& r_element_geometry, GeometryType& r_edge_geometry);
+    static int NumberOfSides() {return 4;}
 
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msEdges[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points);
@@ -459,9 +521,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 4;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msFaces[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points);
@@ -476,9 +542,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 4;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msFaces[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points);
@@ -493,9 +563,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 6;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msFaces[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points);
@@ -510,9 +584,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 6;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msFaces[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points);
@@ -527,9 +605,13 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
 
+    static int NumberOfSides() {return 6;}
+
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2);
 
     static const int* Faces(const std::size_t& side) {return msFaces[side];}
+
+    static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point);
 
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points);

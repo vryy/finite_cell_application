@@ -127,6 +127,13 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyCondit
     return rDummy.SetUpSurfacePenaltyConditions(r_model_part, pElements, p_sample_condition, r_brep, lastCondId, pProperties);
 }
 
+Condition::Pointer GhostPenaltyUtility_SetUpSurfacePenaltyCondition(GhostPenaltyUtility& rDummy,
+        Element::Pointer p_element_1, Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
+        std::size_t lastCondId, Properties::Pointer pProperties)
+{
+    return rDummy.SetUpSurfacePenaltyCondition(p_element_1, p_element_2, p_sample_condition, lastCondId, pProperties);
+}
+
 void FiniteCellApplication_AddCustomUtilitiesToPython()
 {
     void(QuadratureUtility::*pointer_to_CreateConditionFromQuadraturePoint)(ModelPart&, boost::python::list&,
@@ -216,6 +223,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions1)
     .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions2)
     .def("SetUpSurfacePenaltyConditions", &GhostPenaltyUtility_SetUpSurfacePenaltyConditions3)
+    .def("SetUpSurfacePenaltyCondition", &GhostPenaltyUtility_SetUpSurfacePenaltyCondition)
     ;
 }
 
