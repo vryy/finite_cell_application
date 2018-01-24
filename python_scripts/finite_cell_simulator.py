@@ -169,6 +169,9 @@ class FiniteCellSimulator:
     def __init__(self, params = None):
         self.params = params
 
+        if 'enable_ghost_penalty' not in self.params: # turn off ghost penalty by default
+            self.params['enable_ghost_penalty'] = False
+
     ###TREES & FOREST CREATION#############
     def CreateForest(self, elements, nsampling = 1):
         ###############################################################
@@ -427,7 +430,7 @@ class FiniteCellSimulator:
                         num_physical_points = qs.GetNumberOfPhysicalIntegrationPoint(self.brep, integrator_quadrature_method)
                         if num_physical_points < number_of_minimum_physical_points:
                             include_element = False
-                            print("\nthe quadtree subcell of element " + str(elem_id) + " has number of physical point(s) = " + str(num_physical_points) + " < " + str(number_of_minimum_physical_points) + ". It will be skipped.")
+                            print("\nthe quadtree subcell of element " + str(elem_id) + " has number of physical point(s) = " + str(num_physical_points) + " < " + str(number_of_minimum_physical_points) + ". It will be considered as small subcell. The action on it is: " + str(action_on_small_subcell))
 
 #                print("include_element:", include_element)
                 if include_element:

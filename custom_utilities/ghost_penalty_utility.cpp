@@ -13,8 +13,10 @@
 
 
 #include "custom_utilities/ghost_penalty_utility.h"
+#include "structural_application/custom_utilities/sd_math_utils.h"
 
-#define ENABLE_DEBUG_GHOST_PENALTY
+//#define ENABLE_DEBUG_GHOST_PENALTY
+// #define ENABLE_DEBUG_GHOST_PENALTY_2
 
 namespace Kratos
 {
@@ -80,6 +82,13 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     {
         WeakPointerVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
 
+        // std::cout << "neighbours of element " << it->Id() << ":";
+        // for (std::size_t i = 0; i < rNeighbours.size(); ++i)
+        // {
+        //     std::cout << " " << rNeighbours(i).lock()->Id();
+        // }
+        // std::cout << std::endl;
+
         for (std::size_t i = 0; i < rNeighbours.size(); ++i)
         {
             const std::size_t& id2 = rNeighbours(i).lock()->Id();
@@ -93,6 +102,13 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
                 edges.insert(std::make_pair(id2, id1));
         }
     }
+
+    // std::cout << "neighbour couples:";
+    // for (std::set<std::pair<std::size_t, std::size_t> >::iterator it = edges.begin(); it != edges.end(); ++it)
+    // {
+    //     std::cout << " (" << it->first << ", " << it->second << ")";
+    // }
+    // std::cout << std::endl;
 
     // setup the ghost penalty condition from the edges
     ModelPart::ConditionsContainerType pNewConditions;
@@ -256,6 +272,56 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     return pNewCond;
 }
 
+void GhostPenaltyUtility::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points)
+{
+    if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Triangle2D3)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Triangle2D6)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunction(N, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << "does not work on geometry " << r_element_geometry.GetGeometryType();
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+}
 
 void GhostPenaltyUtility::ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
         GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points)
@@ -299,6 +365,57 @@ void GhostPenaltyUtility::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Geome
     else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
     {
         GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunctionNormalGradient(dNdn, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << "does not work on geometry " << r_element_geometry.GetGeometryType();
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+}
+
+void GhostPenaltyUtility::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& integration_points)
+{
+    if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Triangle2D3)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Triangle2D6)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
+    }
+    else if (r_element_geometry.GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
+    {
+        GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunctionNormalSecondDerivatives(d2Ndn2, r_element_geometry, r_edge_geometry, integration_points);
     }
     else
     {
@@ -603,6 +720,9 @@ void GhostPenalty_Helper::ComputeLocalFrame(Vector& t, Vector& n, GeometryType& 
             t(0) += aux(i, 0) * r_edge_geometry[i].X0();
             t(1) += aux(i, 0) * r_edge_geometry[i].Y0();
         }
+        double length = norm_2(t);
+        t(0) = t(0) / length;
+        t(1) = t(1) / length;
         n(0) = -t(1);
         n(1) = t(0);
     }
@@ -612,9 +732,27 @@ void GhostPenalty_Helper::ComputeLocalFrame(Vector& t, Vector& n, GeometryType& 
 
 void GhostPenalty_Helper::ComputeLocalFrame(Vector& t1, Vector& t2, Vector& n, GeometryType& r_face_geometry, const IntegrationPointType& integration_point)
 {
-    if (r_face_geometry.GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4)
+    if (r_face_geometry.WorkingSpaceDimension() == 3)
     {
-        // TODO
+        Matrix aux;
+        aux = r_face_geometry.ShapeFunctionsLocalGradients(aux, integration_point);
+        noalias(t1) = ZeroVector(3);
+        noalias(t2) = ZeroVector(3);
+        noalias(n) = ZeroVector(3);
+        for (std::size_t i = 0; i < r_face_geometry.size(); ++i)
+        {
+            t1(0) += aux(i, 0) * r_face_geometry[i].X0();
+            t1(1) += aux(i, 0) * r_face_geometry[i].Y0();
+            t1(2) += aux(i, 0) * r_face_geometry[i].Z0();
+            t2(0) += aux(i, 1) * r_face_geometry[i].X0();
+            t2(1) += aux(i, 1) * r_face_geometry[i].Y0();
+            t2(2) += aux(i, 1) * r_face_geometry[i].Z0();
+        }
+        // Note that t1 and t2 is not orthogonal
+        t1 *= (1.0 / norm_2(t1));
+        t2 *= (1.0 / norm_2(t2));
+        noalias(n) = MathUtils<double>::CrossProduct(t1, t2);
+        n *= (1.0 / norm_2(n));
     }
     else
         KRATOS_THROW_ERROR(std::logic_error, "The geometry type is invalid:", r_face_geometry.GetGeometryType())
@@ -678,34 +816,36 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrat
     }
     else if (side == 2) // xi: 1
     {
-        // TODO: check sequence
         integration_point.X() = 1.0;
         integration_point.Y() = face_integration_point.X();
         integration_point.Z() = face_integration_point.Y();
     }
     else if (side == 3) // eta: 1
     {
-         // TODO: check sequence
         integration_point.X() = face_integration_point.X();
         integration_point.Y() = 1.0;
         integration_point.Z() = face_integration_point.Y();
     }
     else if (side == 4) // xi: -1
     {
-         // TODO: check sequence
         integration_point.X() = -1.0;
         integration_point.Y() = face_integration_point.X();
         integration_point.Z() = face_integration_point.Y();
     }
     else if (side == 5) // zeta: 1
     {
-         // TODO: check sequence
         integration_point.X() = face_integration_point.X();
         integration_point.Y() = face_integration_point.Y();
         integration_point.Z() = 1.0;
     }
 
     return integration_point;
+}
+
+Vector& GhostPenalty_Helper::ComputeShapeFunction(Vector& N, GeometryType& r_element_geometry, const IntegrationPointType& integration_point)
+{
+    N = r_element_geometry.ShapeFunctionsValues(N, integration_point);
+    return N;
 }
 
 Matrix& GhostPenalty_Helper::ComputeShapeFunctionGradient(Matrix& DN_DX, GeometryType& r_element_geometry, const IntegrationPointType& integration_point)
@@ -723,6 +863,160 @@ Matrix& GhostPenalty_Helper::ComputeShapeFunctionGradient(Matrix& DN_DX, Geometr
     noalias( DN_DX ) = prod( DN_De, InvJ );
 
     return DN_DX;
+}
+
+std::vector<Vector>& GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(std::vector<Vector>& D2N_DX2, GeometryType& r_element_geometry, const IntegrationPointType& integration_point)
+{
+    unsigned int dim = r_element_geometry.WorkingSpaceDimension();
+    unsigned int number_of_nodes = r_element_geometry.size();
+    unsigned int strain_size = dim * (dim + 1) / 2;
+
+    // compute the gradient and inversed of Jacobian
+    Matrix DeltaPosition(r_element_geometry.size(), 3);
+    for ( unsigned int node = 0; node < r_element_geometry.size(); ++node )
+        noalias( row( DeltaPosition, node ) ) = r_element_geometry[node].Coordinates() - r_element_geometry[node].GetInitialPosition();
+
+    Matrix DN_De;
+    DN_De = r_element_geometry.ShapeFunctionsLocalGradients(DN_De, integration_point);
+
+    Matrix J, InvJ;
+    double DetJ;
+    J = r_element_geometry.Jacobian(J, integration_point, DeltaPosition);
+    MathUtils<double>::InvertMatrix(J, InvJ, DetJ);
+
+    Matrix DN_DX(r_element_geometry.size(), dim);
+    noalias( DN_DX ) = prod( DN_De, InvJ );
+
+    // compute the second derivatives
+    ShapeFunctionsSecondDerivativesType D2N_De2;
+    D2N_De2 = r_element_geometry.ShapeFunctionsSecondDerivatives(D2N_De2, integration_point);
+    #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+    KRATOS_WATCH(D2N_De2)
+    #endif
+
+    Matrix D2X_De2(dim, dim);
+    Matrix D2Y_De2(dim, dim);
+    Matrix D2Z_De2(dim, dim);
+    for(unsigned int i = 0; i < dim; ++i)
+    {
+        for(unsigned int j = 0; j < dim; ++j)
+        {
+            D2X_De2(i, j) = 0.0;
+            for(unsigned int k = 0; k < number_of_nodes; ++k)
+                D2X_De2(i, j) += r_element_geometry[k].X0() * D2N_De2[k](i, j);
+
+            D2Y_De2(i, j) = 0.0;
+            for(unsigned int k = 0; k < number_of_nodes; ++k)
+                D2Y_De2(i, j) += r_element_geometry[k].Y0() * D2N_De2[k](i, j);
+
+            if(dim > 2)
+            {
+                D2Z_De2(i, j) = 0.0;
+                for(unsigned int k = 0; k < number_of_nodes; ++k)
+                    D2Z_De2(i, j) += r_element_geometry[k].Z0() * D2N_De2[k](i, j);
+            }
+        }
+    }
+
+    Matrix D2(strain_size, strain_size);
+    if(dim == 2)
+    {
+        D2(0, 0) = pow(J(0, 0), 2);
+        D2(0, 1) = pow(J(0, 1), 2);
+        D2(0, 2) = J(0, 0) * J(0, 1);
+
+        D2(1, 0) = pow(J(1, 0), 2);
+        D2(1, 1) = pow(J(1, 1), 2);
+        D2(1, 2) = J(1, 0) * J(1, 1);
+
+        D2(2, 0) = 2.0 * J(0, 0) * J(1, 0);
+        D2(2, 1) = 2.0 * J(0, 1) * J(1, 1);
+        D2(2, 2) = J(0, 0) * J(1, 1) + J(1, 0) * J(0, 1);
+    }
+    else if(dim == 3)
+    {
+        D2(0, 0) = pow(J(0, 0), 2);
+        D2(0, 1) = pow(J(0, 1), 2);
+        D2(0, 2) = pow(J(0, 2), 2);
+        D2(0, 3) = J(0, 0) * J(0, 1);
+        D2(0, 4) = J(0, 1) * J(0, 2);
+        D2(0, 5) = J(0, 0) * J(0, 2);
+
+        D2(1, 0) = pow(J(1, 0), 2);
+        D2(1, 1) = pow(J(1, 1), 2);
+        D2(1, 2) = pow(J(1, 2), 2);
+        D2(1, 3) = J(1, 0) * J(1, 1);
+        D2(1, 4) = J(1, 1) * J(1, 2);
+        D2(1, 5) = J(1, 0) * J(1, 2);
+
+        D2(2, 0) = pow(J(2, 0), 2);
+        D2(2, 1) = pow(J(2, 1), 2);
+        D2(2, 2) = pow(J(2, 2), 2);
+        D2(2, 3) = J(2, 0) * J(2, 1);
+        D2(2, 4) = J(2, 1) * J(2, 2);
+        D2(2, 5) = J(2, 0) * J(2, 2);
+
+        D2(3, 0) = 2.0 * J(0, 0) * J(1, 0);
+        D2(3, 1) = 2.0 * J(0, 1) * J(1, 1);
+        D2(3, 2) = 2.0 * J(0, 2) * J(1, 2);
+        D2(3, 3) = J(0, 0) * J(1, 1) + J(0, 1) * J(1, 0);
+        D2(3, 4) = J(0, 1) * J(1, 2) + J(0, 2) * J(1, 1);
+        D2(3, 5) = J(0, 0) * J(1, 2) + J(0, 2) * J(1, 0);
+
+        D2(4, 0) = 2.0 * J(1, 0) * J(2, 0);
+        D2(4, 1) = 2.0 * J(1, 1) * J(2, 1);
+        D2(4, 2) = 2.0 * J(1, 2) * J(2, 2);
+        D2(4, 3) = J(1, 0) * J(2, 1) + J(1, 1) * J(2, 0);
+        D2(4, 4) = J(1, 1) * J(2, 2) + J(1, 2) * J(2, 1);
+        D2(4, 5) = J(1, 0) * J(2, 2) + J(1, 2) * J(2, 0);
+
+        D2(5, 0) = 2.0 * J(0, 0) * J(2, 0);
+        D2(5, 1) = 2.0 * J(0, 1) * J(2, 1);
+        D2(5, 2) = 2.0 * J(0, 2) * J(2, 2);
+        D2(5, 3) = J(0, 0) * J(2, 1) + J(0, 1) * J(2, 1);
+        D2(5, 4) = J(0, 1) * J(2, 2) + J(0, 2) * J(2, 1);
+        D2(5, 5) = J(0, 0) * J(2, 2) + J(0, 2) * J(2, 0);
+    }
+
+    Matrix InvD2(strain_size, strain_size);
+    SD_MathUtils<double>::InvertMatrix(D2, InvD2);
+
+    if(D2N_DX2.size() != number_of_nodes)
+        D2N_DX2.resize(number_of_nodes);
+
+    Vector R2(strain_size);
+    #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+    KRATOS_WATCH(D2)
+    KRATOS_WATCH(InvD2)
+    KRATOS_WATCH(D2X_De2)
+    KRATOS_WATCH(D2Y_De2)
+    KRATOS_WATCH(D2Z_De2)
+    #endif
+    for(unsigned int i = 0; i < number_of_nodes; ++i)
+    {
+        if(D2N_DX2[i].size() != strain_size)
+            D2N_DX2[i].resize(strain_size, false);
+
+        if(dim == 2)
+        {
+            R2(0) = D2N_De2[i](0, 0) - DN_DX(i, 0) * D2X_De2(0, 0) - DN_DX(i, 1) * D2Y_De2(0, 0);
+            R2(1) = D2N_De2[i](1, 1) - DN_DX(i, 0) * D2X_De2(1, 1) - DN_DX(i, 1) * D2Y_De2(1, 1);
+            R2(2) = D2N_De2[i](0, 1) - DN_DX(i, 0) * D2X_De2(0, 1) - DN_DX(i, 1) * D2Y_De2(0, 1);
+        }
+        else if(dim == 3)
+        {
+            R2(0) = D2N_De2[i](0, 0) - DN_DX(i, 0) * D2X_De2(0, 0) - DN_DX(i, 1) * D2Y_De2(0, 0) - DN_DX(i, 2) * D2Z_De2(0, 0);
+            R2(1) = D2N_De2[i](1, 1) - DN_DX(i, 0) * D2X_De2(1, 1) - DN_DX(i, 1) * D2Y_De2(1, 1) - DN_DX(i, 2) * D2Z_De2(1, 1);
+            R2(2) = D2N_De2[i](2, 2) - DN_DX(i, 0) * D2X_De2(2, 2) - DN_DX(i, 1) * D2Y_De2(2, 2) - DN_DX(i, 2) * D2Z_De2(2, 2);
+            R2(3) = D2N_De2[i](0, 1) - DN_DX(i, 0) * D2X_De2(0, 1) - DN_DX(i, 1) * D2Y_De2(0, 1) - DN_DX(i, 2) * D2Z_De2(0, 1);
+            R2(4) = D2N_De2[i](1, 2) - DN_DX(i, 0) * D2X_De2(1, 2) - DN_DX(i, 1) * D2Y_De2(1, 2) - DN_DX(i, 2) * D2Z_De2(1, 2);
+            R2(5) = D2N_De2[i](0, 2) - DN_DX(i, 0) * D2X_De2(0, 2) - DN_DX(i, 1) * D2Y_De2(0, 2) - DN_DX(i, 2) * D2Z_De2(0, 2);
+        }
+
+        noalias(D2N_DX2[i]) = prod(R2, InvD2);
+    }
+
+    return D2N_DX2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -754,9 +1048,23 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnTriSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
+    // TODO
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -787,9 +1095,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnTriSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -815,6 +1136,12 @@ std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadr
 Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeIntegrationPoint(const int& side, const Element::GeometryType::IntegrationPointType& edge_integration_point)
 {
     return GhostPenalty_Helper::ComputeIntegrationPointOnQuadSide(side, edge_integration_point);
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
@@ -883,6 +1210,12 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::Comput
         KRATOS_THROW_ERROR(std::logic_error, "The edge geometry is not found on the element geometry. Check the input", "")
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::msEdges[][3] = { {0, 1, 4}, {1, 2, 5}, {2, 3, 6}, {3, 0, 7} };
@@ -911,9 +1244,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnQuadSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -944,9 +1290,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnQuadSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -977,9 +1336,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnTetSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1019,9 +1391,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnTetSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1055,9 +1440,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnHexSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1103,9 +1501,22 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnHexSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
+        GeometryType& r_face_geometry, const GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not implemented")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1160,9 +1571,166 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Geometry_Helper<Geometr
     return GhostPenalty_Helper::ComputeIntegrationPointOnHexSide(side, edge_integration_point);
 }
 
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunction(Matrix& N, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    std::map<std::size_t, std::size_t> map_edge_node_index_to_element_node_index;
+
+    int side = FindSide_Helper<GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27> >::Execute(r_element_geometry, r_face_geometry);
+    if (side != -1)
+    {
+        GhostPenalty_Helper::BuildMapEdgeNodeIndexToElementNodeIndex(map_edge_node_index_to_element_node_index,
+                    r_face_geometry, r_element_geometry, Faces(side));
+
+        Vector Ne(27);
+
+        if (N.size1() != r_face_geometry.size() || N.size2() != face_integration_points.size())
+            N.resize(r_face_geometry.size(), face_integration_points.size(), false);
+
+        for (std::size_t i = 0; i < face_integration_points.size(); ++i)
+        {
+            IntegrationPointType integration_point = ComputeIntegrationPoint(side, face_integration_points[i]);
+
+            Ne = GhostPenalty_Helper::ComputeShapeFunction(Ne, r_element_geometry, integration_point);
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+            KRATOS_WATCH(Ne)
+            #endif
+            for (std::size_t j = 0; j < r_face_geometry.size(); ++j)
+            {
+                N(j, i) = Ne(map_edge_node_index_to_element_node_index[j]);
+            }
+        }
+    }
+}
+
 void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
+    std::map<std::size_t, std::size_t> map_edge_node_index_to_element_node_index;
+
+    #ifdef ENABLE_DEBUG_GHOST_PENALTY
+    std::cout << "element geometry:";
+    for (std::size_t i = 0; i < r_element_geometry.size(); ++i)
+        std::cout << " " << r_element_geometry[i].Id();
+    std::cout << std::endl;
+
+    std::cout << "face geometry:";
+    for (std::size_t i = 0; i < r_face_geometry.size(); ++i)
+        std::cout << " " << r_face_geometry[i].Id();
+    std::cout << std::endl;
+    #endif
+
+    int side = FindSide_Helper<GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27> >::Execute(r_element_geometry, r_face_geometry);
+    if (side != -1)
+    {
+        GhostPenalty_Helper::BuildMapEdgeNodeIndexToElementNodeIndex(map_edge_node_index_to_element_node_index,
+                    r_face_geometry, r_element_geometry, Faces(side));
+
+        #ifdef ENABLE_DEBUG_GHOST_PENALTY
+        KRATOS_WATCH(side)
+        #endif
+
+        Matrix DN_DX(27, 3);
+
+        if (dNdn.size1() != r_face_geometry.size() || dNdn.size2() != face_integration_points.size())
+            dNdn.resize(r_face_geometry.size(), face_integration_points.size(), false);
+
+        // construct the local coordinates system associated with the face
+        Vector t1(3), t2(3), n(3);
+
+        for (std::size_t i = 0; i < face_integration_points.size(); ++i)
+        {
+            GhostPenalty_Helper::ComputeLocalFrame(t1, t2, n, r_face_geometry, face_integration_points[i]);
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+            KRATOS_WATCH(t1)
+            KRATOS_WATCH(t2)
+            KRATOS_WATCH(n)
+            #endif
+
+            IntegrationPointType integration_point = ComputeIntegrationPoint(side, face_integration_points[i]);
+
+            DN_DX = GhostPenalty_Helper::ComputeShapeFunctionGradient(DN_DX, r_element_geometry, integration_point);
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+            KRATOS_WATCH(DN_DX)
+            #endif
+            for (std::size_t j = 0; j < r_face_geometry.size(); ++j)
+            {
+                dNdn(j, i) = 0.0;
+                for (std::size_t k = 0; k < 3; ++k)
+                {
+                    dNdn(j, i) += DN_DX(map_edge_node_index_to_element_node_index[j], k) * n(k);
+                }
+            }
+        }
+    }
+
+    if (side == -1)
+        KRATOS_THROW_ERROR(std::logic_error, "The face geometry is not found on the element geometry. Check the input", "")
+}
+
+void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
+        Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
+{
+    std::map<std::size_t, std::size_t> map_edge_node_index_to_element_node_index;
+
+    #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+    std::cout << "element geometry:";
+    for (std::size_t i = 0; i < r_element_geometry.size(); ++i)
+        std::cout << " " << r_element_geometry[i].Id();
+    std::cout << std::endl;
+
+    std::cout << "face geometry:";
+    for (std::size_t i = 0; i < r_face_geometry.size(); ++i)
+        std::cout << " " << r_face_geometry[i].Id();
+    std::cout << std::endl;
+    #endif
+
+    int side = FindSide_Helper<GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27> >::Execute(r_element_geometry, r_face_geometry);
+    if (side != -1)
+    {
+        GhostPenalty_Helper::BuildMapEdgeNodeIndexToElementNodeIndex(map_edge_node_index_to_element_node_index,
+                    r_face_geometry, r_element_geometry, Faces(side));
+
+        #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+        KRATOS_WATCH(side)
+        #endif
+
+        std::vector<Vector> D2N_DX2;
+
+        if (d2Ndn2.size1() != r_face_geometry.size() || d2Ndn2.size2() != face_integration_points.size())
+            d2Ndn2.resize(r_face_geometry.size(), face_integration_points.size(), false);
+
+        // construct the local coordinates system associated with the face
+        Vector t1(3), t2(3), n(3);
+
+        for (std::size_t i = 0; i < face_integration_points.size(); ++i)
+        {
+            GhostPenalty_Helper::ComputeLocalFrame(t1, t2, n, r_face_geometry, face_integration_points[i]);
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+            KRATOS_WATCH(t1)
+            KRATOS_WATCH(t2)
+            KRATOS_WATCH(n)
+            #endif
+
+            IntegrationPointType integration_point = ComputeIntegrationPoint(side, face_integration_points[i]);
+
+            D2N_DX2 = GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(D2N_DX2, r_element_geometry, integration_point);
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
+            std::cout << "D2N_DX2:" << std::endl;
+            for (std::size_t i = 0; i < D2N_DX2.size(); ++i)
+                std::cout << " " << D2N_DX2[i] << std::endl;
+            std::cout << std::endl;
+            #endif
+            for (std::size_t j = 0; j < r_face_geometry.size(); ++j)
+            {
+                d2Ndn2(j, i) = pow(n(0), 2)*D2N_DX2[j](0) + pow(n(1), 2)*D2N_DX2[j](1) + pow(n(2), 2)*D2N_DX2[j](2)
+                        + 2.0*n(0)*n(1)*D2N_DX2[j](3) + 2.0*n(1)*n(2)*D2N_DX2[j](4) + 2.0*n(0)*n(2)*D2N_DX2[j](5);
+            }
+        }
+    }
+
+    if (side == -1)
+        KRATOS_THROW_ERROR(std::logic_error, "The face geometry is not found on the element geometry. Check the input", "")
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1170,4 +1738,5 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::ComputeSh
 }  // namespace Kratos.
 
 #undef ENABLE_DEBUG_GHOST_PENALTY
+#undef ENABLE_DEBUG_GHOST_PENALTY_2
 
