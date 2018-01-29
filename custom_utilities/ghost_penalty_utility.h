@@ -132,6 +132,7 @@ struct GhostPenalty_Geometry_Helper
 {
     typedef Element::GeometryType GeometryType;
     typedef GeometryType::IntegrationPointType IntegrationPointType;
+    typedef GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     /// Get the number of sides associated with a geometry
     static int NumberOfSides()
@@ -202,6 +203,8 @@ public:
     typedef GeometryType::PointType NodeType;
 
     typedef GeometryType::IntegrationPointType IntegrationPointType;
+
+    typedef GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     typedef NodeType::PointType PointType;
 
@@ -281,6 +284,8 @@ public:
     /// Probe the neighbour elements of an element
     static void ProbeNeighbourElements(Element::Pointer p_element);
 
+    /// Compute and print out the second derivatives of the geometry, in order for debugging
+    static void ProbeShapeFunctionSecondDerivatives(GeometryType& r_geom);
 
     ///@}
     ///@name Access

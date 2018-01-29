@@ -590,6 +590,20 @@ void GhostPenaltyUtility::ProbeNeighbourElements(Element::Pointer p_element)
     std::cout << std::endl;
 }
 
+void GhostPenaltyUtility::ProbeShapeFunctionSecondDerivatives(GeometryType& r_element_geometry)
+{
+
+    const IntegrationPointsArrayType& integration_points = r_element_geometry.IntegrationPoints(r_element_geometry.GetDefaultIntegrationMethod());
+
+    for (std::size_t PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
+    {
+        std::cout << "At point " << integration_points[PointNumber] << std::endl;
+        std::vector<Vector> D2N_DX2;
+        D2N_DX2 = GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(D2N_DX2, r_element_geometry, integration_points[PointNumber]);
+        for (std::size_t i = 0; i < D2N_DX2.size(); ++i)
+            std::cout << " shape function " << i << " 2nd-der: " << D2N_DX2[i] << std::endl;
+    }
+}
 
 std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > GhostPenaltyUtility::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
@@ -892,6 +906,7 @@ std::vector<Vector>& GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(
     D2N_De2 = r_element_geometry.ShapeFunctionsSecondDerivatives(D2N_De2, integration_point);
     #ifdef ENABLE_DEBUG_GHOST_PENALTY_2
     KRATOS_WATCH(D2N_De2)
+    KRATOS_WATCH(J)
     #endif
 
     Matrix D2X_De2(dim, dim);
@@ -935,6 +950,7 @@ std::vector<Vector>& GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(
     }
     else if(dim == 3)
     {
+        //TODO there are still some bugs in computing D2, must be checked again
         D2(0, 0) = pow(J(0, 0), 2);
         D2(0, 1) = pow(J(0, 1), 2);
         D2(0, 2) = pow(J(0, 2), 2);
@@ -973,7 +989,7 @@ std::vector<Vector>& GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(
         D2(5, 0) = 2.0 * J(0, 0) * J(2, 0);
         D2(5, 1) = 2.0 * J(0, 1) * J(2, 1);
         D2(5, 2) = 2.0 * J(0, 2) * J(2, 2);
-        D2(5, 3) = J(0, 0) * J(2, 1) + J(0, 1) * J(2, 1);
+        D2(5, 3) = J(0, 0) * J(2, 1) + J(0, 1) * J(2, 0);
         D2(5, 4) = J(0, 1) * J(2, 2) + J(0, 2) * J(2, 1);
         D2(5, 5) = J(0, 0) * J(2, 2) + J(0, 2) * J(2, 0);
     }
