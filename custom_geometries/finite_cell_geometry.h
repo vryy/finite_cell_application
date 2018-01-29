@@ -175,7 +175,7 @@ public:
     /** Type of the normal vector used for normal to edges in geomety.
      */
     typedef typename BaseType::NormalType NormalType;
-    
+
     typedef typename BaseType::NormalType ValuesContainerType;
 
     /**
@@ -189,17 +189,17 @@ public:
     typedef typename BaseType::ptr_const_iterator           ptr_const_iterator;
     typedef typename BaseType::ptr_reverse_iterator         ptr_reverse_iterator;
     typedef typename BaseType::ptr_const_reverse_iterator   ptr_const_reverse_iterator;
-    
+
     /**
      * Type of Matrix
      */
     typedef Matrix MatrixType;
-    
+
     /**
      * Type of Vector
      */
     typedef Vector VectorType;
-    
+
     ///@}
     ///@name Life Cycle
     ///@{
@@ -224,7 +224,7 @@ public:
     TODO
     */
     FiniteCellGeometry( const PointsArrayType& ThisPoints )
-        : BaseType( ThisPoints )
+    : BaseType( ThisPoints )
     {
 //        std::cout << "constructor FiniteCellGeometry is called" << std::endl;
 //        KRATOS_WATCH(typeid(*this).name())
@@ -239,7 +239,21 @@ public:
     source geometry's points too.
     */
     FiniteCellGeometry( const FiniteCellGeometry& rOther )
-        : BaseType( rOther )
+    : BaseType( rOther )
+    {
+//        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
+    }
+
+    /** Copy constructor.
+    Construct this geometry as a copy of given geometry.
+
+    @note This copy constructor don't copy the points and new
+    geometry shares points with given source geometry. It's
+    obvious that any change to this new geometry's point affect
+    source geometry's points too.
+    */
+    FiniteCellGeometry( const Geometry<PointType>& rOther )
+    : BaseType( rOther )
     {
 //        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
     }
@@ -469,7 +483,7 @@ protected:
     ///@}
     ///@name Protected static Member Variables
     ///@{
-    
+
 
     ///@}
     ///@name Protected member Variables
@@ -605,6 +619,6 @@ inline std::ostream& operator << ( std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_FINITE_CELL_GEOMETRY_H_INCLUDED  defined 
+#endif // KRATOS_FINITE_CELL_GEOMETRY_H_INCLUDED  defined
 
 
