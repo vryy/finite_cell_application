@@ -171,7 +171,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+        this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
@@ -205,7 +205,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+        this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
@@ -268,7 +268,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+        this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
@@ -310,7 +310,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+        this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, *pParentGeometry, integration_points);
