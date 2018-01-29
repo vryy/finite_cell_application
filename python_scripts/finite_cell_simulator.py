@@ -605,13 +605,56 @@ class FiniteCellSimulator:
                 quad_filename = self.params["quad_filename"]
                 quad_filetype = self.params["quad_filetype"]
                 accuracy = self.params["quad_accuracy"]
+                self.params["material_properties_utility"] = ""
                 quad_util.SaveQuadrature(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
                 fid = open(quad_filename, "a")
                 fid.write("\ndef GetParameter():\n")
                 fid.write("    params = " + str(self.params) + "\n")
                 fid.write("    return params\n")
                 fid.close()
-
+            # end if self.quadrature_method == "quadtree":
+        elif self.quadrature_method == "quadtree preload":
+            cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
+            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+            quadrature_data = self.params["quadrature_data"]
+            cut_elems = quadrature_data.GetCutElements()
+            exclude_elems = quadrature_data.GetExcludeElements()
+            cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
+            ###########################################
+            ##QUADTREE PRELOAD FROM FILE
+            ###########################################
+            total_add_quadrature_pnts = 0
+            self.proper_cut_elems = ElementsArray()
+            for elem_id in cut_elems:
+                elem = model.model_part.Elements[elem_id]
+                quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem_id])
+                total_add_quadrature_pnts = total_add_quadrature_pnts + len(cut_cell_quadrature[elem_id])
+                elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                elem.Initialize()
+                aux_util.AddElement(self.proper_cut_elems, elem)
+            for elem_id in exclude_elems:
+                elem = model.model_part.Elements[elem_id]
+                elem.SetValue(ACTIVATION_LEVEL, -1)
+                elem.SetValue(IS_INACTIVE, True)
+                elem.Set(ACTIVE, False)
+            print("obtain quadtree quadrature successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
+            for elem_id in cut_elems:
+                elem = model.model_part.Elements[elem_id]
+                self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
+                physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
+                for i in range(0, len(physical_constitutive_laws)):
+                    physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
+                    physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
+            print("reading " + self.mat_type + " material completed")
+            if self.params["export_physical_integration_point"]:
+                cog_points = []
+                for elem in self.proper_cut_elems:
+                    points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                    for point in points:
+                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                print("len(cog_points):", len(cog_points))
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+            #end elif self.quadrature_method == "quadtree":
         elif self.quadrature_method == "moment-fit quadtree":
             cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
             quadrature_data = self.params["quadrature_data"]
@@ -649,7 +692,7 @@ class FiniteCellSimulator:
                         cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 print("len(cog_points):", len(cog_points))
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
-
+            # end elif self.quadrature_method == "moment-fit quadtree":
         elif self.quadrature_method == "moment-fit subcell":
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
             cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
@@ -751,6 +794,7 @@ class FiniteCellSimulator:
             print("obtain moment-fit subcell quadrature successfully")
             if self.params["export_physical_integration_point"]:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+            # end elif self.quadrature_method == "moment-fit subcell":
         else:
             print("Unknown quadrature_method", self.quadrature_method)
             sys.exit(0)
