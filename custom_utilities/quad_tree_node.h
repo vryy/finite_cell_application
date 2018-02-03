@@ -948,7 +948,7 @@ public:
 #endif
 
 
-/// Haxehedral quad-tree node in reference coordinates
+/// Hexahedral quad-tree node in reference coordinates
 class QuadTreeNodeH8 : public QuadTreeNode
 {
 public:
@@ -1558,10 +1558,41 @@ public:
         return C;
     }
 
+    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    {
+        // REF: https://stackoverflow.com/ques
+        // tions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+        double Area = 0.5*(-mY1*mX2 + mY0*(-mX1 + mX2) + mX0*(mY1 - mY2) + mX1*mY2);
+        double s = 1/(2*Area)*(mY0*mX2 - mX0*mY2 + (mY2 - mY0)*rLocalPoint[0] + (mX0 - mX2)*rLocalPoint[1]);
+        double t = 1/(2*Area)*(mX0*mY1 - mY0*mX1 + (mY0 - mY1)*rLocalPoint[0] + (mX1 - mX0)*rLocalPoint[1]);
+        return (s > 0.0) && (s < 1.0) && (t > 0.0) && (t < 1.0) && (s + t < 1.0);
+    }
+
     virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
             GeometryType& r_geom, const std::size_t& nsampling) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+        SamplingPoints.reserve((nsampling+1)*(nsampling+2) / 2);
+        CoordinatesArrayType X;
+        PointType P;
+
+        X[2] = 0.0;
+        for (std::size_t row = 0; row < nsampling+1; ++row)
+        {
+            std::size_t n = row + 1;
+
+            double xstart = mX0 + (mX1 - mX0)*row / nsampling;
+            double ystart = mY0 + (mY1 - mY0)*row / nsampling;
+            double xend = mX0 + (mX2 - mX0)*row / nsampling;
+            double yend = mY0 + (mY2 - mY0)*row / nsampling;
+
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                X[0] = xstart + i*xend/n;
+                X[1] = ystart + i*yend/n;
+                r_geom.GlobalCoordinates(P, X);
+                SamplingPoints.push_back(P);
+            }
+        }
     }
 
     /// Turn back information as a string.
@@ -1623,14 +1654,20 @@ public:
             double X8 = 0.5*(mX1 + mX3), Y8 = 0.5*(mY1 + mY3), Z8 = 0.5*(mZ1 + mZ3);
             double X9 = 0.5*(mX2 + mX3), Y9 = 0.5*(mY2 + mY3), Z9 = 0.5*(mZ2 + mZ3);
 
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(mX0, mY0, mZ0, X4, Y4, Z4, X6, Y6, Z6, X7, Y7, Z7)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(mX1, mY1, mZ1, X5, Y5, Z5, X4, Y4, Z4, X8, Y8, Z8)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(mX2, mY2, mZ2, X6, Y6, Z6, X5, Y5, Z5, X9, Y9, Z9)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X7, Y7, Z7, X8, Y8, Z8, X9, Y9, Z9, mX3, mY3, mZ3)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X6, Y6, Z6, X9, Y9, Z9, X7, Y7, Z7)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X5, Y5, Z5, X9, Y9, Z9, X8, Y8, Z8)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X5, Y5, Z5, X6, Y6, Z6, X9, Y9, Z9)));
-            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X9, Y9, Z9, X7, Y7, Z7, X8, Y8, Z8)));
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(mX0, mY0, mZ0, X4, Y4, Z4, X6, Y6, Z6, X7, Y7, Z7))); // 1
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, mX1, mY1, mZ1, X5, Y5, Z5, X8, Y8, Z8))); // 2
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X6, Y6, Z6, X5, Y5, Z5, mX2, mY2, mZ2, X9, Y9, Z9))); // 3
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X7, Y7, Z7, X8, Y8, Z8, X9, Y9, Z9, mX3, mY3, mZ3))); // 4
+            // // figure 3
+            // mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X7, Y7, Z7, X8, Y8, Z8, X6, Y6, Z6))); // 5
+            // mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X4, Y4, Z4, X5, Y5, Z5, X6, Y6, Z6, X8, Y8, Z8))); // 6
+            // mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X9, Y9, Z9, X6, Y6, Z6, X5, Y5, Z5, X8, Y8, Z8))); // 7
+            // mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X9, Y9, Z9, X8, Y8, Z8, X7, Y7, Z7, X6, Y6, Z6))); // 8
+            // figure 4
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X8, Y8, Z8, X7, Y7, Z7, X9, Y9, Z9, X4, Y4, Z4))); // 5
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X8, Y8, Z8, X5, Y5, Z5, X4, Y4, Z4, X9, Y9, Z9))); // 6
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X6, Y6, Z6, X4, Y4, Z4, X5, Y5, Z5, X9, Y9, Z9))); // 7
+            mpChildren.push_back(BaseType::Pointer(new QuadTreeNodeT4(X9, Y9, Z9, X6, Y6, Z6, X4, Y4, Z4, X7, Y7, Z7))); // 8
         }
         else
         {
@@ -1725,10 +1762,53 @@ public:
         return C;
     }
 
+    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "Not implemented")
+    }
+
     virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
             GeometryType& r_geom, const std::size_t& nsampling) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+        SamplingPoints.reserve((nsampling+1)*(nsampling+2)*(nsampling+3) / 6);
+        CoordinatesArrayType X;
+        PointType P;
+
+        for (std::size_t row = 0; row < nsampling+1; ++row)
+        {
+            double x0 = mX0 + (mX1 - mX0)*row / nsampling;
+            double y0 = mY0 + (mY1 - mY0)*row / nsampling;
+            double z0 = mZ0 + (mZ1 - mZ0)*row / nsampling;
+
+            double x1 = mX0 + (mX2 - mX0)*row / nsampling;
+            double y1 = mY0 + (mY2 - mY0)*row / nsampling;
+            double z1 = mZ0 + (mZ2 - mZ0)*row / nsampling;
+
+            double x2 = mX0 + (mX3 - mX0)*row / nsampling;
+            double y2 = mY0 + (mY3 - mY0)*row / nsampling;
+            double z2 = mZ0 + (mZ3 - mZ0)*row / nsampling;
+
+            for (std::size_t col = 0; col < row+1; ++col)
+            {
+                std::size_t n = col + 1;
+
+                double xstart = x0 + (x1 - x0)*col / nsampling;
+                double ystart = y0 + (y1 - y0)*col / nsampling;
+                double zstart = z0 + (z1 - z0)*col / nsampling;
+                double xend = x0 + (x2 - x0)*col / nsampling;
+                double yend = y0 + (y2 - y0)*col / nsampling;
+                double zend = z0 + (z2 - z0)*col / nsampling;
+
+                for (std::size_t i = 0; i < n; ++i)
+                {
+                    X[0] = xstart + i*xend/n;
+                    X[1] = ystart + i*yend/n;
+                    X[2] = zstart + i*zend/n;
+                    r_geom.GlobalCoordinates(P, X);
+                    SamplingPoints.push_back(P);
+                }
+            }
+        }
     }
 
     /// Turn back information as a string.
