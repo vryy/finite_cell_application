@@ -28,6 +28,7 @@
 #include "custom_algebra/level_set/union_level_set.h"
 #include "custom_algebra/level_set/intersection_level_set.h"
 #include "custom_algebra/level_set/difference_level_set.h"
+#include "custom_algebra/level_set/distance_to_curve_level_set.h"
 #include "custom_algebra/curve/parametric_curve.h"
 #include "custom_algebra/surface/parametric_surface.h"
 #include "custom_algebra/volume/parametric_volume.h"
@@ -44,6 +45,33 @@ namespace Python
 {
 
 using namespace boost::python;
+
+LevelSet::Pointer InverseLevelSet_GetLevelSet(InverseLevelSet& rDummy)
+{
+    return rDummy.pLeveSet();
+}
+
+void InverseLevelSet_SetLevelSet(InverseLevelSet& rDummy, LevelSet::Pointer p_level_set)
+{
+    rDummy.pSetLevelSet(p_level_set);
+}
+
+template<class TLevelSel>
+boost::python::list LevelSet_CreateQ4ElementsClosedLoop(
+    TLevelSel& rDummy,
+    ModelPart& r_model_part,
+    const std::string& sample_element_name,
+    Properties::Pointer pProperties,
+    const std::size_t& nsampling_axial,
+    const std::size_t& nsampling_radial)
+{
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> Results
+        = rDummy.CreateQ4ElementsClosedLoop(r_model_part, sample_element_name, pProperties, nsampling_axial, nsampling_radial);
+    boost::python::list Output;
+    Output.append(Results.first);
+    Output.append(Results.second);
+    return Output;
+}
 
 void FiniteCellApplication_AddBRepAndLevelSetToPython()
 {
@@ -71,6 +99,7 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<ParametricCurve, ParametricCurve::Pointer, boost::noncopyable, bases<FunctionR1R3> >
     ("ParametricCurve", init<const FunctionR1R1::Pointer, const FunctionR1R1::Pointer, const FunctionR1R1::Pointer>())
+    .def("Export", &ParametricCurve::Export)
     ;
 
     class_<ParametricSurface, ParametricSurface::Pointer, boost::noncopyable, bases<FunctionR2R3> >
@@ -110,6 +139,7 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<CylinderLevelSet, CylinderLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "CylinderLevelSet", init<const double&, const double&, const double&, const double&, const double&, const double&, const double&>() )
+    .def("CreateQ4ElementsClosedLoop", &LevelSet_CreateQ4ElementsClosedLoop<CylinderLevelSet>)
     .def(self_ns::str(self))
     ;
 
@@ -130,6 +160,7 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<InverseLevelSet, InverseLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "InverseLevelSet", init<const LevelSet::Pointer>() )
+    .add_property("LevelSet", &InverseLevelSet_GetLevelSet, &InverseLevelSet_SetLevelSet)
     .def(self_ns::str(self))
     ;
 
@@ -145,6 +176,12 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<DifferenceLevelSet, DifferenceLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "DifferenceLevelSet", init<const LevelSet::Pointer, const LevelSet::Pointer>() )
+    .def(self_ns::str(self))
+    ;
+
+    class_<DistanceToCurveLevelSet, DistanceToCurveLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
+    ( "DistanceToCurveLevelSet", init<const FunctionR1R3::Pointer, const double&>() )
+    .def("CreateQ4ElementsClosedLoop", &LevelSet_CreateQ4ElementsClosedLoop<DistanceToCurveLevelSet>)
     .def(self_ns::str(self))
     ;
 

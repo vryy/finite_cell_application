@@ -25,6 +25,7 @@
 #include "custom_algebra/function/pow_function.h"
 #include "custom_algebra/function/negate_function.h"
 #include "custom_algebra/function/inverse_function.h"
+#include "custom_algebra/function/cubic_spline_function.h"
 #ifdef FINITE_CELL_APPLICATION_USE_MASHPRESSO
 #include "custom_algebra/function/mathpresso_function.h"
 #endif
@@ -39,23 +40,61 @@ namespace Python
 
 using namespace boost::python;
 
-double Helper_FunctionR3R1_GetValue_1(FunctionR3R1::Pointer rDummy,
+double Helper_FunctionR3R1_GetValue_1(FunctionR3R1& rDummy,
         const double& x, const double& y)
 {
     FunctionR3R1::InputType P;
     P[0] = x;
     P[1] = y;
-    return rDummy->GetValue(P);
+    return rDummy.GetValue(P);
 }
 
-double Helper_FunctionR3R1_GetValue_2(FunctionR3R1::Pointer rDummy,
+double Helper_FunctionR3R1_GetValue_2(FunctionR3R1& rDummy,
         const double& x, const double& y, const double& z)
 {
     FunctionR3R1::InputType P;
     P[0] = x;
     P[1] = y;
     P[2] = z;
-    return rDummy->GetValue(P);
+    return rDummy.GetValue(P);
+}
+
+double Helper_FunctionR1R1_GetDerivative(FunctionR1R1& rDummy,
+        const double& t)
+{
+    return rDummy.GetDerivative(0, t);
+}
+
+double Helper_FunctionR1R1_GetSecondDerivative(FunctionR1R1& rDummy,
+        const double& t)
+{
+    return rDummy.GetSecondDerivative(0, 0, t);
+}
+
+template<int TDerivDegree>
+void CubicSplineFunction_SetPoints(CubicSplineFunction<TDerivDegree>& rDummy, boost::python::list list_t,
+    boost::python::list list_x)
+{
+    std::vector<double> t;
+    std::vector<double> x;
+
+    typedef boost::python::stl_input_iterator<double> iterator_tree_type;
+
+    BOOST_FOREACH(const typename iterator_tree_type::value_type& v,
+                  std::make_pair(iterator_tree_type(list_t), // begin
+                  iterator_tree_type() ) ) // end
+    {
+        t.push_back(v);
+    }
+
+    BOOST_FOREACH(const typename iterator_tree_type::value_type& v,
+                  std::make_pair(iterator_tree_type(list_x), // begin
+                  iterator_tree_type() ) ) // end
+    {
+        x.push_back(v);
+    }
+
+    rDummy.SetPoints(t, x);
 }
 
 void FiniteCellApplication_AddFunctionsToPython()
@@ -73,6 +112,8 @@ void FiniteCellApplication_AddFunctionsToPython()
     .def("Integrate", FunctionR1R1_pointer_to_Integrate)
     .def("Integrate", FunctionR1R1_pointer_to_Integrate2)
     .def("GetValue", FunctionR1R1_pointer_to_GetValue)
+    .def("GetDerivative", Helper_FunctionR1R1_GetDerivative)
+    .def("GetSecondDerivative", Helper_FunctionR1R1_GetSecondDerivative)
     .def("GetFormula", &FunctionR1R1::GetFormula)
     .def("GetDiffFunction", &FunctionR1R1::GetDiffFunction)
     ;
@@ -151,6 +192,18 @@ void FiniteCellApplication_AddFunctionsToPython()
 
     class_<MonomialFunctionR1R1<5>, MonomialFunctionR1R1<5>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
     ("MonomialFunctionR1R1X5", init<>())
+    ;
+
+    class_<CubicSplineFunction<0>, CubicSplineFunction<0>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("CubicSplineFunctionR1R1", init<>())
+    .def("SetPoints", &CubicSplineFunction_SetPoints<0>)
+    .def("SetLeftBoundary", &CubicSplineFunction<0>::SetLeftBoundary)
+    .def("SetRightBoundary", &CubicSplineFunction<0>::SetRightBoundary)
+    ;
+
+    class_<CubicSplineFunction<1>, CubicSplineFunction<1>::Pointer, boost::noncopyable, bases<FunctionR1R1> >
+    ("DerivativeCubicSplineFunctionR1R1", init<>())
+    .def("SetPoints", &CubicSplineFunction_SetPoints<1>)
     ;
 
     /**************************************************************/
