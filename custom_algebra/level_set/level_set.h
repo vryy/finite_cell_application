@@ -180,7 +180,11 @@ public:
     /// Check if a geometry is cut by the level set
     virtual int CutStatus(GeometryType& r_geom) const
     {
-        return CutStatusOfPoints<GeometryType>(r_geom);
+        // return CutStatusOfPoints<GeometryType>(r_geom); // this is dangerous because it used the current position of node, e.g. in dynamics
+        std::vector<PointType> points(r_geom.size());
+        for (std::size_t i = 0; i < r_geom.size(); ++i)
+            noalias(points[i]) = r_geom[i].GetInitialPosition();
+        return CutStatusOfPoints(points);
     }
 
 
@@ -353,6 +357,12 @@ private:
         int stat;
         if(in_list.size() == 0 && out_list.size() == 0)
         {
+            for(std::size_t v = 0; v < r_points.size(); ++v)
+                KRATOS_WATCH(r_points[v])
+            KRATOS_WATCH(in_list.size())
+            KRATOS_WATCH(out_list.size())
+            KRATOS_WATCH(on_list.size())
+            KRATOS_WATCH(this->GetTolerance())
             KRATOS_THROW_ERROR(std::logic_error, "!!!FATAL ERROR!!!The geometry is degenerated. We won't handle it.", "")
         }
         else
