@@ -28,7 +28,9 @@
 // Project includes
 #include "includes/define.h"
 #include "custom_algebra/level_set/level_set.h"
+#include "custom_utilities/finite_cell_mesh_utility.h"
 
+#define PI 3.1415926535897932384626433832795028841971693
 
 namespace Kratos
 {
@@ -76,14 +78,14 @@ public:
     CylinderLevelSet(const double& cX, const double& cY, const double& cZ, const double& dX, const double& dY, const double& dZ, const double& R)
     : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
     {
-        double norm_d = sqrt(pow(dX, 2) + pow(dY, 2) + pow(dZ, 2));
+        mLength = sqrt(pow(dX, 2) + pow(dY, 2) + pow(dZ, 2));
 
-        if(norm_d == 0.0)
+        if(mLength == 0.0)
             KRATOS_THROW_ERROR(std::logic_error, "The director vector can't be null", "")
 
-        mdX = dX / norm_d;
-        mdY = dY / norm_d;
-        mdZ = dZ / norm_d;
+        mdX = dX / mLength;
+        mdY = dY / mLength;
+        mdZ = dZ / mLength;
     }
 
     /// Destructor.
@@ -138,6 +140,66 @@ public:
         grad(1) = 2.0 * (P(1) - pY) * (1.0 - mdY*mdY);
         grad(2) = 2.0 * (P(2) - pZ) * (1.0 - mdZ*mdZ);
         return grad;
+    }
+
+
+    /// Generate the sampling points on the level set surface
+    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial) const
+    {
+        const double tmin = 0.0;
+        const double tmax = 1.0;
+        const double tol = 1.0e-10;
+        // KRATOS_WATCH(nsampling_axial)
+        // KRATOS_WATCH(nsampling_radial)
+
+        std::vector<std::vector<PointType> > results;
+
+        double t, d;
+        PointType P, T, B, V, Up;
+        Up[0] = 0.0; Up[1] = 0.0; Up[2] = 1.0;
+        for (std::size_t i = 0; i < nsampling_axial; ++i)
+        {
+            t = tmin + i*(tmax-tmin)/(nsampling_axial-1);
+
+            P[0] = mcX + t*mdX*mLength;
+            P[1] = mcY + t*mdY*mLength;
+            P[2] = mcZ + t*mdZ*mLength;
+            // KRATOS_WATCH(P)
+
+            T[0] = mdX;
+            T[1] = mdY;
+            T[2] = mdZ;
+            // KRATOS_WATCH(T)
+
+            noalias(B) = MathUtils<double>::CrossProduct(Up, T);
+            // KRATOS_WATCH(B)
+
+            std::vector<PointType> radial_points(nsampling_radial);
+            for (std::size_t j = 0; j < nsampling_radial; ++j)
+            {
+                d = j*2.0*PI/nsampling_radial;
+                noalias(V) = std::cos(d)*Up + std::sin(d)*B;
+
+                noalias(radial_points[j]) = P + mR*V;
+            }
+
+            results.push_back(radial_points);
+        }
+
+        return results;
+    }
+
+
+    /// Create the elements based on sampling points on the surface
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQ4ElementsClosedLoop(ModelPart& r_model_part,
+        const std::string& sample_element_name,
+        Properties::Pointer pProperties,
+        const std::size_t& nsampling_axial,
+        const std::size_t& nsampling_radial) const
+    {
+        // firstly create the sampling points on surface
+        std::vector<std::vector<PointType> > sampling_points = this->GeneratePoints(nsampling_axial, nsampling_radial);
+        return FiniteCellMeshUtility::CreateQ4ElementsClosedLoop(r_model_part, sampling_points, sample_element_name, pProperties);
     }
 
 
@@ -229,6 +291,7 @@ private:
 
     double mcX, mcY, mcZ; // point on center line
     double mdX, mdY, mdZ; // director vector
+    double mLength;
     double mR;
 
 
@@ -298,5 +361,7 @@ inline std::ostream& operator << (std::ostream& rOStream,
 ///@} addtogroup block
 
 }  // namespace Kratos.
+
+#undef PI
 
 #endif // KRATOS_CYLINDER_LEVEL_SET_H_INCLUDED  defined
