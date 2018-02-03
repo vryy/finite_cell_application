@@ -18,7 +18,10 @@ endif()
 
 FIND_PACKAGE(MathPresso REQUIRED)
 IF(${MATHPRESSO_FOUND} MATCHES TRUE)
+    MESSAGE("mathpresso is found at " ${MATHPRESSO_DIR})
     ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_MASHPRESSO)
+ELSE()
+    MESSAGE("mathpresso is not found")
 ENDIF()
 
 ######### add compilation units here
