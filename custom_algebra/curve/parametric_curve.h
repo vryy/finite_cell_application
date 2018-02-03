@@ -20,6 +20,7 @@
 // System includes
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 
 // External includes
@@ -113,6 +114,32 @@ public:
 
 
     /// inherit from Function
+    virtual OutputType GetDerivative(const int& component, const InputType& t) const
+    {
+        OutputType P;
+
+        P[0] = mp_func_x->GetDerivative(component, t);
+        P[1] = mp_func_y->GetDerivative(component, t);
+        P[2] = mp_func_z->GetDerivative(component, t);
+
+        return P;
+    }
+
+
+    /// inherit from Function
+    virtual OutputType GetSecondDerivative(const int& component_1, const int& component_2, const InputType& t) const
+    {
+        OutputType P;
+
+        P[0] = mp_func_x->GetSecondDerivative(component_1, component_2, t);
+        P[1] = mp_func_y->GetSecondDerivative(component_1, component_2, t);
+        P[2] = mp_func_z->GetSecondDerivative(component_1, component_2, t);
+
+        return P;
+    }
+
+
+    /// inherit from Function
     virtual BaseType::Pointer GetDiffFunction(const int& component) const
     {
         return BaseType::Pointer(
@@ -122,6 +149,43 @@ public:
                         mp_func_z->GetDiffFunction(component)
                     )
                 );
+    }
+
+
+    void Export(const std::string& filename, const double& tmin, const double& tmax, const std::size_t& nsampling, const int& deriv) const
+    {
+        std::ofstream fid(filename.c_str());
+        fid << std::setprecision(6) << std::scientific;
+
+        OutputType P, DP, D2P;
+
+        fid << "t\t\t\t\tx\t\t\t\ty\t\t\t\tz";
+        if (deriv > 0) fid << "\t\t\t\tdx\t\t\t\tdy\t\t\t\tdz";
+        if (deriv > 1) fid << "\t\t\t\td2x\t\t\t\td2y\t\t\t\td2z";
+        fid << "\n";
+
+        for (std::size_t i = 0; i < nsampling; ++i)
+        {
+            double t = tmin + i*(tmax-tmin)/(nsampling-1);
+            P = this->GetValue(t);
+            fid << t << "\t" << P[0] << "\t" << P[1] << "\t" << P[2];
+
+            if (deriv > 0)
+            {
+                DP = this->GetDerivative(0, t);
+                fid << "\t" << DP[0] << "\t" << DP[1] << "\t" << DP[2];
+            }
+
+            if (deriv > 1)
+            {
+                D2P = this->GetSecondDerivative(0, 0, t);
+                fid << "\t" << D2P[0] << "\t" << D2P[1] << "\t" << D2P[2];
+            }
+
+            fid << std::endl;
+        }
+
+        fid.close();
     }
 
 

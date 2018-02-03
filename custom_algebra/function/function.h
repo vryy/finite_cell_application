@@ -127,6 +127,13 @@ public:
     }
 
 
+    virtual TOutputType GetSecondDerivative(const int& component_1, const int& component_2, const TInputType& P) const
+    {
+        Function::Pointer pSecondDerivative = this->GetDiffFunction(component_1)->GetDiffFunction(component_2);
+        return pSecondDerivative->GetValue(P);
+    }
+
+
     virtual boost::numeric::ublas::vector<TOutputType> GetGradient(const TInputType& P) const
     {
         boost::numeric::ublas::vector<TOutputType> Result(this->InputSize());
