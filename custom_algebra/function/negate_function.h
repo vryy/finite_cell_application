@@ -104,6 +104,18 @@ public:
     }
 
 
+    virtual double GetDerivative(const int& component, const InputType& P) const
+    {
+        return -mp_func->GetDerivative(component, P);
+    }
+
+
+    virtual double GetSecondDerivative(const int& component_1, const int& component_2, const InputType& P) const
+    {
+        return -mp_func->GetSecondDerivative(component_1, component_2, P);
+    }
+
+
     virtual std::string GetFormula(const std::string& Format) const
     {
         std::stringstream ss;
