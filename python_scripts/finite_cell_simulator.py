@@ -578,11 +578,12 @@ class FiniteCellSimulator:
                     elem.Initialize()
                     aux_util.AddElement(self.proper_cut_elems, elem)
                     cut_elems.append(elem)
-                elif stat == 1:
+                elif stat == self.brep._OUT:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
                     elem.Set(ACTIVE, False)
                     exclude_elems.append(elem)
+                    print("element " + str(elem.Id) + " is outside the physical domain. It will be deactivated.")
             print("construct quadrature using quad-tree successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             for elem in bulk_elements:
                 self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
