@@ -73,6 +73,12 @@ void FiniteCellAuxilliaryUtility_AddElement(FiniteCellAuxilliaryUtility& rDummy,
     rDummy.AddElement(rpElements, pElement);
 }
 
+void FiniteCellAuxilliaryUtility_RemoveElement(FiniteCellAuxilliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
+        Element::Pointer pElement)
+{
+    rDummy.RemoveElement(rpElements, pElement);
+}
+
 int QuadratureUtility_GetQuadratureType(QuadratureUtility& rDummy, const int& integration_method)
 {
     return rDummy.GetQuadratureType(integration_method);
@@ -218,6 +224,7 @@ void FiniteCellApplication_AddCustomUtilitiesToPython()
     .def("GetLastConditionId", &FiniteCellAuxilliaryUtility_GetLastConditionId)
     .def("GetLastPropertiesId", &FiniteCellAuxilliaryUtility_GetLastPropertiesId)
     .def("AddElement", &FiniteCellAuxilliaryUtility_AddElement)
+    .def("RemoveElement", &FiniteCellAuxilliaryUtility_RemoveElement)
     .def("MultithreadedRefineBy", &FiniteCellAuxilliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
     .def("Print", pointer_to_PrintGeometry)
     ;

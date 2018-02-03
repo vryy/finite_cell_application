@@ -32,6 +32,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "includes/kratos_flags.h"
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
@@ -167,6 +168,12 @@ public:
     static void AddElement(ModelPart::ElementsContainerType& rpElements, Element::Pointer pElement)
     {
         rpElements.push_back(pElement);
+    }
+
+    /// Remove an element to the container
+    static void RemoveElement(ModelPart::ElementsContainerType& rpElements, Element::Pointer pElement)
+    {
+        rpElements.erase(pElement->Id());
     }
 
     /// "Auxiliary method"
@@ -425,31 +432,6 @@ protected:
 
 private:
 
-    struct SpatialKey
-    {
-        public:
-            SpatialKey(int ix, int iy, int iz) : x(ix), y(iy), z(iz) {}
-            bool operator<(const SpatialKey& rOther) const
-            {
-                if(x == rOther.x)
-                {
-                    if(y == rOther.y)
-                    {
-                        return z < rOther.z;
-                    }
-                    else
-                        return y < rOther.y;
-                }
-                else
-                    return x < rOther.x;
-            }
-            int kx() const {return x;}
-            int ky() const {return y;}
-            int kz() const {return z;}
-        private:
-            int x, y, z;
-    };
-
     ///@name Static Member Variables
     ///@{
 
@@ -457,10 +439,6 @@ private:
     ///@}
     ///@name Member Variables
     ///@{
-
-
-//    double mDx, mDy, mDz;
-//    std::map<SpatialKey, std::set<std::size_t> > mBinElements;
 
 
     ///@}
