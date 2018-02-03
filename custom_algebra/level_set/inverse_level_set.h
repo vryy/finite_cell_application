@@ -120,6 +120,17 @@ public:
     }
 
 
+    /// Get the original level set
+    BaseType::Pointer pLeveSet() const
+    {
+        return mp_level_set;
+    }
+
+    void pSetLevelSet(BaseType::Pointer p_level_set)
+    {
+        mp_level_set = p_level_set;
+    }
+
     ///@}
     ///@name Access
     ///@{
@@ -169,7 +180,7 @@ protected:
     ///@{
 
 
-    const BaseType::Pointer mp_level_set;
+    BaseType::Pointer mp_level_set;
 
 
     ///@}
