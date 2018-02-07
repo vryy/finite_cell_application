@@ -103,40 +103,6 @@ public:
     ///@name Operations
     ///@{
 
-
-    /// Extract the element from the list of ids
-    ModelPart::ElementsContainerType PyGetElements(ModelPart& r_model_part, boost::python::list& element_list) const
-    {
-        std::set<std::size_t> element_ids;
-
-        typedef boost::python::stl_input_iterator<int> iterator_value_type;
-        BOOST_FOREACH(const iterator_value_type::value_type& id,
-                      std::make_pair(iterator_value_type(element_list), // begin
-                        iterator_value_type() ) ) // end
-        {
-            element_ids.insert(static_cast<std::size_t>(id));
-        }
-
-        return GetElements(r_model_part, element_ids);
-    }
-
-    /// Extract the element from the list of ids
-    void PyGetElements(ModelPart::ElementsContainerType& rpElements,
-        ModelPart& r_model_part, boost::python::list& element_list) const
-    {
-        std::set<std::size_t> element_ids;
-
-        typedef boost::python::stl_input_iterator<int> iterator_value_type;
-        BOOST_FOREACH(const iterator_value_type::value_type& id,
-                      std::make_pair(iterator_value_type(element_list), // begin
-                        iterator_value_type() ) ) // end
-        {
-            element_ids.insert(static_cast<std::size_t>(id));
-        }
-
-        GetElements(rpElements, r_model_part, element_ids);
-    }
-
     /// Extract the element from the list of ids
     static ModelPart::ElementsContainerType GetElements(ModelPart& r_model_part, const std::set<std::size_t>& element_list)
     {

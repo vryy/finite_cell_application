@@ -296,28 +296,6 @@ public:
     }
 
 
-    /// construct the element out from quad-tree and add to model_part.
-    /// This is mainly for post-processing
-    boost::python::list PyAddToModelPart(ModelPart& r_model_part, const std::string sample_entity_name,
-            std::size_t lastNodeId, std::size_t lastEntityId) const
-    {
-        if( KratosComponents<Element>::Has(sample_entity_name) )
-        {
-            Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
-            mpTreeNode->AddToModelPart<true, Element>(mpThisGeometry, r_model_part, r_clone_element, lastNodeId, lastEntityId, 1);
-        }
-        else if( KratosComponents<Condition>::Has(sample_entity_name) )
-        {
-            Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
-            mpTreeNode->AddToModelPart<true, Condition>(mpThisGeometry, r_model_part, r_clone_condition, lastNodeId, lastEntityId, 1);
-        }
-
-        boost::python::list list;
-        list.append(lastNodeId);
-        list.append(lastEntityId);
-        return list;
-    }
-
     static QuadTreeNode::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
     {
         QuadTreeNode::Pointer pTreeNode;
