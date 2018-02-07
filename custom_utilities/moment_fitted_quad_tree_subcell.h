@@ -257,7 +257,7 @@ public:
     }
 
 
-    const GeometryData::IntegrationMethod& GetRepresentativeIntegrationMethod() const
+    GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
     {
         return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
     }
@@ -266,68 +266,6 @@ public:
     const GeometryType::IntegrationPointsArrayType& GetRepresentativeIntegrationPoints() const
     {
         return mMomentFittingIntegrationPoints;
-    }
-
-
-    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is fitted by sub-cell.
-    ModelPart::ElementsContainerType PyFitAndCreateSubCellElements(ModelPart& r_model_part,
-        const std::string& sample_element_name,
-        boost::python::list& r_funcs,
-        const BRep& r_brep,
-        const int& integrator_integration_method,
-        const std::string& solver_type,
-        const int& echo_level,
-        const double& small_weight,
-        const bool& compute_subcell_domain_size) const
-    {
-        /* firstly compute the physical integration point */
-        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
-                = this->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
-        const std::vector<std::size_t>& subcell_index = Output.first;
-        const GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
-
-        /* secondly assign the quadrature for parent element based on physical integration_points of the previous step */
-        GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(mRepresentativeIntegrationOrder);
-//        KRATOS_WATCH(RepresentativeIntegrationMethod)
-        FiniteCellGeometryUtility::AssignGeometryData(*BaseType::pGetGeometry(), RepresentativeIntegrationMethod, physical_integration_points);
-        Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
-        mpElement->SetValue(INTEGRATION_ORDER_var, mRepresentativeIntegrationOrder);
-        mpElement->Initialize();
-
-        /* thirdly fit the sub-cell */
-        std::vector<FunctionR3R1::Pointer> funcs;
-        typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_value_type;
-        BOOST_FOREACH(const iterator_value_type::value_type& f,
-                      std::make_pair(iterator_value_type(r_funcs), // begin
-                        iterator_value_type() ) ) // end
-        {
-            funcs.push_back(f);
-        }
-
-        Matrix Weights = this->FitQuadratureSubCell(subcell_index, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
-
-        /* next create the sub-elements */
-        // find the last element id
-        std::size_t lastElementId = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
-
-        // find the last condition id
-        std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
-
-        ModelPart::ElementsContainerType NewSubCellElements = CreateSubCellElements(r_model_part, sample_element_name, Weights, lastElementId, lastCondId);
-
-        // set the domain size for the sub-cell
-        if(compute_subcell_domain_size)
-        {
-            std::size_t cnt = 0;
-            for(typename ModelPart::ElementsContainerType::ptr_iterator it = NewSubCellElements.ptr_begin();
-                    it != NewSubCellElements.ptr_end(); ++it)
-            {
-                (*it)->SetValue(SUBCELL_DOMAIN_SIZE, this->DomainSize(subcell_index[cnt++], r_brep, integrator_integration_method));
-            }
-        }
-
-        return NewSubCellElements;
     }
 
 
@@ -442,77 +380,13 @@ public:
 
 
     /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is given.
-    /// This is the python interface
-    boost::python::list PyCreateSubCellElements(ModelPart& r_model_part,
-            const std::string& subcell_element_type,
-            const int& cut_cell_quadrature_order,
-            boost::python::list& cut_cell_full_quadrature,
-            boost::python::list& subcell_weights,
-            std::size_t lastElementId,
-            std::size_t lastCondId)
-    {
-        typedef Element::GeometryType GeometryType;
-
-        ModelPart::ElementsContainerType NewElements;
-
-    //    if(!boost::python::list::is_empty(subcell_weights))
-    //    {
-        // TODO find a way to check if a list is empty
-            GeometryType::IntegrationPointsArrayType integration_points;
-            Matrix Weights;
-
-            std::size_t num_physical_point = boost::python::len(subcell_weights);
-            std::size_t weight_length = boost::python::len(subcell_weights[0]);
-            Weights.resize(num_physical_point, weight_length, false);
-
-            for(std::size_t i = 0; i < num_physical_point; ++i)
-            {
-                boost::python::list weights = boost::python::extract<boost::python::list>(subcell_weights[i]);
-                for(std::size_t j = 0; j < weight_length; ++j)
-                {
-                    Weights(i, j) = boost::python::extract<double>(weights[j]);
-                }
-            }
-    //        KRATOS_WATCH(Weights)
-
-            for(std::size_t i = 0; i < boost::python::len(cut_cell_full_quadrature); ++i)
-            {
-                boost::python::list point = boost::python::extract<boost::python::list>(cut_cell_full_quadrature[i]);
-                GeometryType::IntegrationPointType integration_point;
-                integration_point.X() = boost::python::extract<double>(point[0]);
-                integration_point.Y() = boost::python::extract<double>(point[1]);
-                integration_point.Z() = boost::python::extract<double>(point[2]);
-                integration_point.Weight() = boost::python::extract<double>(point[3]);
-    //            KRATOS_WATCH(integration_point)
-                integration_points.push_back(integration_point);
-            }
-
-            NewElements = this->CreateSubCellElements(r_model_part,
-                subcell_element_type,
-                cut_cell_quadrature_order,
-                integration_points,
-                Weights,
-                lastElementId,
-                lastCondId);
-    //        std::cout << "----------------------" << std::endl;
-    //    }
-
-        boost::python::list Output;
-        Output.append(lastElementId);
-        Output.append(lastCondId);
-        Output.append(NewElements);
-
-        return Output;
-    }
-
-    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is given.
     ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
         const std::string& sample_element_name,
         const Matrix& rWeights,
         std::size_t& lastElementId,
         std::size_t& lastCondId) const
     {
-        return CreateSubCellElements(r_model_part, sample_element_name, mRepresentativeIntegrationOrder,
+        return this->CreateSubCellElements(r_model_part, sample_element_name, mRepresentativeIntegrationOrder,
                             mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId);
     }
 

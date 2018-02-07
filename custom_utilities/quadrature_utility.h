@@ -680,8 +680,7 @@ public:
             std::size_t& lastNodeId,
             std::size_t& lastCondId,
             const double& min_weight,
-            const double& max_weight
-            ) const
+            const double& max_weight) const
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
@@ -709,8 +708,23 @@ public:
     /// Create a new condition from point
     ModelPart::ConditionsContainerType PyCreateConditionFromPoint(ModelPart& r_model_part,
             boost::python::list& pyPointList,
-            const std::string& sample_cond_name
-            ) const
+            const std::string& sample_cond_name) const
+    {
+        // find the maximum properties Id
+        std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
+
+        // create new properties
+        Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
+        r_model_part.AddProperties(pProperties);
+
+        return PyCreateConditionFromPoint(r_model_part, pyPointList, sample_cond_name, pProperties);
+    }
+
+    /// Create a new condition from point
+    ModelPart::ConditionsContainerType PyCreateConditionFromPoint(ModelPart& r_model_part,
+            boost::python::list& pyPointList,
+            const std::string& sample_cond_name,
+            Properties::Pointer pProperties) const
     {
         // find the maximum node Id
         std::size_t lastNodeId = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
@@ -720,10 +734,6 @@ public:
 
         // find the maximum properties Id
         std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
-
-        // create new properties
-        Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
-        r_model_part.AddProperties(pProperties);
 
         // get the sample condition
         if(!KratosComponents<Condition>::Has(sample_cond_name))
