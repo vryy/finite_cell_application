@@ -172,6 +172,9 @@ class FiniteCellSimulator:
         if 'enable_ghost_penalty' not in self.params: # turn off ghost penalty by default
             self.params['enable_ghost_penalty'] = False
 
+        if 'enable_skeleton_penalty' not in self.params: # turn off skeleton penalty by default
+            self.params['enable_skeleton_penalty'] = False
+
     ###TREES & FOREST CREATION#############
     def CreateForest(self, elements, nsampling = 1):
         ###############################################################
@@ -599,7 +602,8 @@ class FiniteCellSimulator:
                     for point in points:
                         cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 print("len(cog_points):", len(cog_points))
-                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+                prop_id = self.params["physical_integration_point_prop_id"]
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
 
             ## export the quadrature if user needs
             if self.params["write_quadrature_to_file"] == True:
@@ -654,7 +658,8 @@ class FiniteCellSimulator:
                     for point in points:
                         cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 print("len(cog_points):", len(cog_points))
-                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+                prop_id = self.params["physical_integration_point_prop_id"]
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             #end elif self.quadrature_method == "quadtree":
         elif self.quadrature_method == "moment-fit quadtree":
             cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
@@ -692,7 +697,8 @@ class FiniteCellSimulator:
                     for point in points:
                         cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 print("len(cog_points):", len(cog_points))
-                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+                prop_id = self.params["physical_integration_point_prop_id"]
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             # end elif self.quadrature_method == "moment-fit quadtree":
         elif self.quadrature_method == "moment-fit subcell":
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
@@ -794,7 +800,8 @@ class FiniteCellSimulator:
                     self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
             print("obtain moment-fit subcell quadrature successfully")
             if self.params["export_physical_integration_point"]:
-                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D")
+                prop_id = self.params["physical_integration_point_prop_id"]
+                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             # end elif self.quadrature_method == "moment-fit subcell":
         else:
             print("Unknown quadrature_method", self.quadrature_method)
@@ -802,6 +809,15 @@ class FiniteCellSimulator:
 
         if self.params["enable_ghost_penalty"] == True:
             ghost_penalty_util = GhostPenaltyUtility()
+
+        if self.params["enable_skeleton_penalty"] == True:
+            ghost_penalty_util = SkeletonPenaltyUtility()
+
+        if self.params["enable_ghost_penalty"] == True and self.params["enable_skeleton_penalty"] == True:
+            print("Both ghost_penalty and skeleton_penalty are activated. You should choose only one.")
+            sys.exit(0)
+
+        if self.params["enable_ghost_penalty"] == True or self.params["enable_skeleton_penalty"] == True:
             space_dim = self.params["space_dim"]
             estimated_neighbours = self.params["estimated_number_of_neighbours"]
 
