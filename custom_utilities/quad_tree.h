@@ -83,6 +83,11 @@ public:
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
     }
+
+    virtual void Clear()
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+    }
 };
 
 
@@ -166,6 +171,14 @@ public:
     virtual void RefineBy(const BRep& r_brep)
     {
         mpTreeNode->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
+    }
+
+
+    /// Clear the underlying quadtree node
+    /// Implement function from abstract class RefinableTree
+    virtual void Clear()
+    {
+        mpTreeNode->Clear();
     }
 
 
@@ -479,6 +492,15 @@ public:
     }
 
 
+    /// Clear the underlying quadtree nodes
+    /// Implement function from abstract class RefinableTree
+    virtual void Clear()
+    {
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+            mpTreeNodes[i]->Clear();
+    }
+
+
     /// Compute the domain size of the subcell i
     double DomainSize(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
     {
@@ -571,40 +593,6 @@ public:
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return integration_points.size();
-    }
-
-
-    /// construct the element out from quad-tree and add to model_part
-    /// This is mainly for post-processing
-    template<bool TShallow = true>
-    boost::python::list PyAddToModelPart(ModelPart& r_model_part, const std::string sample_entity_name,
-            std::size_t lastNodeId, std::size_t lastEntityId) const
-    {
-        if( KratosComponents<Element>::Has(sample_entity_name) )
-        {
-            Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
-            for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            {
-                mpTreeNodes[i]->AddToModelPart<false, Element>(mpThisGeometry, r_model_part, r_clone_element, lastNodeId, lastEntityId, 1);
-                if(!TShallow)
-                    mpTreeNodes[i]->AddToModelPart<true, Element>(mpThisGeometry, r_model_part, r_clone_element, lastNodeId, lastEntityId, 2);
-            }
-        }
-        else if( KratosComponents<Condition>::Has(sample_entity_name) )
-        {
-            Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
-            for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            {
-                mpTreeNodes[i]->AddToModelPart<false, Condition>(mpThisGeometry, r_model_part, r_clone_condition, lastNodeId, lastEntityId, 1);
-                if(!TShallow)
-                    mpTreeNodes[i]->AddToModelPart<true, Condition>(mpThisGeometry, r_model_part, r_clone_condition, lastNodeId, lastEntityId, 2);
-            }
-        }
-
-        boost::python::list list;
-        list.append(lastNodeId);
-        list.append(lastEntityId);
-        return list;
     }
 
 

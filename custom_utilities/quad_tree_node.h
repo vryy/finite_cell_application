@@ -89,10 +89,22 @@ public:
     /// Destructor
     virtual ~QuadTreeNode() {}
 
+    /// Return the number of children.
+    std::size_t Size() const
+    {
+        return mpChildren.size();
+    }
+
     /// Check if the quadtree node is a leaf node or not.
     bool IsLeaf() const
     {
-        return (mpChildren.size() == 0);
+        return (Size() == 0);
+    }
+
+    /// Clear the list of children
+    void Clear()
+    {
+        mpChildren.clear();
     }
 
     /*****************************************************************/
@@ -574,6 +586,7 @@ public:
     }
 
 protected:
+
     std::vector<QuadTreeNode::Pointer> mpChildren;
 
 }; // class QuadTreeNode
