@@ -38,11 +38,11 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMeshUtility& 
     std::vector<std::vector<PointType> > sampling_points;
 
     std::vector<std::size_t> nsampling = {nsampling1, nsampling2};
-    FiniteCellMeshUtility::GenerateStructuredMesh2D(sampling_points, type, StartPoint, EndPoint, nsampling);
+    rDummy.GenerateStructuredMesh2D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 }
 
 void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& rDummy,
@@ -61,11 +61,11 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& 
     std::vector<std::vector<std::vector<PointType> > > sampling_points;
 
     std::vector<std::size_t> nsampling = {nsampling1, nsampling2, nsampling3};
-    FiniteCellMeshUtility::GenerateStructuredMesh3D(sampling_points, type, StartPoint, EndPoint, nsampling);
+    rDummy.GenerateStructuredMesh3D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 }
 
 void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
@@ -73,8 +73,8 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
 
     class_<FiniteCellMeshUtility, FiniteCellMeshUtility::Pointer, boost::noncopyable>
     ("FiniteCellMeshUtility", init<>())
-    ("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2D)
-    ("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart3D)
+    .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2D)
+    .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart3D)
     ;
 
 }
