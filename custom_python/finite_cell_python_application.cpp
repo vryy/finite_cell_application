@@ -51,6 +51,11 @@ namespace Python
         FiniteCellApplication_AddQuadTreeToPython<3>();
         FiniteCellApplication_AddQuadTreeToPython<4>();
         FiniteCellApplication_AddQuadTreeToPython<5>();
+        FiniteCellApplication_AddQuadTreeToPython<6>();
+        FiniteCellApplication_AddQuadTreeToPython<7>();
+        FiniteCellApplication_AddQuadTreeToPython<8>();
+        FiniteCellApplication_AddQuadTreeToPython<9>();
+        FiniteCellApplication_AddQuadTreeToPython<10>();
         FiniteCellApplication_AddCustomConditionsToPython();
 
         FiniteCellApplication_AddQuadratureUtilityToPython();

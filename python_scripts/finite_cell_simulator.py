@@ -175,6 +175,16 @@ def CreateQuadTree(element, nsampling):
         return QuadTreeLocal4(element)
     elif nsampling == 5:
         return QuadTreeLocal5(element)
+    elif nsampling == 6:
+        return QuadTreeLocal6(element)
+    elif nsampling == 7:
+        return QuadTreeLocal7(element)
+    elif nsampling == 8:
+        return QuadTreeLocal8(element)
+    elif nsampling == 9:
+        return QuadTreeLocal9(element)
+    elif nsampling == 10:
+        return QuadTreeLocal10(element)
 
 def CreateQuadTreeSubCell(element, nsampling):
     if nsampling == 1:
@@ -187,6 +197,16 @@ def CreateQuadTreeSubCell(element, nsampling):
         return MomentFittedQuadTreeSubCell4(element)
     elif nsampling == 5:
         return MomentFittedQuadTreeSubCell5(element)
+    elif nsampling == 6:
+        return MomentFittedQuadTreeSubCell6(element)
+    elif nsampling == 7:
+        return MomentFittedQuadTreeSubCell7(element)
+    elif nsampling == 8:
+        return MomentFittedQuadTreeSubCell8(element)
+    elif nsampling == 9:
+        return MomentFittedQuadTreeSubCell9(element)
+    elif nsampling == 10:
+        return MomentFittedQuadTreeSubCell10(element)
 
 class FiniteCellSimulator:
 
@@ -267,7 +287,7 @@ class FiniteCellSimulator:
                 print("moment-fitting begins")
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
-                stat = self.brep.CutStatus(elem)
+                stat = self.brep.CutStatusBySampling(elem, nsampling)
                 if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
@@ -289,7 +309,7 @@ class FiniteCellSimulator:
             integrators = []
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
-                stat = self.brep.CutStatus(elem)
+                stat = self.brep.CutStatusBySampling(elem, nsampling)
                 if stat == self.brep._CUT:
                     cut_elems.append(elem)
                     integrators.append(qt)
@@ -368,7 +388,7 @@ class FiniteCellSimulator:
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatus(elem)
+            stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
             if stat == self.brep._CUT:
                 cut_elems.append(qs)
@@ -385,7 +405,7 @@ class FiniteCellSimulator:
             for qs in cut_elems:
                 for i in range(0, qs.NumberOfSubCells()):
                     qt = qs.CreateQuadTree(i)
-                    stat = self.brep.CutStatus(qt.pCreateGeometry())
+                    stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
                     if stat == self.brep._CUT:
                         cnt = qt_depth
                         found = False
@@ -554,7 +574,7 @@ class FiniteCellSimulator:
             exclude_elems = []
             for qi, qt in self.forest.iteritems():
                 elem = model.model_part.Elements[qi]
-                stat = self.brep.CutStatus(elem)
+                stat = self.brep.CutStatusBySampling(elem, nsampling)
                 if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
@@ -578,6 +598,8 @@ class FiniteCellSimulator:
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
             print("reading " + self.mat_type + " material completed")
+
+            ## export the physical integration points for debugging if needed
             if self.params["export_physical_integration_point"]:
                 cog_points = []
                 for elem in self.proper_cut_elems:
@@ -587,6 +609,16 @@ class FiniteCellSimulator:
                 print("len(cog_points):", len(cog_points))
                 prop_id = self.params["physical_integration_point_prop_id"]
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+
+            ## export the quadtree for debugging if needed
+            if self.params["export_quadtree_cell"]:
+                lastNodeId = aux_util.GetLastNodeId(model.model_part)
+                lastElementId = aux_util.GetLastElementId(model.model_part)
+                sample_quad_element_name = self.params["sample_quad_element_name"]
+                for qi, qt in self.forest.iteritems():
+                    last_ids = qt.AddToModelPart(model.model_part, sample_quad_element_name, lastNodeId, lastElementId)
+                    lastNodeId = last_ids[0]
+                    lastElementId = last_ids[1]
 
             ## export the quadrature if user needs
             if self.params["write_quadrature_to_file"] == True:
@@ -1001,7 +1033,7 @@ class FiniteCellSimulator:
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatus(elem)
+            stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
             if stat == self.brep._CUT:
                 cut_elems.append(qs)
@@ -1016,7 +1048,7 @@ class FiniteCellSimulator:
             print("    number of subcells: " + str(qs.NumberOfSubCells()))
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
-                stat = self.brep.CutStatus(qt.pGetGeometry())
+                stat = self.brep.CutStatusBySampling(qt.pGetGeometry(), nsampling)
                 print("    subcell " + str(i) + " info:")
                 if stat == self.brep._CUT:
                     print("        cut: yes")
@@ -1038,7 +1070,7 @@ class FiniteCellSimulator:
         if selected_elems == "all":
             for qi, qs in self.forest.iteritems():
                 elem = qs.GetElement()
-                stat = self.brep.CutStatus(elem)
+                stat = self.brep.CutStatusBySampling(elem, nsampling)
                 elem.SetValue(CUT_STATUS, stat)
                 if stat == self.brep._CUT:
                     cut_elems.append(qs)
@@ -1046,7 +1078,7 @@ class FiniteCellSimulator:
             for qi, qs in self.forest.iteritems():
                 elem = qs.GetElement()
                 if elem.Id in selected_elems:
-                    stat = self.brep.CutStatus(elem)
+                    stat = self.brep.CutStatusBySampling(elem, nsampling)
                     elem.SetValue(CUT_STATUS, stat)
                     if stat == self.brep._CUT:
                         cut_elems.append(qs)
@@ -1088,7 +1120,7 @@ class FiniteCellSimulator:
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatus(elem)
+            stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
             if stat == self.brep._CUT:
                 cut_elems.append(qs)
@@ -1104,7 +1136,7 @@ class FiniteCellSimulator:
         for qs in cut_elems:
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
-                stat = self.brep.CutStatus(qt.pCreateGeometry())
+                stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
                 if stat == self.brep._CUT:
 #                    domain_size = qt.DomainSize(self.brep)
 #                    domain_size = qt.Integrate(Hf, 0x12) # Gauss Legendre order 2
