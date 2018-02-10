@@ -194,7 +194,10 @@ public:
     {
         // firstly create the sampling points on surface
         std::vector<std::vector<PointType> > sampling_points = this->GeneratePoints(nsampling_axial, nsampling_radial);
-        return FiniteCellMeshUtility::CreateQ4ElementsClosedLoop(r_model_part, sampling_points, sample_element_name, pProperties);
+        int order = 1;
+        int close_dir = 2;
+        int activation_dir = 1;
+        return FiniteCellMeshUtility::CreateQuadElements(r_model_part, sampling_points, sample_element_name, order, close_dir, activation_dir, pProperties);
     }
 
 
