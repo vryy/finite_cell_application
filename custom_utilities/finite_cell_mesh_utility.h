@@ -102,18 +102,16 @@ struct GenerateStructuredMesh_Helper<2, 1> : public GenerateStructuredMesh_Helpe
         double dx = (mEndPoint[0] - mStartPoint[0]) / mnsampling[0];
         double dy = (mEndPoint[1] - mStartPoint[1]) / mnsampling[1];
 
-        rPoints.resize(mnsampling[0]+1);
-        for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
+        rPoints.resize(mnsampling[1]+1);
+        for (std::size_t j = 0; j < mnsampling[1]+1; ++j)
         {
-            rPoints[i].resize(mnsampling[1]+1);
+            rPoints[j].resize(mnsampling[0]+1);
+            y = mStartPoint[1] + j*dy;
 
-            x = mStartPoint[0] + i*dx;
-
-            for (std::size_t j = 0; j < mnsampling[1]+1; ++j)
+            for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
             {
-                y = mStartPoint[1] + dy;
-
-                rPoints[i][j] = PointType(x, y, 0.0);
+                x = mStartPoint[0] + i*dx;
+                rPoints[j][i] = PointType(x, y, 0.0);
             }
         }
     }
@@ -137,24 +135,21 @@ struct GenerateStructuredMesh_Helper<3, 1> : public GenerateStructuredMesh_Helpe
         double dy = (mEndPoint[1] - mStartPoint[1]) / mnsampling[1];
         double dz = (mEndPoint[2] - mStartPoint[2]) / mnsampling[2];
 
-        rPoints.resize(mnsampling[0]+1);
-        for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
+        rPoints.resize(mnsampling[2]+1);
+        for (std::size_t k = 0; k < mnsampling[2]+1; ++k)
         {
-            rPoints[i].resize(mnsampling[1]+1);
-
-            x = mStartPoint[0] + i*dx;
+            rPoints[k].resize(mnsampling[1]+1);
+            z = mStartPoint[2] + k*dz;
 
             for (std::size_t j = 0; j < mnsampling[1]+1; ++j)
             {
-                rPoints[i][j].resize(mnsampling[1]+1);
+                rPoints[k][j].resize(mnsampling[0]+1);
+                y = mStartPoint[1] + j*dy;
 
-                y = mStartPoint[1] + dy;
-
-                for (std::size_t k = 0; k < mnsampling[2]+1; ++k)
+                for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
                 {
-                    z = mStartPoint[2] + dz;
-
-                    rPoints[i][j][k] = PointType(x, y, z);
+                    x = mStartPoint[0] + i*dx;
+                    rPoints[k][j][i] = PointType(x, y, z);
                 }
             }
         }
