@@ -23,17 +23,21 @@ void QuadTreeNode::AddToModelPart<false, Element>(GeometryType::Pointer pParentG
         Element const& r_clone_element,
         std::size_t& lastNodeId,
         std::size_t& lastElementId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const
 {
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     Properties::Pointer p_properties = r_model_part.pGetProperties(level);
     GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
     Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, pThisGeometry, p_properties);
+    new_entity_ids.push_back(lastElementId);
     r_model_part.AddElement(pNewElement);
 
     for(std::size_t i = 0; i < pThisGeometry->size(); ++i)
     {
         (*pThisGeometry)[i].SetId(++lastNodeId);
+        new_node_ids.push_back(lastNodeId);
         (*pThisGeometry)[i].SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
         (*pThisGeometry)[i].SetBufferSize(r_model_part.GetBufferSize());
         r_model_part.AddNode((*pThisGeometry)(i));
@@ -47,17 +51,21 @@ void QuadTreeNode::AddToModelPart<false, Condition>(GeometryType::Pointer pParen
         Condition const& r_clone_condition,
         std::size_t& lastNodeId,
         std::size_t& lastCondId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const
 {
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     Properties::Pointer p_properties = r_model_part.pGetProperties(level);
     GeometryType::Pointer pThisGeometry = this->pCreateGeometry(pParentGeometry);
     Condition::Pointer pNewCondition = r_clone_condition.Create(++lastCondId, pThisGeometry, p_properties);
+    new_entity_ids.push_back(lastCondId);
     r_model_part.AddCondition(pNewCondition);
 
     for(std::size_t i = 0; i < pThisGeometry->size(); ++i)
     {
         (*pThisGeometry)[i].SetId(++lastNodeId);
+        new_node_ids.push_back(lastNodeId);
         (*pThisGeometry)[i].SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
         (*pThisGeometry)[i].SetBufferSize(r_model_part.GetBufferSize());
         r_model_part.AddNode((*pThisGeometry)(i));
@@ -71,18 +79,20 @@ void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGe
         Element const& r_clone_element,
         std::size_t& lastNodeId,
         std::size_t& lastElementId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const
 {
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
         if (level > 1) // this is to avoid adding duplicated element with the original mesh
-            this->AddToModelPart<false, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, level);
+            this->AddToModelPart<false, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, new_node_ids, new_entity_ids, level);
     }
     else
     {
         for(std::size_t i = 0; i < mpChildren.size(); ++i)
-            mpChildren[i]->AddToModelPart<true, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, level + 1);
+            mpChildren[i]->AddToModelPart<true, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, new_node_ids, new_entity_ids, level + 1);
     }
 }
 
@@ -92,18 +102,20 @@ void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParent
         Condition const& r_clone_condition,
         std::size_t& lastNodeId,
         std::size_t& lastCondId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const
 {
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
         if (level > 1) // this is to avoid adding duplicated element with the original mesh
-            this->AddToModelPart<false, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, level);
+            this->AddToModelPart<false, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, new_node_ids, new_entity_ids, level);
     }
     else
     {
         for(std::size_t i = 0; i < mpChildren.size(); ++i)
-            mpChildren[i]->AddToModelPart<true, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, level + 1);
+            mpChildren[i]->AddToModelPart<true, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, new_node_ids, new_entity_ids, level + 1);
     }
 }
 

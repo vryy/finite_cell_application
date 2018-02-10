@@ -473,13 +473,9 @@ public:
             TEntityType const& r_clone_entity,
             std::size_t& lastNodeId,
             std::size_t& lastEntityId,
+            std::vector<std::size_t>& new_node_ids,
+            std::vector<std::size_t>& new_entity_ids,
             const int level) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
-    }
-
-    template<bool TRecursive, class TEntityType>
-    void AddToModelPart() const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
@@ -598,6 +594,8 @@ void QuadTreeNode::AddToModelPart<false, Element>(GeometryType::Pointer pParentG
         Element const& r_clone_element,
         std::size_t& lastNodeId,
         std::size_t& lastElementId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const;
 
 
@@ -607,6 +605,8 @@ void QuadTreeNode::AddToModelPart<false, Condition>(GeometryType::Pointer pParen
         Condition const& r_clone_condition,
         std::size_t& lastNodeId,
         std::size_t& lastCondId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const;
 
 
@@ -616,6 +616,8 @@ void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGe
         Element const& r_clone_element,
         std::size_t& lastNodeId,
         std::size_t& lastElementId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const;
 
 template<>
@@ -624,6 +626,8 @@ void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParent
         Condition const& r_clone_condition,
         std::size_t& lastNodeId,
         std::size_t& lastCondId,
+        std::vector<std::size_t>& new_node_ids,
+        std::vector<std::size_t>& new_entity_ids,
         const int level) const;
 
 
