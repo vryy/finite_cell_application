@@ -91,6 +91,8 @@ public:
 
         int gauss_quadrature_order = QuadratureUtility::GetQuadratureOrder(gauss_integration_method);
 
+        BaseType::mpTreeNodes.clear();
+
         if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
@@ -180,6 +182,8 @@ public:
      */
     void ConstructSubCellsBasedOnEqualDistribution(const int& integration_order)
     {
+        BaseType::mpTreeNodes.clear();
+
         if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
          || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
@@ -418,17 +422,11 @@ public:
             for(std::size_t j = 0; j < new_integration_points.size(); ++j)
                 new_integration_points[j].Weight() = rWeights(i, j);
 
-            // create the new "parasite" elements from sub-cell
+            // create the new "extrapolated" elements from sub-cell
+            // here we make a clone of the geometry because we want to assign different geometry data later on
+            // this also works with Bezier element, because Bezier geometry has implemented the Create method
             Element::Pointer pNewElement;
-            if (r_geom.GetGeometryType() != GeometryData::Kratos_Bezier2D
-                && r_geom.GetGeometryType() != GeometryData::Kratos_Bezier3D)
-            {
-                pNewElement = r_clone_element.Create(++lastElementId, r_geom.Points(), mpElement->pGetProperties());
-            }
-            else
-            {
-                pNewElement = r_clone_element.Create(++lastElementId, BaseType::pGetGeometry(), mpElement->pGetProperties());
-            }
+            pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), mpElement->pGetProperties());
 
             FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
@@ -437,6 +435,7 @@ public:
         }
 
         /* create new wrapped conditions and add to the model_part */
+        // the purpose is to delay the assembly until the parent element has done its update
         for(typename ModelPart::ElementsContainerType::ptr_iterator it = NewElements.ptr_begin();
                 it != NewElements.ptr_end(); ++it)
         {
