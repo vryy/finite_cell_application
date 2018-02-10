@@ -76,7 +76,8 @@ void QuadTreeNode::AddToModelPart<true, Element>(GeometryType::Pointer pParentGe
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
-        this->AddToModelPart<false, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, level);
+        if (level > 1) // this is to avoid adding duplicated element with the original mesh
+            this->AddToModelPart<false, Element>(pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, level);
     }
     else
     {
@@ -96,7 +97,8 @@ void QuadTreeNode::AddToModelPart<true, Condition>(GeometryType::Pointer pParent
     // std::cout << __FUNCTION__ << " is called" << std::endl;
     if(this->IsLeaf())
     {
-        this->AddToModelPart<false, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, level);
+        if (level > 1) // this is to avoid adding duplicated element with the original mesh
+            this->AddToModelPart<false, Condition>(pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, level);
     }
     else
     {
