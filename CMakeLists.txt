@@ -34,8 +34,13 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_1_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_2_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_conditions_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_conditions_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_quadrature_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_div_free_basis_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_mesh_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_auxilliary_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_moment_fitting_utility_to_python.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )
 #######################################################################

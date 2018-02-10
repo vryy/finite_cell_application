@@ -42,6 +42,7 @@ void FiniteCellApplication_AddRefinableTreeToPython()
     ("RefinableTree", init<>())
     .def("Refine", &RefinableTree::Refine)
     .def("RefineBy", &RefinableTree::RefineBy)
+    .def("Clear", &RefinableTree::Clear)
     ;
 }
 
@@ -61,6 +62,40 @@ boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
     {
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
         rDummy.Get().template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, 1);
+    }
+
+    boost::python::list list;
+    list.append(lastNodeId);
+    list.append(lastEntityId);
+    return list;
+}
+
+/// construct the element out from quad-tree and add to model_part
+/// This is mainly for post-processing
+template<class TTreeType, bool TShallow = true>
+boost::python::list QuadTreeSubCell_AddToModelPart(TTreeType& rDummy,
+    ModelPart& r_model_part, const std::string sample_entity_name,
+    std::size_t lastNodeId, std::size_t lastEntityId)
+{
+    if( KratosComponents<Element>::Has(sample_entity_name) )
+    {
+        Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
+        for(std::size_t i = 0; i < rDummy.NumberOfSubCells(); ++i)
+        {
+            rDummy.Get(i).template AddToModelPart<false, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, 1);
+            if(!TShallow)
+                rDummy.Get(i).template AddToModelPart<true, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, 2);
+        }
+    }
+    else if( KratosComponents<Condition>::Has(sample_entity_name) )
+    {
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
+        for(std::size_t i = 0; i < rDummy.NumberOfSubCells(); ++i)
+        {
+            rDummy.Get(i).template AddToModelPart<false, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, 1);
+            if(!TShallow)
+                rDummy.Get(i).template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, 2);
+        }
     }
 
     boost::python::list list;
@@ -244,8 +279,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("DomainSize", pointer_to_DomainSize2)
     .def("CreateQuadTree", &QuadTreeSubCellType::CreateQuadTree)
     .def("ConstructQuadrature", &QuadTreeSubCellType::ConstructQuadrature)
-    .def("ShallowAddToModelPart", &QuadTreeSubCellType::template PyAddToModelPart<true>) // only add the sub-cell
-    .def("DeepAddToModelPart", &QuadTreeSubCellType::template PyAddToModelPart<false>) // add the sub-cell and all the quad-trees
+    .def("ShallowAddToModelPart", &QuadTreeSubCell_AddToModelPart<QuadTreeSubCellType, true>) // only add the sub-cell
+    .def("DeepAddToModelPart", &QuadTreeSubCell_AddToModelPart<QuadTreeSubCellType, false>) // add the sub-cell and all the quad-trees
     ;
 
     std::stringstream MomentFittedQuadTreeSubCellName;

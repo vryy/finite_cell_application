@@ -51,6 +51,116 @@ namespace Kratos
 ///@name Type Definitions
 ///@{
 
+template<int TDim, int TOrder>
+struct GenerateStructuredMesh_Helper
+{
+    typedef typename Element::GeometryType GeometryType;
+
+    typedef typename GeometryType::PointType NodeType;
+
+    typedef typename NodeType::PointType PointType;
+
+    GenerateStructuredMesh_Helper(const PointType& StartPoint,
+            const PointType& EndPoint,
+            const std::vector<std::size_t>& nsampling
+    ) : mStartPoint(StartPoint), mEndPoint(EndPoint), mnsampling(nsampling)
+    {}
+
+    void Execute(std::vector<std::vector<PointType> >& rPoints)
+    {
+        std::stringstream ss;
+        ss << "Error calling unimplemented " << __FUNCTION__ << "_" << TDim << "_" << TOrder;
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
+    void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints)
+    {
+        std::stringstream ss;
+        ss << "Error calling unimplemented " << __FUNCTION__ << "_" << TDim << "_" << TOrder;
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
+    const PointType& mStartPoint;
+    const PointType& mEndPoint;
+    const std::vector<std::size_t>& mnsampling;
+};
+
+template<>
+struct GenerateStructuredMesh_Helper<2, 1> : public GenerateStructuredMesh_Helper<0, 0>
+{
+    typedef GenerateStructuredMesh_Helper<0, 0> BaseType;
+
+    GenerateStructuredMesh_Helper(const PointType& StartPoint,
+            const PointType& EndPoint,
+            const std::vector<std::size_t>& nsampling)
+    : BaseType(StartPoint, EndPoint, nsampling)
+    {}
+
+    void Execute(std::vector<std::vector<PointType> >& rPoints)
+    {
+        double x, y;
+        double dx = (mEndPoint[0] - mStartPoint[0]) / mnsampling[0];
+        double dy = (mEndPoint[1] - mStartPoint[1]) / mnsampling[1];
+
+        rPoints.resize(mnsampling[0]+1);
+        for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
+        {
+            rPoints[i].resize(mnsampling[1]+1);
+
+            x = mStartPoint[0] + i*dx;
+
+            for (std::size_t j = 0; j < mnsampling[1]+1; ++j)
+            {
+                y = mStartPoint[1] + dy;
+
+                rPoints[i][j] = PointType(x, y, 0.0);
+            }
+        }
+    }
+};
+
+template<>
+struct GenerateStructuredMesh_Helper<3, 1> : public GenerateStructuredMesh_Helper<0, 0>
+{
+    typedef GenerateStructuredMesh_Helper<0, 0> BaseType;
+
+    GenerateStructuredMesh_Helper(const PointType& StartPoint,
+            const PointType& EndPoint,
+            const std::vector<std::size_t>& nsampling)
+    : BaseType(StartPoint, EndPoint, nsampling)
+    {}
+
+    void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints)
+    {
+        double x, y, z;
+        double dx = (mEndPoint[0] - mStartPoint[0]) / mnsampling[0];
+        double dy = (mEndPoint[1] - mStartPoint[1]) / mnsampling[1];
+        double dz = (mEndPoint[2] - mStartPoint[2]) / mnsampling[2];
+
+        rPoints.resize(mnsampling[0]+1);
+        for (std::size_t i = 0; i < mnsampling[0]+1; ++i)
+        {
+            rPoints[i].resize(mnsampling[1]+1);
+
+            x = mStartPoint[0] + i*dx;
+
+            for (std::size_t j = 0; j < mnsampling[1]+1; ++j)
+            {
+                rPoints[i][j].resize(mnsampling[1]+1);
+
+                y = mStartPoint[1] + dy;
+
+                for (std::size_t k = 0; k < mnsampling[2]+1; ++k)
+                {
+                    z = mStartPoint[2] + dz;
+
+                    rPoints[i][j][k] = PointType(x, y, z);
+                }
+            }
+        }
+    }
+};
+
 ///@}
 ///@name  Enum's
 ///@{
@@ -64,7 +174,7 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** class for auxilliary routines
+/** class for auxiliary mesh routines
 */
 class FiniteCellMeshUtility
 {
@@ -104,10 +214,56 @@ public:
     ///@{
 
 
-    /// Create the quad-4 elements based on given points list
-    static std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQ4ElementsClosedLoop(ModelPart& r_model_part,
+    /// Generate the background structure mesh
+    static void GenerateStructuredMesh2D(std::vector<std::vector<PointType> >& sampling_points,
+        const int& type,
+        const PointType& StartPoint,
+        const PointType& EndPoint,
+        const std::vector<std::size_t>& nsampling)
+    {
+        if (type == 1)
+        {
+            GenerateStructuredMesh_Helper<2, 1>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+        else if (type == 2)
+        {
+            GenerateStructuredMesh_Helper<2, 2>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+        else if (type == 3)
+        {
+            GenerateStructuredMesh_Helper<2, 3>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+    }
+
+    /// Generate the background structure mesh
+    static void GenerateStructuredMesh3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+        const int& type,
+        const PointType& StartPoint,
+        const PointType& EndPoint,
+        const std::vector<std::size_t>& nsampling)
+    {
+        if (type == 1)
+        {
+            GenerateStructuredMesh_Helper<3, 1>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+        else if (type == 2)
+        {
+            GenerateStructuredMesh_Helper<3, 2>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+        else if (type == 3)
+        {
+            GenerateStructuredMesh_Helper<3, 3>(StartPoint, EndPoint, nsampling).Execute(sampling_points);
+        }
+    }
+
+
+    /// Create the quad elements based on given points list
+    static std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQuadElements(ModelPart& r_model_part,
         const std::vector<std::vector<PointType> >& sampling_points,
         const std::string& sample_element_name,
+        const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
+        const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir
+        const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir
         Properties::Pointer pProperties)
     {
         std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
@@ -115,6 +271,23 @@ public:
         std::size_t num_division_1 = sampling_points.size() - 1;
         std::size_t num_division_2 = sampling_points[0].size() - 1;
         // KRATOS_WATCH(last_node_id)
+
+        std::size_t num_1, num_2;
+        if (close_dir == 1)
+        {
+            num_1 = num_division_1 + 1;
+            num_2 = num_division_2;
+        }
+        else if (close_dir == 2)
+        {
+            num_1 = num_division_1;
+            num_2 = num_division_2 + 1;
+        }
+        else
+        {
+            num_1 = num_division_1;
+            num_2 = num_division_2;
+        }
 
         Variable<int>& ACTIVATION_LEVEL_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("ACTIVATION_LEVEL"));
 
@@ -138,41 +311,67 @@ public:
         Element::NodesArrayType temp_element_nodes;
         ModelPart::ElementsContainerType NewElements;
         const std::string NodeKey("Node");
-        std::size_t node_1, node_2, node_3, node_4;
-        int activation_level = -num_division_1;
-        for (std::size_t i = 0; i < num_division_1; ++i)
+        std::vector<std::size_t> node;
+        int activation_level;
+
+        if (type == 1)
+            node.resize(4);
+        else if (type == 2)
+            node.resize(8);
+        else if (type == 2)
+            node.resize(9);
+        else
+            KRATOS_THROW_ERROR(std::logic_error, "Invalid type", type)
+
+        if (activation_dir == 1) activation_level = -num_division_1;
+
+        for (std::size_t i = 0; i < num_1; ++i)
         {
-            // KRATOS_WATCH(sampling_points[i].size())
-            for (std::size_t j = 0; j < num_division_2+1; ++j)
+            if (activation_dir == 2) activation_level = -num_division_2;
+            for (std::size_t j = 0; j < num_2; ++j)
             {
-                node_1 = last_node_id_old + i * (num_division_2 + 1) + j + 1;
-                node_3 = last_node_id_old + (i + 1) * (num_division_2 + 1) + j + 1;
-                if (j < num_division_2)
+                if (type == 1)
                 {
-                    node_2 = last_node_id_old + i * (num_division_2 + 1) + j + 2;
-                    node_4 = last_node_id_old + (i + 1) * (num_division_2 + 1) + j + 2;
+                    node[0] = last_node_id_old + i * (num_division_2 + 1) + j + 1;
+                    node[2] = last_node_id_old + (i + 1) * (num_division_2 + 1) + j + 1;
+                    if (j < num_division_2)
+                    {
+                        node[1] = last_node_id_old + i * (num_division_2 + 1) + j + 2;
+                        node[3] = last_node_id_old + (i + 1) * (num_division_2 + 1) + j + 2;
+                    }
+                    else
+                    {
+                        node[1] = last_node_id_old + i * (num_division_2 + 1) + 1;
+                        node[3] = last_node_id_old + (i + 1) * (num_division_2 + 1) + 1;
+                    }
+                    // std::cout << node[0] << " " << node[1] << " " << node[2] << " " << node[3] << std::endl;
                 }
-                else
+                else if (type == 2)
                 {
-                    node_2 = last_node_id_old + i * (num_division_2 + 1) + 1;
-                    node_4 = last_node_id_old + (i + 1) * (num_division_2 + 1) + 1;
+                    // TODO
                 }
-                // std::cout << node_1 << " " << node_2 << " " << node_3 << " " << node_4 << std::endl;
+                else if (type == 3)
+                {
+                    // TODO
+                }
 
                 temp_element_nodes.clear();
-                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node_1, NodeKey).base()));
-                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node_2, NodeKey).base()));
-                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node_4, NodeKey).base()));
-                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node_3, NodeKey).base()));
+                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[0], NodeKey).base()));
+                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[1], NodeKey).base()));
+                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[3], NodeKey).base()));
+                temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[2], NodeKey).base()));
 
                 Element::Pointer pNewElement = rCloneElement.Create(++last_element_id, temp_element_nodes, pProperties);
                 // std::cout << "element " << pNewElement->Id() << " is created" << std::endl;
                 pNewElement->Set(ACTIVE, true);
                 pNewElement->SetValue(IS_INACTIVE, false);
-                pNewElement->SetValue(ACTIVATION_LEVEL_var, activation_level);
+                if (activation_dir != 0)
+                    pNewElement->SetValue(ACTIVATION_LEVEL_var, activation_level);
                 NewElements.push_back(pNewElement);
+
+                if (activation_dir == 2) ++activation_level;
             }
-            ++activation_level;
+            if (activation_dir == 1) ++activation_level;
         }
 
         for (ModelPart::ElementsContainerType::ptr_iterator it = NewElements.ptr_begin(); it != NewElements.ptr_end(); ++it)
@@ -185,6 +384,19 @@ public:
         std::cout << NewElements.size() << " " << sample_element_name << " elements are created and added to the model_part" << std::endl;
 
         return std::make_pair(NewNodes, NewElements);
+    }
+
+
+    /// Create the hex elements based on given points list
+    static std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateHexElements(ModelPart& r_model_part,
+        const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+        const std::string& sample_element_name,
+        const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
+        const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir; 3: close on 3rd dir
+        const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir; r: activation on 3rd dir
+        Properties::Pointer pProperties)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling unimplemented", __FUNCTION__)
     }
 
     static ModelPart::NodesContainerType::iterator FindKey(ModelPart::NodesContainerType& ThisContainer,
@@ -329,7 +541,6 @@ private:
 
 ///@name Type Definitions
 ///@{
-
 
 ///@}
 ///@name Input and output
