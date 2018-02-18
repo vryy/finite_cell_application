@@ -219,6 +219,13 @@ class FiniteCellSimulator:
         if 'enable_skeleton_penalty' not in self.params: # turn off skeleton penalty by default
             self.params['enable_skeleton_penalty'] = False
 
+        if 'export_quadtree_cell' not in self.params:
+            self.params['export_quadtree_cell'] = False
+
+        if self.params['export_quadtree_cell'] == True:
+            if 'sample_quad_element_name' not in self.params:
+                self.params["sample_quad_element_name"] = "DummySurfaceElement2D4N"
+
     ###TREES & FOREST CREATION#############
     def CreateForest(self, elements, nsampling = 1):
         ###############################################################
@@ -346,7 +353,7 @@ class FiniteCellSimulator:
         fid.write("    return params\n")
         fid.close()
 
-    def MomentFitSubCell(self, bulk_elements):
+    def MomentFitSubCell(self, model_part, bulk_elements):
         print("fit parameters:")
         pprint.pprint(self.params)
         qt_depth = self.params["qt_depth"]
@@ -355,6 +362,8 @@ class FiniteCellSimulator:
         small_domain_size = self.params["small_domain_size"]
         number_of_minimum_physical_points = self.params["number_of_minimum_physical_points"]
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        quad_util = QuadratureUtility()
+        aux_util = FiniteCellAuxilliaryUtility()
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
@@ -367,23 +376,24 @@ class FiniteCellSimulator:
         fit_degree = self.params["fitting_function_degree"]
         fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
 
-        cut_elems = []
-        exclude_elems = []
-        quadtree_elems = []
-        moment_fit_elems = []
+        cut_qs_elems = []
+        exclude_qs_elems = []
+        small_qs_elems = []
 
-#        fit_mode = self.params["fit_mode"]
         integrator_quadrature_method = self.params["integrator_quadrature_method"]
         solver_type = self.params["fit_solver_type"]
         echo_level = self.params["fit_echo_level"]
         fit_small_weight = self.params["fit_small_weight"]
-        action_on_small_subcell = self.params["action_on_small_subcell"]
+        action_on_small_cut_cell = self.params["action_on_small_cut_cell"]
+        fict_weight = self.params["fictitious_weight"] if ("fictitious_weight" in self.params) else 0.0
 
         if nsampling > 1:
-            fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
+            subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
+            small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique" + str(nsampling))
             save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell" + str(nsampling))
         else:
-            fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+            subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+            small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
             save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
 
         for qi, qs in self.forest.iteritems():
@@ -391,18 +401,18 @@ class FiniteCellSimulator:
             stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
             if stat == self.brep._CUT:
-                cut_elems.append(qs)
+                cut_qs_elems.append(qs)
             elif stat == self.brep._OUT:
-                exclude_elems.append(qs)
+                exclude_qs_elems.append(qs)
         aux_util = FiniteCellAuxilliaryUtility()
         for i in range(0, qt_depth):
             print("Refine level " + str(i+1) + " ...")
-#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
-            aux_util.MultithreadedRefineBy(cut_elems, self.brep)
+#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_qs_elems, self.brep)
+            aux_util.MultithreadedRefineBy(cut_qs_elems, self.brep)
             print("###################################################")
         # recursive refine the subcell that are cut but not integrable by the quadtree # this is required if Gauss-Legendre quadrature is used
         if max_qt_depth > qt_depth:
-            for qs in cut_elems:
+            for qs in cut_qs_elems:
                 for i in range(0, qs.NumberOfSubCells()):
                     qt = qs.CreateQuadTree(i)
                     stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
@@ -427,6 +437,17 @@ class FiniteCellSimulator:
         print("Refine completed")
         sys.stdout.flush()
 
+        # generate the physical integration points in each cut-cell
+        for qs in cut_qs_elems:
+            elem_id = qs.GetElement().Id
+
+            # for cut element, we generate and store the physical integration points
+            qs.GeneratePhysicalIntegrationPoints(self.brep, integrator_quadrature_method)
+
+            # if we want to add the fictitious element later on, the weight shall be set
+            qs.SetFictitiousWeight(fict_weight)
+        print("Generate physical integration points completed for " + str(len(cut_qs_elems)) + " cut-cells")
+
         # here we check the small subcell; the small subcell is determined by either domain_size less than a threshold, or number of physical points less than specific number
         if small_domain_size > 0.0:
             criteria_check_small_domain_size = True
@@ -438,19 +459,19 @@ class FiniteCellSimulator:
         else:
             criteria_check_number_of_physical_points = False
 
-        proper_cut_elems = []
+        proper_cut_qs_elems = []
         cnt = 0
         cnt2 = 0
         cnt3 = 0
-        num_cut_elems = len(cut_elems)
+        num_cut_qs_elems = len(cut_qs_elems)
 
         if not(criteria_check_small_domain_size or criteria_check_number_of_physical_points):
-            proper_cut_elems = cut_elems
+            proper_cut_qs_elems = cut_qs_elems
             print("\nNo criteria is selected. No quadtree subcell is removed")
         else:
-            for qs in cut_elems:
-                elem_id = qs.GetElement().Id
+            for qs in cut_qs_elems:
 
+                # here we check if the cut element shall be excluded or not. The criteria for exclusion is either small size or small number of physical integration points
                 include_element = True
 
                 if include_element:
@@ -462,26 +483,33 @@ class FiniteCellSimulator:
 
                 if include_element:
                     if criteria_check_number_of_physical_points:
-                        num_physical_points = qs.GetNumberOfPhysicalIntegrationPoint(self.brep, integrator_quadrature_method)
+                        print("checking the number of physical point for element " + str(elem_id))
+                        num_physical_points = len(qs.GetPhysicalIntegrationPoints())
+                        print("the quadtree subcell of element " + str(elem_id) + " has number of physical point(s) = " + str(num_physical_points))
                         if num_physical_points < number_of_minimum_physical_points:
                             include_element = False
-                            print("\nthe quadtree subcell of element " + str(elem_id) + " has number of physical point(s) = " + str(num_physical_points) + " < " + str(number_of_minimum_physical_points) + ". It will be considered as small subcell. The action on it is: " + str(action_on_small_subcell))
+                            print("the quadtree subcell of element " + str(elem_id) + " has number of physical point(s) = " + str(num_physical_points) + " < " + str(number_of_minimum_physical_points) + ". It will be considered as small subcell. The action on it is: " + str(action_on_small_cut_cell) + "\n")
 
-#                print("include_element:", include_element)
                 if include_element:
-                    proper_cut_elems.append(qs)
+                    proper_cut_qs_elems.append(qs)
                 else:
-                    if action_on_small_subcell == 'eliminate':
-                        exclude_elems.append(qs)
+                    if action_on_small_cut_cell == 'eliminate':
+                        exclude_qs_elems.append(qs)
                         cnt = cnt + 1
-                    elif action_on_small_subcell == 'replace by subcell quadtree':
-                        quadtree_elems.append(qs)
+                    elif action_on_small_cut_cell == 'replace by subcell quadtree':
+                        small_qs_elems.append(qs)
                         cnt = cnt + 1
-                    elif action_on_small_subcell == 'replace by quadtree':
-                        quadtree_elems.append(qs)
+                    elif action_on_small_cut_cell == 'replace by quadtree':
+                        small_qs_elems.append(qs)
+                        cnt = cnt + 1
+                    elif action_on_small_cut_cell == 'replace by moment-fit quadtree':
+                        small_qs_elems.append(qs)
+                        cnt = cnt + 1
+                    else:
+                        small_qs_elems.append(qs)
                         cnt = cnt + 1
 
-                if cnt2 > 0.01*num_cut_elems:
+                if cnt2 > 0.01*num_cut_qs_elems:
                     cnt2 = 0
                     sys.stdout.write(str(cnt3) + " ")
                     sys.stdout.flush()
@@ -489,27 +517,50 @@ class FiniteCellSimulator:
                 else:
                     cnt2 = cnt2 + 1
 
-            if action_on_small_subcell == 'eliminate':
+            if action_on_small_cut_cell == 'eliminate':
                 print("\nRemoval completed, " + str(cnt) + " quadtree subcell is removed")
-            elif (action_on_small_subcell == 'replace by subcell quadtree') or (action_on_small_subcell == 'replace by quadtree'):
+            elif (action_on_small_cut_cell == 'replace by subcell quadtree') or (action_on_small_cut_cell == 'replace by quadtree'):
                 print("\nReplace completed, " + str(cnt) + " quadtree subcell will be filled with quadtree quadrature")
 
-        fit_func_callback(proper_cut_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+        subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
         print("construct quadrature using moment fitting for subcell successfully")
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
         accuracy = self.params["quad_accuracy"]
 
-        if action_on_small_subcell == 'eliminate':
-            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, quadtree_elems, accuracy)
-        elif action_on_small_subcell == 'replace by quadtree':
+        ## export the physical integration points for debugging if needed
+        if self.params["export_physical_integration_point"]:
+            cog_points = []
+            for qs in cut_qs_elems:
+                elem = qs.GetElement()
+                points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+                for point in points:
+                    cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+            print("len(cog_points):", len(cog_points))
+            prop_id = self.params["physical_integration_point_prop_id"]
+            quad_util.CreateConditionFromPoint(model_part, cog_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
+
+        ## export the quadtree for debugging if needed
+        if self.params["export_quadtree_cell"]:
+            lastNodeId = aux_util.GetLastNodeId(model_part)
+            lastElementId = aux_util.GetLastElementId(model_part)
+            sample_quad_element_name = self.params["sample_quad_element_name"]
+            for qs in small_qs_elems:
+                last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, 61)
+                lastNodeId = last_ids[0]
+                lastElementId = last_ids[1]
+
+        ## handle the small cells
+        if action_on_small_cut_cell == 'eliminate':
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, small_qs_elems, accuracy)
+        elif action_on_small_cut_cell == 'replace by quadtree':
             # perform quadtree refinement for "eliminated" cell
             total_add_quadrature_pnts = 0
             small_cut_cell_quadrature_method = self.params["small_cut_cell_quadrature_method"]
             quadtree_small_weight = self.params["quadtree_small_weight"]
             small_cut_cell_qt_depth = self.params["small_cut_cell_qt_depth"]
-            valid_quadtree_elems = []
-            for qs in quadtree_elems:
+            valid_quadtree_qs_elems = []
+            for qs in small_qs_elems:
                 qs.Clear()
                 qs.ConstructSubCellsBasedOnGaussQuadrature(1)
                 for i in range(0, small_cut_cell_qt_depth):
@@ -517,30 +568,58 @@ class FiniteCellSimulator:
                 np = qs.ConstructQuadrature(self.brep, small_cut_cell_quadrature_method, quadtree_small_weight)
                 total_add_quadrature_pnts = total_add_quadrature_pnts + np
                 if np == 0:
-                    exclude_elems.append(qs)
+                    exclude_qs_elems.append(qs)
                 else:
-                    valid_quadtree_elems.append(qs)
-            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
-            print("generate quadtree quadrature for small subcell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
-        elif action_on_small_subcell == 'replace by subcell quadtree':
+                    valid_quadtree_qs_elems.append(qs)
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, valid_quadtree_qs_elems, accuracy)
+            print("generate quadtree quadrature for small cell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
+            ## export the quadtree for debugging if needed
+            if self.params["export_small_quadtree_cell"]:
+                lastNodeId = aux_util.GetLastNodeId(model_part)
+                lastElementId = aux_util.GetLastElementId(model_part)
+                sample_quad_element_name = self.params["sample_quad_element_name"]
+                for qs in small_qs_elems:
+                    last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, 51)
+                    lastNodeId = last_ids[0]
+                    lastElementId = last_ids[1]
+        elif action_on_small_cut_cell == 'replace by subcell quadtree':
             # perform quadtree refinement for "eliminated" cell
             total_add_quadrature_pnts = 0
             small_cut_cell_quadrature_method = self.params["small_cut_cell_quadrature_method"]
             quadtree_small_weight = self.params["quadtree_small_weight"]
             small_cut_cell_qt_depth = self.params["small_cut_cell_qt_depth"]
-            valid_quadtree_elems = []
-            for qs in quadtree_elems:
+            valid_quadtree_qs_elems = []
+            for qs in small_qs_elems:
                 qs.Clear()
                 for i in range(0, small_cut_cell_qt_depth):
                     qs.RefineBy(self.brep)
                 np = qs.ConstructQuadrature(self.brep, small_cut_cell_quadrature_method, quadtree_small_weight)
                 total_add_quadrature_pnts = total_add_quadrature_pnts + np
                 if np == 0:
-                    exclude_elems.append(qs)
+                    exclude_qs_elems.append(qs)
                 else:
-                    valid_quadtree_elems.append(qs)
-            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_elems, exclude_elems, valid_quadtree_elems, accuracy)
-            print("generate quadtree quadrature for small subcell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
+                    valid_quadtree_qs_elems.append(qs)
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, valid_quadtree_qs_elems, accuracy)
+            print("generate subcell quadtree quadrature for small subcell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
+        elif action_on_small_cut_cell == 'replace by moment-fit quadtree':
+            small_cut_cell_quadrature_method = self.params["small_cut_cell_quadrature_method"]
+            small_cut_cell_qt_depth = self.params["small_cut_cell_qt_depth"]
+            small_elems = []
+            small_qt_elems = []
+            print("len(small_qs_elems):", len(small_qs_elems))
+            for qs in small_qs_elems:
+                qs.Clear()
+                qt = CreateQuadTree(qs.GetElement(), nsampling)
+                for i in range(0, small_cut_cell_qt_depth):
+                    qt.RefineBy(self.brep)
+                small_qt_elems.append(qt)
+                small_elems.append(qs.GetElement())
+            small_fit_solver_type = self.params["small_fit_solver_type"]
+            small_fit_echo_level = self.params["small_fit_echo_level"]
+            small_fit_small_weight = self.params["small_fit_small_weight"]
+            small_subcell_fit_func_callback(small_elems, fit_funcs, self.brep, small_qs_elems, small_cut_cell_quadrature_method, integrator_quadrature_method, small_fit_solver_type, small_fit_echo_level, small_fit_small_weight)
+            save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, small_qs_elems, accuracy)
+            print("generate moment-fit quadrature for small cell completed")
 
         fid = open(quad_filename, "a")
         fid.write("\ndef GetParameter():\n")
@@ -558,6 +637,7 @@ class FiniteCellSimulator:
         pprint.pprint(self.params)
         quad_util = QuadratureUtility()
         aux_util = FiniteCellAuxilliaryUtility()
+        mesh_util = FiniteCellMeshUtility()
 
         if self.quadrature_method == "quadtree":
             qt_depth = self.params["qt_depth"]
@@ -735,7 +815,9 @@ class FiniteCellSimulator:
             cut_elems = quadrature_data.GetCutElements()
             exclude_elems = quadrature_data.GetExcludeElements()
             quadtree_elems = quadrature_data.GetQuadTreeElements()
+            fict_elems = ElementsArray()
             cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
+            cut_cell_fictitious_quadrature = quadrature_data.GetCutCellFictitiousQuadrature()
             cut_cell_full_quadrature = quadrature_data.GetCutCellFullQuadrature()
             subcell_weights = quadrature_data.GetCutCellSubCellWeights()
             subcell_domain_sizes = quadrature_data.GetCutCellSubCellDomainSizes()
@@ -746,6 +828,10 @@ class FiniteCellSimulator:
             self.all_subcell_elems = []
             if self.params["export_physical_integration_point"]:
                 cog_points = []
+            if self.params["export_fictitious_integration_point"]:
+                fict_cog_points = []
+            if self.params["add_fictitious_element"]:
+                sample_fictitious_element_name = self.params["fictitious_element_name"]
             for elem in bulk_elements:
                 if elem.Id in cut_elems:
 #                    print("at cut element " + str(elem.Id))
@@ -797,14 +883,32 @@ class FiniteCellSimulator:
                         points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
                         for point in points:
                             cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+
+                    if self.params["add_fictitious_element"]:
+                        if len(cut_cell_fictitious_quadrature[elem.Id]) > 0:
+                            fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
+                            print("fictitious element " + str(fict_elem.Id) + " is created")
+                            aux_util.AddElement(fict_elems, fict_elem)
+                            lastElementId = fict_elem.Id
+                            self.mpu.SetMaterialProperties(model.model_part, fict_elem, self.mat_type)
+                            elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                            elem.Initialize()
+
+                            if self.params["export_fictitious_integration_point"]:
+                                points = fict_elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                                for point in points:
+                                    fict_cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+
                 elif elem.Id in exclude_elems:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
                     elem.Set(ACTIVE, False)
+                    self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type) # set material so that initialize nonlinear iteration can pass
                 elif elem.Id in quadtree_elems:
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, quadtree_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize()
+                    self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
                     aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is also considered as proper_cut_elems
                     print("element " + str(elem.Id) + " is assigned " + str(len(quadtree_quadrature[elem.Id])) + " quadrature points")
                     if self.params["export_physical_integration_point"]:
@@ -817,7 +921,22 @@ class FiniteCellSimulator:
             if self.params["export_physical_integration_point"]:
                 prop_id = self.params["physical_integration_point_prop_id"]
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+            if self.params["export_fictitious_integration_point"]:
+                prop_id = self.params["fictitious_integration_point_prop_id"]
+                quad_util.CreateConditionFromPoint(model.model_part, fict_cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+
+            if self.params["add_fictitious_element"] == True:
+                for fict_elem in fict_elems:
+                    model.model_part.AddElement(fict_elem)
+                    print("fictitious element " + str(fict_elem.Id) + " is added to the model_part")
+
             # end elif self.quadrature_method == "moment-fit subcell":
+        elif self.quadrature_method == "moment-fit subcell no-preload":
+            ###########################################
+            ##QUADTREE
+            ###########################################
+            self.CreateForestSubCell(bulk_elements, nsampling)
+            self.proper_cut_elems = ElementsArray()
         else:
             print("Unknown quadrature_method", self.quadrature_method)
             sys.exit(0)

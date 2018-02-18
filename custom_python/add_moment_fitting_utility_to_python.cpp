@@ -185,7 +185,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
             else
             {
                 Element::GeometryType::IntegrationPointsArrayType integration_points
-                        = (*it_integrator)->Get().ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
+                        = (*it_integrator)->Get(0).ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
 //KRATOS_WATCH(fit_quadrature_type)
 //KRATOS_WATCH(fit_quadrature_order)
 //KRATOS_WATCH(integration_points.size())
@@ -199,7 +199,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
 //                    GeometryData::IntegrationMethod ElementalIntegrationMethod
 //                        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
 
-                // it is a hack here, since the integration method can be larger than Kratos can accomodate. We set to minimum value. In the element this information is not important anyway.
+                // it is a hack here, since the integration method can be larger than Kratos can accommodate. We set to minimum value. In the element this information is not important anyway.
                 GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::GI_GAUSS_1;
 
                 /* create new quadrature and assign to the geometry */
@@ -259,22 +259,52 @@ void FiniteCellApplication_AddMomentFittingUtilityToPython()
     .def("FitQuadrature", &MomentFittingUtility_FitQuadrature<QuadTree<1> >)
     .def("MultithreadedFitQuadrature", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<1> >)
     .def("MultithreadedFitQuadratureSubCell", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<1>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<1> >)
     /////
     .def("FitQuadrature2", &MomentFittingUtility_FitQuadrature<QuadTree<2> >)
     .def("MultithreadedFitQuadrature2", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<2> >)
     .def("MultithreadedFitQuadratureSubCell2", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<2>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique2", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<2> >)
     /////
     .def("FitQuadrature3", &MomentFittingUtility_FitQuadrature<QuadTree<3> >)
     .def("MultithreadedFitQuadrature3", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<3> >)
     .def("MultithreadedFitQuadratureSubCell3", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<3>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique3", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<3> >)
     /////
     .def("FitQuadrature4", &MomentFittingUtility_FitQuadrature<QuadTree<4> >)
     .def("MultithreadedFitQuadrature4", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<4> >)
     .def("MultithreadedFitQuadratureSubCell4", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<4>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique4", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<4> >)
     /////
     .def("FitQuadrature5", &MomentFittingUtility_FitQuadrature<QuadTree<5> >)
     .def("MultithreadedFitQuadrature5", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<5> >)
     .def("MultithreadedFitQuadratureSubCell5", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<5>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique5", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<5> >)
+    /////
+    .def("FitQuadrature6", &MomentFittingUtility_FitQuadrature<QuadTree<6> >)
+    .def("MultithreadedFitQuadrature6", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<6> >)
+    .def("MultithreadedFitQuadratureSubCell6", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<6>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique6", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<6> >)
+    /////
+    .def("FitQuadrature7", &MomentFittingUtility_FitQuadrature<QuadTree<7> >)
+    .def("MultithreadedFitQuadrature7", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<7> >)
+    .def("MultithreadedFitQuadratureSubCell7", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<7>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique7", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<7> >)
+    /////
+    .def("FitQuadrature8", &MomentFittingUtility_FitQuadrature<QuadTree<8> >)
+    .def("MultithreadedFitQuadrature8", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<8> >)
+    .def("MultithreadedFitQuadratureSubCell8", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<8>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique8", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<8> >)
+    /////
+    .def("FitQuadrature9", &MomentFittingUtility_FitQuadrature<QuadTree<9> >)
+    .def("MultithreadedFitQuadrature9", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<9> >)
+    .def("MultithreadedFitQuadratureSubCell9", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<9>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique9", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<9> >)
+    /////
+    .def("FitQuadrature10", &MomentFittingUtility_FitQuadrature<QuadTree<10> >)
+    .def("MultithreadedFitQuadrature10", &MomentFittingUtility_MultithreadedFitQuadrature<QuadTree<10> >)
+    .def("MultithreadedFitQuadratureSubCell10", &MomentFittingutility_MultithreadedFitQuadratureSubCell<MomentFittedQuadTreeSubCell<10>, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCellUnique10", &MomentFittingUtility_MultithreadedFitQuadrature<MomentFittedQuadTreeSubCell<10> >)
     ;
 
 }

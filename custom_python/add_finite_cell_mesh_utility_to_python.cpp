@@ -68,6 +68,35 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& 
     rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 }
 
+Element::Pointer FiniteCellMeshUtility_CreateParasiteElement(FiniteCellMeshUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_element_name,
+    std::size_t& lastElementId, Element::Pointer pElement, Properties::Pointer pProperties)
+{
+    return rDummy.CreateParasiteElement(r_model_part, sample_element_name, lastElementId, pElement, pProperties);
+}
+
+Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_element_name,
+    std::size_t lastElementId, Element::Pointer pElement, const int& integration_order,
+    boost::python::list& assigned_quadrature, Properties::Pointer pProperties)
+{
+    Element::GeometryType::IntegrationPointsArrayType integration_points;
+    for(std::size_t i = 0; i < boost::python::len(assigned_quadrature); ++i)
+    {
+        boost::python::list point = boost::python::extract<boost::python::list>(assigned_quadrature[i]);
+        Element::GeometryType::IntegrationPointType integration_point;
+        integration_point.X() = boost::python::extract<double>(point[0]);
+        integration_point.Y() = boost::python::extract<double>(point[1]);
+        integration_point.Z() = boost::python::extract<double>(point[2]);
+        integration_point.Weight() = boost::python::extract<double>(point[3]);
+//            KRATOS_WATCH(integration_point)
+        integration_points.push_back(integration_point);
+    }
+
+    return rDummy.CreateParasiteElement(r_model_part, pElement, sample_element_name,
+        integration_order, integration_points, lastElementId, pProperties);
+}
+
 void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
 {
 
@@ -75,6 +104,8 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
     ("FiniteCellMeshUtility", init<>())
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2D)
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart3D)
+    .def("CreateParasiteElement", &FiniteCellMeshUtility_CreateParasiteElement)
+    .def("CreateParasiteElement", &FiniteCellMeshUtility_CreateParasiteElement2)
     ;
 
 }

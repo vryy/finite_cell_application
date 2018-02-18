@@ -15,7 +15,7 @@
 #include "custom_utilities/ghost_penalty_utility.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 
-#define ENABLE_DEBUG_GHOST_PENALTY
+// #define ENABLE_DEBUG_GHOST_PENALTY
 // #define ENABLE_DEBUG_GHOST_PENALTY_2
 
 namespace Kratos

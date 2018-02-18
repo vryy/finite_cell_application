@@ -357,6 +357,30 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         ////////////////////////////////
 
+        myFile << "\ndef GetCutCellFictitiousQuadrature():\n";
+        myFile << "\tfiq = {}\n";
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
+                std::make_pair(iterator_value_type(pyCutTrees), // begin
+                iterator_value_type() ) ) // end
+        {
+            const Element::GeometryType::IntegrationPointsArrayType& integration_points
+                = p_tree->GetFictitiousIntegrationPoints();
+
+            myFile << "\tfiq[" << p_tree->pGetElement()->Id() << "] = [";
+            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            {
+                myFile << "\n\t\t[" << integration_points[i].X()
+                             << ", " << integration_points[i].Y()
+                             << ", " << integration_points[i].Z()
+                             << ", " << integration_points[i].Weight() << "],";
+            }
+            myFile << "] # " << integration_points.size() << "\n";
+        }
+
+        myFile << "\treturn fiq\n";
+
+        ////////////////////////////////
+
         myFile << "\ndef GetCutCellFullQuadrature():\n";
         myFile << "\tfq = {}\n";
         BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
@@ -570,6 +594,11 @@ void FiniteCellApplication_AddQuadratureUtilityToPython()
     .def("SaveQuadratureSubCell3", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<3> >)
     .def("SaveQuadratureSubCell4", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<4> >)
     .def("SaveQuadratureSubCell5", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<5> >)
+    .def("SaveQuadratureSubCell6", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<6> >)
+    .def("SaveQuadratureSubCell7", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<7> >)
+    .def("SaveQuadratureSubCell8", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<8> >)
+    .def("SaveQuadratureSubCell9", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<9> >)
+    .def("SaveQuadratureSubCell10", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<10> >)
     .def("SetQuadrature", &QuadratureUtility_SetQuadrature)
     .def("CreateConditionFromQuadraturePoint", &QuadratureUtility_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint)

@@ -235,6 +235,51 @@ public:
 
 
     template<class TTreeType, class TFunctionType> // = MomentFittedQuadTreeSubCell
+    void FitQuadratureSubCell(typename TTreeType::Pointer p_tree,
+            const std::vector<typename TFunctionType::Pointer>& r_funcs,
+            const BRep& r_brep,
+            const int& integrator_integration_method,
+            const std::string& solver_type,
+            const int& echo_level,
+            const double& small_weight) const
+    {
+        if(echo_level > 0)
+            std::cout << "--------------------------------start fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+
+        /* firstly get the physical integration point */
+        // note that p_tree->GeneratePhysicalIntegrationPoints() must be called before to generate integration points data
+        const std::vector<std::size_t>& subcell_index = p_tree->SubCellIndices();
+        const GeometryType::IntegrationPointsArrayType& physical_integration_points = p_tree->GetPhysicalIntegrationPoints();
+
+//            std::cout << "list of physical integration points for element " << p_tree->pGetElement()->Id() << std::endl;
+//            for(std::size_t i = 0; i < physical_integration_points.size(); ++i)
+//                std::cout << " " << physical_integration_points[i] << std::endl;
+//            std::cout << std::endl;
+
+        /* secondly assign the physical integration points to the element */
+        GeometryData::IntegrationMethod RepresentativeIntegrationMethod = p_tree->GetRepresentativeIntegrationMethod();
+        FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
+        Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+        p_tree->pGetElement()->SetValue(INTEGRATION_ORDER_var, p_tree->GetRepresentativeIntegrationOrder());
+        p_tree->pGetElement()->Initialize();
+
+        /* thirdly fit the subcell */
+        Matrix Weights = p_tree->FitQuadratureSubCell(subcell_index, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
+
+        p_tree->pGetElement()->SetValue(SUBCELL_WEIGHTS, Weights);
+
+        /* compute the subcell domain size */
+        Vector DomainSizes(subcell_index.size());
+        for(std::size_t i = 0; i < subcell_index.size(); ++i)
+            DomainSizes(i) = p_tree->DomainSize(subcell_index[i], r_brep, integrator_integration_method);
+        p_tree->pGetElement()->SetValue(SUBCELL_DOMAIN_SIZES, DomainSizes);
+
+        if(echo_level > 0)
+            std::cout << "--------------------------------end fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+    }
+
+
+    template<class TTreeType, class TFunctionType> // = MomentFittedQuadTreeSubCell
     void MultithreadedFitQuadratureSubCell(std::vector<typename TTreeType::Pointer>& r_trees,
             const std::vector<typename TFunctionType::Pointer>& r_funcs,
             const BRep& r_brep,
@@ -272,36 +317,7 @@ public:
 
             for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
             {
-                if(echo_level > 0)
-                    std::cout << "--------------------------------start fitting for element " << (*it)->pGetElement()->Id() << "--------------------------------" << std::endl;
-
-                /* firstly compute the physical integration point */
-                std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
-                        = (*it)->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
-                const std::vector<std::size_t>& subcell_index = Output.first;
-                const GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
-
-                /* secondly assign the physical integration points to the element */
-                GeometryData::IntegrationMethod RepresentativeIntegrationMethod = (*it)->GetRepresentativeIntegrationMethod();
-                FiniteCellGeometryUtility::AssignGeometryData(*(*it)->pGetGeometry(), RepresentativeIntegrationMethod, physical_integration_points);
-                Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
-                (*it)->pGetElement()->SetValue(INTEGRATION_ORDER_var, (*it)->GetRepresentativeIntegrationOrder());
-                (*it)->pGetElement()->Initialize();
-
-                /* thirdly fit the subcell */
-                Matrix Weights = (*it)->FitQuadratureSubCell(subcell_index, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
-
-                (*it)->pGetElement()->SetValue(SUBCELL_WEIGHTS, Weights);
-
-                /* compute the subcell domain size */
-                Vector DomainSizes(subcell_index.size());
-                for(std::size_t i = 0; i < subcell_index.size(); ++i)
-                    DomainSizes(i) = (*it)->DomainSize(subcell_index[i], r_brep, integrator_integration_method);
-                (*it)->pGetElement()->SetValue(SUBCELL_DOMAIN_SIZES, DomainSizes);
-
-                if(echo_level > 0)
-                    std::cout << "--------------------------------end fitting for element " << (*it)->pGetElement()->Id() << "--------------------------------" << std::endl;
-
+                this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
                 ++show_progress;
             }
         }

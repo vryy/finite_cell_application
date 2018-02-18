@@ -20,6 +20,7 @@
 // System includes
 #include <string>
 #include <iostream>
+#include <tuple>
 
 
 // External includes
@@ -39,6 +40,7 @@
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
+#include "custom_utilities/finite_cell_mesh_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
 //#define DEBUG_SUBCELL
@@ -255,41 +257,54 @@ public:
     }
 
 
+    /// Get the integration order of fitting integration points
     const int& GetRepresentativeIntegrationOrder() const
     {
         return mRepresentativeIntegrationOrder;
     }
 
 
+    /// Get the integration method of fitting integration points
     GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
     {
         return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
     }
 
 
+    /// Get the list of integration points used to fit each subcell
     const GeometryType::IntegrationPointsArrayType& GetRepresentativeIntegrationPoints() const
     {
         return mMomentFittingIntegrationPoints;
     }
 
 
-    /// Get the number of physical quadrature point. One physical quadrature point represents a subcell.
-    std::size_t GetNumberOfPhysicalIntegrationPoint(const BRep& r_brep, const int& integrator_integration_method) const
+    /// Get the physical integration points
+    const GeometryType::IntegrationPointsArrayType& GetPhysicalIntegrationPoints() const
     {
-        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output
-            = this->GetPhysicalInterationPoint(r_brep, integrator_integration_method);
+        return mPhysicalIntegrationPoints;
+    }
 
-        return Output.second.size();
+
+    /// Get index of the sub-cells
+    const std::vector<std::size_t>& SubCellIndices() const
+    {
+        return mSubCellIndices;
+    }
+
+
+    /// Get the fictitious integration points
+    const GeometryType::IntegrationPointsArrayType& GetFictitiousIntegrationPoints() const
+    {
+        return mFictitiousIntegrationPoints;
     }
 
 
     /// Compute the physical quadrature point. One physical quadrature point represents a subcell.
-    std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType>
-    GetPhysicalInterationPoint(const BRep& r_brep, const int& integrator_integration_method) const
+    void GeneratePhysicalIntegrationPoints(const BRep& r_brep, const int& integrator_integration_method)
     {
-        std::pair<std::vector<std::size_t>, GeometryType::IntegrationPointsArrayType> Output;
-        std::vector<std::size_t>& subcell_index = Output.first;
-        GeometryType::IntegrationPointsArrayType& physical_integration_points = Output.second;
+        mSubCellIndices.clear();
+        mPhysicalIntegrationPoints.clear();
+        mFictitiousIntegrationPoints.clear();
 
         PointType COG;
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
@@ -318,8 +333,8 @@ public:
                 // the cell is completely inside the physical domain
                 GeometryType::IntegrationPointType integration_point = mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
-                physical_integration_points.push_back(integration_point);
-                subcell_index.push_back(i);
+                mPhysicalIntegrationPoints.push_back(integration_point);
+                mSubCellIndices.push_back(i);
             }
             else if(status == BRep::_CUT)
             {
@@ -341,18 +356,33 @@ public:
                         std::cout << "!!WARNING!!The CenterOfGravity is not inside the domain of the subcell " << i << std::endl;
                     }
                     integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
-                    physical_integration_points.push_back(integration_point);
-                    subcell_index.push_back(i);
+                    mPhysicalIntegrationPoints.push_back(integration_point);
+                    mSubCellIndices.push_back(i);
                 }
             }
-            #ifdef DEBUG_SUBCELL
             else
+            {
+                #ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is completely outside the physical domain" << std::endl;
+                #endif
+                // the cell is completely outside the physical domain
+                GeometryType::IntegrationPointType integration_point = mRepresentativeIntegrationPoints[i];
+                integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
+                mFictitiousIntegrationPoints.push_back(integration_point);
+            }
+
+            #ifdef DEBUG_SUBCELL
             std::cout << "---------------------><--------------------\n\n";
             #endif
         }
+    }
 
-        return Output;
+
+    /// Set the weight for fictitious integration points
+    void SetFictitiousWeight(const double& weight)
+    {
+        for (std::size_t i = 0; i < mFictitiousIntegrationPoints.size(); ++i)
+            mFictitiousIntegrationPoints[i].SetWeight(weight);
     }
 
 
@@ -383,33 +413,35 @@ public:
     }
 
 
-    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weight is given.
+    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weights are given.
     ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
         const std::string& sample_element_name,
         const Matrix& rWeights,
         std::size_t& lastElementId,
         std::size_t& lastCondId) const
     {
-        return this->CreateSubCellElements(r_model_part, sample_element_name, mRepresentativeIntegrationOrder,
-                            mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId);
+        return CreateSubCellElements(r_model_part, mpElement, sample_element_name, mRepresentativeIntegrationOrder,
+                            mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId, mpElement->pGetProperties());
     }
 
 
-    /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the integration point and weight is given.
-    ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
+    /// Create the element out from sub-cells of an element. The new element takes the same geometry of the original element, but the integration points and weights are given.
+    static ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
+        Element::Pointer pElement, // the parent element that contains sub-cells
         const std::string& sample_element_name,
         const int& RepresentativeIntegrationOrder,
         const GeometryType::IntegrationPointsArrayType& integration_points,
         const Matrix& rWeights,
         std::size_t& lastElementId,
-        std::size_t& lastCondId) const
+        std::size_t& lastCondId,
+        Properties::Pointer pProperties)
     {
         /* create the new elements from subcell */
         std::size_t num_physical_point = rWeights.size1();
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
         ModelPart::ElementsContainerType NewElements;
-        GeometryType& r_geom = *BaseType::pGetGeometry();
+        GeometryType& r_geom = *(pElement->pGetGeometry());
 
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
@@ -426,7 +458,7 @@ public:
             // here we make a clone of the geometry because we want to assign different geometry data later on
             // this also works with Bezier element, because Bezier geometry has implemented the Create method
             Element::Pointer pNewElement;
-            pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), mpElement->pGetProperties());
+            pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), pProperties);
 
             FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
@@ -444,25 +476,21 @@ public:
             r_model_part.Conditions().push_back(pNewCond);
         }
 
-        std::cout << NewElements.size() << " new " << sample_element_name << "-wrapped conditions from parent element " << mpElement->Id()
+        std::cout << NewElements.size() << " new " << sample_element_name << "-wrapped conditions from parent element " << pElement->Id()
                   << " are added to the model_part" << std::endl;
 
         return NewElements;
     }
 
-    /// Create an element taking the same nodes as the original one, but taking the type of geometry from sample_element_name
-    Element::Pointer CreateParasiteElement(ModelPart& r_model_part,
-        const std::string& sample_element_name, std::size_t& lastElementId,
-        Element::Pointer pElement ) const
+
+    /// Create the fictitious element out from an element. The new element takes the same geometry of the original element, but with the fictitious integration points.
+    Element::Pointer CreateFictitiousElement(ModelPart& r_model_part,
+        const std::string& sample_element_name,
+        std::size_t& lastElementId,
+        Properties::Pointer pProperties)
     {
-        Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
-
-        // REMARK: when creating the element here, the integration rule is not passed. Instead the default integration rule of this element_type is applied, which is not the same as the original element.
-        Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, pElement->pGetGeometry(), pElement->pGetProperties());
-
-        std::cout << "1 element of type " << sample_element_name << " is created" << std::endl;
-
-        return pNewElement;
+        return FiniteCellMeshUtility::CreateParasiteElement(r_model_part, mpElement, sample_element_name,
+                mRepresentativeIntegrationOrder, mFictitiousIntegrationPoints, lastElementId, pProperties);
     }
 
 
@@ -493,6 +521,10 @@ private:
     int mRepresentativeIntegrationOrder; // this is the integration order associated with mMomentFittingIntegrationPoints
     GeometryType::IntegrationPointsArrayType mMomentFittingIntegrationPoints; // this contains the quadrature points to fit the integration on sub-cell. It is typically the Gauß quadrature point on big cell.
     GeometryType::IntegrationPointsArrayType mRepresentativeIntegrationPoints; // this contains the quadrature points representing a sub-cell. In most of the case, it is not useful. However, when the sub-cell is completely inside the physical domain, it can be used as physical integration point.
+
+    std::vector<std::size_t> mSubCellIndices;
+    GeometryType::IntegrationPointsArrayType mPhysicalIntegrationPoints;
+    GeometryType::IntegrationPointsArrayType mFictitiousIntegrationPoints;
 
     /// Assignment operator.
      MomentFittedQuadTreeSubCell& operator=( MomentFittedQuadTreeSubCell const& rOther);

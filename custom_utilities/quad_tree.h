@@ -153,6 +153,14 @@ public:
     QuadTreeNode::Pointer pGet() {return mpTreeNode;}
 
 
+    /// Access the underlying quad-tree node
+    /// These functions are provided so that quadtree-subcell can work interchangeably with quadtree
+    const QuadTreeNode& Get(const std::size_t& i) const {return *mpTreeNode;}
+    QuadTreeNode& Get(const std::size_t& i) {return *mpTreeNode;}
+    const QuadTreeNode::Pointer pGet(const std::size_t& i) const {return mpTreeNode;}
+    QuadTreeNode::Pointer pGet(const std::size_t& i) {return mpTreeNode;}
+
+
     /// Access the underlying (operating) geometry
     GeometryType& GetGeometry() const {return *mpThisGeometry;}
     GeometryType::Pointer pGetGeometry() const {return mpThisGeometry;}
@@ -550,6 +558,20 @@ public:
             mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
+
+    //////////////////////
+
+    /// Integrate a function using the underlying geometry of the quadtree subcell and integration rule
+    /// The caller has to manually set rOutput to zero before calling this function
+    template<typename TOutputType, int Frame>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            const BRep& r_brep, TOutputType& rOutput, const int& integration_method, const double& small_weight) const
+    {
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+    }
+
+    //////////////////////
 
     /// Construct the finite cell quadrature
     std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,

@@ -37,6 +37,7 @@
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_geometry_utility.h"
 
 
 namespace Kratos
@@ -406,6 +407,52 @@ public:
         }
 
         return i_result;
+    }
+
+
+    /// Create an element taking the same nodes as the original one, but taking the type of geometry from sample_element_name
+    static Element::Pointer CreateParasiteElement(ModelPart& r_model_part,
+        const std::string& sample_element_name, std::size_t& lastElementId,
+        Element::Pointer pElement, Properties::Pointer pProperties )
+    {
+        Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
+
+        // REMARK: when creating the element here, the integration rule is not passed. Instead the default integration rule of this element_type is applied, which is not the same as the original element.
+        Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, pElement->pGetGeometry(), pProperties);
+
+        std::cout << "1 element of type " << sample_element_name << " is created" << std::endl;
+
+        return pNewElement;
+    }
+
+
+    /// Create the parasite element taking the same geometry of the original element, but the integration points are given.
+    static Element::Pointer CreateParasiteElement(ModelPart& r_model_part,
+        Element::Pointer pElement, // the parent element keep the geometry
+        const std::string& sample_element_name,
+        const int& RepresentativeIntegrationOrder,
+        const GeometryType::IntegrationPointsArrayType& integration_points,
+        std::size_t& lastElementId,
+        Properties::Pointer pProperties)
+    {
+        Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
+        GeometryType& r_geom = *(pElement->pGetGeometry());
+
+        GeometryData::IntegrationMethod RepresentativeIntegrationMethod
+                = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
+        Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+
+        // create the new elements from sub-cell
+        // here we make a clone of the geometry because we want to assign different geometry data later on
+        // this also works with Bezier element, because Bezier geometry has implemented the Create method
+        Element::Pointer pNewElement;
+        pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), pProperties);
+
+        FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, integration_points);
+        pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
+        pNewElement->Initialize();
+
+        return pNewElement;
     }
 
 
