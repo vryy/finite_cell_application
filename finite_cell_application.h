@@ -229,6 +229,12 @@ namespace Kratos
         const DummyElement mDummySurfaceElement3D8N;
         const DummyElement mDummySurfaceElement3D9N;
 
+        const DummyElement mDummyVolumeElement3D4N;
+        const DummyElement mDummyVolumeElement3D10N;
+        const DummyElement mDummyVolumeElement3D8N;
+        const DummyElement mDummyVolumeElement3D20N;
+        const DummyElement mDummyVolumeElement3D27N;
+
         ///@}
         ///@name Private Operators
         ///@{
