@@ -547,6 +547,147 @@ struct ComputeShapeFunctionGradient_Helper
     }
 };
 
+template<class TClassType>
+struct ComputeShapeFunctionNormalGradient_Helper
+{
+    typedef typename TClassType::GeometryType GeometryType;
+
+    typedef typename GeometryType::IntegrationPointType IntegrationPointType;
+
+    typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
+    static void Execute2D(Matrix& dNdn, GeometryType& r_element_geometry,
+        GeometryType& r_edge_geometry, const IntegrationPointsArrayType& edge_integration_points)
+    {
+        std::map<std::size_t, std::size_t> map_edge_node_index_to_element_node_index;
+
+        #ifdef ENABLE_DEBUG_GHOST_PENALTY
+        std::cout << "element geometry:";
+        for (std::size_t i = 0; i < r_element_geometry.size(); ++i)
+            std::cout << " " << r_element_geometry[i].Id();
+        std::cout << std::endl;
+
+        std::cout << "edge geometry:";
+        for (std::size_t i = 0; i < r_edge_geometry.size(); ++i)
+            std::cout << " " << r_edge_geometry[i].Id();
+        std::cout << std::endl;
+        #endif
+
+        int side = FindSide_Helper<TClassType>::Execute(r_element_geometry, r_edge_geometry);
+        if (side != -1)
+        {
+            map_edge_node_index_to_element_node_index.clear();
+
+            GhostPenalty_Helper::BuildMapEdgeNodeIndexToElementNodeIndex(map_edge_node_index_to_element_node_index,
+                        r_edge_geometry, r_element_geometry, TClassType::Faces(side));
+
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+            KRATOS_WATCH(side)
+            #endif
+
+            Matrix DN_DX(TClassType::NumberOfNodes(), 2);
+
+            // construct the local coordinates system associated with the edge
+            Vector t(2), n(2);
+    //            double length = norm_2(r_element_geometry[msEdges[side][0]] - r_element_geometry[msEdges[side][1]]);
+    //            t(0) = (r_element_geometry[msEdges[side][1]].X0() - r_element_geometry[msEdges[side][0]].X0()) / length;
+    //            t(1) = (r_element_geometry[msEdges[side][1]].Y0() - r_element_geometry[msEdges[side][0]].Y0()) / length;
+    //            n(0) = -t(1);
+    //            n(1) = t(0);
+    //            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+    //            KRATOS_WATCH(t)
+    //            KRATOS_WATCH(n)
+    //            #endif
+
+            for (std::size_t i = 0; i < edge_integration_points.size(); ++i)
+            {
+                GhostPenalty_Helper::ComputeLocalFrame(t, n, r_edge_geometry, edge_integration_points[i]);
+                #ifdef ENABLE_DEBUG_GHOST_PENALTY
+                KRATOS_WATCH(t)
+                KRATOS_WATCH(n)
+                #endif
+
+                IntegrationPointType integration_point = TClassType::ComputeIntegrationPoint(side, edge_integration_points[i]);
+
+                DN_DX = GhostPenalty_Helper::ComputeShapeFunctionGradient(DN_DX, r_element_geometry, integration_point);
+                #ifdef ENABLE_DEBUG_GHOST_PENALTY
+                KRATOS_WATCH(DN_DX)
+                #endif
+                dNdn(0, i) = DN_DX(map_edge_node_index_to_element_node_index[0], 0) * n(0) + DN_DX(map_edge_node_index_to_element_node_index[0], 1) * n(1);
+                dNdn(1, i) = DN_DX(map_edge_node_index_to_element_node_index[1], 0) * n(0) + DN_DX(map_edge_node_index_to_element_node_index[1], 1) * n(1);
+            }
+        }
+
+        if (side == -1)
+            KRATOS_THROW_ERROR(std::logic_error, "The edge geometry is not found on the element geometry. Check the input", "")
+    }
+
+    static void Execute3D(Matrix& dNdn, GeometryType& r_element_geometry, GeometryType& r_face_geometry,
+        const IntegrationPointsArrayType& face_integration_points)
+    {
+        std::map<std::size_t, std::size_t> map_edge_node_index_to_element_node_index;
+
+        #ifdef ENABLE_DEBUG_GHOST_PENALTY
+        std::cout << "element geometry:";
+        for (std::size_t i = 0; i < r_element_geometry.size(); ++i)
+            std::cout << " " << r_element_geometry[i].Id();
+        std::cout << std::endl;
+
+        std::cout << "face geometry:";
+        for (std::size_t i = 0; i < r_face_geometry.size(); ++i)
+            std::cout << " " << r_face_geometry[i].Id();
+        std::cout << std::endl;
+        #endif
+
+        int side = FindSide_Helper<TClassType>::Execute(r_element_geometry, r_face_geometry);
+        if (side != -1)
+        {
+            GhostPenalty_Helper::BuildMapEdgeNodeIndexToElementNodeIndex(map_edge_node_index_to_element_node_index,
+                        r_face_geometry, r_element_geometry, TClassType::Faces(side));
+
+            #ifdef ENABLE_DEBUG_GHOST_PENALTY
+            KRATOS_WATCH(side)
+            #endif
+
+            Matrix DN_DX(TClassType::NumberOfNodes(), 3);
+
+            if (dNdn.size1() != r_face_geometry.size() || dNdn.size2() != face_integration_points.size())
+                dNdn.resize(r_face_geometry.size(), face_integration_points.size(), false);
+
+            // construct the local coordinates system associated with the face
+            Vector t1(3), t2(3), n(3);
+
+            for (std::size_t i = 0; i < face_integration_points.size(); ++i)
+            {
+                GhostPenalty_Helper::ComputeLocalFrame(t1, t2, n, r_face_geometry, face_integration_points[i]);
+                #ifdef ENABLE_DEBUG_GHOST_PENALTY
+                KRATOS_WATCH(t1)
+                KRATOS_WATCH(t2)
+                KRATOS_WATCH(n)
+                #endif
+
+                IntegrationPointType integration_point = TClassType::ComputeIntegrationPoint(side, face_integration_points[i]);
+
+                DN_DX = GhostPenalty_Helper::ComputeShapeFunctionGradient(DN_DX, r_element_geometry, integration_point);
+                #ifdef ENABLE_DEBUG_GHOST_PENALTY
+                KRATOS_WATCH(DN_DX)
+                #endif
+                for (std::size_t j = 0; j < r_face_geometry.size(); ++j)
+                {
+                    dNdn(j, i) = 0.0;
+                    for (std::size_t k = 0; k < 3; ++k)
+                    {
+                        dNdn(j, i) += DN_DX(map_edge_node_index_to_element_node_index[j], k) * n(k);
+                    }
+                }
+            }
+        }
+
+        if (side == -1)
+            KRATOS_THROW_ERROR(std::logic_error, "The face geometry is not found on the element geometry. Check the input", "")
+    }
+};
+
 template<>
 struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>
 {
