@@ -83,7 +83,12 @@ public:
 
     /// Default constructor.
     CosFunction(const typename BaseType::Pointer p_func)
-    : mp_func(p_func)
+    : BaseType(), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    CosFunction(CosFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction())
     {}
 
     /// Destructor.
@@ -99,6 +104,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new CosFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -231,10 +242,6 @@ private:
     /// Assignment operator.
     CosFunction& operator=(CosFunction const& rOther);
 
-    /// Copy constructor.
-    CosFunction(CosFunction const& rOther);
-
-
     ///@}
 
 }; // Class CosFunction
@@ -264,7 +271,12 @@ public:
 
     /// Default constructor.
     SinFunction(const typename BaseType::Pointer p_func)
-    : mp_func(p_func)
+    : BaseType(), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    SinFunction(SinFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction())
     {}
 
     /// Destructor.
@@ -280,6 +292,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new SinFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -413,10 +431,6 @@ private:
     /// Assignment operator.
     SinFunction& operator=(SinFunction const& rOther);
 
-    /// Copy constructor.
-    SinFunction(SinFunction const& rOther);
-
-
     ///@}
 
 }; // Class SinFunction
@@ -446,7 +460,12 @@ public:
 
     /// Default constructor.
     AcosFunction(const typename BaseType::Pointer p_func)
-    : mp_func(p_func)
+    : BaseType(), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    AcosFunction(AcosFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction())
     {}
 
     /// Destructor.
@@ -462,6 +481,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new AcosFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -594,10 +619,6 @@ private:
 
     /// Assignment operator.
     AcosFunction& operator=(AcosFunction const& rOther);
-
-    /// Copy constructor.
-    AcosFunction(AcosFunction const& rOther);
-
 
     ///@}
 

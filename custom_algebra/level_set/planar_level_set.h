@@ -77,6 +77,11 @@ public:
     : BaseType(), mA(A), mB(B), mC(C), mD(D)
     {}
 
+    /// Copy constructor.
+    PlanarLevelSet(PlanarLevelSet const& rOther)
+    : BaseType(rOther), mA(rOther.mA), mB(rOther.mB), mC(rOther.mC), mD(rOther.mD)
+    {}
+
     /// Destructor.
     virtual ~PlanarLevelSet() {}
 
@@ -89,6 +94,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new PlanarLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -226,9 +237,6 @@ private:
 
     /// Assignment operator.
     PlanarLevelSet& operator=(PlanarLevelSet const& rOther);
-
-    /// Copy constructor.
-    PlanarLevelSet(PlanarLevelSet const& rOther);
 
 
     ///@}

@@ -79,7 +79,11 @@ public:
     ///@{
 
     /// Default constructor.
-    ZeroFunction()
+    ZeroFunction() : BaseType()
+    {}
+
+    /// Copy constructor.
+    ZeroFunction(ZeroFunction const& rOther) : BaseType(rOther)
     {}
 
     /// Destructor.
@@ -95,6 +99,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new ZeroFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -227,10 +237,6 @@ private:
 
     /// Assignment operator.
     ZeroFunction& operator=(ZeroFunction const& rOther);
-
-    /// Copy constructor.
-    ZeroFunction(ZeroFunction const& rOther);
-
 
     ///@}
 

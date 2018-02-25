@@ -87,6 +87,9 @@ public:
     /// Default constructor.
     BRep() : mTOL(1.0e-10) {}
 
+    /// Copy constructor.
+    BRep(BRep const& rOther) : mTOL(rOther.mTOL) {}
+
     /// Destructor.
     virtual ~BRep() {}
 
@@ -99,6 +102,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+    /// Clone this BRep
+    virtual BRep::Pointer CloneBRep() const
+    {
+        return BRep::Pointer(new BRep(*this));
+    }
 
     /// Set for geometric tolerance
     void SetTolerance(const double& TOL) {mTOL = TOL;}
@@ -391,10 +400,6 @@ private:
 
     /// Assignment operator.
     BRep& operator=(BRep const& rOther);
-
-    /// Copy constructor.
-    BRep(BRep const& rOther);
-
 
     ///@}
 

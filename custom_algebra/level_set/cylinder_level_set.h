@@ -88,6 +88,12 @@ public:
         mdZ = dZ / mLength;
     }
 
+    /// Copy constructor.
+    CylinderLevelSet(CylinderLevelSet const& rOther)
+    : BaseType(rOther), mcX(rOther.mcX), mcY(rOther.mcY), mcZ(rOther.mcZ)
+    , mdX(rOther.mdX), mdY(rOther.mdY), mdZ(rOther.mdZ), mR(rOther.mR)
+    {}
+
     /// Destructor.
     virtual ~CylinderLevelSet() {}
 
@@ -100,6 +106,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new CylinderLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -324,10 +336,6 @@ private:
 
     /// Assignment operator.
     CylinderLevelSet& operator=(CylinderLevelSet const& rOther);
-
-    /// Copy constructor.
-    CylinderLevelSet(CylinderLevelSet const& rOther);
-
 
     ///@}
 

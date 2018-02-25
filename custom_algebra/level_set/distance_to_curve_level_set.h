@@ -81,6 +81,11 @@ public:
     : BaseType(), mpCurve(pAlignCurve), mR(R)
     {}
 
+    /// Copy constructor.
+    DistanceToCurveLevelSet(DistanceToCurveLevelSet const& rOther)
+    : BaseType(rOther), mpCurve(rOther.mpCurve->CloneFunction()), mR(rOther.mR)
+    {}
+
     /// Destructor.
     virtual ~DistanceToCurveLevelSet() {}
 
@@ -93,6 +98,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new DistanceToCurveLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -443,10 +454,6 @@ private:
 
     /// Assignment operator.
     DistanceToCurveLevelSet& operator=(DistanceToCurveLevelSet const& rOther);
-
-    /// Copy constructor.
-    DistanceToCurveLevelSet(DistanceToCurveLevelSet const& rOther);
-
 
     ///@}
 

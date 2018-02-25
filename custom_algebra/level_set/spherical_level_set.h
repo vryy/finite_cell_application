@@ -77,6 +77,11 @@ public:
     : BaseType(), mcX(cX), mcY(cY), mcZ(cZ), mR(R)
     {}
 
+    /// Copy constructor.
+    SphericalLevelSet(SphericalLevelSet const& rOther)
+    : BaseType(rOther), mcX(rOther.mcX), mcY(rOther.mcY), mcZ(rOther.mcZ), mR(rOther.mR)
+    {}
+
     /// Destructor.
     virtual ~SphericalLevelSet() {}
 
@@ -89,6 +94,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new SphericalLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -226,10 +237,6 @@ private:
 
     /// Assignment operator.
     SphericalLevelSet& operator=(SphericalLevelSet const& rOther);
-
-    /// Copy constructor.
-    SphericalLevelSet(SphericalLevelSet const& rOther);
-
 
     ///@}
 

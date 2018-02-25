@@ -84,7 +84,14 @@ public:
 
     /// Default constructor.
     ProductLevelSet(const BaseType::Pointer p_level_set_1, const BaseType::Pointer p_level_set_2)
-    : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
+    : BaseType(), mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
+    {}
+
+    /// Copy constructor.
+    ProductLevelSet(ProductLevelSet const& rOther)
+    : BaseType(rOther)
+    , mp_level_set_1(rOther.mp_level_set_1->CloneLevelSet())
+    , mp_level_set_2(rOther.mp_level_set_2->CloneLevelSet())
     {}
 
     /// Destructor.
@@ -99,6 +106,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new ProductLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -161,6 +174,7 @@ public:
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
+        rOStream << "LS1: " << *mp_level_set_1 << ", LS2: " << *mp_level_set_2;
     }
 
 
@@ -249,10 +263,6 @@ private:
     /// Assignment operator.
     ProductLevelSet& operator=(ProductLevelSet const& rOther);
 
-    /// Copy constructor.
-    ProductLevelSet(ProductLevelSet const& rOther);
-
-
     ///@}
 
 }; // Class ProductLevelSet
@@ -270,13 +280,15 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream, ProductLevelSet& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream, const ProductLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
+    rOStream << " ";
     rThis.PrintData(rOStream);
 
     return rOStream;

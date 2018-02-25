@@ -79,7 +79,14 @@ public:
 
     /// Default constructor.
     SumFunction(const typename BaseType::Pointer p_func_1, const typename BaseType::Pointer p_func_2)
-    : mp_func_1(p_func_1), mp_func_2(p_func_2)
+    : BaseType(), mp_func_1(p_func_1), mp_func_2(p_func_2)
+    {}
+
+    /// Copy constructor.
+    SumFunction(SumFunction const& rOther)
+    : BaseType(rOther)
+    , mp_func_1(rOther.mp_func_1->CloneFunction())
+    , mp_func_2(rOther.mp_func_2->CloneFunction())
     {}
 
     /// Destructor.
@@ -95,6 +102,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new SumFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -234,10 +247,6 @@ private:
 
     /// Assignment operator.
     SumFunction& operator=(SumFunction const& rOther);
-
-    /// Copy constructor.
-    SumFunction(SumFunction const& rOther);
-
 
     ///@}
 

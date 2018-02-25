@@ -80,11 +80,16 @@ public:
 
     /// Default constructor.
     PowFunction(const double a, const typename BaseType::Pointer p_func)
-    : ma(a), mp_func(p_func)
+    : BaseType(), ma(a), mp_func(p_func)
     {}
 
     PowFunction(const typename BaseType::Pointer p_func, const double a)
-    : ma(a), mp_func(p_func)
+    : BaseType(), ma(a), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    PowFunction(PowFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction()), ma(rOther.ma)
     {}
 
     /// Destructor.
@@ -100,6 +105,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new PowFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -258,10 +269,6 @@ private:
 
     /// Assignment operator.
     PowFunction& operator=(PowFunction const& rOther);
-
-    /// Copy constructor.
-    PowFunction(PowFunction const& rOther);
-
 
     ///@}
 

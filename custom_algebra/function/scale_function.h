@@ -83,6 +83,11 @@ public:
     : BaseType(), ma(a), mp_func(p_func)
     {}
 
+    /// Copy constructor.
+    ScaleFunction(ScaleFunction const& rOther)
+    : BaseType(rOther), ma(rOther.ma), mp_func(rOther.mp_func->CloneFunction())
+    {}
+
     /// Destructor.
     virtual ~ScaleFunction()
     {}
@@ -96,6 +101,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new ScaleFunction(*this));
+    }
 
 
     virtual OutputType GetValue(const InputType& P) const
@@ -234,10 +245,6 @@ private:
 
     /// Assignment operator.
     ScaleFunction& operator=(ScaleFunction const& rOther);
-
-    /// Copy constructor.
-    ScaleFunction(ScaleFunction const& rOther);
-
 
     ///@}
 

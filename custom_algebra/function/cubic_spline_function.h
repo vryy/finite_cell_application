@@ -82,12 +82,23 @@ public:
     ///@{
 
     /// Default constructor.
-    CubicSplineFunction()
+    CubicSplineFunction() : BaseType()
+    {}
+
+    /// Copy constructor.
+    CubicSplineFunction(CubicSplineFunction const& rOther)
+    : BaseType(rOther), mS(rOther.mS)
     {}
 
     /// Destructor.
     virtual ~CubicSplineFunction()
     {}
+
+
+    virtual BaseType::Pointer CloneFunction() const
+    {
+        return BaseType::Pointer(new CubicSplineFunction(*this));
+    }
 
 
     void SetPoints(const std::vector<double>& t, const std::vector<double>& x)
@@ -264,10 +275,6 @@ private:
 
     /// Assignment operator.
     CubicSplineFunction& operator=(CubicSplineFunction const& rOther);
-
-    /// Copy constructor.
-    CubicSplineFunction(CubicSplineFunction const& rOther);
-
 
     ///@}
 

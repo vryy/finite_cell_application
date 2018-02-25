@@ -88,6 +88,10 @@ public:
     /// Default constructor.
     Function() {}
 
+    /// Copy constructor.
+    Function(Function const& rOther)
+    {}
+
     /// Destructor.
     virtual ~Function() {}
 
@@ -100,6 +104,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual Function::Pointer CloneFunction() const
+    {
+        return Function::Pointer(new Function(*this));
+    }
 
 
     virtual inline const std::size_t InputSize() const
@@ -420,10 +430,6 @@ private:
 
     /// Assignment operator.
     Function& operator=(Function const& rOther);
-
-    /// Copy constructor.
-    Function(Function const& rOther);
-
 
     ///@}
 

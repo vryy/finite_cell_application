@@ -77,6 +77,11 @@ public:
     : BaseType(), mcX(cX), mcY(cY), mR(R)
     {}
 
+    /// Copy constructor.
+    CircularLevelSet(CircularLevelSet const& rOther)
+    : BaseType(rOther), mcX(rOther.mcX), mcY(rOther.mcY), mR(rOther.mR)
+    {}
+
     /// Destructor.
     virtual ~CircularLevelSet() {}
 
@@ -89,6 +94,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new CircularLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -133,7 +144,10 @@ public:
     }
 
     /// Print information about this object.
-//    virtual void PrintInfo(std::ostream& rOStream) const;
+    virtual void PrintInfo(std::ostream& rOStream) const
+    {
+        rOStream << this->Info();
+    }
 
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
@@ -226,10 +240,6 @@ private:
     /// Assignment operator.
     CircularLevelSet& operator=(CircularLevelSet const& rOther);
 
-    /// Copy constructor.
-    CircularLevelSet(CircularLevelSet const& rOther);
-
-
     ///@}
 
 }; // Class CircularLevelSet
@@ -246,16 +256,16 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                CircularLevelSet& rThis)
-{}
+inline std::istream& operator >> (std::istream& rIStream, CircularLevelSet& rThis)
+{
+    return rIStream;
+}
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const CircularLevelSet& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const CircularLevelSet& rThis)
 {
     rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
+    rOStream << " ";
     rThis.PrintData(rOStream);
 
     return rOStream;

@@ -66,6 +66,8 @@ public:
     /// Pointer definition of AndBRep
     KRATOS_CLASS_POINTER_DEFINITION(AndBRep);
 
+    typedef BRep BaseType;
+
     typedef typename Element::GeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;
@@ -79,8 +81,15 @@ public:
     ///@{
 
     /// Default constructor.
-    AndBRep(BRep::Pointer pLS1, BRep::Pointer pLS2)
-    : mpLS1(pLS1), mpLS2(pLS2)
+    AndBRep(BRep::Pointer pBRep1, BRep::Pointer pBRep2)
+    : mpBRep1(pBRep1), mpBRep2(pBRep2), BaseType()
+    {}
+
+    /// Copy constructor.
+    AndBRep(AndBRep const& rOther)
+    : BaseType(rOther)
+    , mpBRep1(rOther.mpBRep1->CloneBRep())
+    , mpBRep2(rOther.mpBRep2->CloneBRep())
     {}
 
     /// Destructor.
@@ -96,24 +105,30 @@ public:
     ///@name Operations
     ///@{
 
+    virtual BRep::Pointer CloneBRep() const
+    {
+        return BRep::Pointer(new AndBRep(*this));
+    }
+
+
     virtual std::size_t WorkingSpaceDimension() const
     {
-        if(mpLS1->WorkingSpaceDimension() != mpLS2->WorkingSpaceDimension())
+        if(mpBRep1->WorkingSpaceDimension() != mpBRep2->WorkingSpaceDimension())
             KRATOS_THROW_ERROR(std::logic_error, "The working space dimension is not compatible", "")
-        return mpLS1->WorkingSpaceDimension();
+        return mpBRep1->WorkingSpaceDimension();
     }
 
 
     virtual std::size_t LocalSpaceDimension() const
     {
-        if(mpLS1->LocalSpaceDimension() != mpLS2->LocalSpaceDimension())
+        if(mpBRep1->LocalSpaceDimension() != mpBRep2->LocalSpaceDimension())
             KRATOS_THROW_ERROR(std::logic_error, "The local space dimension is not compatible", "")
-        return mpLS1->LocalSpaceDimension();
+        return mpBRep1->LocalSpaceDimension();
     }
 
     virtual bool IsInside(const PointType& P) const
     {
-        return (mpLS1->IsInside(P) && mpLS2->IsInside(P));
+        return (mpBRep1->IsInside(P) && mpBRep2->IsInside(P));
     }
 
     /// Check if a geometry is cut by the level set
@@ -122,13 +137,13 @@ public:
     /// -1: the cell is cut by level set
     virtual int CutStatus(GeometryType& r_geom) const
     {
-        if(mpLS1->CutStatus(r_geom) == _OUT || mpLS2->CutStatus(r_geom) == _OUT)
+        if(mpBRep1->CutStatus(r_geom) == _OUT || mpBRep2->CutStatus(r_geom) == _OUT)
         {
             return _OUT;
         }
         else
         {
-            if(mpLS1->CutStatus(r_geom) == _IN && mpLS2->CutStatus(r_geom) == _IN)
+            if(mpBRep1->CutStatus(r_geom) == _IN && mpBRep2->CutStatus(r_geom) == _IN)
             {
                 return _IN;
             }
@@ -145,13 +160,13 @@ public:
     /// -1: the cell is cut by level set
     virtual int CutStatus(const std::vector<PointType>& r_points) const
     {
-        if(mpLS1->CutStatus(r_points) == _OUT || mpLS2->CutStatus(r_points) == _OUT)
+        if(mpBRep1->CutStatus(r_points) == _OUT || mpBRep2->CutStatus(r_points) == _OUT)
         {
             return _OUT;
         }
         else
         {
-            if(mpLS1->CutStatus(r_points) == _IN && mpLS2->CutStatus(r_points) == _IN)
+            if(mpBRep1->CutStatus(r_points) == _IN && mpBRep2->CutStatus(r_points) == _IN)
             {
                 return _IN;
             }
@@ -247,8 +262,8 @@ private:
     ///@name Member Variables
     ///@{
 
-    BRep::Pointer mpLS1;
-    BRep::Pointer mpLS2;
+    BRep::Pointer mpBRep1;
+    BRep::Pointer mpBRep2;
 
     ///@}
     ///@name Private Operators
@@ -276,10 +291,6 @@ private:
 
     /// Assignment operator.
     AndBRep& operator=(AndBRep const& rOther);
-
-    /// Copy constructor.
-    AndBRep(AndBRep const& rOther);
-
 
     ///@}
 

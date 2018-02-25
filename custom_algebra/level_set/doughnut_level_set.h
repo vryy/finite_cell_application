@@ -79,6 +79,11 @@ public:
     {
     }
 
+    /// Copy constructor.
+    DoughnutLevelSet(DoughnutLevelSet const& rOther)
+    : BaseType(rOther), mR(rOther.mR), mr(rOther.mr)
+    {}
+
     /// Destructor.
     virtual ~DoughnutLevelSet() {}
 
@@ -91,6 +96,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new DoughnutLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -229,10 +240,6 @@ private:
 
     /// Assignment operator.
     DoughnutLevelSet& operator=(DoughnutLevelSet const& rOther);
-
-    /// Copy constructor.
-    DoughnutLevelSet(DoughnutLevelSet const& rOther);
-
 
     ///@}
 

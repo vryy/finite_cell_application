@@ -79,8 +79,12 @@ public:
     ///@{
 
     /// Default constructor.
-    ScalarFunction(const double S)
-    : mS(S)
+    ScalarFunction(const double& S)
+    : BaseType(), mS(S)
+    {}
+
+    /// Copy constructor.
+    ScalarFunction(ScalarFunction const& rOther) : BaseType(), mS(rOther.mS)
     {}
 
     /// Destructor.
@@ -96,6 +100,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new ScalarFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -231,10 +241,6 @@ private:
 
     /// Assignment operator.
     ScalarFunction& operator=(ScalarFunction const& rOther);
-
-    /// Copy constructor.
-    ScalarFunction(ScalarFunction const& rOther);
-
 
     ///@}
 

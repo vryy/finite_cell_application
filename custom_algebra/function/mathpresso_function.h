@@ -82,6 +82,33 @@ public:
     MathPressoFunctionR3R1(const std::string& expression)
     : mStr(expression)
     {
+        this->Initialize(expression);
+    }
+
+    /// Copy constructor.
+    MathPressoFunctionR3R1(MathPressoFunctionR3R1 const& rOther)
+    : BaseType(rOther), mStr(rOther.mStr)
+    {
+        this->Initialize(rOther.mStr);
+    }
+
+    /// Destructor.
+    virtual ~MathPressoFunctionR3R1()
+    {}
+
+
+    ///@}
+    ///@name Operators
+    ///@{
+
+
+    ///@}
+    ///@name Operations
+    ///@{
+
+
+    void Initialize(const std::string& expression)
+    {
         // Initialize the context by adding MathPresso built-ins. Without this line
         // functions like round(), sin(), etc won't be available.
         mCtx.addBuiltIns();
@@ -111,19 +138,11 @@ public:
         }
     }
 
-    /// Destructor.
-    virtual ~MathPressoFunctionR3R1()
-    {}
 
-
-    ///@}
-    ///@name Operators
-    ///@{
-
-
-    ///@}
-    ///@name Operations
-    ///@{
+    virtual BaseType::Pointer CloneFunction() const
+    {
+        return BaseType::Pointer(new MathPressoFunctionR3R1(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -264,10 +283,6 @@ private:
 
     /// Assignment operator.
     MathPressoFunctionR3R1& operator=(MathPressoFunctionR3R1 const& rOther);
-
-    /// Copy constructor.
-    MathPressoFunctionR3R1(MathPressoFunctionR3R1 const& rOther);
-
 
     ///@}
 

@@ -124,6 +124,10 @@ public:
     MonomialFunctionR3R1()
     {}
 
+    /// Copy constructor.
+    MonomialFunctionR3R1(MonomialFunctionR3R1 const& rOther) : BaseType(rOther)
+    {}
+
     /// Destructor.
     virtual ~MonomialFunctionR3R1()
     {}
@@ -137,6 +141,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -283,10 +293,6 @@ private:
     /// Assignment operator.
     MonomialFunctionR3R1& operator=(MonomialFunctionR3R1 const& rOther);
 
-    /// Copy constructor.
-    MonomialFunctionR3R1(MonomialFunctionR3R1 const& rOther);
-
-
     ///@}
 
 }; // Class MonomialFunctionR3R1
@@ -304,6 +310,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -347,6 +358,11 @@ public:
 
     typedef BaseType::OutputType OutputType;
 
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
+
     virtual double GetValue(const InputType& P) const
     {
         return pow(P[0], TDegreeX) * pow(P[2], TDegreeZ);
@@ -388,6 +404,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -431,6 +452,11 @@ public:
 
     typedef BaseType::OutputType OutputType;
 
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
+
     virtual double GetValue(const InputType& P) const
     {
         return pow(P[0], TDegreeX);
@@ -472,6 +498,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -515,6 +546,11 @@ public:
 
     typedef BaseType::OutputType OutputType;
 
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
+
     virtual double GetValue(const InputType& P) const
     {
         return pow(P[2], TDegreeZ);
@@ -556,6 +592,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(new MonomialFunctionR3R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -604,6 +645,10 @@ public:
     MonomialFunctionR2R1()
     {}
 
+    /// Copy constructor.
+    MonomialFunctionR2R1(MonomialFunctionR2R1 const& rOther) : BaseType(rOther)
+    {}
+
     /// Destructor.
     virtual ~MonomialFunctionR2R1()
     {}
@@ -617,6 +662,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual FunctionR2R1::Pointer CloneFunction() const
+    {
+        return FunctionR2R1::Pointer(new MonomialFunctionR2R1());
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -759,10 +810,6 @@ private:
     /// Assignment operator.
     MonomialFunctionR2R1& operator=(MonomialFunctionR2R1 const& rOther);
 
-    /// Copy constructor.
-    MonomialFunctionR2R1(MonomialFunctionR2R1 const& rOther);
-
-
     ///@}
 
 }; // Class MonomialFunctionR2R1
@@ -779,6 +826,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR2R1::Pointer CloneFunction() const
+    {
+        return FunctionR2R1::Pointer(new MonomialFunctionR2R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -818,6 +870,11 @@ public:
 
     typedef BaseType::OutputType OutputType;
 
+    virtual FunctionR2R1::Pointer CloneFunction() const
+    {
+        return FunctionR2R1::Pointer(new MonomialFunctionR2R1());
+    }
+
     virtual double GetValue(const InputType& P) const
     {
         return pow(P[1], TDegreeY);
@@ -855,6 +912,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR2R1::Pointer CloneFunction() const
+    {
+        return FunctionR2R1::Pointer(new MonomialFunctionR2R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {
@@ -916,6 +978,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual FunctionR1R1::Pointer CloneFunction() const
+    {
+        return FunctionR1R1::Pointer(new MonomialFunctionR1R1());
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -1074,6 +1142,11 @@ public:
     typedef BaseType::InputType InputType;
 
     typedef BaseType::OutputType OutputType;
+
+    virtual FunctionR1R1::Pointer CloneFunction() const
+    {
+        return FunctionR1R1::Pointer(new MonomialFunctionR1R1());
+    }
 
     virtual double GetValue(const InputType& P) const
     {

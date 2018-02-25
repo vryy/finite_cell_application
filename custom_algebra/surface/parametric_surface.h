@@ -86,6 +86,14 @@ public:
     : BaseType(), mp_func_x(p_func_x), mp_func_y(p_func_y), mp_func_z(p_func_z)
     {}
 
+    /// Copy constructor.
+    ParametricSurface(ParametricSurface const& rOther)
+    : BaseType(rOther)
+    , mp_func_x(rOther.mp_func_x->CloneFunction())
+    , mp_func_y(rOther.mp_func_y->CloneFunction())
+    , mp_func_z(rOther.mp_func_z->CloneFunction())
+    {}
+
     /// Destructor.
     virtual ~ParametricSurface() {}
 
@@ -98,6 +106,13 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    /// inherit from Function
+    virtual BaseType::Pointer CloneFunction() const
+    {
+        return BaseType::Pointer(new ParametricSurface(*this));
+    }
 
 
     /// inherit from Function
@@ -241,10 +256,6 @@ private:
 
     /// Assignment operator.
     ParametricSurface& operator=(ParametricSurface const& rOther);
-
-    /// Copy constructor.
-    ParametricSurface(ParametricSurface const& rOther);
-
 
     ///@}
 

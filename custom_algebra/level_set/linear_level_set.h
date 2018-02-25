@@ -77,6 +77,11 @@ public:
     : BaseType(), mA(A), mB(B), mC(C)
     {}
 
+    /// Copy constructor.
+    LinearLevelSet(LinearLevelSet const& rOther)
+    : BaseType(rOther), mA(rOther.mA), mB(rOther.mB), mC(rOther.mC)
+    {}
+
     /// Destructor.
     virtual ~LinearLevelSet() {}
 
@@ -89,6 +94,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new LinearLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -225,10 +236,6 @@ private:
 
     /// Assignment operator.
     LinearLevelSet& operator=(LinearLevelSet const& rOther);
-
-    /// Copy constructor.
-    LinearLevelSet(LinearLevelSet const& rOther);
-
 
     ///@}
 

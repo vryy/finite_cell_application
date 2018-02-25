@@ -84,6 +84,11 @@ public:
     : mP(P), mr(r)
     {}
 
+    /// Copy constructor.
+    LoadFunctionR3RnPlateWithTheHole(LoadFunctionR3RnPlateWithTheHole const& rOther)
+    : BaseType(rOther), mP(rOther.mP), mr(rOther.mr)
+    {}
+
     /// Destructor.
     virtual ~LoadFunctionR3RnPlateWithTheHole()
     {}
@@ -97,6 +102,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual BaseType::Pointer CloneFunction() const
+    {
+        return BaseType::Pointer(new LoadFunctionR3RnPlateWithTheHole(*this));
+    }
 
 
     virtual OutputType GetValue(const InputType& P) const
@@ -244,10 +255,6 @@ private:
 
     /// Assignment operator.
     LoadFunctionR3RnPlateWithTheHole& operator=(LoadFunctionR3RnPlateWithTheHole const& rOther);
-
-    /// Copy constructor.
-    LoadFunctionR3RnPlateWithTheHole(LoadFunctionR3RnPlateWithTheHole const& rOther);
-
 
     ///@}
 

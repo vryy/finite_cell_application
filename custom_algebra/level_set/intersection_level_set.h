@@ -85,7 +85,14 @@ public:
 
     /// Default constructor.
     IntersectionLevelSet(const BaseType::Pointer p_level_set_1, const BaseType::Pointer p_level_set_2)
-    : mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
+    : BaseType(), mp_level_set_1(p_level_set_1), mp_level_set_2(p_level_set_2)
+    {}
+
+    /// Copy constructor.
+    IntersectionLevelSet(IntersectionLevelSet const& rOther)
+    : BaseType(rOther)
+    , mp_level_set_1(rOther.mp_level_set_1->CloneLevelSet())
+    , mp_level_set_2(rOther.mp_level_set_2->CloneLevelSet())
     {}
 
     /// Destructor.
@@ -100,6 +107,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new IntersectionLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -239,9 +252,6 @@ private:
 
     /// Assignment operator.
     IntersectionLevelSet& operator=(IntersectionLevelSet const& rOther);
-
-    /// Copy constructor.
-    IntersectionLevelSet(IntersectionLevelSet const& rOther);
 
 
     ///@}

@@ -80,7 +80,12 @@ public:
 
     /// Default constructor.
     NegateFunction(const typename BaseType::Pointer p_func)
-    : mp_func(p_func)
+    : BaseType(), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    NegateFunction(NegateFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction())
     {}
 
     /// Destructor.
@@ -96,6 +101,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new NegateFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -243,10 +254,6 @@ private:
 
     /// Assignment operator.
     NegateFunction& operator=(NegateFunction const& rOther);
-
-    /// Copy constructor.
-    NegateFunction(NegateFunction const& rOther);
-
 
     ///@}
 

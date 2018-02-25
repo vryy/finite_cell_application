@@ -85,7 +85,12 @@ public:
 
     /// Default constructor.
     InverseLevelSet(const BaseType::Pointer p_level_set)
-    : mp_level_set(p_level_set)
+    : BaseType(), mp_level_set(p_level_set)
+    {}
+
+    /// Copy constructor.
+    InverseLevelSet(InverseLevelSet const& rOther)
+    : BaseType(rOther), mp_level_set(rOther.mp_level_set->CloneLevelSet())
     {}
 
     /// Destructor.
@@ -100,6 +105,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new InverseLevelSet(*this));
+    }
 
 
     virtual std::size_t WorkingSpaceDimension() const
@@ -246,10 +257,6 @@ private:
 
     /// Assignment operator.
     InverseLevelSet& operator=(InverseLevelSet const& rOther);
-
-    /// Copy constructor.
-    InverseLevelSet(InverseLevelSet const& rOther);
-
 
     ///@}
 

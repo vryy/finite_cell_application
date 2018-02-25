@@ -75,18 +75,22 @@ public:
 
     typedef typename BaseType::OutputType OutputType;
 
-
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
     HeavisideFunction(const BRep& r_brep)
-    : mr_brep(r_brep)
+    : BaseType(), mr_brep(r_brep)
     {}
 
     HeavisideFunction(const BRep::Pointer p_brep)
-    : mr_brep(*p_brep)
+    : BaseType(), mr_brep(*p_brep)
+    {}
+
+    /// Copy constructor.
+    HeavisideFunction(HeavisideFunction const& rOther)
+    : BaseType(rOther), mr_brep(rOther.mr_brep)
     {}
 
     /// Destructor.
@@ -102,6 +106,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new HeavisideFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -238,10 +248,6 @@ private:
 
     /// Assignment operator.
     HeavisideFunction& operator=(HeavisideFunction const& rOther);
-
-    /// Copy constructor.
-    HeavisideFunction(HeavisideFunction const& rOther);
-
 
     ///@}
 

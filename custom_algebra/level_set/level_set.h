@@ -90,7 +90,10 @@ public:
     ///@{
 
     /// Default constructor.
-    LevelSet() {}
+    LevelSet() : BRep(), BaseType() {}
+
+    /// Copy constructor.
+    LevelSet(LevelSet const& rOther) : BRep(rOther), BaseType(rOther) {}
 
     /// Destructor.
     virtual ~LevelSet() {}
@@ -104,6 +107,26 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+    /// inherit from BRep
+    virtual BRep::Pointer CloneBRep() const
+    {
+        return BRep::Pointer(this->CloneLevelSet());
+    }
+
+
+    /// inherit from Function
+    virtual FunctionR3R1::Pointer CloneFunction() const
+    {
+        return FunctionR3R1::Pointer(this->CloneLevelSet());
+    }
+
+
+    /// Clone this level set
+    virtual LevelSet::Pointer CloneLevelSet() const
+    {
+        return LevelSet::Pointer(new LevelSet());
+    }
 
 
     /// inherit from BRep
@@ -404,10 +427,6 @@ private:
     /// Assignment operator.
     LevelSet& operator=(LevelSet const& rOther);
 
-    /// Copy constructor.
-    LevelSet(LevelSet const& rOther);
-
-
     ///@}
 
 }; // Class LevelSet
@@ -425,7 +444,9 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream, LevelSet& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream, const LevelSet& rThis)

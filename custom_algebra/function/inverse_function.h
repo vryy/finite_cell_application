@@ -80,7 +80,12 @@ public:
 
     /// Default constructor.
     InverseFunction(const typename BaseType::Pointer p_func)
-    : mp_func(p_func)
+    : BaseType(), mp_func(p_func)
+    {}
+
+    /// Copy constructor.
+    InverseFunction(InverseFunction const& rOther)
+    : BaseType(rOther), mp_func(rOther.mp_func->CloneFunction())
     {}
 
     /// Destructor.
@@ -96,6 +101,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+
+    virtual typename BaseType::Pointer CloneFunction() const
+    {
+        return typename BaseType::Pointer(new InverseFunction(*this));
+    }
 
 
     virtual double GetValue(const InputType& P) const
@@ -242,10 +253,6 @@ private:
 
     /// Assignment operator.
     InverseFunction& operator=(InverseFunction const& rOther);
-
-    /// Copy constructor.
-    InverseFunction(InverseFunction const& rOther);
-
 
     ///@}
 
