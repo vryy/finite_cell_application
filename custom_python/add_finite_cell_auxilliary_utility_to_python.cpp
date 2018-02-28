@@ -15,6 +15,7 @@
 #include "custom_algebra/brep.h"
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/moment_fitted_quad_tree_subcell.h"
 
 
 namespace Kratos
@@ -91,6 +92,22 @@ void FiniteCellAuxilliaryUtility_MultithreadedRefineBy(FiniteCellAuxilliaryUtili
     rDummy.MultithreadedRefineBy<TTreeType, TBRepType>(trees, r_brep);
 }
 
+template<class TCellType, class TBRepType>
+void FiniteCellAuxilliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints(FiniteCellAuxilliaryUtility& rDummy,
+    boost::python::list& r_cells, typename TBRepType::Pointer p_brep, int integrator_integration_method)
+{
+    PointerVectorSet<TCellType> cells;
+    typedef boost::python::stl_input_iterator<typename TCellType::Pointer> iterator_tree_type;
+    BOOST_FOREACH(const typename iterator_tree_type::value_type& t,
+                  std::make_pair(iterator_tree_type(r_cells), // begin
+                  iterator_tree_type() ) ) // end
+    {
+        cells.push_back(t);
+    }
+
+    rDummy.MultithreadedGeneratePhysicalIntegrationPoints<TCellType, TBRepType>(cells, *p_brep, integrator_integration_method);
+}
+
 /// Extract the element from the list of ids
 ModelPart::ElementsContainerType FiniteCellAuxilliaryUtility_GetElements(FiniteCellAuxilliaryUtility& rDummy,
     ModelPart& r_model_part, boost::python::list& element_list)
@@ -147,6 +164,7 @@ void FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython()
     .def("AddElement", &FiniteCellAuxilliaryUtility_AddElement)
     .def("RemoveElement", &FiniteCellAuxilliaryUtility_RemoveElement)
     .def("MultithreadedRefineBy", &FiniteCellAuxilliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
+    .def("MultithreadedGeneratePhysicalIntegrationPoints", &FiniteCellAuxilliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints<BaseMomentFittedQuadTreeSubCell, BRep>)
     .def("Print", pointer_to_PrintGeometry)
     ;
 

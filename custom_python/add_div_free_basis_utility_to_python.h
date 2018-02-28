@@ -13,11 +13,9 @@
 
 
 // System includes
-#include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 
 // Project includes
@@ -28,8 +26,6 @@ namespace Kratos
 
 namespace Python
 {
-
-using namespace boost::python;
 
 void  FiniteCellApplication_AddDivFreeBasisUtilityToPython();
 

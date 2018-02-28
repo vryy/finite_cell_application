@@ -90,13 +90,70 @@ public:
     }
 };
 
+/**
+Abstract class of all integrator for functions.
+This class is useful for computing the quadrature in the reference cell using moment fitting method.
+ */
+class FunctionIntegrator
+{
+public:
+    KRATOS_CLASS_POINTER_DEFINITION(FunctionIntegrator);
+
+    typedef typename GeometricalObject::GeometryType GeometryType;
+
+    typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
+    FunctionIntegrator() {}
+    virtual ~FunctionIntegrator() {}
+
+    /////////////////////////////////////////////////////////////////////////////
+
+    /// Integrate a function defined in local coordinates
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+    }
+
+    /// Integrate a function defined in local coordinates
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const int& integration_method) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+
+    /// Integrate a function defined in global coordinates
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+    }
+
+    /// Integrate a function defined in global coordinates
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const int& integration_method) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+
+    /// Construct a custom quadrature on the support domain
+    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+    }
+};
+
 
 /** A general implementation of the quad/oct tree concept for finite cell integration
 The quad-tree contains a geometry for high-level identification of the inner points in local coordinates
 One quad-tree contains only one quad-tree node
 */
-template<std::size_t TNsampling>
-class QuadTree : public QuadratureUtility, public RefinableTree
+template<std::size_t TNsampling, int TFrameType>
+class QuadTree : public QuadratureUtility, public RefinableTree, public FunctionIntegrator
 {
 public:
     ///@name Type Definitions
@@ -112,6 +169,8 @@ public:
     typedef typename NodeType::PointType PointType;
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+
+    typedef QuadTreeNode<TFrameType> QuadTreeNodeType;
 
     ///@}
     ///@name Life Cycle
@@ -130,7 +189,7 @@ public:
     }
 
     /// Constructor taking the geometry and the quad-tree node. This constructor allows for arbitrary reference coordinates of the initial quad-tree node.
-    QuadTree(GeometryType::Pointer pGeometry, QuadTreeNode::Pointer pTreeNode)
+    QuadTree(GeometryType::Pointer pGeometry, typename QuadTreeNodeType::Pointer pTreeNode)
     : mpThisGeometry(pGeometry), mpTreeNode(pTreeNode)
     {
     }
@@ -147,18 +206,18 @@ public:
 
 
     /// Access the underlying quad-tree node
-    const QuadTreeNode& Get() const {return *mpTreeNode;}
-    QuadTreeNode& Get() {return *mpTreeNode;}
-    const QuadTreeNode::Pointer pGet() const {return mpTreeNode;}
-    QuadTreeNode::Pointer pGet() {return mpTreeNode;}
+    const QuadTreeNodeType& Get() const {return *mpTreeNode;}
+    QuadTreeNodeType& Get() {return *mpTreeNode;}
+    const typename QuadTreeNodeType::Pointer pGet() const {return mpTreeNode;}
+    typename QuadTreeNodeType::Pointer pGet() {return mpTreeNode;}
 
 
     /// Access the underlying quad-tree node
     /// These functions are provided so that quadtree-subcell can work interchangeably with quadtree
-    const QuadTreeNode& Get(const std::size_t& i) const {return *mpTreeNode;}
-    QuadTreeNode& Get(const std::size_t& i) {return *mpTreeNode;}
-    const QuadTreeNode::Pointer pGet(const std::size_t& i) const {return mpTreeNode;}
-    QuadTreeNode::Pointer pGet(const std::size_t& i) {return mpTreeNode;}
+    const QuadTreeNodeType& Get(const std::size_t& i) const {return *mpTreeNode;}
+    QuadTreeNodeType& Get(const std::size_t& i) {return *mpTreeNode;}
+    const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNode;}
+    typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNode;}
 
 
     /// Access the underlying (operating) geometry
@@ -190,6 +249,51 @@ public:
     }
 
 
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
+        return Result;
+    }
+
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
+        return Result;
+    }
+
+    /// Integrate a global function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
+        return Result;
+    }
+
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
+        return Result;
+    }
+
+    /// Construct a custom quadrature on the support domain
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        return this->Get().ConstructCustomQuadrature(quadrature_type, integration_order);
+    }
+
     /// Compute the domain size covered by this quadtree
     double DomainSize(const BRep& r_brep, const int& integration_method) const
     {
@@ -208,68 +312,51 @@ public:
     }
 
 
-    /// Integrate a function using the underlying geometry of the quadtree with the provided integration method
-    template<class TOutputType, int Frame>
-    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int& integration_method) const
-    {
-        TOutputType Result = TOutputType(0.0);
-
-        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, Result, integration_method);
-
-        return Result;
-    }
-
-
     /// Integrate a function using the underlying geometry of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, int Frame>
-    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
+    template<typename TOutputType, int TFuncFrameType>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            TOutputType& rOutput,
             const int& integration_method) const
     {
-        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
+        mpTreeNode->Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, int Frame>
-    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
+    template<typename TOutputType, int TFuncFrameType>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points) const
     {
-        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(mpThisGeometry, rFunc, rOutput, integration_points);
-    }
-
-
-    /// Integrate a function using the underlying geometry limited by a BRep of the quadtree with the provided integration method
-    template<class TOutputType, int Frame>
-    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const BRep& r_brep, const int& integration_method, const double& small_weight) const
-    {
-        TOutputType Result = TOutputType(0.0);
-
-        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, Result, integration_method, small_weight);
-
-        return Result;
+        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_points);
     }
 
 
     /// Integrate a function using the underlying geometry limited by a BRep of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, int Frame>
-    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
-            const int& integration_method, const double& small_weight) const
+    template<typename TOutputType, int TFuncFrameType>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            const BRep& r_brep,
+            TOutputType& rOutput,
+            const int& integration_method,
+            const double& small_weight) const
     {
-        mpTreeNode->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+        mpTreeNode->Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
 
 
     /// Integrate a function using the underlying geometry limited by a BRep and a set of sample integration points
     /// The caller has to manually set rOutput to zero before calling this function
-    template<typename TOutputType, int Frame>
-    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const BRep& r_brep, TOutputType& rOutput,
-            const GeometryType::IntegrationPointsArrayType& integration_points, const double& small_weight) const
+    template<typename TOutputType, int TFuncFrameType>
+    void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
+            const BRep& r_brep,
+            TOutputType& rOutput,
+            const GeometryType::IntegrationPointsArrayType& integration_points,
+            const double& small_weight) const
     {
-        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
+        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
 
 
@@ -317,9 +404,9 @@ public:
     }
 
 
-    static QuadTreeNode::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
+    static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
     {
-        QuadTreeNode::Pointer pTreeNode;
+        typename QuadTreeNodeType::Pointer pTreeNode;
 
         if(    ThisGeometryType == GeometryData::Kratos_Quadrilateral2D4
             || ThisGeometryType == GeometryData::Kratos_Quadrilateral2D8
@@ -328,35 +415,35 @@ public:
             || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D8
             || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D9 )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 1.0, -1.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, 1.0, -1.0, 1.0));
         }
         else if(ThisGeometryType == GeometryData::Kratos_Triangle2D3
              || ThisGeometryType == GeometryData::Kratos_Triangle2D6
              || ThisGeometryType == GeometryData::Kratos_Triangle3D3
              || ThisGeometryType == GeometryData::Kratos_Triangle3D6 )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT3(0.0, 0.0, 1.0, 0.0, 0.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeT3<TFrameType>(0.0, 0.0, 1.0, 0.0, 0.0, 1.0));
         }
         else if(ThisGeometryType == GeometryData::Kratos_Hexahedra3D8
              || ThisGeometryType == GeometryData::Kratos_Hexahedra3D20
              || ThisGeometryType == GeometryData::Kratos_Hexahedra3D27 )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
         }
         else if(ThisGeometryType == GeometryData::Kratos_Tetrahedra3D4
              || ThisGeometryType == GeometryData::Kratos_Tetrahedra3D10 )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeT4(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeT4<TFrameType>(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0));
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
         else if(ThisGeometryType == GeometryData::Kratos_Bezier2D
              || ThisGeometryType == GeometryData::Kratos_Bezier2D3 )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeBezier2D(0.0, 1.0, 0.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(0.0, 1.0, 0.0, 1.0));
         }
         else if(ThisGeometryType == GeometryData::Kratos_Bezier3D )
         {
-            pTreeNode = QuadTreeNode::Pointer(new QuadTreeNodeBezier3D(0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
+            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
         }
         #endif
         else
@@ -397,7 +484,7 @@ public:
 private:
 
     GeometryType::Pointer mpThisGeometry;
-    QuadTreeNode::Pointer mpTreeNode;
+    typename QuadTreeNodeType::Pointer mpTreeNode;
 
     void Initialize(GeometryType::Pointer pGeometry)
     {
@@ -419,8 +506,8 @@ The quad-tree w/ sub-cell contains a geometry for high-level identification of t
 One quad-tree w/ sub-cell can contain multiple quad-tree nodes
 The method to construct the sub-cells must be implemented in the sub-class
 */
-template<std::size_t TNsampling>
-class QuadTreeSubCell : public QuadratureUtility, public RefinableTree
+template<std::size_t TNsampling, int TFrameType>
+class QuadTreeSubCell : public QuadratureUtility, public RefinableTree, public FunctionIntegrator
 {
 public:
     ///@name Type Definitions
@@ -436,6 +523,8 @@ public:
     typedef typename NodeType::PointType PointType;
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+
+    typedef QuadTreeNode<TFrameType> QuadTreeNodeType;
 
     ///@}
     ///@name Life Cycle
@@ -476,10 +565,10 @@ public:
 
 
     /// Access the underlying quad-tree nodes
-    const QuadTreeNode& Get(const std::size_t& i) const {return *mpTreeNodes[i];}
-    QuadTreeNode& Get(const std::size_t& i) {return *mpTreeNodes[i];}
-    const QuadTreeNode::Pointer pGet(const std::size_t& i) const {return mpTreeNodes[i];}
-    QuadTreeNode::Pointer pGet(const std::size_t& i) {return mpTreeNodes[i];}
+    const QuadTreeNodeType& Get(const std::size_t& i) const {return *mpTreeNodes[i];}
+    QuadTreeNodeType& Get(const std::size_t& i) {return *mpTreeNodes[i];}
+    const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNodes[i];}
+    typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNodes[i];}
 
 
     /// Refine the sub-cells
@@ -509,6 +598,52 @@ public:
     }
 
 
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
+        return Result;
+    }
+
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
+        return Result;
+    }
+
+    /// Integrate a global function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
+        return Result;
+    }
+
+    /// Integrate a local function
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    {
+        double Result = 0.0;
+        this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
+        return Result;
+    }
+
+    /// Construct a custom quadrature on the support domain
+    /// Implement function from abstrat class FunctionIntegrator
+    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    {
+        return this->Get(0).ConstructCustomQuadrature(quadrature_type, integration_order);
+    }
+
+
     /// Compute the domain size of the subcell i
     double DomainSize(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
     {
@@ -528,23 +663,9 @@ public:
 
     /// Create a quadtree out from a subcell
     /// Fundamentally we can use this function to extract out a subcell and refine it since it's a quadtree node
-    typename QuadTree<TNsampling>::Pointer CreateQuadTree(const std::size_t& i) const
+    typename QuadTree<TNsampling, TFrameType>::Pointer CreateQuadTree(const std::size_t& i) const
     {
-        return typename QuadTree<TNsampling>::Pointer(new QuadTree<TNsampling>(mpThisGeometry, mpTreeNodes[i]));
-    }
-
-
-    /// Integrate a function using the underlying geometry of the quadtree subcell with the integration order
-    template<class TOutputType, int Frame>
-    TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const int& integration_method) const
-    {
-        TOutputType Result = TOutputType(0.0);
-
-        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, Result, integration_method);
-
-        return Result;
+        return typename QuadTree<TNsampling, TFrameType>::Pointer(new QuadTree<TNsampling, TFrameType>(mpThisGeometry, mpTreeNodes[i]));
     }
 
 
@@ -650,22 +771,22 @@ public:
 protected:
 
     GeometryType::Pointer mpThisGeometry; // the geometry covers all the subcells
-    std::vector<QuadTreeNode::Pointer> mpTreeNodes; // array of subcells
+    std::vector<typename QuadTreeNodeType::Pointer> mpTreeNodes; // array of subcells
 
     /// Construct the sub-cells for Gauss Quadrature on the quadrilateral. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
-    void ConstructSubCellsForQuadBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForQuadBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const int& integration_order) const
     {
         if(integration_order == 1)
         {
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 1.0, -1.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, 1.0, -1.0, 1.0)) );
         }
         else if(integration_order == 2)
         {
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 0.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(0.0, 1.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(0.0, 1.0, 0.0, 1.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, 0.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, 0.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(0.0, 1.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(0.0, 1.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, 0.0, 0.0, 1.0)) );
         }
         else if(integration_order == 3)
         {
@@ -673,20 +794,20 @@ protected:
 //            double mid1 = -(2.0 * std::sqrt(3.00/5.00) - 1.0);
             double mid2 = -mid1;
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, mid1, -1.0, mid1)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid2,  1.0, -1.0, mid1)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid2,  1.0, mid2,  1.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, mid1, mid2,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, mid1, -1.0, mid1)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid2,  1.0, -1.0, mid1)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid2,  1.0, mid2,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, mid1, mid2,  1.0)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid1, mid2, -1.0, mid1)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid1, mid2, -1.0, mid1)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid2,  1.0, mid1, mid2)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid2,  1.0, mid1, mid2)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid1, mid2, mid2,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid1, mid2, mid2,  1.0)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, mid1, mid1, mid2)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, mid1, mid1, mid2)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(mid1, mid2, mid1, mid2)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(mid1, mid2, mid1, mid2)) );
         }
         else if(integration_order == 4)
         {
@@ -694,25 +815,25 @@ protected:
             double b = std::sqrt( (3.0 + 2.0 * std::sqrt(6.0/5.0)) / 7.0 );
             double mid = 0.5*(a + b);
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, -mid, -1.0, -mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, -mid, -mid,  0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, -mid,  0.0,  mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0, -mid,  mid,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, -mid, -1.0, -mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, -mid, -mid,  0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, -mid,  0.0,  mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, -mid,  mid,  1.0)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-mid,  0.0, -1.0, -mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-mid,  0.0, -mid,  0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-mid,  0.0,  0.0,  mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-mid,  0.0,  mid,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-mid,  0.0, -1.0, -mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-mid,  0.0, -mid,  0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-mid,  0.0,  0.0,  mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-mid,  0.0,  mid,  1.0)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( 0.0,  mid, -1.0, -mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( 0.0,  mid, -mid,  0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( 0.0,  mid,  0.0,  mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( 0.0,  mid,  mid,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( 0.0,  mid, -1.0, -mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( 0.0,  mid, -mid,  0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( 0.0,  mid,  0.0,  mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( 0.0,  mid,  mid,  1.0)) );
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( mid,  1.0, -1.0, -mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( mid,  1.0, -mid,  0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( mid,  1.0,  0.0,  mid)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4( mid,  1.0,  mid,  1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( mid,  1.0, -1.0, -mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( mid,  1.0, -mid,  0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( mid,  1.0,  0.0,  mid)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>( mid,  1.0,  mid,  1.0)) );
         }
         else if(integration_order == 5)
         {
@@ -721,7 +842,7 @@ protected:
 
             for(std::size_t i = 0; i < 5; ++i)
                 for(std::size_t j = 0; j < 5; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else if(integration_order == 6)
         {
@@ -730,7 +851,7 @@ protected:
 
             for(std::size_t i = 0; i < 6; ++i)
                 for(std::size_t j = 0; j < 6; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else if(integration_order == 7)
         {
@@ -739,7 +860,7 @@ protected:
 
             for(std::size_t i = 0; i < 7; ++i)
                 for(std::size_t j = 0; j < 7; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else if(integration_order == 8)
         {
@@ -748,7 +869,7 @@ protected:
 
             for(std::size_t i = 0; i < 8; ++i)
                 for(std::size_t j = 0; j < 8; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else if(integration_order == 9)
         {
@@ -757,7 +878,7 @@ protected:
 
             for(std::size_t i = 0; i < 9; ++i)
                 for(std::size_t j = 0; j < 9; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else if(integration_order == 10)
         {
@@ -766,7 +887,7 @@ protected:
 
             for(std::size_t i = 0; i < 10; ++i)
                 for(std::size_t j = 0; j < 10; ++j)
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(b[i], b[i+1], b[j], b[j+1])) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(b[i], b[i+1], b[j], b[j+1])) );
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
@@ -774,14 +895,14 @@ protected:
 
     #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
     /// Construct the sub-cells for Gauss Quadrature on the Bezier 2D geometry.
-    void ConstructSubCellsForBezier2DBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForBezier2DBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const int& integration_order) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
     }
     #endif
 
-    void ConstructSubCellsForQuadBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForQuadBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const std::size_t& m, const std::size_t& n) const
     {
         const double dx = 2.0/m;
@@ -790,13 +911,13 @@ protected:
         {
             for(std::size_t j = 0; j < n; ++j)
             {
-                pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeQ4(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy)) );
+                pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy)) );
             }
         }
     }
 
     #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-    void ConstructSubCellsForBezier2DBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForBezier2DBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const std::size_t& m, const std::size_t& n) const
     {
         const double dx = 1.0/m;
@@ -805,67 +926,67 @@ protected:
         {
             for(std::size_t j = 0; j < n; ++j)
             {
-                pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeBezier2D(i*dx, (i+1)*dx, j*dy, (j+1)*dy)) );
+                pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(i*dx, (i+1)*dx, j*dy, (j+1)*dy)) );
             }
         }
     }
     #endif
 
     /// Construct the sub-cells for Gauss Quadrature on the hexahedra. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
-    void ConstructSubCellsForHexBasedOnGaussQuadrature(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForHexBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const int& integration_order) const
     {
         if(integration_order == 1)
         {
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)) );
         }
         else if(integration_order == 2)
         {
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, -1.0, 0.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, -1.0, 0.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, 0.0, 1.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, 0.0, 1.0, -1.0, 0.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, -1.0, 0.0, 0.0, 1.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, -1.0, 0.0, 0.0, 1.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)) );
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, 0.0, 0.0, 1.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 0.0, -1.0, 0.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(0.0, 1.0, -1.0, 0.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(0.0, 1.0, 0.0, 1.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 0.0, 0.0, 1.0, -1.0, 0.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 0.0, -1.0, 0.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(0.0, 1.0, -1.0, 0.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)) );
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 0.0, 0.0, 1.0, 0.0, 1.0)) );
         }
         else if(integration_order == 3)
         {
             double b = 0.5 * std::sqrt(3.00/5.00);
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, -1.0, -b)) );    // 1
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, -1.0, -b)) );      // 2
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, -1.0, -b)) );        // 3
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, -1.0, -b)) );      // 4
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -1.0, -b, -1.0, -b)) );    // 1
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -1.0, -b, -1.0, -b)) );      // 2
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, b, 1.0, -1.0, -b)) );        // 3
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, b, 1.0, -1.0, -b)) );      // 4
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, b, 1.0)) );  // 5
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, b, 1.0)) );    // 6
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, b, 1.0)) );      // 7
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, b, 1.0)) );    // 8
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -1.0, -b, b, 1.0)) );  // 5
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -1.0, -b, b, 1.0)) );    // 6
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, b, 1.0, b, 1.0)) );      // 7
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, b, 1.0, b, 1.0)) );    // 8
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, -1.0, -b)) );   // 9
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, -1.0, -b)) );     // 10
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, -1.0, -b)) );     // 11
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, -1.0, -b)) );   // 12
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -1.0, -b, -1.0, -b)) );   // 9
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -b, b, -1.0, -b)) );     // 10
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, b, 1.0, -1.0, -b)) );     // 11
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -b, b, -1.0, -b)) );   // 12
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -1.0, -b, -b, b)) );   // 13
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -1.0, -b, -b, b)) );     // 14
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, b, 1.0, -b, b)) );       // 15
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, b, 1.0, -b, b)) );     // 16
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -1.0, -b, -b, b)) );   // 13
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -1.0, -b, -b, b)) );     // 14
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, b, 1.0, -b, b)) );       // 15
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, b, 1.0, -b, b)) );     // 16
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, b, 1.0)) );     // 17
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, b, 1.0)) );       // 18
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, b, 1.0)) );       // 19
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, b, 1.0)) );     // 20
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -1.0, -b, b, 1.0)) );     // 17
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -b, b, b, 1.0)) );       // 18
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, b, 1.0, b, 1.0)) );       // 19
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -b, b, b, 1.0)) );     // 20
 
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, -1.0, -b)) );     // 21
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -1.0, -b, -b, b)) );     // 22
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(b, 1.0, -b, b, -b, b)) );       // 23
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, b, 1.0, -b, b)) );       // 24
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0, -b, -b, b, -b, b)) );     // 25
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, b, 1.0)) );       // 26
-            pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-b, b, -b, b, -b, b)) );        // 27
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -b, b, -1.0, -b)) );     // 21
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -1.0, -b, -b, b)) );     // 22
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(b, 1.0, -b, b, -b, b)) );       // 23
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, b, 1.0, -b, b)) );       // 24
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, -b, -b, b, -b, b)) );     // 25
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -b, b, b, 1.0)) );       // 26
+            pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-b, b, -b, b, -b, b)) );        // 27
         }
         else if(integration_order == 4)
         {
@@ -881,7 +1002,7 @@ protected:
                 {
                     for(int k = 0; k < 4; ++k)
                     {
-                        pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(p[k], p[k+1], p[j], p[j+1], p[i], p[i+1])) );
+                        pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(p[k], p[k+1], p[j], p[j+1], p[i], p[i+1])) );
                     }
                 }
             }
@@ -900,7 +1021,7 @@ protected:
                 {
                     for(int k = 0; k < 5; ++k)
                     {
-                        pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(p[k], p[k+1], p[j], p[j+1], p[i], p[i+1])) );
+                        pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(p[k], p[k+1], p[j], p[j+1], p[i], p[i+1])) );
                     }
                 }
             }
@@ -920,7 +1041,7 @@ protected:
                 {
                     for(int k = 0; k < 6; ++k)
                     {
-                        pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(p[i], p[i+1], p[j], p[j+1], p[k], p[k+1])) );
+                        pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(p[i], p[i+1], p[j], p[j+1], p[k], p[k+1])) );
                     }
                 }
             }
@@ -929,7 +1050,7 @@ protected:
             KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
     }
 
-    void ConstructSubCellsForHexBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForHexBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const std::size_t& m, const std::size_t& n, const std::size_t& p) const
     {
         const double dx = 2.0/m;
@@ -941,14 +1062,14 @@ protected:
             {
                 for(std::size_t k = 0; k < p; ++k)
                 {
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeH8(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy, -1.0+k*dz, -1.0+(k+1)*dz)) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0+i*dx, -1.0+(i+1)*dx, -1.0+j*dy, -1.0+(j+1)*dy, -1.0+k*dz, -1.0+(k+1)*dz)) );
                 }
             }
         }
     }
 
     #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-    void ConstructSubCellsForBezier3DBasedOnEqualDistribution(std::vector<QuadTreeNode::Pointer>& pTreeNodes,
+    void ConstructSubCellsForBezier3DBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const std::size_t& m, const std::size_t& n, const std::size_t& p) const
     {
         const double dx = 1.0/m;
@@ -960,7 +1081,7 @@ protected:
             {
                 for(std::size_t k = 0; k < p; ++k)
                 {
-                    pTreeNodes.push_back( QuadTreeNode::Pointer(new QuadTreeNodeBezier3D(i*dx, (i+1)*dx, j*dy, (j+1)*dy, k*dz, (k+1)*dz)) );
+                    pTreeNodes.push_back( typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(i*dx, (i+1)*dx, j*dy, (j+1)*dy, k*dz, (k+1)*dz)) );
                 }
             }
         }
@@ -978,30 +1099,30 @@ private:
 }; // Class  QuadTreeSubCell
 
 /// input stream function
-template<std::size_t TNsampling>
-inline std::istream& operator >> (std::istream& rIStream, QuadTree<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::istream& operator >> (std::istream& rIStream, QuadTree<TNsampling, TFrameType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-template<std::size_t TNsampling>
-inline std::ostream& operator << (std::ostream& rOStream, const QuadTree<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::ostream& operator << (std::ostream& rOStream, const QuadTree<TNsampling, TFrameType>& rThis)
 {
     rOStream << rThis;
     return rOStream;
 }
 
 /// input stream function
-template<std::size_t TNsampling>
-inline std::istream& operator >> (std::istream& rIStream, QuadTreeSubCell<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::istream& operator >> (std::istream& rIStream, QuadTreeSubCell<TNsampling, TFrameType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-template<std::size_t TNsampling>
-inline std::ostream& operator << (std::ostream& rOStream, const  QuadTreeSubCell<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::ostream& operator << (std::ostream& rOStream, const  QuadTreeSubCell<TNsampling, TFrameType>& rThis)
 {
     rOStream << rThis;
     return rOStream;

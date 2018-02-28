@@ -303,6 +303,21 @@ public:
         }
     }
 
+    /// Helper function to compute the global coordinates in the reference frame
+    static CoordinatesArrayType& GlobalCoordinates0( GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
+    {
+		if (rResult.size() != 3)
+			rResult.resize(3, false);
+        noalias( rResult ) = ZeroVector( 3 );
+
+        Vector N( rGeometry.size() );
+        rGeometry.ShapeFunctionsValues( N, LocalCoordinates );
+
+        for ( std::size_t i = 0 ; i < rGeometry.size() ; ++i )
+            noalias( rResult ) += N[i] * rGeometry[i].GetInitialPosition();
+
+        return rResult;
+    }
 
     ///@}
     ///@name Access

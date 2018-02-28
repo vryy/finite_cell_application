@@ -10,6 +10,8 @@
 
 
 // Project includes
+#include "includes/define.h"
+#include "includes/ublas_interface.h"
 #include "includes/element.h"
 #include "custom_python/add_quadrature_utility_to_python.h"
 #include "custom_utilities/quadrature_utility.h"
@@ -228,17 +230,16 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
 }
 
-template<class TTreeType>
+template<class TCellType>
 void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         const std::string& fileName,
         const std::string& fileType,
-        boost::python::list& pyCutTrees,
-        boost::python::list& pyExcludeTrees,
-        boost::python::list& pyQuadTreeTrees,
+        boost::python::list& pyCutCells,
+        boost::python::list& pyExcludeCells,
+        boost::python::list& pyQuadTreeCells,
         const int& accuracy)
 {
-    typedef typename TTreeType::Pointer TTreePointerType;
-    typedef boost::python::stl_input_iterator<TTreePointerType> iterator_value_type;
+    typedef boost::python::stl_input_iterator<typename TCellType::Pointer> iterator_value_type;
     std::ofstream myFile;
 
     if(fileType == std::string("python"))
@@ -254,8 +255,8 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         int cnt = 0;
         std::size_t number_of_cut_elems = 0;
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
             if(cnt < number_of_element_per_row)
@@ -268,7 +269,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 myFile << "\n\t";
             }
             ++number_of_cut_elems;
-            myFile << p_tree->pGetElement()->Id() << ", ";
+            myFile << p_cell->pGetElement()->Id() << ", ";
         }
 
         myFile << "\t]\n";
@@ -282,8 +283,8 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         cnt = 0;
         std::size_t number_of_exclude_elems = 0;
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyExcludeTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyExcludeCells), // begin
                 iterator_value_type() ) ) // end
         {
             if(cnt < number_of_element_per_row)
@@ -296,7 +297,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 myFile << "\n\t";
             }
             ++number_of_exclude_elems;
-            myFile << p_tree->pGetElement()->Id() << ", ";
+            myFile << p_cell->pGetElement()->Id() << ", ";
         }
 
         myFile << "\t]\n";
@@ -310,8 +311,8 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         cnt = 0;
         std::size_t number_of_quadtree_elems = 0;
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyQuadTreeTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyQuadTreeCells), // begin
                 iterator_value_type() ) ) // end
         {
             if(cnt < number_of_element_per_row)
@@ -324,7 +325,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 myFile << "\n\t";
             }
             ++number_of_quadtree_elems;
-            myFile << p_tree->pGetElement()->Id() << ", ";
+            myFile << p_cell->pGetElement()->Id() << ", ";
         }
 
         myFile << "\t]\n";
@@ -335,14 +336,14 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         myFile << "\ndef GetCutCellQuadrature():\n";
         myFile << "\tcq = {}\n";
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
             const Element::GeometryType::IntegrationPointsArrayType& integration_points
-                = p_tree->pGetElement()->GetGeometry().IntegrationPoints( p_tree->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
+                = p_cell->pGetElement()->GetGeometry().IntegrationPoints( p_cell->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
 
-            myFile << "\tcq[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tcq[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 myFile << "\n\t\t[" << integration_points[i].X()
@@ -359,14 +360,14 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         myFile << "\ndef GetCutCellFictitiousQuadrature():\n";
         myFile << "\tfiq = {}\n";
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
             const Element::GeometryType::IntegrationPointsArrayType& integration_points
-                = p_tree->GetFictitiousIntegrationPoints();
+                = p_cell->GetFictitiousIntegrationPoints();
 
-            myFile << "\tfiq[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tfiq[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 myFile << "\n\t\t[" << integration_points[i].X()
@@ -383,14 +384,14 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
         myFile << "\ndef GetCutCellFullQuadrature():\n";
         myFile << "\tfq = {}\n";
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
             const Element::GeometryType::IntegrationPointsArrayType& integration_points
-                = p_tree->GetRepresentativeIntegrationPoints();
+                = p_cell->GetRepresentativeIntegrationPoints();
 
-            myFile << "\tfq[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tfq[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 myFile << "\n\t\t[" << integration_points[i].X()
@@ -408,13 +409,13 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         myFile << "\ndef GetCutCellSubCellWeights():\n";
         myFile << "\tsw = {}\n";
 
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
-            const Matrix& Weights = p_tree->pGetElement()->GetValue(SUBCELL_WEIGHTS);
+            const Matrix& Weights = p_cell->pGetElement()->GetValue(SUBCELL_WEIGHTS);
 
-            myFile << "\tsw[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tsw[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < Weights.size1(); ++i)
             {
                 myFile << "\n\t\t[";
@@ -432,13 +433,13 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         myFile << "\ndef GetCutCellSubCellDomainSizes():\n";
         myFile << "\tds = {}\n";
 
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyCutTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyCutCells), // begin
                 iterator_value_type() ) ) // end
         {
-            const Vector& DomainSizes = p_tree->pGetElement()->GetValue(SUBCELL_DOMAIN_SIZES);
+            const Vector& DomainSizes = p_cell->pGetElement()->GetValue(SUBCELL_DOMAIN_SIZES);
 
-            myFile << "\tds[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tds[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < DomainSizes.size(); ++i)
             {
                 myFile << DomainSizes(i) << ", ";
@@ -453,14 +454,14 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         myFile << "\ndef GetQuadTreeQuadrature():\n";
         myFile << "\tqq = {}\n";
 
-        BOOST_FOREACH(const typename iterator_value_type::value_type& p_tree,
-                std::make_pair(iterator_value_type(pyQuadTreeTrees), // begin
+        BOOST_FOREACH(const typename iterator_value_type::value_type& p_cell,
+                std::make_pair(iterator_value_type(pyQuadTreeCells), // begin
                 iterator_value_type() ) ) // end
         {
             const Element::GeometryType::IntegrationPointsArrayType& integration_points
-                = p_tree->pGetElement()->GetGeometry().IntegrationPoints( p_tree->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
+                = p_cell->pGetElement()->GetGeometry().IntegrationPoints( p_cell->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
 
-            myFile << "\tqq[" << p_tree->pGetElement()->Id() << "] = [";
+            myFile << "\tqq[" << p_cell->pGetElement()->Id() << "] = [";
             for(std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 myFile << "\n\t\t[" << integration_points[i].X()
@@ -589,16 +590,7 @@ void FiniteCellApplication_AddQuadratureUtilityToPython()
     .def("ScaleQuadrature", &QuadratureUtility_ScaleQuadrature)
     .def("SaveQuadrature", &QuadratureUtility_SaveQuadrature)
     .def("SaveQuadrature", &QuadratureUtility_SaveQuadratureAdvanced)
-    .def("SaveQuadratureSubCell", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<1> >)
-    .def("SaveQuadratureSubCell2", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<2> >)
-    .def("SaveQuadratureSubCell3", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<3> >)
-    .def("SaveQuadratureSubCell4", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<4> >)
-    .def("SaveQuadratureSubCell5", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<5> >)
-    .def("SaveQuadratureSubCell6", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<6> >)
-    .def("SaveQuadratureSubCell7", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<7> >)
-    .def("SaveQuadratureSubCell8", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<8> >)
-    .def("SaveQuadratureSubCell9", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<9> >)
-    .def("SaveQuadratureSubCell10", &QuadratureUtility_SaveQuadratureAdvancedSubCell<MomentFittedQuadTreeSubCell<10> >)
+    .def("SaveQuadratureSubCell", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCell>)
     .def("SetQuadrature", &QuadratureUtility_SetQuadrature)
     .def("CreateConditionFromQuadraturePoint", &QuadratureUtility_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint)

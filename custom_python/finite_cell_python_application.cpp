@@ -46,16 +46,53 @@ namespace Python
         FiniteCellApplication_AddFunctionsToPython();
         FiniteCellApplication_AddBRepAndLevelSetToPython();
         FiniteCellApplication_AddRefinableTreeToPython();
-        FiniteCellApplication_AddQuadTreeToPython<1>();
-        FiniteCellApplication_AddQuadTreeToPython<2>();
-        FiniteCellApplication_AddQuadTreeToPython<3>();
-        FiniteCellApplication_AddQuadTreeToPython<4>();
-        FiniteCellApplication_AddQuadTreeToPython<5>();
-        FiniteCellApplication_AddQuadTreeToPython<6>();
-        FiniteCellApplication_AddQuadTreeToPython<7>();
-        FiniteCellApplication_AddQuadTreeToPython<8>();
-        FiniteCellApplication_AddQuadTreeToPython<9>();
-        FiniteCellApplication_AddQuadTreeToPython<10>();
+
+        FiniteCellApplication_AddQuadTreeToPython<1, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<2, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<3, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<4, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<5, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_REFERENCE>();
+
+        FiniteCellApplication_AddQuadTreeToPython<1, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<2, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<3, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<4, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<5, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_CURRENT>();
+
+        FiniteCellApplication_AddBaseMomentFittedQuadTreeSubCellToPython();
+
+        FiniteCellApplication_AddQuadTreeSubCellToPython<1, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<2, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<3, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<4, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<5, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_REFERENCE>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_REFERENCE>();
+
+        FiniteCellApplication_AddQuadTreeSubCellToPython<1, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<2, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<3, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<4, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<5, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_CURRENT>();
+//        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_CURRENT>();
+
         FiniteCellApplication_AddCustomConditionsToPython();
 
         FiniteCellApplication_AddQuadratureUtilityToPython();

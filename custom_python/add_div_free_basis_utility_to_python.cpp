@@ -7,7 +7,8 @@
 //
 //
 
-
+// External includes
+#include <boost/python.hpp>
 
 // Project includes
 #include "custom_python/add_div_free_basis_utility_to_python.h"

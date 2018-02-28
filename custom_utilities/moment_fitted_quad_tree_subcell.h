@@ -28,41 +28,36 @@
 
 
 // Project includes
-#include "custom_utilities/quadrature_utility.h"
-#include "custom_utilities/moment_fitting_utility.h"
 #include "includes/model_part.h"
 #include "includes/geometrical_object.h"
+#include "includes/serializer.h"
 #include "utilities/math_utils.h"
+#include "utilities/timer.h"
 #include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_conditions/element_wrapper_condition.h"
 #include "custom_utilities/quad_tree.h"
+#include "custom_utilities/quadrature_utility.h"
+#include "custom_utilities/moment_fitting_utility.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_mesh_utility.h"
 
 //#define ENABLE_DEBUG_QUADRATURE
 //#define DEBUG_SUBCELL
+//#define ENABLE_PROFILING
 
 namespace Kratos
 {
 
-/// Short class definition.
-/** A special type of quad tree w/ sub-cell. It uses quad-tree to compute the moment fitted quadrature of the element. For details see:
-Hoang-Giang Bui, D. Schillinger, G. Meschke, Finite Cell Method for Plasticity using Moment-Fitted Quadrature Technique, in preparation.
-*/
-template<std::size_t TNsampling>
-class MomentFittedQuadTreeSubCell : public QuadTreeSubCell<TNsampling>
+/**
+Abstract class for moment fitted quadtree w/ subcell
+ */
+class BaseMomentFittedQuadTreeSubCell
 {
 public:
-    ///@name Type Definitions
-    ///@{
-
-    /// Pointer definition of  MomentFittedQuadTreeSubCell
-    KRATOS_CLASS_POINTER_DEFINITION(MomentFittedQuadTreeSubCell);
-
-    typedef QuadTreeSubCell<TNsampling> BaseType;
+    KRATOS_CLASS_POINTER_DEFINITION(BaseMomentFittedQuadTreeSubCell);
 
     typedef typename GeometricalObject::GeometryType GeometryType;
 
@@ -72,13 +67,158 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
+    BaseMomentFittedQuadTreeSubCell() {} // Empty constructor for serializer
+
+    BaseMomentFittedQuadTreeSubCell(Element::Pointer p_elem) : mpElement(p_elem) {}
+
+    virtual ~BaseMomentFittedQuadTreeSubCell() {}
+
+    virtual void GeneratePhysicalIntegrationPoints(const BRep& r_brep, const int& integrator_integration_method)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    /// Get the underlying element
+    Element::Pointer pGetElement() const
+    {
+        return mpElement;
+    }
+
+    /// Get the integration order of fitting integration points
+    const int& GetRepresentativeIntegrationOrder() const
+    {
+        return mRepresentativeIntegrationOrder;
+    }
+
+
+    /// Get the integration method of fitting integration points
+    GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
+    {
+        return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
+    }
+
+
+    /// Get the list of integration points used to fit each subcell
+    const IntegrationPointsArrayType& GetRepresentativeIntegrationPoints() const
+    {
+        return mMomentFittingIntegrationPoints;
+    }
+
+
+    /// Get the physical integration points
+    const IntegrationPointsArrayType& GetPhysicalIntegrationPoints() const
+    {
+        return mPhysicalIntegrationPoints;
+    }
+
+
+    /// Get index of the sub-cells
+    const std::vector<std::size_t>& SubCellIndices() const
+    {
+        return mSubCellIndices;
+    }
+
+
+    /// Get the fictitious integration points
+    const IntegrationPointsArrayType& GetFictitiousIntegrationPoints() const
+    {
+        return mFictitiousIntegrationPoints;
+    }
+
+    /// Compute the domain size of the subcell i
+    virtual double DomainSizeSubCell(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class", __FUNCTION__)
+    }
+
+    /// Fit a list of subcell using the representative quadrature points from the parent element
+    virtual Matrix FitQuadratureSubCell(const std::vector<size_t>& subcell_index,
+        const std::vector<FunctionR3R1::Pointer>& r_funcs,
+        const BRep& r_brep,
+        const int& integrator_integration_method,
+        const std::string& solver_type,
+        const int& echo_level,
+        const double& small_weight) const
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class", __FUNCTION__)
+    }
+
+protected:
+
+    Element::Pointer mpElement;
+    int mRepresentativeIntegrationOrder; // this is the integration order associated with mMomentFittingIntegrationPoints
+    IntegrationPointsArrayType mMomentFittingIntegrationPoints; // this contains the quadrature points to fit the integration on sub-cell. It is typically the Gauß quadrature point on big cell.
+    IntegrationPointsArrayType mRepresentativeIntegrationPoints; // this contains the quadrature points representing a sub-cell. In most of the case, it is not useful. However, when the sub-cell is completely inside the physical domain, it can be used as physical integration point.
+
+    std::vector<std::size_t> mSubCellIndices;
+    IntegrationPointsArrayType mPhysicalIntegrationPoints;
+    IntegrationPointsArrayType mFictitiousIntegrationPoints;
+
+private:
+
+    friend class Serializer;
+
+    virtual void save(Serializer& rSerializer) const
+    {
+    }
+
+    virtual void load(Serializer& rSerializer)
+    {
+    }
+};
+
+/// input stream function
+inline std::istream& operator >> (std::istream& rIStream, BaseMomentFittedQuadTreeSubCell& rThis)
+{
+    return rIStream;
+}
+
+/// output stream function
+inline std::ostream& operator << (std::ostream& rOStream, const BaseMomentFittedQuadTreeSubCell& rThis)
+{
+    return rOStream;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+/** A special type of quad tree w/ sub-cell. It uses quad-tree to compute the moment fitted quadrature of the element. For details see:
+Hoang-Giang Bui, D. Schillinger, G. Meschke, Finite Cell Method for Plasticity using Moment-Fitted Quadrature Technique, in preparation.
+*/
+template<std::size_t TNsampling, int TFrameType>
+class MomentFittedQuadTreeSubCell : public QuadTreeSubCell<TNsampling, TFrameType>, public BaseMomentFittedQuadTreeSubCell
+{
+public:
+    ///@name Type Definitions
+    ///@{
+
+    /// Pointer definition of  MomentFittedQuadTreeSubCell
+    KRATOS_CLASS_POINTER_DEFINITION(MomentFittedQuadTreeSubCell);
+
+    typedef QuadTreeSubCell<TNsampling, TFrameType> BaseType;
+
+    typedef BaseMomentFittedQuadTreeSubCell RefType;
+
+    typedef typename GeometricalObject::GeometryType GeometryType;
+
+    typedef typename GeometryType::PointType NodeType;
+
+    typedef typename NodeType::PointType PointType;
+
+    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+
+    typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor
     MomentFittedQuadTreeSubCell(Element::Pointer p_elem)
-    : BaseType(p_elem), mpElement(p_elem)
+    : BaseType(p_elem), RefType(p_elem)
     {
     }
 
@@ -95,52 +235,52 @@ public:
 
         BaseType::mpTreeNodes.clear();
 
-        if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
+        if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForQuadBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
-             || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
+        else if(RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
+             || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
         {
             KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
         }
         #endif
-        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
-              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
-              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
+        else if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
+              || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
+              || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForHexBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D)
+        else if(RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D)
         {
             KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
         }
         #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpElement->GetGeometry().GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", RefType::mpElement->GetGeometry().GetGeometryType())
 
         // using the standard Gauss quadrature as moment fitting integration points
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(gauss_quadrature_order);
 
-        mRepresentativeIntegrationOrder = gauss_quadrature_order;
+        RefType::mRepresentativeIntegrationOrder = gauss_quadrature_order;
 
         if(gauss_quadrature_type == 0)
         {
-            const GeometryType::IntegrationPointsArrayType& integration_points
-                = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
+            const IntegrationPointsArrayType& integration_points
+                = RefType::mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
 
-            mMomentFittingIntegrationPoints = integration_points;
-            mRepresentativeIntegrationPoints = integration_points;
+            RefType::mMomentFittingIntegrationPoints = integration_points;
+            RefType::mRepresentativeIntegrationPoints = integration_points;
 
             // do a check, to make sure the integration point is inside the sub-cell
             for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
@@ -152,13 +292,13 @@ public:
         else
         {
             // create a big quadtree node for quadrature points generation
-            QuadTreeNode::Pointer pTreeNode = QuadTree<TNsampling>::pCreateQuadTreeNode(mpElement->GetGeometry().GetGeometryType());
+            typename QuadTreeNode<TFrameType>::Pointer pTreeNode = QuadTree<TNsampling, TFrameType>::pCreateQuadTreeNode(RefType::mpElement->GetGeometry().GetGeometryType());
 
-            const GeometryType::IntegrationPointsArrayType integration_points
+            const IntegrationPointsArrayType integration_points
                 = pTreeNode->ConstructCustomQuadrature(gauss_quadrature_type, gauss_quadrature_order);
 
-            mMomentFittingIntegrationPoints = integration_points;
-            mRepresentativeIntegrationPoints = integration_points;
+            RefType::mMomentFittingIntegrationPoints = integration_points;
+            RefType::mRepresentativeIntegrationPoints = integration_points;
 
             // do a check, to make sure the integration point is inside the sub-cell
             KRATOS_WATCH(BaseType::mpTreeNodes.size())
@@ -186,12 +326,12 @@ public:
     {
         BaseType::mpTreeNodes.clear();
 
-        if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
-         || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
+        if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8
+         || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
         {
             std::size_t nsegments = integration_order;
 
@@ -199,8 +339,8 @@ public:
             BaseType::ConstructSubCellsForQuadBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
-              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
+        else if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D
+              || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier2D3 )
         {
             std::size_t nsegments = integration_order;
 
@@ -208,9 +348,9 @@ public:
             BaseType::ConstructSubCellsForBezier2DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
         #endif
-        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
-              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
-              || mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
+        else if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D8
+              || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D20
+              || RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Hexahedra3D27 )
         {
             std::size_t nsegments = integration_order;
 
@@ -218,7 +358,7 @@ public:
             BaseType::ConstructSubCellsForHexBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D )
+        else if( RefType::mpElement->GetGeometry().GetGeometryType() == GeometryData::Kratos_Bezier3D )
         {
             std::size_t nsegments = integration_order;
 
@@ -227,23 +367,23 @@ public:
         }
         #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", mpElement->GetGeometry().GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", RefType::mpElement->GetGeometry().GetGeometryType())
 
         // using the standard Gauss quadrature as moment fitting integration points
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(integration_order);
 
-        mRepresentativeIntegrationOrder = integration_order;
+        RefType::mRepresentativeIntegrationOrder = integration_order;
 
-        const GeometryType::IntegrationPointsArrayType& integration_points
-            = mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
+        const IntegrationPointsArrayType& integration_points
+            = RefType::mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
 //        KRATOS_WATCH(integration_points.size())
 
-        mMomentFittingIntegrationPoints = integration_points;
+        RefType::mMomentFittingIntegrationPoints = integration_points;
 
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
+            RefType::mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
         }
     }
 
@@ -251,60 +391,12 @@ public:
     virtual ~ MomentFittedQuadTreeSubCell() {}
 
 
-    Element::Pointer pGetElement() const
-    {
-        return mpElement;
-    }
-
-
-    /// Get the integration order of fitting integration points
-    const int& GetRepresentativeIntegrationOrder() const
-    {
-        return mRepresentativeIntegrationOrder;
-    }
-
-
-    /// Get the integration method of fitting integration points
-    GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
-    {
-        return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
-    }
-
-
-    /// Get the list of integration points used to fit each subcell
-    const GeometryType::IntegrationPointsArrayType& GetRepresentativeIntegrationPoints() const
-    {
-        return mMomentFittingIntegrationPoints;
-    }
-
-
-    /// Get the physical integration points
-    const GeometryType::IntegrationPointsArrayType& GetPhysicalIntegrationPoints() const
-    {
-        return mPhysicalIntegrationPoints;
-    }
-
-
-    /// Get index of the sub-cells
-    const std::vector<std::size_t>& SubCellIndices() const
-    {
-        return mSubCellIndices;
-    }
-
-
-    /// Get the fictitious integration points
-    const GeometryType::IntegrationPointsArrayType& GetFictitiousIntegrationPoints() const
-    {
-        return mFictitiousIntegrationPoints;
-    }
-
-
     /// Compute the physical quadrature point. One physical quadrature point represents a subcell.
-    void GeneratePhysicalIntegrationPoints(const BRep& r_brep, const int& integrator_integration_method)
+    virtual void GeneratePhysicalIntegrationPoints(const BRep& r_brep, const int& integrator_integration_method)
     {
-        mSubCellIndices.clear();
-        mPhysicalIntegrationPoints.clear();
-        mFictitiousIntegrationPoints.clear();
+        RefType::mSubCellIndices.clear();
+        RefType::mPhysicalIntegrationPoints.clear();
+        RefType::mFictitiousIntegrationPoints.clear();
 
         PointType COG;
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
@@ -323,7 +415,17 @@ public:
 
             std::vector<PointType> SamplingPoints;
             BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), TNsampling);
+
+            #ifdef ENABLE_PROFILING
+            std::stringstream time_mark_name; time_mark_name << "CutStatus at " << __LINE__;
+            Timer::Start(time_mark_name.str());
+            #endif
+
             int status = r_brep.CutStatus(SamplingPoints);
+
+            #ifdef ENABLE_PROFILING
+            Timer::Stop(time_mark_name.str());
+            #endif
 
             if(status == BRep::_IN)
             {
@@ -331,18 +433,25 @@ public:
                 std::cout << "sub-cell " << i << " is completely inside the physical domain" << std::endl;
                 #endif
                 // the cell is completely inside the physical domain
-                GeometryType::IntegrationPointType integration_point = mRepresentativeIntegrationPoints[i];
+                GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
-                mPhysicalIntegrationPoints.push_back(integration_point);
-                mSubCellIndices.push_back(i);
+                RefType::mPhysicalIntegrationPoints.push_back(integration_point);
+                RefType::mSubCellIndices.push_back(i);
             }
             else if(status == BRep::_CUT)
             {
                 #ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is cut" << std::endl;
                 #endif
+                #ifdef ENABLE_PROFILING
+                std::stringstream time_mark_name2; time_mark_name2 << "CenterOfGravity at " << __LINE__;
+                Timer::Start(time_mark_name2.str());
+                #endif
                 // the cell is cut
                 bool found = BaseType::mpTreeNodes[i]->CenterOfGravity(COG, BaseType::pGetGeometry(), r_brep, integrator_integration_method);
+                #ifdef ENABLE_PROFILING
+                Timer::Stop(time_mark_name2.str());
+                #endif
                 #ifdef DEBUG_SUBCELL
                 KRATOS_WATCH(found)
                 KRATOS_WATCH(COG)
@@ -350,14 +459,44 @@ public:
                 if(found)
                 {
                     GeometryType::IntegrationPointType integration_point;
-                    bool is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point);
+                    bool is_inside;
+                    if(TFrameType == GLOBAL_CURRENT)
+                    {
+                        is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point);
+                    }
+                    else if(TFrameType == GLOBAL_REFERENCE)
+                    {
+                        GeometryType& rGeometry = *(BaseType::pGetGeometry());
+                        Matrix DeltaPosition(rGeometry.size(), 3);
+                        for ( unsigned int node = 0; node < rGeometry.size(); ++node )
+                            noalias( row( DeltaPosition, node ) ) = rGeometry[node].Coordinates() - rGeometry[node].GetInitialPosition();
+                        is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point, DeltaPosition);
+                    }
                     if(!is_inside)
                     {
-                        std::cout << "!!WARNING!!The CenterOfGravity is not inside the domain of the subcell " << i << std::endl;
+                        std::cout << "!!WARNING!!The CenterOfGravity is found but not inside the domain of the subcell " << i << " of the element " << mpElement->Id() << std::endl;
+                        std::cout << " The found COG: " << COG << std::endl;
+                        std::cout << " The found integration point: " << integration_point << std::endl;
+                        std::cout << " The element " << RefType::mpElement->Id() << ":" << std::endl;
+                        for (std::size_t i = 0; i < RefType::mpElement->GetGeometry().size(); ++i)
+                            std::cout << " " << RefType::mpElement->GetGeometry()[i].Id();
+                        std::cout << std::endl;
+                        for (std::size_t i = 0; i < RefType::mpElement->GetGeometry().size(); ++i)
+                        {
+                            const PointType& point = RefType::mpElement->GetGeometry()[i].GetInitialPosition();
+                            std::cout << " " << point[0] << "," << point[1] << "," << point[2] << std::endl;
+                        }
                     }
                     integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
-                    mPhysicalIntegrationPoints.push_back(integration_point);
-                    mSubCellIndices.push_back(i);
+                    RefType::mPhysicalIntegrationPoints.push_back(integration_point);
+                    RefType::mSubCellIndices.push_back(i);
+                }
+                else
+                {
+                    // if the adaptive quadrature can't find the center of gravity, this sub-cell will be considered fictitious
+                    GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
+                    integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
+                    RefType::mFictitiousIntegrationPoints.push_back(integration_point);
                 }
             }
             else
@@ -366,9 +505,9 @@ public:
                 std::cout << "sub-cell " << i << " is completely outside the physical domain" << std::endl;
                 #endif
                 // the cell is completely outside the physical domain
-                GeometryType::IntegrationPointType integration_point = mRepresentativeIntegrationPoints[i];
+                GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
-                mFictitiousIntegrationPoints.push_back(integration_point);
+                RefType::mFictitiousIntegrationPoints.push_back(integration_point);
             }
 
             #ifdef DEBUG_SUBCELL
@@ -378,16 +517,23 @@ public:
     }
 
 
+    /// Compute the domain size of the subcell i
+    virtual double DomainSizeSubCell(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
+    {
+        return BaseType::DomainSize(i, r_brep, integration_method);
+    }
+
+
     /// Set the weight for fictitious integration points
     void SetFictitiousWeight(const double& weight)
     {
-        for (std::size_t i = 0; i < mFictitiousIntegrationPoints.size(); ++i)
-            mFictitiousIntegrationPoints[i].SetWeight(weight);
+        for (std::size_t i = 0; i < RefType::mFictitiousIntegrationPoints.size(); ++i)
+            RefType::mFictitiousIntegrationPoints[i].SetWeight(weight);
     }
 
 
     /// Fit a list of subcell using the representative quadrature points from the parent element
-    Matrix FitQuadratureSubCell(const std::vector<size_t>& subcell_index,
+    virtual Matrix FitQuadratureSubCell(const std::vector<size_t>& subcell_index,
         const std::vector<FunctionR3R1::Pointer>& r_funcs,
         const BRep& r_brep,
         const int& integrator_integration_method,
@@ -395,18 +541,34 @@ public:
         const int& echo_level,
         const double& small_weight) const
     {
-        Matrix Weights(subcell_index.size(), mMomentFittingIntegrationPoints.size());
+        Matrix Weights(subcell_index.size(), RefType::mMomentFittingIntegrationPoints.size());
+        Vector aux;
+
         for(std::size_t i = 0; i < subcell_index.size(); ++i)
         {
             // perform the moment fit for the sub-cell
-            std::size_t i_cell = subcell_index[i];
+            const std::size_t& i_cell = subcell_index[i];
 
-            typename QuadTree<TNsampling>::Pointer quad_tree = typename QuadTree<TNsampling>::Pointer(
-                    new QuadTree<TNsampling>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
+            typename QuadTree<TNsampling, TFrameType>::Pointer quad_tree = typename QuadTree<TNsampling, TFrameType>::Pointer(
+                    new QuadTree<TNsampling, TFrameType>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
 
-            noalias(row(Weights, i)) = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree<TNsampling> >(*BaseType::pGetGeometry(),
-                    r_funcs, r_brep, *quad_tree, mMomentFittingIntegrationPoints,
+            #ifdef ENABLE_PROFILING
+            std::stringstream time_mark_name; time_mark_name << "FitQuadrature at " << __LINE__;
+            Timer::Start(time_mark_name.str());
+            #endif
+
+            aux = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree<TNsampling, TFrameType> >(*BaseType::pGetGeometry(),
+                    r_funcs, r_brep, *quad_tree, RefType::mMomentFittingIntegrationPoints,
                     integrator_integration_method, solver_type, echo_level, small_weight);
+
+            if (Weights.size2() != aux.size())
+                KRATOS_THROW_ERROR(std::logic_error, "Size conflict", "")
+
+            noalias(row(Weights, i)) = aux;
+
+            #ifdef ENABLE_PROFILING
+            Timer::Stop(time_mark_name.str());
+            #endif
         }
 
         return Weights;
@@ -420,17 +582,17 @@ public:
         std::size_t& lastElementId,
         std::size_t& lastCondId) const
     {
-        return CreateSubCellElements(r_model_part, mpElement, sample_element_name, mRepresentativeIntegrationOrder,
-                            mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId, mpElement->pGetProperties());
+        return CreateSubCellElements(r_model_part, RefType::mpElement, sample_element_name, RefType::mRepresentativeIntegrationOrder,
+                            RefType::mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId, RefType::mpElement->pGetProperties());
     }
 
 
-    /// Create the element out from sub-cells of an element. The new element takes the same geometry of the original element, but the integration points and weights are given.
+    /// Create the elements out from sub-cells of an element. The new elements take the same geometry of the original element, but the integration points and weights are given.
     static ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
         Element::Pointer pElement, // the parent element that contains sub-cells
         const std::string& sample_element_name,
         const int& RepresentativeIntegrationOrder,
-        const GeometryType::IntegrationPointsArrayType& integration_points,
+        const IntegrationPointsArrayType& integration_points,
         const Matrix& rWeights,
         std::size_t& lastElementId,
         std::size_t& lastCondId,
@@ -450,7 +612,7 @@ public:
         for(std::size_t i = 0; i < num_physical_point; ++i)
         {
             // create new list of integration points
-            GeometryType::IntegrationPointsArrayType new_integration_points = integration_points;
+            IntegrationPointsArrayType new_integration_points = integration_points;
             for(std::size_t j = 0; j < new_integration_points.size(); ++j)
                 new_integration_points[j].Weight() = rWeights(i, j);
 
@@ -472,7 +634,7 @@ public:
                 it != NewElements.ptr_end(); ++it)
         {
             // create new element-wrapped condition
-            Condition::Pointer pNewCond = Condition::Pointer(new ElementWrapperCondition(++lastCondId, *it));
+            Condition::Pointer pNewCond = Condition::Pointer(new ElementWrapperCondition(++lastCondId, *it, pProperties));
             r_model_part.Conditions().push_back(pNewCond);
         }
 
@@ -489,8 +651,8 @@ public:
         std::size_t& lastElementId,
         Properties::Pointer pProperties)
     {
-        return FiniteCellMeshUtility::CreateParasiteElement(r_model_part, mpElement, sample_element_name,
-                mRepresentativeIntegrationOrder, mFictitiousIntegrationPoints, lastElementId, pProperties);
+        return FiniteCellMeshUtility::CreateParasiteElement(r_model_part, RefType::mpElement, sample_element_name,
+                RefType::mRepresentativeIntegrationOrder, RefType::mFictitiousIntegrationPoints, lastElementId, pProperties);
     }
 
 
@@ -517,15 +679,6 @@ private:
     bool mDebugFlag;
     #endif
 
-    Element::Pointer mpElement;
-    int mRepresentativeIntegrationOrder; // this is the integration order associated with mMomentFittingIntegrationPoints
-    GeometryType::IntegrationPointsArrayType mMomentFittingIntegrationPoints; // this contains the quadrature points to fit the integration on sub-cell. It is typically the Gauß quadrature point on big cell.
-    GeometryType::IntegrationPointsArrayType mRepresentativeIntegrationPoints; // this contains the quadrature points representing a sub-cell. In most of the case, it is not useful. However, when the sub-cell is completely inside the physical domain, it can be used as physical integration point.
-
-    std::vector<std::size_t> mSubCellIndices;
-    GeometryType::IntegrationPointsArrayType mPhysicalIntegrationPoints;
-    GeometryType::IntegrationPointsArrayType mFictitiousIntegrationPoints;
-
     /// Assignment operator.
      MomentFittedQuadTreeSubCell& operator=( MomentFittedQuadTreeSubCell const& rOther);
 
@@ -536,15 +689,15 @@ private:
 
 
 /// input stream function
-template<std::size_t TNsampling>
-inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell<TNsampling, TFrameType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-template<std::size_t TNsampling>
-inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell<TNsampling>& rThis)
+template<std::size_t TNsampling, int TFrameType>
+inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell<TNsampling, TFrameType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -552,10 +705,12 @@ inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQua
 
     return rOStream;
 }
+
 ///@}
 
 }  // namespace Kratos.
 
+#undef ENABLE_PROFILING
 #undef ENABLE_DEBUG_QUADRATURE
 
 #endif // KRATOS_FINITE_CELL_APPLICATION_MOMENT_FITTED_QUAD_TREE_SUBCELL_H_INCLUDED defined

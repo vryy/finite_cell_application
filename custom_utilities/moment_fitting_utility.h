@@ -28,11 +28,14 @@
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/foreach.hpp>
-#include <boost/numeric/ublas/lu.hpp>
 #include <boost/progress.hpp>
 
 
 // Project includes
+#include "includes/define.h"
+#include "includes/ublas_interface.h"
+#include "utilities/timer.h"
+#include <boost/numeric/ublas/lu.hpp>
 #include "custom_algebra/brep.h"
 #include "custom_algebra/function/function.h"
 #include "custom_algebra/function/product_function.h"
@@ -43,6 +46,7 @@
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "finite_cell_application/finite_cell_application.h"
 
+//#define ENABLE_PROFILING // WARNING: Using this can lose the performance because the Timer limits one thread when updating.
 
 namespace Kratos
 {
@@ -152,16 +156,24 @@ public:
         if(echo_level > 4)
             KRATOS_WATCH(MA)
 
+        #ifdef ENABLE_PROFILING
+        std::stringstream time_mark_name; time_mark_name << "Evaluate b at " << __LINE__;
+        Timer::Start(time_mark_name.str());
+        #endif
+
         // form the vector b
         Vector Mb(num_basis);
         for(std::size_t i = 0; i < num_basis; ++i)
         {
             // because the fitting functions is defined in the local frame, the integration in local scheme must be used
-            Mb(i) = 0.0;
-            r_integrator.template Integrate<double, 0>(*(r_funcs[i]), r_brep, Mb(i), integrator_integration_method, small_weight);
+            Mb(i) = r_integrator.IntegrateLocal(*(r_funcs[i]), r_brep, integrator_integration_method, small_weight);
         }
         if(echo_level > 3)
             KRATOS_WATCH(Mb)
+
+        #ifdef ENABLE_PROFILING
+        Timer::Stop(time_mark_name.str());
+        #endif
 
         if(echo_level > 2)
         {
@@ -172,6 +184,11 @@ public:
                 KRATOS_WATCH(rcond)
             }
         }
+
+        #ifdef ENABLE_PROFILING
+        std::stringstream time_mark_name2; time_mark_name2 << "Solve for w at " << __LINE__;
+        Timer::Start(time_mark_name2.str());
+        #endif
 
         // solve for weights
         Vector Mw;
@@ -220,6 +237,10 @@ public:
             KRATOS_WATCH(sum(Mw))
         }
 
+        #ifdef ENABLE_PROFILING
+        Timer::Stop(time_mark_name2.str());
+        #endif
+
         if(echo_level > 1)
         {
             // check the error of the solution
@@ -258,7 +279,7 @@ public:
 
         /* secondly assign the physical integration points to the element */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod = p_tree->GetRepresentativeIntegrationMethod();
-        FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
+        FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetElement()->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
         p_tree->pGetElement()->SetValue(INTEGRATION_ORDER_var, p_tree->GetRepresentativeIntegrationOrder());
         p_tree->pGetElement()->Initialize();
@@ -271,7 +292,7 @@ public:
         /* compute the subcell domain size */
         Vector DomainSizes(subcell_index.size());
         for(std::size_t i = 0; i < subcell_index.size(); ++i)
-            DomainSizes(i) = p_tree->DomainSize(subcell_index[i], r_brep, integrator_integration_method);
+            DomainSizes(i) = p_tree->DomainSizeSubCell(subcell_index[i], r_brep, integrator_integration_method);
         p_tree->pGetElement()->SetValue(SUBCELL_DOMAIN_SIZES, DomainSizes);
 
         if(echo_level > 0)
@@ -303,25 +324,55 @@ public:
 
         boost::progress_display show_progress( r_trees.size() );
 
-//        int integrator_quadrature_type = QuadratureUtility::GetQuadratureType(integrator_integration_method);
-//        int integrator_quadrature_order = QuadratureUtility::GetQuadratureOrder(integrator_integration_method);
-//        int integrator_integration_method_physical_point = 0x20 + integrator_quadrature_order;
+        #ifdef ENABLE_PROFILING
+        double start = OpenMPUtils::GetCurrentTime();
+        #endif
 
 #ifdef _OPENMP
-        #pragma omp parallel for
-#endif
-        for(int k = 0; k < number_of_threads; ++k)
+        if (number_of_threads > 1)
         {
-            typename std::vector<typename TTreeType::Pointer>::iterator it_first_tree = r_trees.begin() + tree_partition[k];
-            typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k+1];
+            std::vector<BRep::Pointer> clone_breps;
+            std::vector<std::vector<typename TFunctionType::Pointer> > clone_funcs;
 
-            for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
+            for(int k = 0; k < number_of_threads; ++k)
+            {
+                clone_breps.push_back(r_brep.CloneBRep());
+
+                std::vector<typename TFunctionType::Pointer> funcs;
+                for(std::size_t i = 0; i < r_funcs.size(); ++i)
+                    funcs.push_back(r_funcs[i]->CloneFunction());
+                clone_funcs.push_back(funcs);
+            }
+
+            #pragma omp parallel for // default(none) shared(r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, number_of_threads, r_trees, show_progress, tree_partition)
+            for(int k = 0; k < number_of_threads; ++k)
+            {
+                typename std::vector<typename TTreeType::Pointer>::iterator it_first_tree = r_trees.begin() + tree_partition[k];
+                typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k+1];
+
+                for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
+                {
+                    this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, clone_funcs[k], *(clone_breps[k]), integrator_integration_method, solver_type, echo_level, small_weight);
+                    ++show_progress;
+                }
+            }
+        }
+        else
+#endif
+        {
+            for(typename std::vector<typename TTreeType::Pointer>::iterator it = r_trees.begin(); it != r_trees.end(); ++it)
             {
                 this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
                 ++show_progress;
             }
         }
+
+        #ifdef ENABLE_PROFILING
+        double stop = OpenMPUtils::GetCurrentTime();
+        std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << r_trees.size() << " trees in " << (stop-start) << "s" << std::endl;
+        #else
         std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << r_trees.size() << " trees" << std::endl;
+        #endif
     }
 
 
@@ -477,5 +528,7 @@ inline std::ostream& operator << (std::ostream& rOStream, const MomentFittingUti
 ///@} addtogroup block
 
 }  // namespace Kratos.
+
+#undef ENABLE_PROFILING
 
 #endif // KRATOS_MOMENT_FITTING_UTILITY_H_INCLUDED  defined

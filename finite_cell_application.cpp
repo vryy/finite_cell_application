@@ -15,6 +15,7 @@
 
 
 // Project includes
+#include "finite_cell_application/finite_cell_application.h"
 #include "geometries/quadrilateral_2d_4.h"
 #include "geometries/quadrilateral_2d_8.h"
 #include "geometries/quadrilateral_2d_9.h"
@@ -39,7 +40,6 @@
 #include "geometries/point_2d.h"
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
-#include "finite_cell_application.h"
 
 
 namespace Kratos

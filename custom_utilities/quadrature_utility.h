@@ -24,16 +24,14 @@
 
 
 // External includes
-#include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/numeric/ublas/lu.hpp>
 
 
 // Project includes
 #include "includes/define.h"
+#include "includes/variables.h"
+#include "includes/ublas_interface.h"
 #include "includes/element.h"
 #include "includes/model_part.h"
-#include "includes/ublas_interface.h"
 #include "includes/kratos_flags.h"
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"

@@ -1,5 +1,6 @@
 import math
 import pprint
+import time as time_module
 from KratosMultiphysics import *
 from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.FiniteCellApplication import *
@@ -166,47 +167,47 @@ def CreateFittingFunctions(fit_space_dim, fit_degree):
 
 def CreateQuadTree(element, nsampling):
     if nsampling == 1:
-        return QuadTreeLocal(element)
+        return QuadTreeLocalReference(element)
     elif nsampling == 2:
-        return QuadTreeLocal2(element)
+        return QuadTreeLocalReference2(element)
     elif nsampling == 3:
-        return QuadTreeLocal3(element)
+        return QuadTreeLocalReference3(element)
     elif nsampling == 4:
-        return QuadTreeLocal4(element)
+        return QuadTreeLocalReference4(element)
     elif nsampling == 5:
-        return QuadTreeLocal5(element)
+        return QuadTreeLocalReference5(element)
     elif nsampling == 6:
-        return QuadTreeLocal6(element)
+        return QuadTreeLocalReference6(element)
     elif nsampling == 7:
-        return QuadTreeLocal7(element)
+        return QuadTreeLocalReference7(element)
     elif nsampling == 8:
-        return QuadTreeLocal8(element)
+        return QuadTreeLocalReference8(element)
     elif nsampling == 9:
-        return QuadTreeLocal9(element)
+        return QuadTreeLocalReference9(element)
     elif nsampling == 10:
-        return QuadTreeLocal10(element)
+        return QuadTreeLocalReference10(element)
 
 def CreateQuadTreeSubCell(element, nsampling):
     if nsampling == 1:
-        return MomentFittedQuadTreeSubCell(element)
+        return MomentFittedQuadTreeSubCellReference(element)
     elif nsampling == 2:
-        return MomentFittedQuadTreeSubCell2(element)
+        return MomentFittedQuadTreeSubCellReference2(element)
     elif nsampling == 3:
-        return MomentFittedQuadTreeSubCell3(element)
+        return MomentFittedQuadTreeSubCellReference3(element)
     elif nsampling == 4:
-        return MomentFittedQuadTreeSubCell4(element)
+        return MomentFittedQuadTreeSubCellReference4(element)
     elif nsampling == 5:
-        return MomentFittedQuadTreeSubCell5(element)
+        return MomentFittedQuadTreeSubCellReference5(element)
     elif nsampling == 6:
-        return MomentFittedQuadTreeSubCell6(element)
+        return MomentFittedQuadTreeSubCellReference6(element)
     elif nsampling == 7:
-        return MomentFittedQuadTreeSubCell7(element)
+        return MomentFittedQuadTreeSubCellReference7(element)
     elif nsampling == 8:
-        return MomentFittedQuadTreeSubCell8(element)
+        return MomentFittedQuadTreeSubCellReference8(element)
     elif nsampling == 9:
-        return MomentFittedQuadTreeSubCell9(element)
+        return MomentFittedQuadTreeSubCellReference9(element)
     elif nsampling == 10:
-        return MomentFittedQuadTreeSubCell10(element)
+        return MomentFittedQuadTreeSubCellReference10(element)
 
 class FiniteCellSimulator:
 
@@ -328,16 +329,7 @@ class FiniteCellSimulator:
 #                aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
                 aux_util.MultithreadedRefineBy(integrators, self.brep)
                 print("###################################################")
-            if nsampling == 1:
-                fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
-            elif nsampling == 2:
-                fit_util.MultithreadedFitQuadrature2(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
-            elif nsampling == 3:
-                fit_util.MultithreadedFitQuadrature3(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
-            elif nsampling == 4:
-                fit_util.MultithreadedFitQuadrature4(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
-            elif nsampling == 5:
-                fit_util.MultithreadedFitQuadrature5(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
+            fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
         else:
             print("Unknown fit_mode", fit_mode)
             sys.exit(0)
@@ -387,14 +379,10 @@ class FiniteCellSimulator:
         action_on_small_cut_cell = self.params["action_on_small_cut_cell"]
         fict_weight = self.params["fictitious_weight"] if ("fictitious_weight" in self.params) else 0.0
 
-        if nsampling > 1:
-            subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell" + str(nsampling))
-            small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique" + str(nsampling))
-            save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell" + str(nsampling))
-        else:
-            subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
-            small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
-            save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
+        subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+        small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
+        save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
+        generate_physical_integration_points_callback = getattr(aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
@@ -433,20 +421,40 @@ class FiniteCellSimulator:
                         if (not found) and (cnt >= max_qt_depth):
                             print("can't find the physical point within subcell " + str(i) + " at " + str(max_qt_depth) + " quadtree level")
                             sys.exit(0)
-        # check again, if any quadtree subcell is too small, we shall eliminate them
         print("Refine completed")
         sys.stdout.flush()
 
         # generate the physical integration points in each cut-cell
-        for qs in cut_qs_elems:
-            elem_id = qs.GetElement().Id
+        #### serial version
+#        print("Generating physical integration points for sub-cells...")
+#        cnt = 0
+#        for qs in cut_qs_elems:
+#            elem_id = qs.GetElement().Id
 
-            # for cut element, we generate and store the physical integration points
-            qs.GeneratePhysicalIntegrationPoints(self.brep, integrator_quadrature_method)
+#            # for cut element, we generate and store the physical integration points
+#            qs.GeneratePhysicalIntegrationPoints(self.brep, integrator_quadrature_method)
 
-            # if we want to add the fictitious element later on, the weight shall be set
-            qs.SetFictitiousWeight(fict_weight)
+#            # if we want to add the fictitious element later on, the weight shall be set
+#            if fict_weight != 0.0:
+#                qs.SetFictitiousWeight(fict_weight)
+
+#            cnt = cnt+1
+#            print(" element " + str(elem_id) + " is done with physical integration points generation..." + str(cnt*100/len(cut_qs_elems)) + "% done")
+#            sys.stdout.flush()
+#        print("Generate physical integration points completed for " + str(len(cut_qs_elems)) + " cut-cells")
+#        sys.stdout.flush()
+        ###### multithreaded version
+        print("Generating physical integration points for sub-cells...")
+        generate_physical_integration_points_callback(cut_qs_elems, self.brep, integrator_quadrature_method)
+
+        # if we want to add the fictitious element later on, the weight shall be set
+        if fict_weight != 0.0:
+            for qs in cut_qs_elems:
+                qs.SetFictitiousWeight(fict_weight)
+
         print("Generate physical integration points completed for " + str(len(cut_qs_elems)) + " cut-cells")
+        sys.stdout.flush()
+        #########
 
         # here we check the small subcell; the small subcell is determined by either domain_size less than a threshold, or number of physical points less than specific number
         if small_domain_size > 0.0:
@@ -522,8 +530,11 @@ class FiniteCellSimulator:
             elif (action_on_small_cut_cell == 'replace by subcell quadtree') or (action_on_small_cut_cell == 'replace by quadtree'):
                 print("\nReplace completed, " + str(cnt) + " quadtree subcell will be filled with quadtree quadrature")
 
+        start_fit_t = time_module.time()
         subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
-        print("construct quadrature using moment fitting for subcell successfully")
+        end_fit_t = time_module.time()
+        print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t - start_fit_t) + " s")
+#        sys.exit(0)
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
         accuracy = self.params["quad_accuracy"]
@@ -815,7 +826,7 @@ class FiniteCellSimulator:
             cut_elems = quadrature_data.GetCutElements()
             exclude_elems = quadrature_data.GetExcludeElements()
             quadtree_elems = quadrature_data.GetQuadTreeElements()
-            fict_elems = ElementsArray()
+            self.fict_elems = ElementsArray()
             cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
             cut_cell_fictitious_quadrature = quadrature_data.GetCutCellFictitiousQuadrature()
             cut_cell_full_quadrature = quadrature_data.GetCutCellFullQuadrature()
@@ -826,73 +837,81 @@ class FiniteCellSimulator:
             lastElementId = aux_util.GetLastElementId(model.model_part)
             lastCondId = aux_util.GetLastConditionId(model.model_part)
             self.all_subcell_elems = []
+            extrapolated_prop = model.model_part.Properties[self.params["extrapolated_prop_id"]]
             if self.params["export_physical_integration_point"]:
                 cog_points = []
             if self.params["export_fictitious_integration_point"]:
                 fict_cog_points = []
             if self.params["add_fictitious_element"]:
                 sample_fictitious_element_name = self.params["fictitious_element_name"]
+                if "fictitious_prop" not in self.params:
+                    fict_prop = "same as parent element"
+                else:
+                    fict_prop = self.params["fictitious_prop"]
             for elem in bulk_elements:
                 if elem.Id in cut_elems:
 #                    print("at cut element " + str(elem.Id))
-                    if not cut_cell_quadrature[elem.Id]: # if cut cell quadrature is empty then skip
+                    if len(cut_cell_quadrature[elem.Id]) == 0: # if cut cell quadrature is empty then skip
                         elem.SetValue(ACTIVATION_LEVEL, -1)
                         elem.SetValue(IS_INACTIVE, True)
                         elem.Set(ACTIVE, False)
-                        continue
+                        print("element " + str(elem.Id) + " has no physical integration points. It will be excluded.")
+                    else:
+                        aux_util.AddElement(self.proper_cut_elems, elem)
 
-                    aux_util.AddElement(self.proper_cut_elems, elem)
+                        quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem.Id])
+                        elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                        elem.Initialize()
 
-                    quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem.Id])
-                    elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                    elem.Initialize()
+                        output = self.forest[elem.Id].CreateSubCellElements(model.model_part, subcell_element_type, cut_cell_quadrature_order, cut_cell_full_quadrature[elem.Id], subcell_weights[elem.Id], lastElementId, lastCondId, extrapolated_prop)
+                        lastElementId = output[0]
+                        lastCondId = output[1]
+                        new_sub_elems = output[2] # !!!IMPORTANT!!! here it's assumed that the sub-elements are Extrapolated ones
 
-                    output = self.forest[elem.Id].CreateSubCellElements(model.model_part, subcell_element_type, cut_cell_quadrature_order, cut_cell_full_quadrature[elem.Id], subcell_weights[elem.Id], lastElementId, lastCondId)
-                    lastElementId = output[0]
-                    lastCondId = output[1]
-                    new_sub_elems = output[2] # !!!IMPORTANT!!! here it's assumed that the sub-elements are Extrapolated ones
+                        self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
+                        elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                        elem.Initialize()
 
-                    self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
-                    elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                    elem.Initialize()
+                        physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
+                        for i in range(0, len(physical_constitutive_laws)):
+                            physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
+                            physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
+    #                        physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
 
-                    physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
-                    for i in range(0, len(physical_constitutive_laws)):
-                        physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
-                        physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
-#                        physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
+                        if extrapolation_mode == "extrapolated element" or extrapolation_mode == "extrapolated constant stress element":
+                            physical_integration_points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_LOCAL, model.model_part.ProcessInfo)
+                            cnt = 0
+                            for sub_elem in new_sub_elems:
+                                self.all_subcell_elems.append(sub_elem)
+                                sub_elem.SetValue(CONSTITUTIVE_LAW, physical_constitutive_laws[cnt])
+                                sub_elem.SetValue(PHYSICAL_INTEGRATION_POINT_LOCAL, physical_integration_points[cnt])
+                                sub_elem.SetValue(SUBCELL_DOMAIN_SIZE, subcell_domain_sizes[elem.Id][cnt])
+                                cnt = cnt + 1
+                        elif "extrapolated material" in extrapolation_mode:
+                            representative_weight = subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
+                            cnt = 0
+                            for sub_elem in new_sub_elems:
+                                self.all_subcell_elems.append(sub_elem)
+                                self.mpu.SetExtrapolatedMaterial(model.model_part, sub_elem, physical_constitutive_laws[cnt], representative_weight, extrapolated_material_mode)
+                                cnt = cnt + 1
 
-                    if extrapolation_mode == "extrapolated element" or extrapolation_mode == "extrapolated constant stress element":
-                        physical_integration_points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_LOCAL, model.model_part.ProcessInfo)
-                        cnt = 0
-                        for sub_elem in new_sub_elems:
-                            self.all_subcell_elems.append(sub_elem)
-                            sub_elem.SetValue(CONSTITUTIVE_LAW, physical_constitutive_laws[cnt])
-                            sub_elem.SetValue(PHYSICAL_INTEGRATION_POINT_LOCAL, physical_integration_points[cnt])
-                            sub_elem.SetValue(SUBCELL_DOMAIN_SIZE, subcell_domain_sizes[elem.Id][cnt])
-                            cnt = cnt + 1
-                    elif "extrapolated material" in extrapolation_mode:
-                        representative_weight = subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
-                        cnt = 0
-                        for sub_elem in new_sub_elems:
-                            self.all_subcell_elems.append(sub_elem)
-                            self.mpu.SetExtrapolatedMaterial(model.model_part, sub_elem, physical_constitutive_laws[cnt], representative_weight, extrapolated_material_mode)
-                            cnt = cnt + 1
-
-                    if self.params["export_physical_integration_point"]:
-                        points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
-                        for point in points:
-                            cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                        if self.params["export_physical_integration_point"]:
+                            points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+                            for point in points:
+                                cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
 
                     if self.params["add_fictitious_element"]:
                         if len(cut_cell_fictitious_quadrature[elem.Id]) > 0:
-                            fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
-                            print("fictitious element " + str(fict_elem.Id) + " is created")
-                            aux_util.AddElement(fict_elems, fict_elem)
+                            if fict_prop == "same as parent element": # this uses the material proper from the element, even it's nonlinear
+                                fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
+                                self.mpu.SetMaterialProperties(model.model_part, fict_elem, self.mat_type)
+                                fict_elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                                fict_elem.Initialize()
+                            else: # this allows to set the material property of fictitious element DIFFERENT to the parent element
+                                fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
+                            print("fictitious element " + str(fict_elem.Id) + " is created out from element " + str(elem.Id))
+                            aux_util.AddElement(self.fict_elems, fict_elem)
                             lastElementId = fict_elem.Id
-                            self.mpu.SetMaterialProperties(model.model_part, fict_elem, self.mat_type)
-                            elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                            elem.Initialize()
 
                             if self.params["export_fictitious_integration_point"]:
                                 points = fict_elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
@@ -903,13 +922,14 @@ class FiniteCellSimulator:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
                     elem.Set(ACTIVE, False)
-                    self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type) # set material so that initialize nonlinear iteration can pass
+                    print("element " + str(elem.Id) + " is outside. It will be excluded")
+
                 elif elem.Id in quadtree_elems:
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, quadtree_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize()
                     self.mpu.SetMaterialProperties(model.model_part, elem, self.mat_type)
-                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is also considered as proper_cut_elems
+#                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
                     print("element " + str(elem.Id) + " is assigned " + str(len(quadtree_quadrature[elem.Id])) + " quadrature points")
                     if self.params["export_physical_integration_point"]:
                         points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
@@ -926,7 +946,7 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, fict_cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
 
             if self.params["add_fictitious_element"] == True:
-                for fict_elem in fict_elems:
+                for fict_elem in self.fict_elems:
                     model.model_part.AddElement(fict_elem)
                     print("fictitious element " + str(fict_elem.Id) + " is added to the model_part")
 

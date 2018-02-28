@@ -46,6 +46,26 @@ void FiniteCellApplication_AddRefinableTreeToPython()
     ;
 }
 
+void FiniteCellApplication_AddFunctionIntegratorToPython()
+{
+    double(FunctionIntegrator::*pointer_to_IntegrateLocal_double)(const FunctionR3R1&, const int&) const = &FunctionIntegrator::IntegrateLocal;
+    double(FunctionIntegrator::*pointer_to_IntegrateGlobal_double)(const FunctionR3R1&, const int&) const = &FunctionIntegrator::IntegrateGlobal;
+
+    class_<FunctionIntegrator, FunctionIntegrator::Pointer, boost::noncopyable>
+    ("FunctionIntegrator", init<>())
+    .def("IntegrateLocal", pointer_to_IntegrateLocal_double)
+    .def("IntegrateGlobal", pointer_to_IntegrateGlobal_double)
+    ;
+}
+
+void FiniteCellApplication_AddBaseMomentFittedQuadTreeSubCellToPython()
+{
+    class_<BaseMomentFittedQuadTreeSubCell, BaseMomentFittedQuadTreeSubCell::Pointer, boost::noncopyable>
+    ("BaseMomentFittedQuadTreeSubCell", init<Element::Pointer>())
+    .def("GeneratePhysicalIntegrationPoints", &BaseMomentFittedQuadTreeSubCell::GeneratePhysicalIntegrationPoints)
+    ;
+}
+
 /// construct the element out from quad-tree and add to model_part.
 /// This is mainly for post-processing
 template<class TTreeType>
@@ -149,11 +169,18 @@ template<class TTreeType>
 boost::python::list MomentFittedQuadTreeSubCell_GetPhysicalIntegrationPoints(TTreeType& rDummy)
 {
     const Element::GeometryType::IntegrationPointsArrayType& physical_integration_points = rDummy.GetPhysicalIntegrationPoints();
-KRATOS_WATCH(physical_integration_points.size())
+//KRATOS_WATCH(physical_integration_points.size())
     boost::python::list Output;
 
     for (std::size_t i = 0; i < physical_integration_points.size(); ++i)
-        Output.append(physical_integration_points[i]);
+    {
+        boost::python::list point;
+        point.append(physical_integration_points[i].X());
+        point.append(physical_integration_points[i].Y());
+        point.append(physical_integration_points[i].Z());
+        point.append(physical_integration_points[i].Weight());
+        Output.append(point);
+    }
 
     return Output;
 }
@@ -167,7 +194,14 @@ boost::python::list MomentFittedQuadTreeSubCell_GetFictitiousIntegrationPoints(T
     boost::python::list Output;
 
     for (std::size_t i = 0; i < fictitious_integration_points.size(); ++i)
-        Output.append(fictitious_integration_points[i]);
+    {
+        boost::python::list point;
+        point.append(fictitious_integration_points[i].X());
+        point.append(fictitious_integration_points[i].Y());
+        point.append(fictitious_integration_points[i].Z());
+        point.append(fictitious_integration_points[i].Weight());
+        Output.append(point);
+    }
 
     return Output;
 }
@@ -181,8 +215,9 @@ boost::python::list MomentFittedQuadTreeSubCell_CreateSubCellElements(TTreeType&
         const int& cut_cell_quadrature_order,
         boost::python::list& cut_cell_full_quadrature,
         boost::python::list& subcell_weights,
-        std::size_t lastElementId,
-        std::size_t lastCondId)
+        const std::size_t& lastElementId,
+        const std::size_t& lastCondId,
+        Properties::Pointer pProperties)
 {
     typedef Element::GeometryType GeometryType;
 
@@ -220,21 +255,23 @@ boost::python::list MomentFittedQuadTreeSubCell_CreateSubCellElements(TTreeType&
             integration_points.push_back(integration_point);
         }
 
+        std::size_t new_lastElementId = lastElementId;
+        std::size_t new_lastCondId = lastCondId;
         NewElements = rDummy.CreateSubCellElements(r_model_part,
             rDummy.pGetElement(),
             subcell_element_type,
             cut_cell_quadrature_order,
             integration_points,
             Weights,
-            lastElementId,
-            lastCondId,
-            rDummy.pGetElement()->pGetProperties());
+            new_lastElementId,
+            new_lastCondId,
+            pProperties);
 //        std::cout << "----------------------" << std::endl;
 //    }
 
     boost::python::list Output;
-    Output.append(lastElementId);
-    Output.append(lastCondId);
+    Output.append(new_lastElementId);
+    Output.append(new_lastCondId);
     Output.append(NewElements);
 
     return Output;
@@ -247,8 +284,9 @@ boost::python::list MomentFittedQuadTreeSubCell_CreateSubCellElements2(TTreeType
         ModelPart& r_model_part,
         const std::string& subcell_element_type,
         const int& cut_cell_quadrature_order,
-        std::size_t lastElementId,
-        std::size_t lastCondId)
+        const std::size_t& lastElementId,
+        const std::size_t& lastCondId,
+        Properties::Pointer pProperties)
 {
     typedef Element::GeometryType GeometryType;
 
@@ -259,19 +297,21 @@ boost::python::list MomentFittedQuadTreeSubCell_CreateSubCellElements2(TTreeType
 
     const GeometryType::IntegrationPointsArrayType& integration_points = rDummy.GetRepresentativeIntegrationPoints();
 
+    std::size_t new_lastElementId = lastElementId;
+    std::size_t new_lastCondId = lastCondId;
     NewElements = rDummy.CreateSubCellElements(r_model_part,
         rDummy.pGetElement(),
         subcell_element_type,
         cut_cell_quadrature_order,
         integration_points,
         Weights,
-        lastElementId,
-        lastCondId,
-        rDummy.pGetElement()->pGetProperties());
+        new_lastElementId,
+        new_lastCondId,
+        pProperties);
 
     boost::python::list Output;
-    Output.append(lastElementId);
-    Output.append(lastCondId);
+    Output.append(new_lastElementId);
+    Output.append(new_lastCondId);
     Output.append(NewElements);
 
     return Output;
@@ -341,20 +381,19 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
     return NewSubCellElements;
 }
 
-template<std::size_t TNsampling>
+template<std::size_t TNsampling, int TFrameType>
 void FiniteCellApplication_AddQuadTreeToPython()
 {
-    typedef QuadTree<TNsampling> QuadTreeType;
-    typedef QuadTreeSubCell<TNsampling> QuadTreeSubCellType;
-    typedef MomentFittedQuadTreeSubCell<TNsampling> MomentFittedQuadTreeSubCellType;
+    typedef QuadTree<TNsampling, TFrameType> QuadTreeType;
 
     std::stringstream QuadTreeName;
     QuadTreeName << "QuadTreeLocal";
+    if(TFrameType == GLOBAL_REFERENCE)
+        QuadTreeName << "Reference";
+    else if(TFrameType == GLOBAL_CURRENT)
+        QuadTreeName << "Current";
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
-
-    double(QuadTreeType::*pointer_to_IntegrateLocal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template Integrate<double, QuadTreeNode::LOCAL>;
-    double(QuadTreeType::*pointer_to_IntegrateGlobal_double_quadtree_local)(const FunctionR3R1&, const int&) const = &QuadTreeType::template Integrate<double, QuadTreeNode::GLOBAL>;
 
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
@@ -363,17 +402,26 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("DomainSize", &QuadTreeType::DomainSize)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
-    .def("IntegrateLocal", pointer_to_IntegrateLocal_double_quadtree_local)
-    .def("IntegrateGlobal", pointer_to_IntegrateGlobal_double_quadtree_local)
     .def("ConstructQuadrature", &QuadTreeType::ConstructQuadrature)
     .def(self_ns::str(self))
     ;
+}
+
+template<std::size_t TNsampling, int TFrameType>
+void FiniteCellApplication_AddQuadTreeSubCellToPython()
+{
+    typedef QuadTreeSubCell<TNsampling, TFrameType> QuadTreeSubCellType;
+    typedef MomentFittedQuadTreeSubCell<TNsampling, TFrameType> MomentFittedQuadTreeSubCellType;
 
     double(QuadTreeSubCellType::*pointer_to_DomainSize1)(const std::size_t&, const BRep&, const int&) const = &QuadTreeSubCellType::DomainSize;
     double(QuadTreeSubCellType::*pointer_to_DomainSize2)(const BRep&, const int&) const = &QuadTreeSubCellType::DomainSize;
 
     std::stringstream QuadTreeSubCellName;
     QuadTreeSubCellName << "QuadTreeSubCell";
+    if(TFrameType == GLOBAL_REFERENCE)
+        QuadTreeSubCellName << "Reference";
+    else if(TFrameType == GLOBAL_CURRENT)
+        QuadTreeSubCellName << "Current";
     if(TNsampling > 1)
         QuadTreeSubCellName << TNsampling;
 
@@ -393,19 +441,22 @@ void FiniteCellApplication_AddQuadTreeToPython()
 
     std::stringstream MomentFittedQuadTreeSubCellName;
     MomentFittedQuadTreeSubCellName << "MomentFittedQuadTreeSubCell";
+    if(TFrameType == GLOBAL_REFERENCE)
+        MomentFittedQuadTreeSubCellName << "Reference";
+    else if(TFrameType == GLOBAL_CURRENT)
+        MomentFittedQuadTreeSubCellName << "Current";
     if(TNsampling > 1)
         MomentFittedQuadTreeSubCellName << TNsampling;
 
     void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution1)(const int&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
     void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution2)(const int&) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
 
-    class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType>, boost::noncopyable>
+    class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType, BaseMomentFittedQuadTreeSubCell>, boost::noncopyable>
     (MomentFittedQuadTreeSubCellName.str().c_str(), init<Element::Pointer>())
     .def("ConstructSubCellsBasedOnGaussQuadrature", &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnGaussQuadrature)
     .def("ConstructSubCellsBasedOnEqualDistribution", pointer_to_ConstructSubCellsBasedOnEqualDistribution1)
     .def("ConstructSubCellsBasedOnEqualDistribution", pointer_to_ConstructSubCellsBasedOnEqualDistribution2)
     .def("GetElement", &MomentFittedQuadTreeSubCellType::pGetElement)
-    .def("GeneratePhysicalIntegrationPoints", &MomentFittedQuadTreeSubCellType::GeneratePhysicalIntegrationPoints)
     .def("SetFictitiousWeight", &MomentFittedQuadTreeSubCellType::SetFictitiousWeight)
     .def("GetPhysicalIntegrationPoints", &MomentFittedQuadTreeSubCell_GetPhysicalIntegrationPoints<MomentFittedQuadTreeSubCellType>)
     .def("GetFictitiousIntegrationPoints", &MomentFittedQuadTreeSubCell_GetFictitiousIntegrationPoints<MomentFittedQuadTreeSubCellType>)

@@ -26,6 +26,9 @@
 
 
 // Project includes
+#include "includes/define.h"
+#include "includes/variables.h"
+#include "includes/ublas_interface.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
