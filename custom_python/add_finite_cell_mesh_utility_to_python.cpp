@@ -70,14 +70,14 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& 
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement(FiniteCellMeshUtility& rDummy,
     const std::string& sample_element_name,
-    std::size_t& lastElementId, Element::Pointer pElement, Properties::Pointer pProperties)
+    std::size_t lastElementId, Element::Pointer pElement, Properties::Pointer pProperties)
 {
     return rDummy.CreateParasiteElement(sample_element_name, lastElementId, pElement, pProperties);
 }
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtility& rDummy,
-    const std::string& sample_element_name, std::size_t lastElementId,
-    Element::Pointer pElement, const int& integration_order,
+    const std::string& sample_element_name,
+    std::size_t lastElementId, Element::Pointer pElement, const int& integration_order,
     boost::python::list& assigned_quadrature, Properties::Pointer pProperties)
 {
     Element::GeometryType::IntegrationPointsArrayType integration_points;
