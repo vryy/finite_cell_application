@@ -290,7 +290,8 @@ public:
 //KRATOS_WATCH(MA)
             /* compute vector b */
 
-            Vector Mb(num_basis, 0.0);
+            Vector Mb(num_basis);
+            noalias(Mb) = ZeroVector(num_basis);
 
             // iterate through every edges of the cell, to compute the new quadrature weight
             for(std::size_t e = 0; e < num_edges; ++e)

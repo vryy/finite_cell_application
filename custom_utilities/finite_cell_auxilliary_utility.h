@@ -346,7 +346,7 @@ public:
             }
         }
         else
-#else
+#endif
         {
             for(typename PointerVectorSet<TCellType>::ptr_iterator it = r_trees.ptr_begin(); it != r_trees.ptr_end(); ++it)
             {
@@ -354,7 +354,6 @@ public:
                 ++show_progress;
             }
         }
-#endif
 
         std::cout << "\nMultithreadedGeneratePhysicalIntegrationPoints completed for " << r_trees.size() << " cells" << std::endl;
     }

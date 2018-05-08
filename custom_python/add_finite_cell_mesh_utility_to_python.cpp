@@ -69,15 +69,15 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& 
 }
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement(FiniteCellMeshUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_element_name,
+    const std::string& sample_element_name,
     std::size_t& lastElementId, Element::Pointer pElement, Properties::Pointer pProperties)
 {
-    return rDummy.CreateParasiteElement(r_model_part, sample_element_name, lastElementId, pElement, pProperties);
+    return rDummy.CreateParasiteElement(sample_element_name, lastElementId, pElement, pProperties);
 }
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_element_name,
-    std::size_t lastElementId, Element::Pointer pElement, const int& integration_order,
+    const std::string& sample_element_name, std::size_t lastElementId,
+    Element::Pointer pElement, const int& integration_order,
     boost::python::list& assigned_quadrature, Properties::Pointer pProperties)
 {
     Element::GeometryType::IntegrationPointsArrayType integration_points;
@@ -93,7 +93,7 @@ Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtil
         integration_points.push_back(integration_point);
     }
 
-    return rDummy.CreateParasiteElement(r_model_part, pElement, sample_element_name,
+    return rDummy.CreateParasiteElement(pElement, sample_element_name,
         integration_order, integration_points, lastElementId, pProperties);
 }
 

@@ -646,12 +646,12 @@ public:
 
 
     /// Create the fictitious element out from an element. The new element takes the same geometry of the original element, but with the fictitious integration points.
-    Element::Pointer CreateFictitiousElement(ModelPart& r_model_part,
+    Element::Pointer CreateFictitiousElement(
         const std::string& sample_element_name,
         std::size_t& lastElementId,
         Properties::Pointer pProperties)
     {
-        return FiniteCellMeshUtility::CreateParasiteElement(r_model_part, RefType::mpElement, sample_element_name,
+        return FiniteCellMeshUtility::CreateParasiteElement(RefType::mpElement, sample_element_name,
                 RefType::mRepresentativeIntegrationOrder, RefType::mFictitiousIntegrationPoints, lastElementId, pProperties);
     }
 

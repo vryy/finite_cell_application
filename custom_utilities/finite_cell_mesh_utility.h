@@ -411,8 +411,8 @@ public:
 
 
     /// Create an element taking the same nodes as the original one, but taking the type of geometry from sample_element_name
-    static Element::Pointer CreateParasiteElement(ModelPart& r_model_part,
-        const std::string& sample_element_name, std::size_t& lastElementId,
+    static Element::Pointer CreateParasiteElement(const std::string& sample_element_name,
+        std::size_t& lastElementId,
         Element::Pointer pElement, Properties::Pointer pProperties )
     {
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
@@ -427,8 +427,7 @@ public:
 
 
     /// Create the parasite element taking the same geometry of the original element, but the integration points are given.
-    static Element::Pointer CreateParasiteElement(ModelPart& r_model_part,
-        Element::Pointer pElement, // the parent element keep the geometry
+    static Element::Pointer CreateParasiteElement(Element::Pointer pElement, // the parent element keep the geometry
         const std::string& sample_element_name,
         const int& RepresentativeIntegrationOrder,
         const GeometryType::IntegrationPointsArrayType& integration_points,

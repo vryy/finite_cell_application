@@ -367,6 +367,9 @@ class FiniteCellSimulator:
         fit_space_dim = self.params["fitting_space_dimension"]
         fit_degree = self.params["fitting_function_degree"]
         fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
+        print("list of fitting functions for fit_degree = " + str(fit_degree) + ":")
+        for func in fit_funcs:
+            print(func)
 
         cut_qs_elems = []
         exclude_qs_elems = []
@@ -903,12 +906,12 @@ class FiniteCellSimulator:
                     if self.params["add_fictitious_element"]:
                         if len(cut_cell_fictitious_quadrature[elem.Id]) > 0:
                             if fict_prop == "same as parent element": # this uses the material proper from the element, even it's nonlinear
-                                fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
+                                fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
                                 self.mpu.SetMaterialProperties(model.model_part, fict_elem, self.mat_type)
                                 fict_elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                                 fict_elem.Initialize()
                             else: # this allows to set the material property of fictitious element DIFFERENT to the parent element
-                                fict_elem = mesh_util.CreateParasiteElement(model.model_part, sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
+                                fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
                             print("fictitious element " + str(fict_elem.Id) + " is created out from element " + str(elem.Id))
                             aux_util.AddElement(self.fict_elems, fict_elem)
                             lastElementId = fict_elem.Id
