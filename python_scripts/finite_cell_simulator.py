@@ -544,23 +544,36 @@ class FiniteCellSimulator:
 
         ## export the physical integration points for debugging if needed
         if self.params["export_physical_integration_point"]:
-            cog_points = []
+            cog_physical_points = []
             for qs in cut_qs_elems:
                 elem = qs.GetElement()
-                points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+                points = qs.GetPhysicalIntegrationPoints()
                 for point in points:
-                    cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
-            print("len(cog_points):", len(cog_points))
+                    cog_physical_points.append(quad_util.CreatePoint(elem, point[0], point[1], point[2]))
+            print("len(cog_physical_points):", len(cog_physical_points))
             prop_id = self.params["physical_integration_point_prop_id"]
-            quad_util.CreateConditionFromPoint(model_part, cog_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
+            quad_util.CreateConditionFromPoint(model_part, cog_physical_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
+
+        ## export the physical integration points for debugging if needed
+        if self.params["export_fictitious_integration_point"]:
+            cog_fictitious_points = []
+            for qs in cut_qs_elems:
+                elem = qs.GetElement()
+                points = qs.GetFictitiousIntegrationPoints()
+                for point in points:
+                    cog_fictitious_points.append(quad_util.CreatePoint(elem, point[0], point[1], point[2]))
+            print("len(cog_fictitious_points):", len(cog_fictitious_points))
+            prop_id = self.params["fictitious_integration_point_prop_id"]
+            quad_util.CreateConditionFromPoint(model_part, cog_fictitious_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
 
         ## export the quadtree for debugging if needed
         if self.params["export_quadtree_cell"]:
             lastNodeId = aux_util.GetLastNodeId(model_part)
             lastElementId = aux_util.GetLastElementId(model_part)
             sample_quad_element_name = self.params["sample_quad_element_name"]
-            for qs in small_qs_elems:
-                last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, 61)
+            sample_quad_element_prop_id = self.params["sample_quad_element_prop_id"]
+            for qs in cut_qs_elems:
+                last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, sample_quad_element_prop_id)
                 lastNodeId = last_ids[0]
                 lastElementId = last_ids[1]
 
