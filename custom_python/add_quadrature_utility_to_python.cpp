@@ -27,6 +27,12 @@ namespace Python
 
 using namespace boost::python;
 
+template<class TEntityType>
+int QuadratureUtility_GetDefaultIntegrationMethod(QuadratureUtility& rDummy, typename TEntityType::Pointer p_elem)
+{
+    return rDummy.GetDefaultIntegrationMethod<TEntityType>(p_elem);
+}
+
 int QuadratureUtility_GetQuadratureType(QuadratureUtility& rDummy, const int& integration_method)
 {
     return rDummy.GetQuadratureType(integration_method);
@@ -38,7 +44,7 @@ int QuadratureUtility_GetQuadratureOrder(QuadratureUtility& rDummy, const int& i
 }
 
 void QuadratureUtility_ScaleQuadrature(QuadratureUtility& rDummy,
-        Element::Pointer p_elem, const int quadrature_order, const double ScaleFactor)
+        Element::Pointer p_elem, const int& quadrature_order, const double& ScaleFactor)
 {
     GeometryData::IntegrationMethod ElementalIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(quadrature_order);
@@ -578,13 +584,27 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
     std::cout << num_conds << " conditions of type " << sample_cond_name << " is added to the model_part" << std::endl;
 }
 
+QuadratureUtility::PointType QuadratureUtility_CreatePoint1(QuadratureUtility& rDummy,
+    const double& rX, const double& rY, const double& rZ)
+{
+    return QuadratureUtility::CreatePoint(rX, rY, rZ);
+}
+
+template<class TEntityType>
+QuadratureUtility::PointType QuadratureUtility_CreatePoint2(QuadratureUtility& rDummy,
+    typename TEntityType::Pointer pElement,
+    const double& rx, const double& ry, const double& rz)
+{
+    return QuadratureUtility::CreatePoint(pElement->GetGeometry(), rx, ry, rz);
+}
+
 void FiniteCellApplication_AddQuadratureUtilityToPython()
 {
 
     class_<QuadratureUtility, QuadratureUtility::Pointer, boost::noncopyable>
     ("QuadratureUtility", init<>())
-    .def("GetDefaultIntegrationMethod", &QuadratureUtility::GetDefaultIntegrationMethod<Element>)
-    .def("GetDefaultIntegrationMethod", &QuadratureUtility::GetDefaultIntegrationMethod<Condition>)
+    .def("GetDefaultIntegrationMethod", &QuadratureUtility_GetDefaultIntegrationMethod<Element>)
+    .def("GetDefaultIntegrationMethod", &QuadratureUtility_GetDefaultIntegrationMethod<Condition>)
     .def("GetQuadratureType", QuadratureUtility_GetQuadratureType)
     .def("GetQuadratureOrder", QuadratureUtility_GetQuadratureOrder)
     .def("ScaleQuadrature", &QuadratureUtility_ScaleQuadrature)
@@ -595,7 +615,9 @@ void FiniteCellApplication_AddQuadratureUtilityToPython()
     .def("CreateConditionFromQuadraturePoint", &QuadratureUtility_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint2)
-    .def("CreatePoint", &QuadratureUtility::CreatePoint)
+    .def("CreatePoint", &QuadratureUtility_CreatePoint1)
+    .def("CreatePoint", &QuadratureUtility_CreatePoint2<Element>)
+    .def("CreatePoint", &QuadratureUtility_CreatePoint2<Condition>)
     ;
 
 }

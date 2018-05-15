@@ -97,7 +97,7 @@ public:
 
 
     template<class TEntityType>
-    int GetDefaultIntegrationMethod(typename TEntityType::Pointer p_elem) const
+    static int GetDefaultIntegrationMethod(typename TEntityType::Pointer p_elem)
     {
         return p_elem->GetIntegrationMethod();
 //        return p_elem->GetGeometry().GetDefaultIntegrationMethod();
@@ -124,9 +124,9 @@ public:
     }
 
 
-    void ScaleQuadrature(GeometryType& r_geom,
+    static void ScaleQuadrature(GeometryType& r_geom,
             const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
-            const double ScaleFactor) const
+            const double& ScaleFactor)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = r_geom.IntegrationPoints( ElementalIntegrationMethod );
@@ -143,8 +143,8 @@ public:
 
 
     template<int TMode>
-    void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod) const
+    static void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
+            const GeometryData::IntegrationMethod& ElementalIntegrationMethod)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
@@ -207,7 +207,7 @@ public:
     /// lastCondId      starting condition id to assign to new conditions
     /// min_weight      minimum weight to create new condition
     /// max_weight      maximum weight to create new condition
-    std::size_t CreateConditionFromQuadraturePoint(ModelPart& r_model_part,
+    static std::size_t CreateConditionFromQuadraturePoint(ModelPart& r_model_part,
             const Element::Pointer& p_elem,
             const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
             Condition const& r_sample_cond,
@@ -215,7 +215,7 @@ public:
             std::size_t& lastNodeId,
             std::size_t& lastCondId,
             const double& min_weight,
-            const double& max_weight) const
+            const double& max_weight)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
@@ -241,13 +241,12 @@ public:
     }
 
     /// Create a new condition from point
-    Condition::Pointer CreateConditionFromPoint(ModelPart& r_model_part,
+    static Condition::Pointer CreateConditionFromPoint(ModelPart& r_model_part,
             const PointType& r_point,
             Condition const& r_sample_cond,
             Properties::Pointer pProperties,
             std::size_t& lastNodeId,
-            std::size_t& lastCondId
-            ) const
+            std::size_t& lastCondId)
     {
         NodeType::Pointer pNewNode(new NodeType(++lastNodeId, r_point));
         pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
@@ -261,11 +260,20 @@ public:
         return pNewCond;
     }
 
-    /// Create a point from coordinates
-    PointType CreatePoint(const double& rX, const double& rY, const double& rZ) const
+    /// Create a point from the global coordinates
+    static PointType CreatePoint(const double& rX, const double& rY, const double& rZ)
     {
         PointType P(rX, rY, rZ);
         return P;
+    }
+
+    /// Create a global point from the geometry. The given coordinates shall be in local reference system.
+    static PointType CreatePoint(GeometryType& rGeometry, const double& rx, const double& ry, const double& rz)
+    {
+        PointType P(rx, ry, rz);
+        PointType G;
+        rGeometry.GlobalCoordinates(G, P);
+        return G;
     }
 
 
