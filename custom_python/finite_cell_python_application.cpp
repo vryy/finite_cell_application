@@ -46,6 +46,7 @@ namespace Python
         FiniteCellApplication_AddFunctionsToPython();
         FiniteCellApplication_AddBRepAndLevelSetToPython();
         FiniteCellApplication_AddRefinableTreeToPython();
+        FiniteCellApplication_AddFunctionIntegratorToPython();
 
         FiniteCellApplication_AddQuadTreeToPython<1, GLOBAL_REFERENCE>();
         FiniteCellApplication_AddQuadTreeToPython<2, GLOBAL_REFERENCE>();

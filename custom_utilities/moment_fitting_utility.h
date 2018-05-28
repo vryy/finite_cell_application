@@ -192,7 +192,7 @@ public:
 
         // solve for weights
         Vector Mw;
-        if(solver_type == "direct")
+        if(solver_type == std::string("direct"))
         {
             if(MA.size1() != MA.size2())
             {
@@ -208,7 +208,7 @@ public:
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
-        else if(solver_type == "ata-direct")
+        else if(solver_type == std::string("ata-direct"))
         {
             /* form the linear system for least square problem */
             boost::numeric::ublas::permutation_matrix<> pm(MA.size2());
@@ -218,14 +218,18 @@ public:
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
-        else if(solver_type == "dgelsy")
+        else if(solver_type == std::string("dgelsy"))
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
+            if(echo_level > -1)
+                std::cout << "Lapack DGELSY will be called" << std::endl;
             LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
         }
-        else if(solver_type == "dgelss")
+        else if(solver_type == std::string("dgelss"))
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
+            if(echo_level > -1)
+                std::cout << "Lapack DGELSS will be called" << std::endl;
             LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
         }
         else

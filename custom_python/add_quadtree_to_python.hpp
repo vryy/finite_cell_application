@@ -395,7 +395,7 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
-    class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree> >
+    class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
     .def(init<Condition::Pointer>())
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
