@@ -22,13 +22,13 @@
 #include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_python/add_custom_conditions_to_python.h"
 #include "custom_python/add_quadtree_to_python.hpp"
-
 #include "custom_python/add_quadrature_utility_to_python.h"
 #include "custom_python/add_div_free_basis_utility_to_python.h"
 #include "custom_python/add_moment_fitting_utility_to_python.h"
 #include "custom_python/add_ghost_penalty_utility_to_python.h"
 #include "custom_python/add_finite_cell_auxilliary_utility_to_python.h"
 #include "custom_python/add_finite_cell_mesh_utility_to_python.h"
+#include "custom_python/add_utility_to_python.h"
 
 namespace Kratos
 {
@@ -102,6 +102,7 @@ namespace Python
         FiniteCellApplication_AddGhostPenaltyUtilityToPython();
         FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython();
         FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
+        FiniteCellApplication_AddUtilityToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )

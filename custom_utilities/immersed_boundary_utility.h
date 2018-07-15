@@ -365,6 +365,41 @@ public:
     }
 
 
+    /// Get and interpolate the value at a point within the background mesh
+    template<typename TVariableType>
+    typename TVariableType::Type GetValueOnPoint(const TVariableType& rVariable,
+            const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements)
+    {
+        bool found;
+        PointType rLocalTargetPoint;
+        Element::Pointer pTargetElement;
+        int echo_level = _WARNING_FOUND_NO_ELEMENT;
+
+        found = SearchPartnerWithBin( rSourcePoint, pMasterElements, pTargetElement, rLocalTargetPoint, echo_level );
+
+        if (!found)
+        {
+            typename TVariableType::Type dummy(0.0);
+            return dummy;
+        }
+        else
+        {
+            Vector Ncontainer;
+            pTargetElement->GetGeometry().ShapeFunctionsValues( Ncontainer, rLocalTargetPoint );
+/*            std::cout << "At element " << pTargetElement->Id() << ", point " << rLocalTargetPoint << std::endl;*/
+
+            typename TVariableType::Type val = pTargetElement->GetGeometry()[0].GetSolutionStepValue(rVariable) * Ncontainer(0);
+
+            for (unsigned int i = 1; i < pTargetElement->GetGeometry().size(); ++i)
+            {
+                val += pTargetElement->GetGeometry()[i].GetSolutionStepValue(rVariable) * Ncontainer(i);
+            }
+
+            return val;
+        }
+    }
+
+
     ///@}
     ///@name Access
     ///@{
