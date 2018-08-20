@@ -77,7 +77,7 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Abstract class for a level set in space, both for implicit level set or nodal interpolated level set
+/** Least square solver based on LAPACK
 */
 class LeastSquareLAPACKSolver
 {
@@ -138,7 +138,7 @@ public:
     }
 
 
-    static void SolveDGELSY(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 0.01)
+    static int SolveDGELSY(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 0.01)
     {
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         typedef boost::numeric::bindings::traits::vector_traits<Vector> mbtraits;
@@ -175,10 +175,12 @@ public:
             rX(i) = b[i];
 
         delete JPVT, b, WORK;
+
+        return 0;
     }
 
 
-    static void SolveDGELSS(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 1.0e-10)
+    static int SolveDGELSS(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 1.0e-10)
     {
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         typedef boost::numeric::bindings::traits::vector_traits<Vector> mbtraits;
@@ -215,6 +217,8 @@ public:
             rX(i) = b[i];
 
         delete S, b, WORK;
+
+        return 0;
     }
 
 
