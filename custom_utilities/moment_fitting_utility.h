@@ -41,6 +41,9 @@
 #include "custom_algebra/function/product_function.h"
 #include "custom_algebra/function/heaviside_function.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
+#ifdef FINITE_CELL_APPLICATION_USE_NNLS
+#include "custom_linear_solvers/nnls_solver.h"
+#endif
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_auxilliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
@@ -232,6 +235,15 @@ public:
                 std::cout << "Lapack DGELSS will be called" << std::endl;
             LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
         }
+        #ifdef FINITE_CELL_APPLICATION_USE_NNLS
+        else if(solver_type == std::string("nnls"))
+        {
+            /* solve the non-square linear system by non-negative least square optimizer. */
+            if(echo_level > -1)
+                std::cout << "NNLS will be called" << std::endl;
+            NNLSSolver::Solve(MA, Mw, Mb, echo_level);
+        }
+        #endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "Unknown solver type:", solver_type)
 
@@ -249,7 +261,10 @@ public:
         {
             // check the error of the solution
             Vector Error = (Mb - prod(MA, Mw)) / norm_2(Mb);
-            KRATOS_WATCH(Error)
+            std::cout << "Abs error: " << (Mb - prod(MA, Mw)) << std::endl;
+            std::cout << "Abs error norm: " << norm_2(Mb - prod(MA, Mw)) << std::endl;
+            std::cout << "Rel error: " << Error << std::endl;
+            std::cout << "Rel error norm: " << norm_2(Error) << std::endl;
         }
 
         if(echo_level > -1)
