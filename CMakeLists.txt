@@ -24,6 +24,14 @@ ELSE()
     MESSAGE("mathpresso is not found")
 ENDIF()
 
+FIND_PACKAGE(NNLS REQUIRED)
+IF(${NNLS_FOUND} MATCHES TRUE)
+    MESSAGE("nnls is found at " ${NNLS_DIR})
+    ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_NNLS)
+ELSE()
+    MESSAGE("nnls is not found")
+ENDIF()
+
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/quad_tree_node.cpp
@@ -31,6 +39,7 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/dummy_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/element_wrapper_condition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/ghost_penalty_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/finite_cell_mesh_utility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_1_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_algebra_2_to_python.cpp
@@ -52,6 +61,9 @@ target_link_libraries(KratosFiniteCellApplication KratosCore)
 target_link_libraries(KratosFiniteCellApplication ${LAPACK_LIBRARIES})
 IF(${MATHPRESSO_FOUND} MATCHES TRUE)
     target_link_libraries(KratosFiniteCellApplication ${MATHPRESSO_LIBRARIES})
+ENDIF()
+IF(${NNLS_FOUND} MATCHES TRUE)
+    target_link_libraries(KratosFiniteCellApplication ${NNLS_LIBRARIES})
 ENDIF()
 set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFiniteCellApplication DESTINATION libs )
