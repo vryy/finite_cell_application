@@ -319,7 +319,7 @@ public:
             TOutputType& rOutput,
             const int& integration_method) const
     {
-        mpTreeNode->Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_method);
+        mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
@@ -330,7 +330,7 @@ public:
             TOutputType& rOutput,
             const GeometryType::IntegrationPointsArrayType& integration_points) const
     {
-        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_points);
+        mpTreeNode->template Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_points);
     }
 
 
@@ -343,7 +343,7 @@ public:
             const int& integration_method,
             const double& small_weight) const
     {
-        mpTreeNode->Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+        mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
 
 
@@ -356,7 +356,7 @@ public:
             const GeometryType::IntegrationPointsArrayType& integration_points,
             const double& small_weight) const
     {
-        mpTreeNode->Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
+        mpTreeNode->template Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
 
 
@@ -676,7 +676,7 @@ public:
             const int& integration_method) const
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
+            mpTreeNodes[i]->template Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
 
@@ -689,7 +689,7 @@ public:
             const BRep& r_brep, TOutputType& rOutput, const int& integration_method, const double& small_weight) const
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
+            mpTreeNodes[i]->template Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
 
     //////////////////////
