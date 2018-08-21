@@ -51,7 +51,7 @@ void FiniteCellMeshUtility::GenerateSampling(std::vector<double>& sampling,
 }
 
 
-void FiniteCellMeshUtility::GenerateStructuredMesh2D(std::vector<std::vector<PointType> >& sampling_points,
+void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
     const int& type,
     const PointType& StartPoint,
     const PointType& EndPoint,
@@ -59,21 +59,21 @@ void FiniteCellMeshUtility::GenerateStructuredMesh2D(std::vector<std::vector<Poi
 {
     if (type == 1)
     {
-        GenerateStructuredMesh_Helper<2, 1>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<2, 1>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
     else if (type == 2)
     {
-        GenerateStructuredMesh_Helper<2, 2>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<2, 2>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
     else if (type == 3)
     {
-        GenerateStructuredMesh_Helper<2, 3>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<2, 3>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
 }
 
 
 /// Generate the points for background structure mesh
-void FiniteCellMeshUtility::GenerateStructuredMesh2D(std::vector<std::vector<PointType> >& sampling_points,
+void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
     const int& type,
     const PointType& StartPoint,
     const PointType& EndPoint,
@@ -81,20 +81,20 @@ void FiniteCellMeshUtility::GenerateStructuredMesh2D(std::vector<std::vector<Poi
 {
     if (type == 1)
     {
-        GenerateStructuredMesh_Helper<2, 1>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<2, 1>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
     else if (type == 2)
     {
-        GenerateStructuredMesh_Helper<2, 2>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<2, 2>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
     else if (type == 3)
     {
-        GenerateStructuredMesh_Helper<2, 3>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<2, 3>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
 }
 
 
-void FiniteCellMeshUtility::GenerateStructuredMesh3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+void FiniteCellMeshUtility::GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
     const int& type,
     const PointType& StartPoint,
     const PointType& EndPoint,
@@ -102,20 +102,20 @@ void FiniteCellMeshUtility::GenerateStructuredMesh3D(std::vector<std::vector<std
 {
     if (type == 1)
     {
-        GenerateStructuredMesh_Helper<3, 1>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<3, 1>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
     else if (type == 2)
     {
-        GenerateStructuredMesh_Helper<3, 2>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<3, 2>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
     else if (type == 3)
     {
-        GenerateStructuredMesh_Helper<3, 3>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
+        GenerateStructuredPoints_Helper<3, 3>::Execute(sampling_points, StartPoint, EndPoint, nsampling);
     }
 }
 
 
-void FiniteCellMeshUtility::GenerateStructuredMesh3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+void FiniteCellMeshUtility::GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
     const int& type,
     const PointType& StartPoint,
     const PointType& EndPoint,
@@ -123,21 +123,20 @@ void FiniteCellMeshUtility::GenerateStructuredMesh3D(std::vector<std::vector<std
 {
     if (type == 1)
     {
-        GenerateStructuredMesh_Helper<3, 1>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<3, 1>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
     else if (type == 2)
     {
-        GenerateStructuredMesh_Helper<3, 2>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<3, 2>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
     else if (type == 3)
     {
-        GenerateStructuredMesh_Helper<3, 3>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+        GenerateStructuredPoints_Helper<3, 3>::Execute(sampling_points, StartPoint, EndPoint, sampling);
     }
 }
 
 
-std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType>
-FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
+FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
     const std::vector<std::vector<PointType> >& sampling_points,
     const std::string& sample_element_name,
     const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
@@ -204,6 +203,9 @@ FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
 
     if (activation_dir == 1) activation_level = -num_division_1;
 
+    BoundaryLayerInfoType boundary_layers;
+    BoundaryNodesInfoType boundary_nodes;
+
     for (std::size_t i = 0; i < num_1; ++i)
     {
         if (activation_dir == 2) activation_level = -num_division_2;
@@ -265,12 +267,11 @@ FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
 
     std::cout << NewElements.size() << " " << sample_element_name << " elements are created and added to the model_part" << std::endl;
 
-    return std::make_pair(NewNodes, NewElements);
+    return std::make_tuple(NewNodes, NewElements, boundary_nodes, boundary_layers);
 }
 
 
-std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType>
-FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
+FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
     const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
     const std::string& sample_element_name,
     const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
@@ -343,9 +344,12 @@ FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
         KRATOS_THROW_ERROR(std::logic_error, "Invalid type", type)
 
 //    KRATOS_WATCH(last_node_id_old)
-//    KRATOS_WATCH(num_1)
-//    KRATOS_WATCH(num_2)
-//    KRATOS_WATCH(num_3)
+    KRATOS_WATCH(num_division_1)
+    KRATOS_WATCH(num_division_2)
+    KRATOS_WATCH(num_division_3)
+
+    BoundaryLayerInfoType boundary_layers;
+    BoundaryNodesInfoType boundary_nodes;
 
     for (std::size_t i = 0; i < num_division_1; ++i)
     {
@@ -366,16 +370,134 @@ FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
                     node[6] = node[2] + 1;
                     node[7] = node[3] + 1;
 
-                    for (int i = 0; i < 8; ++i)
+                    for (int n = 0; n < 8; ++n)
                     {
-//                        std::cout << "node " << i << ": " << node[i] << std::endl;
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[i], NodeKey).base()));
+//                        std::cout << "node " << n << ": " << node[n] << std::endl;
+                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[n], NodeKey).base()));
+                    }
+
+                    // extract the layer information
+                    if (k == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[3], node[2], node[1]};
+                        boundary_layers["xmin"].push_back(layer_cond);
+                        boundary_nodes["xmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (k == num_division_3-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[4], node[5], node[6], node[7]};
+                        boundary_layers["xmax"].push_back(layer_cond);
+                        boundary_nodes["xmax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[4], node[7], node[3]};
+                        boundary_layers["ymin"].push_back(layer_cond);
+                        boundary_nodes["ymin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == num_division_2-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[1], node[2], node[6], node[5]};
+                        boundary_layers["ymax"].push_back(layer_cond);
+                        boundary_nodes["ymax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[1], node[5], node[4]};
+                        boundary_layers["zmin"].push_back(layer_cond);
+                        boundary_nodes["zmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == num_division_1-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[2], node[3], node[7], node[6]};
+                        boundary_layers["zmax"].push_back(layer_cond);
+                        boundary_nodes["zmax"].insert(layer_cond.begin(), layer_cond.end());
                     }
                 }
                 else if (type == 2)
                 {
-                    // TODO
-                    KRATOS_THROW_ERROR(std::logic_error, "type == 2", "is not yet implemented")
+                    node[0] = last_node_id_old + 2*((i * (num_2 + 1) + j) * (num_3 + 1) + k) + 1;
+                    node[1] = last_node_id_old + 2*((i * (num_2 + 1) + j + 1) * (num_3 + 1) + k) + 1;
+                    node[2] = last_node_id_old + 2*(((i + 1) * (num_2 + 1) + j + 1) * (num_3 + 1) + k) + 1;
+                    node[3] = last_node_id_old + 2*(((i + 1) * (num_2 + 1) + j) * (num_3 + 1) + k) + 1;
+                    node[4] = node[0] + 2;
+                    node[5] = node[1] + 2;
+                    node[6] = node[2] + 2;
+                    node[7] = node[3] + 2;
+
+                    node[8] = (node[0] + node[1]) / 2;
+                    node[9] = (node[1] + node[2]) / 2;
+                    node[10] = (node[2] + node[3]) / 2;
+                    node[11] = (node[0] + node[3]) / 2;
+
+                    node[12] = (node[0] + node[4]) / 2;
+                    node[13] = (node[1] + node[5]) / 2;
+                    node[14] = (node[2] + node[6]) / 2;
+                    node[15] = (node[3] + node[7]) / 2;
+
+                    node[16] = (node[4] + node[5]) / 2;
+                    node[17] = (node[5] + node[6]) / 2;
+                    node[18] = (node[6] + node[7]) / 2;
+                    node[19] = (node[4] + node[7]) / 2;
+
+                    for (int n = 0; n < 20; ++n)
+                    {
+//                        std::cout << "node " << n << ": " << node[n] << std::endl;
+                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[n], NodeKey).base()));
+                    }
+
+//                    std::cout << "element " << i << " " << j << " " << k << ":" << std::endl;
+//                    for (int n = 0; n < 27; ++n)
+//                        std::cout << " " << node[n];
+//                    std::cout << std::endl;
+
+                    // extract the layer information
+                    if (k == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[3], node[2], node[1], node[11], node[10], node[9], node[8]};
+                        boundary_layers["xmin"].push_back(layer_cond);
+                        boundary_nodes["xmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (k == num_division_3-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[4], node[5], node[6], node[7], node[16], node[17], node[18], node[19]};
+                        boundary_layers["xmax"].push_back(layer_cond);
+                        boundary_nodes["xmax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[4], node[7], node[3], node[12], node[19], node[15], node[11]};
+                        boundary_layers["ymin"].push_back(layer_cond);
+                        boundary_nodes["ymin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == num_division_2-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[1], node[2], node[6], node[5], node[9], node[14], node[17], node[13]};
+                        boundary_layers["ymax"].push_back(layer_cond);
+                        boundary_nodes["ymax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[1], node[5], node[4], node[8], node[13], node[16], node[12]};
+                        boundary_layers["zmin"].push_back(layer_cond);
+                        boundary_nodes["zmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == num_division_1-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[2], node[3], node[7], node[6], node[10], node[15], node[18], node[14]};
+                        boundary_layers["zmax"].push_back(layer_cond);
+                        boundary_nodes["zmax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
                 }
                 else if (type == 3)
                 {
@@ -412,10 +534,58 @@ FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
 
                     node[26] = (node[0] + node[1] + node[2] + node[3] + node[4] + node[5] + node[6] + node[7]) / 8;
 
-                    for (int i = 0; i < 27; ++i)
+                    for (int n = 0; n < 27; ++n)
                     {
-//                        std::cout << "node " << i << ": " << node[i] << std::endl;
-                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[i], NodeKey).base()));
+//                        std::cout << "node " << n << ": " << node[n] << std::endl;
+                        temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[n], NodeKey).base()));
+                    }
+
+//                    std::cout << "element " << i << " " << j << " " << k << ":" << std::endl;
+//                    for (int n = 0; n < 27; ++n)
+//                        std::cout << " " << node[n];
+//                    std::cout << std::endl;
+
+                    // extract the layer information
+                    if (k == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[3], node[2], node[1], node[11], node[10], node[9], node[8], node[20]};
+                        boundary_layers["xmin"].push_back(layer_cond);
+                        boundary_nodes["xmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (k == num_division_3-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[4], node[5], node[6], node[7], node[16], node[17], node[18], node[19], node[25]};
+                        boundary_layers["xmax"].push_back(layer_cond);
+                        boundary_nodes["xmax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[4], node[7], node[3], node[12], node[19], node[15], node[11], node[24]};
+                        boundary_layers["ymin"].push_back(layer_cond);
+                        boundary_nodes["ymin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (j == num_division_2-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[1], node[2], node[6], node[5], node[9], node[14], node[17], node[13], node[22]};
+                        boundary_layers["ymax"].push_back(layer_cond);
+                        boundary_nodes["ymax"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == 0)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[0], node[1], node[5], node[4], node[8], node[13], node[16], node[12], node[21]};
+                        boundary_layers["zmin"].push_back(layer_cond);
+                        boundary_nodes["zmin"].insert(layer_cond.begin(), layer_cond.end());
+                    }
+
+                    if (i == num_division_1-1)
+                    {
+                        std::vector<std::size_t> layer_cond = {node[2], node[3], node[7], node[6], node[10], node[15], node[18], node[14], node[23]};
+                        boundary_layers["zmax"].push_back(layer_cond);
+                        boundary_nodes["zmax"].insert(layer_cond.begin(), layer_cond.end());
                     }
                 }
 
@@ -437,7 +607,7 @@ FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
 
     std::cout << NewElements.size() << " " << sample_element_name << " elements are created and added to the model_part" << std::endl;
 
-    return std::make_pair(NewNodes, NewElements);
+    return std::make_tuple(NewNodes, NewElements, boundary_nodes, boundary_layers);
 }
 
 

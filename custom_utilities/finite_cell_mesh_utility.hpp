@@ -33,7 +33,7 @@ namespace Kratos
 {
 
 template<>
-struct GenerateStructuredMesh_Helper<2, 1> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<2, 1> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
@@ -70,7 +70,7 @@ struct GenerateStructuredMesh_Helper<2, 1> : public GenerateStructuredMesh_Helpe
 };
 
 template<>
-struct GenerateStructuredMesh_Helper<2, 2> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
@@ -94,7 +94,7 @@ struct GenerateStructuredMesh_Helper<2, 2> : public GenerateStructuredMesh_Helpe
 };
 
 template<>
-struct GenerateStructuredMesh_Helper<2, 3> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<2, 3> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
@@ -131,7 +131,7 @@ struct GenerateStructuredMesh_Helper<2, 3> : public GenerateStructuredMesh_Helpe
 };
 
 template<>
-struct GenerateStructuredMesh_Helper<3, 1> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<3, 1> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
@@ -195,7 +195,7 @@ struct GenerateStructuredMesh_Helper<3, 1> : public GenerateStructuredMesh_Helpe
 };
 
 template<>
-struct GenerateStructuredMesh_Helper<3, 2> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
@@ -219,7 +219,7 @@ struct GenerateStructuredMesh_Helper<3, 2> : public GenerateStructuredMesh_Helpe
 };
 
 template<>
-struct GenerateStructuredMesh_Helper<3, 3> : public GenerateStructuredMesh_Helper<0, 0>
+struct GenerateStructuredPoints_Helper<3, 3> : public GenerateStructuredPoints_Helper<0, 0>
 {
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,

@@ -7,7 +7,8 @@
 //
 //
 
-
+// External includes
+#include <boost/python/dict.hpp>
 
 // Project includes
 #include "includes/element.h"
@@ -50,7 +51,51 @@ boost::python::list FiniteCellMeshUtility_GenerateSampling(FiniteCellMeshUtility
     return psampling;
 }
 
-void FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMeshUtility& rDummy,
+boost::python::dict FiniteCellMeshUtility_ExtractBoundaryLayer(const FiniteCellMeshUtility::BoundaryLayerInfoType& Info)
+{
+    boost::python::dict layer_cond_sets;
+
+    for (FiniteCellMeshUtility::BoundaryLayerInfoType::const_iterator it = Info.begin(); it != Info.end(); ++it)
+    {
+        const std::string& layer_name = it->first;
+
+        boost::python::list layer_conds;
+
+        for (std::size_t i = 0; i < it->second.size(); ++i)
+        {
+            boost::python::list cond;
+            for (std::size_t j = 0; j < it->second[i].size(); ++j)
+                cond.append(it->second[i][j]);
+            layer_conds.append(cond);
+        }
+
+        layer_cond_sets[layer_name] = layer_conds;
+    }
+
+    return layer_cond_sets;
+}
+
+boost::python::dict FiniteCellMeshUtility_ExtractBoundaryNodes(const FiniteCellMeshUtility::BoundaryNodesInfoType& Info)
+{
+    boost::python::dict layer_node_sets;
+
+    for (FiniteCellMeshUtility::BoundaryNodesInfoType::const_iterator it = Info.begin(); it != Info.end(); ++it)
+    {
+        const std::string& layer_name = it->first;
+
+        boost::python::list node_set;
+        for (std::set<std::size_t>::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+        {
+            node_set.append(*it2);
+        }
+
+        layer_node_sets[layer_name] = node_set;
+    }
+
+    return layer_node_sets;
+}
+
+boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMeshUtility& rDummy,
     ModelPart& r_model_part,
     const Element::GeometryType::PointType::PointType& StartPoint,
     const Element::GeometryType::PointType::PointType& EndPoint,
@@ -65,14 +110,28 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMeshUtility& 
     std::vector<std::vector<PointType> > sampling_points;
 
     std::vector<std::size_t> nsampling = {nsampling1, nsampling2};
-    rDummy.GenerateStructuredMesh2D(sampling_points, type, StartPoint, EndPoint, nsampling);
+    rDummy.GenerateStructuredPoints2D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+
+    typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
+    typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
+    const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
+
+    // generate layer information
+    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list output;
+    output.append(layer_node_sets);
+    output.append(layer_cond_sets);
+    return output;
 }
 
-void FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSampling(FiniteCellMeshUtility& rDummy,
+boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSampling(FiniteCellMeshUtility& rDummy,
     ModelPart& r_model_part,
     const Element::GeometryType::PointType::PointType& StartPoint,
     const Element::GeometryType::PointType::PointType& EndPoint,
@@ -93,14 +152,28 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSampling(FiniteCel
     BOOST_FOREACH(const iterator_value_type::value_type& v,
         std::make_pair(iterator_value_type(vsampling2), iterator_value_type() ) ) sampling[1].push_back(v);
 
-    rDummy.GenerateStructuredMesh2D(sampling_points, type, StartPoint, EndPoint, sampling);
+    rDummy.GenerateStructuredPoints2D(sampling_points, type, StartPoint, EndPoint, sampling);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+
+    typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
+    typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
+    const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
+
+    // generate layer information
+    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list output;
+    output.append(layer_node_sets);
+    output.append(layer_cond_sets);
+    return output;
 }
 
-void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& rDummy,
+boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& rDummy,
     ModelPart& r_model_part,
     const Element::GeometryType::PointType::PointType& StartPoint,
     const Element::GeometryType::PointType::PointType& EndPoint,
@@ -116,14 +189,28 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMeshUtility& 
     std::vector<std::vector<std::vector<PointType> > > sampling_points;
 
     std::vector<std::size_t> nsampling = {nsampling1, nsampling2, nsampling3};
-    rDummy.GenerateStructuredMesh3D(sampling_points, type, StartPoint, EndPoint, nsampling);
+    rDummy.GenerateStructuredPoints3D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+
+    typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
+    typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
+    const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
+
+    // generate layer information
+    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list output;
+    output.append(layer_node_sets);
+    output.append(layer_cond_sets);
+    return output;
 }
 
-void FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSampling(FiniteCellMeshUtility& rDummy,
+boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSampling(FiniteCellMeshUtility& rDummy,
     ModelPart& r_model_part,
     const Element::GeometryType::PointType::PointType& StartPoint,
     const Element::GeometryType::PointType::PointType& EndPoint,
@@ -147,14 +234,29 @@ void FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSampling(FiniteCel
     BOOST_FOREACH(const iterator_value_type::value_type& v,
         std::make_pair(iterator_value_type(vsampling3), iterator_value_type() ) ) sampling[2].push_back(v);
 
-    rDummy.GenerateStructuredMesh3D(sampling_points, type, StartPoint, EndPoint, sampling);
-    KRATOS_WATCH(sampling_points.size())
-    KRATOS_WATCH(sampling_points[0].size())
-    KRATOS_WATCH(sampling_points[0][0].size())
+    rDummy.GenerateStructuredPoints3D(sampling_points, type, StartPoint, EndPoint, sampling);
+//    KRATOS_WATCH(sampling_points.size())
+//    KRATOS_WATCH(sampling_points[0].size())
+//    KRATOS_WATCH(sampling_points[0][0].size())
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points,
+        sample_element_name, type, close_dir, activation_dir, pProperties);
+
+    typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
+    typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
+    const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
+
+    // generate layer information
+    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list output;
+    output.append(layer_node_sets);
+    output.append(layer_cond_sets);
+    return output;
 }
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement(FiniteCellMeshUtility& rDummy,

@@ -21,6 +21,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <tuple>
 
 
 // External includes
@@ -54,7 +55,7 @@ namespace Kratos
 ///@{
 
 template<int TDim, int TType>
-struct GenerateStructuredMesh_Helper
+struct GenerateStructuredPoints_Helper
 {
     typedef typename Element::GeometryType GeometryType;
 
@@ -94,6 +95,13 @@ public:
     typedef typename NodeType::PointType PointType;
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+
+    typedef std::map<std::string, std::set<std::size_t> > BoundaryNodesInfoType;
+
+    typedef std::map<std::string, std::vector<std::vector<std::size_t> > > BoundaryLayerInfoType;
+
+    typedef std::tuple<ModelPart::NodesContainerType, ModelPart::ElementsContainerType,
+        BoundaryNodesInfoType, BoundaryLayerInfoType> MeshInfoType;
 
     ///@}
     ///@name Life Cycle
@@ -136,7 +144,7 @@ public:
 
 
     /// Generate the points for background structure mesh
-    static void GenerateStructuredMesh2D(std::vector<std::vector<PointType> >& sampling_points,
+    static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
         const int& type,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -145,7 +153,7 @@ public:
 
     /// Generate the points for background structure mesh
     /// sampling vector contains the local coordinate s (0 <= s <= 1) of sampling points in each axis
-    static void GenerateStructuredMesh2D(std::vector<std::vector<PointType> >& sampling_points,
+    static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
         const int& type,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -153,7 +161,7 @@ public:
 
 
     /// Generate the points for background structure mesh
-    static void GenerateStructuredMesh3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+    static void GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
         const int& type,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -162,7 +170,7 @@ public:
 
     /// Generate the points for background structure mesh
     /// sampling vector contains the local coordinate s (0 <= s <= 1) of sampling points in each axis
-    static void GenerateStructuredMesh3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
+    static void GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
         const int& type,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -170,7 +178,7 @@ public:
 
 
     /// Create the quad elements based on given points list
-    static std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQuadElements(ModelPart& r_model_part,
+    static MeshInfoType CreateQuadElements(ModelPart& r_model_part,
         const std::vector<std::vector<PointType> >& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
@@ -180,7 +188,7 @@ public:
 
 
     /// Create the hex elements based on given points list
-    static std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateHexElements(ModelPart& r_model_part,
+    static MeshInfoType CreateHexElements(ModelPart& r_model_part,
         const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
