@@ -22,7 +22,9 @@
 
 namespace Kratos
 {
+
 /**
+ * A zero contribution element to support for assigning condition
  */
 class DummyElement : public Element
 {
