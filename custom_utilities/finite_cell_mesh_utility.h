@@ -178,6 +178,15 @@ public:
 
 
     /// Create the quad elements based on given points list
+    static MeshInfoType CreateLineElements(ModelPart& r_model_part,
+        const std::vector<PointType>& sampling_points,
+        const std::string& sample_element_name,
+        const int& type, // if 1: generate L2 elements; 2: L3 elements;
+        const bool& close, // if false: open loop; true: close loop
+        Properties::Pointer pProperties);
+
+
+    /// Create the quad elements based on given points list
     static MeshInfoType CreateQuadElements(ModelPart& r_model_part,
         const std::vector<std::vector<PointType> >& sampling_points,
         const std::string& sample_element_name,

@@ -58,7 +58,32 @@ void FiniteCellAuxilliaryUtility_RemoveElement(FiniteCellAuxilliaryUtility& rDum
     rDummy.RemoveElement(rpElements, pElement);
 }
 
-/// Create a line condition from sample_cond_name and from 2 nodes
+/// Create an element from sample element name and from list of nodes
+Element::Pointer FiniteCellAuxilliaryUtility_CreateElement(FiniteCellAuxilliaryUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_elem_name,
+    const std::size_t& Id, Properties::Pointer pProperties, boost::python::list& node_ids)
+{
+    std::vector<std::size_t> node_list;
+    typedef boost::python::stl_input_iterator<int> iterator_value_type;
+    BOOST_FOREACH(const iterator_value_type::value_type& id,
+                  std::make_pair(iterator_value_type(node_ids), // begin
+                  iterator_value_type() ) ) // end
+    {
+        node_list.push_back(static_cast<std::size_t>(id));
+    }
+
+    return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, node_list);
+}
+
+/// Create an element from sample element name and from other element (to provide the geometry)
+Element::Pointer FiniteCellAuxilliaryUtility_CreateElement2(FiniteCellAuxilliaryUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_elem_name,
+    const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+{
+    return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, pElement);
+}
+
+/// Create a condition from sample condition and from list of nodes
 Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition(FiniteCellAuxilliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_cond_name,
     const std::size_t& Id, Properties::Pointer pProperties, boost::python::list& node_ids)
@@ -73,6 +98,14 @@ Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition(FiniteCellAuxilli
     }
 
     return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, node_list);
+}
+
+/// Create a condition from sample condition and from other condition (to provide the geometry)
+Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition2(FiniteCellAuxilliaryUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_cond_name,
+    const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+{
+    return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, pCond);
 }
 
 template<class TTreeType, class TBRepType>
@@ -153,7 +186,10 @@ void FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython()
 
     class_<FiniteCellAuxilliaryUtility, FiniteCellAuxilliaryUtility::Pointer, boost::noncopyable>
     ("FiniteCellAuxilliaryUtility", init<>())
+    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement)
+    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement2)
     .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition)
+    .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition2)
     .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements)
     .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements2)
     .def("Clean", pointer_to_Clean)

@@ -28,6 +28,7 @@
 // Project includes
 #include "includes/define.h"
 #include "custom_algebra/level_set/level_set.h"
+#include "custom_utilities/finite_cell_mesh_utility.h"
 
 
 namespace Kratos
@@ -67,6 +68,8 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(CircularLevelSet);
 
     typedef LevelSet BaseType;
+
+    static constexpr double PI = std::atan(1.0)*4;
 
     ///@}
     ///@name Life Cycle
@@ -120,6 +123,52 @@ public:
         grad(0) = 2.0 * (P(0) - mcX);
         grad(1) = 2.0 * (P(1) - mcY);
         return grad;
+    }
+
+
+    /// Generate the sampling points on the level set surface
+    std::vector<PointType> GeneratePoints(const double& start_angle, const double& end_angle,
+        const std::size_t& nsampling_radial) const
+    {
+        std::vector<PointType> radial_points(nsampling_radial);
+        double small_angle = (end_angle - start_angle) / nsampling_radial;
+
+        PointType V;
+        V[2] = 0.0;
+        double d;
+        for (std::size_t j = 0; j < nsampling_radial; ++j)
+        {
+            d = start_angle + j*small_angle;
+            V[0] = mcX + mR*std::cos(d);
+            V[1] = mcY + mR*std::sin(d);
+            noalias(radial_points[j]) = V;
+        }
+
+        return radial_points;
+    }
+
+
+    /// Generate the sampling points on the level set surface
+    std::vector<PointType> GeneratePoints(const std::size_t& nsampling_radial) const
+    {
+        return GeneratePoints(0.0, 2*PI, nsampling_radial);
+    }
+
+
+    /// Create the elements based on sampling points on the line
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateLineElements(ModelPart& r_model_part,
+        const std::string& sample_element_name,
+        Properties::Pointer pProperties,
+        const double& start_angle,
+        const double& end_angle,
+        const std::size_t& nsampling_radial,
+        const bool close = false) const
+    {
+        // firstly create the sampling points on surface
+        std::vector<PointType> sampling_points = this->GeneratePoints(start_angle, end_angle, nsampling_radial);
+        int order = 1;
+        FiniteCellMeshUtility::MeshInfoType Info = FiniteCellMeshUtility::CreateLineElements(r_model_part, sampling_points, sample_element_name, order, close, pProperties);
+        return std::make_pair(std::get<0>(Info), std::get<1>(Info));
     }
 
 

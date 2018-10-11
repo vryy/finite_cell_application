@@ -165,27 +165,81 @@ public:
             std::cout << cnt << " conditions: " << first_id << "->" << last_id << " is removed from model_part" << std::endl;
     }
 
-
-    static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
+    /// Create a new entity (element/condition) but not add to the model_part
+    template<class TEntityType>
+    static typename TEntityType::Pointer CreateEntity(ModelPart& r_model_part, const std::string& sample_entity_name,
         const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
-        if(!KratosComponents<Condition>::Has(sample_cond_name))
-            KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
-//        KRATOS_WATCH(r_clone_condition)
+        if(!KratosComponents<TEntityType>::Has(sample_entity_name))
+            KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
+        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+//        KRATOS_WATCH(r_clone_entity)
 
         // create the points array
         GeometryType::PointsArrayType Points;
         for(std::size_t i = 0; i < node_ids.size(); ++i)
             Points.push_back(r_model_part.pGetNode(node_ids[i]));
-//        GeometryType::Pointer pTempGeometry = r_clone_condition.GetGeometry().Create(Points);
+//        GeometryType::Pointer pTempGeometry = r_clone_entity.GetGeometry().Create(Points);
 
-        // create new condition
-        Condition::Pointer pNewCond = r_clone_condition.Create(Id, Points, pProperties);
-        pNewCond->SetValue(IS_INACTIVE, false);
-        pNewCond->Set(ACTIVE, true);
+        // create new entity
+        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, Points, pProperties);
+        pNewEntity->SetValue(IS_INACTIVE, false);
+        pNewEntity->Set(ACTIVE, true);
+
+        return pNewEntity;
+    }
+
+    /// Create a new entity (element/condition) from another entity but not add to the model_part
+    template<class TEntityType>
+    static typename TEntityType::Pointer CreateEntity(ModelPart& r_model_part, const std::string& sample_entity_name,
+        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::Pointer pEntity)
+    {
+        if(!KratosComponents<TEntityType>::Has(sample_entity_name))
+            KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
+        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+//        KRATOS_WATCH(r_clone_entity)
+
+        // create new entity
+        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, pEntity->pGetGeometry(), pProperties);
+        pNewEntity->SetValue(IS_INACTIVE, false);
+        pNewEntity->Set(ACTIVE, true);
+
+        return pNewEntity;
+    }
+
+    /// Create a new element and add to the model_part
+    static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
+    {
+        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, node_ids);
+        r_model_part.Elements().push_back(pNewElem);
+        return pNewElem;
+    }
+
+    /// Create a new element and add to the model_part
+    static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+    {
+        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pElement);
+        r_model_part.Elements().push_back(pNewElem);
+        return pNewElem;
+    }
+
+    /// Create a new condition and add to the model_part
+    static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
+    {
+        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, node_ids);
         r_model_part.Conditions().push_back(pNewCond);
+        return pNewCond;
+    }
 
+    /// Create a new condition and add to the model_part
+    static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+    {
+        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pCond);
+        r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
 

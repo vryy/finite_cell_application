@@ -30,7 +30,7 @@
 #include "custom_algebra/level_set/level_set.h"
 #include "custom_utilities/finite_cell_mesh_utility.h"
 
-#define PI 3.1415926535897932384626433832795028841971693
+/*#define PI 3.1415926535897932384626433832795028841971693*/
 
 namespace Kratos
 {
@@ -69,6 +69,8 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(CylinderLevelSet);
 
     typedef LevelSet BaseType;
+
+    static constexpr double PI = std::atan(1.0)*4;
 
     ///@}
     ///@name Life Cycle
@@ -156,7 +158,8 @@ public:
 
 
     /// Generate the sampling points on the level set surface
-    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial) const
+    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial,
+        const double& start_angle, const double& end_angle) const
     {
         const double tmin = 0.0;
         const double tmax = 1.0;
@@ -165,6 +168,7 @@ public:
         // KRATOS_WATCH(nsampling_radial)
 
         std::vector<std::vector<PointType> > results;
+        double small_angle = (end_angle - start_angle) / nsampling_radial;
 
         double t, d;
         PointType P, T, B, V, Up;
@@ -189,7 +193,7 @@ public:
             std::vector<PointType> radial_points(nsampling_radial);
             for (std::size_t j = 0; j < nsampling_radial; ++j)
             {
-                d = j*2.0*PI/nsampling_radial;
+                d = start_angle + j*small_angle;
                 noalias(V) = std::cos(d)*Up + std::sin(d)*B;
 
                 noalias(radial_points[j]) = P + mR*V;
@@ -199,6 +203,13 @@ public:
         }
 
         return results;
+    }
+
+
+    /// Generate the sampling points on the level set surface
+    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial) const
+    {
+        return GeneratePoints(nsampling_axial, nsampling_radial, 0.0, 2*PI);
     }
 
 

@@ -136,6 +136,103 @@ void FiniteCellMeshUtility::GenerateStructuredPoints3D(std::vector<std::vector<s
 }
 
 
+FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateLineElements(ModelPart& r_model_part,
+        const std::vector<PointType>& sampling_points,
+        const std::string& sample_element_name,
+        const int& type, // if 1: generate L2 elements; 2: L3 elements;
+        const bool& close, // if false: open loop; true: close loop
+        Properties::Pointer pProperties)
+{
+    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t last_node_id_old = last_node_id;
+    std::size_t num_division_1 = sampling_points.size() - 1;
+    // KRATOS_WATCH(last_node_id)
+
+    std::size_t num_1, num_2;
+    if (close)
+    {
+        num_1 = num_division_1 + 1;
+    }
+    else
+    {
+        num_1 = num_division_1;
+    }
+
+    // firstly create nodes and add to model_part
+    ModelPart::NodesContainerType NewNodes;
+    for (std::size_t i = 0; i < num_1; ++i)
+    {
+        NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++last_node_id,
+                sampling_points[i][0], sampling_points[i][1], sampling_points[i][2]);
+        // std::cout << "node " << last_node_id << " is created at " << pNewNode->X0() << " " << pNewNode->Y0() << " " << pNewNode->Z0() << std::endl;
+        NewNodes.push_back(pNewNode);
+    }
+
+    // secondly create elements
+    std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
+    // KRATOS_WATCH(last_element_id)
+    Element const& rCloneElement = KratosComponents<Element>::Get(sample_element_name);
+    Element::NodesArrayType temp_element_nodes;
+    ModelPart::ElementsContainerType NewElements;
+    const std::string NodeKey("Node");
+    std::vector<std::size_t> node;
+    int activation_level;
+
+    if (type == 1)
+        node.resize(2);
+    else if (type == 2)
+        node.resize(3);
+    else
+        KRATOS_THROW_ERROR(std::logic_error, "Invalid type", type)
+
+    BoundaryLayerInfoType boundary_layers;
+    BoundaryNodesInfoType boundary_nodes;
+
+    for (std::size_t i = 0; i < num_1; ++i)
+    {
+        temp_element_nodes.clear();
+
+        if (type == 1)
+        {
+            node[0] = last_node_id_old + i + 1;
+            if (i < num_division_1)
+            {
+                node[1] = last_node_id_old + i + 2;
+            }
+            else
+            {
+                node[1] = last_node_id_old + 1;
+            }
+
+            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[0], NodeKey).base()));
+            temp_element_nodes.push_back(*(FindKey(r_model_part.Nodes(), node[1], NodeKey).base()));
+        }
+        else if (type == 2)
+        {
+            // TODO
+            KRATOS_THROW_ERROR(std::logic_error, "type == 2", "is not yet implemented")
+        }
+
+        Element::Pointer pNewElement = rCloneElement.Create(++last_element_id, temp_element_nodes, pProperties);
+        // std::cout << "element " << pNewElement->Id() << " is created" << std::endl;
+        pNewElement->Set(ACTIVE, true);
+        pNewElement->SetValue(IS_INACTIVE, false);
+        NewElements.push_back(pNewElement);
+    }
+
+    for (ModelPart::ElementsContainerType::ptr_iterator it = NewElements.ptr_begin(); it != NewElements.ptr_end(); ++it)
+    {
+        r_model_part.Elements().push_back(*it);
+    }
+
+    r_model_part.Elements().Unique();
+
+    std::cout << NewElements.size() << " " << sample_element_name << " elements are created and added to the model_part" << std::endl;
+
+    return std::make_tuple(NewNodes, NewElements, boundary_nodes, boundary_layers);
+}
+
+
 FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
     const std::vector<std::vector<PointType> >& sampling_points,
     const std::string& sample_element_name,
