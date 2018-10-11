@@ -227,6 +227,10 @@ class FiniteCellSimulator:
             if 'sample_quad_element_name' not in self.params:
                 self.params["sample_quad_element_name"] = "DummySurfaceElement2D4N"
 
+        self.params['write_quadrature_to_file'] = False
+        self.params['export_quadrature_in_reference_frame'] = False
+        self.params['export_quadrature_in_current_frame'] = False
+
     ###TREES & FOREST CREATION#############
     def CreateForest(self, elements, nsampling = 1):
         ###############################################################
@@ -739,6 +743,12 @@ class FiniteCellSimulator:
                 fid.write("    params = " + str(self.params) + "\n")
                 fid.write("    return params\n")
                 fid.close()
+            if self.params["export_quadrature_in_reference_frame"] == True:
+                quad_filename = self.params["quad_filename_reference"]
+                quad_filetype = self.params["quad_filetype_reference"]
+                accuracy = self.params["quad_accuracy"]
+                self.params["material_properties_utility"] = ""
+                quad_util.ExportQuadratureInReferenceFrame(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
             # end if self.quadrature_method == "quadtree":
         elif self.quadrature_method == "quadtree preload":
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]

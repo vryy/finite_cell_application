@@ -142,12 +142,14 @@ public:
     }
 
 
-    template<int TMode>
+    template<int TMode, int TFrame = 0>
     static void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
             const GeometryData::IntegrationMethod& ElementalIntegrationMethod)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+
+        CoordinatesArrayType Coords;
 
         if(TMode == 0 || TMode == 1) // binary
         {
@@ -162,13 +164,20 @@ public:
             {
                 for(std::size_t i = 0; i < integration_points.size(); ++i)
                 {
-                    aux = integration_points[i].X();
+                    if (TFrame == 0)
+                        noalias(Coords) = integration_points[i];
+                    else if (TFrame == 1)
+                        FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                    else if (TFrame == 2)
+                        p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+
+                    aux = Coords[0];
                     rOStream.write((char*)&aux, sizeof(double));
 
-                    aux = integration_points[i].Y();
+                    aux = Coords[1];
                     rOStream.write((char*)&aux, sizeof(double));
 
-                    aux = integration_points[i].Z();
+                    aux = Coords[2];
                     rOStream.write((char*)&aux, sizeof(double));
                 }
             }
@@ -186,11 +195,18 @@ public:
 
             for(std::size_t i = 0; i < integration_points.size(); ++i)
             {
+                if (TFrame == 0)
+                    noalias(Coords) = integration_points[i];
+                else if (TFrame == 1)
+                    FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                else if (TFrame == 2)
+                    p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+
                 if(TMode == 3)
                 {
-                    rOStream << "  " << integration_points[i].X()
-                             << " \t" << integration_points[i].Y()
-                             << " \t" << integration_points[i].Z();
+                    rOStream << "  " << Coords[0]
+                             << " \t" << Coords[1]
+                             << " \t" << Coords[2];
                 }
                 rOStream << " \t" << integration_points[i].Weight() << std::endl;
             }
