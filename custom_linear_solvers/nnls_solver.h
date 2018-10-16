@@ -23,10 +23,12 @@
 
 
 // External includes
-#include <boost/numeric/bindings/traits/matrix_traits.hpp>
-#include <boost/numeric/bindings/traits/vector_traits.hpp>
-#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
-#include <boost/numeric/bindings/traits/ublas_vector.hpp>
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/matrix_traits.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/vector_traits.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_matrix.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_vector.hpp"
+#endif
 #include "nnls.h"
 
 
@@ -97,14 +99,19 @@ public:
 
     static int Solve(Matrix& rA, Vector& rX, Vector& rB, int echo_level, int maxit = 100)
     {
-        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
-        typedef boost::numeric::bindings::traits::vector_traits<Vector> mbtraits;
-
         /* initialization */
         std::size_t M = rA.size1();
         std::size_t N = rA.size2();
 
+        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* dA = matraits::storage(rA);
+        #else
+        double* dA = new double[M*N];
+        for(int i = 0; i < M; ++i)
+            for(int j = 0; j < N; ++j)
+                dA[i*N+j] = rA(j, i); // TODO check
+        #endif
 
         nsNNLS::matrix* A;
         nsNNLS::vector* b;
@@ -144,6 +151,9 @@ public:
 
         delete solver;
         delete A, b, x;
+        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        delete dA;
+        #endif
 
         return 0;
     }

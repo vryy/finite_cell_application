@@ -14,6 +14,10 @@ if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
     ADD_DEFINITIONS(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
 endif()
 
+if(EXISTS ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes)
+    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_BOOST_BINDINGS)
+endif()
+
 #######################################################################
 
 FIND_PACKAGE(MathPresso REQUIRED)

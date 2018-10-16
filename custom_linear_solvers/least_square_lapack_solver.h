@@ -23,10 +23,12 @@
 
 
 // External includes
-#include <boost/numeric/bindings/traits/matrix_traits.hpp>
-#include <boost/numeric/bindings/traits/vector_traits.hpp>
-#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
-#include <boost/numeric/bindings/traits/ublas_vector.hpp>
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/matrix_traits.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/vector_traits.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_matrix.hpp"
+#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_vector.hpp"
+#endif
 
 
 // Project includes
@@ -112,14 +114,21 @@ public:
 
     static double EstimateRCond(Matrix& rA, char* norm_type = "1")
     {
-        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
-
         int M = rA.size1();
         int N = rA.size2();
         Matrix At = trans(rA);
-        double* A = matraits::storage(At);
         int LDA = M;
         int INFO;
+
+        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
+        double* A = matraits::storage(At);
+        #else
+        double* A = new double[M*N];
+        for(int i = 0; i < M; ++i)
+            for(int j = 0; j < N; ++j)
+                A[i*N+j] = rA(j, i); // TODO check
+        #endif
 
         double* WORK = new double[4*N];
         double anorm = dlange_(norm_type, &M, &N, A, &LDA, WORK);
@@ -133,6 +142,10 @@ public:
         LDA = N;
         dgecon_(norm_type, &N, A, &LDA, &anorm, &rcond, WORK, IWORK, &INFO);
 
+        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        delete A;
+        #endif
+
         delete IPIV, WORK, IWORK;
         return rcond;
     }
@@ -140,14 +153,19 @@ public:
 
     static int SolveDGELSY(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 0.01)
     {
-        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
-        typedef boost::numeric::bindings::traits::vector_traits<Vector> mbtraits;
-
         int M = rA.size1();
         int N = rA.size2();
         int NRHS = 1;
         Matrix At = trans(rA);
+        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* A = matraits::storage(At);
+        #else
+        double* A = new double[M*N];
+        for(int i = 0; i < M; ++i)
+            for(int j = 0; j < N; ++j)
+                A[i*N+j] = rA(j, i); // TODO check
+        #endif
         int LDA = M;
         int INFO;
         int LDB = std::max(M, N);
@@ -175,6 +193,9 @@ public:
             rX(i) = b[i];
 
         delete JPVT, b, WORK;
+        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        delete A;
+        #endif
 
         return 0;
     }
@@ -182,14 +203,19 @@ public:
 
     static int SolveDGELSS(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 1.0e-10)
     {
-        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
-        typedef boost::numeric::bindings::traits::vector_traits<Vector> mbtraits;
-
         int M = rA.size1();
         int N = rA.size2();
         int NRHS = 1;
         Matrix At = trans(rA);
+        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* A = matraits::storage(At);
+        #else
+        double* A = new double[M*N];
+        for(int i = 0; i < M; ++i)
+            for(int j = 0; j < N; ++j)
+                A[i*N+j] = rA(j, i); // TODO check
+        #endif
         int LDA = M;
         int INFO;
         int LDB = std::max(M, N);
@@ -217,6 +243,9 @@ public:
             rX(i) = b[i];
 
         delete S, b, WORK;
+        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+        delete A;
+        #endif
 
         return 0;
     }
