@@ -69,9 +69,9 @@ void FiniteCellApplication_AddBaseMomentFittedQuadTreeSubCellToPython()
 /// construct the element out from quad-tree and add to model_part.
 /// This is mainly for post-processing
 template<class TTreeType>
-boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
+boost::python::list QuadTree_AddToModelPart_WithLevel(TTreeType& rDummy,
     ModelPart& r_model_part, const std::string sample_entity_name,
-    std::size_t lastNodeId, std::size_t lastEntityId)
+    std::size_t lastNodeId, std::size_t lastEntityId, int start_level)
 {
     std::vector<std::size_t> new_node_ids;
     std::vector<std::size_t> new_entity_ids;
@@ -79,12 +79,12 @@ boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
     if( KratosComponents<Element>::Has(sample_entity_name) )
     {
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
-        rDummy.Get().template AddToModelPart<true, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, 1);
+        rDummy.Get().template AddToModelPart<true, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
     }
     else if( KratosComponents<Condition>::Has(sample_entity_name) )
     {
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
-        rDummy.Get().template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, 1);
+        rDummy.Get().template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
     }
 
     boost::python::list list;
@@ -103,6 +103,16 @@ boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
     list.append(list_new_entities);
 
     return list;
+}
+
+/// construct the element out from quad-tree and add to model_part.
+/// This is mainly for post-processing
+template<class TTreeType>
+boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
+    ModelPart& r_model_part, const std::string sample_entity_name,
+    std::size_t lastNodeId, std::size_t lastEntityId)
+{
+    return QuadTree_AddToModelPart_WithLevel(rDummy, r_model_part, sample_entity_name, lastNodeId, lastEntityId, 1);
 }
 
 /// construct the element out from quad-tree and add to model_part
@@ -401,6 +411,7 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
     .def("DomainSize", &QuadTreeType::DomainSize)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
+    .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
     .def("ConstructQuadrature", &QuadTreeType::ConstructQuadrature)
     .def(self_ns::str(self))

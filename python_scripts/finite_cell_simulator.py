@@ -726,8 +726,15 @@ class FiniteCellSimulator:
                 lastNodeId = aux_util.GetLastNodeId(model.model_part)
                 lastElementId = aux_util.GetLastElementId(model.model_part)
                 sample_quad_element_name = self.params["sample_quad_element_name"]
+                if not ("starting_level" in self.params):
+                    starting_level = 1
+                else:
+                    starting_level = self.params["starting_level"]
                 for qi, qt in self.forest.iteritems():
-                    last_ids = qt.AddToModelPart(model.model_part, sample_quad_element_name, lastNodeId, lastElementId)
+                    if starting_level == 1:
+                        last_ids = qt.AddToModelPart(model.model_part, sample_quad_element_name, lastNodeId, lastElementId)
+                    else:
+                        last_ids = qt.AddToModelPartWithLevel(model.model_part, sample_quad_element_name, lastNodeId, lastElementId, starting_level)
                     lastNodeId = last_ids[0]
                     lastElementId = last_ids[1]
 
