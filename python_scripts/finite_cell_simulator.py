@@ -1019,12 +1019,19 @@ class FiniteCellSimulator:
     # end Initialize
 
     ### Utility function to export the integration points to the mesh for post-processing ###
-    def ExportPhysicalIntegrationPoints(self, model_part, elements, prop_id):
+    def ExportPhysicalIntegrationPoints(self, model_part, elements, prop_id, current_frame = False):
         quad_util = QuadratureUtility()
         cog_points = []
         for elem in elements:
             points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
-            for point in points:
+            if current_frame:
+                disps = elem.GetValuesOnIntegrationPoints(DISPLACEMENT, model_part.ProcessInfo)
+            for i in range(0, len(points)):
+                point = points[i]
+                if current_frame:
+                    point[0] = point[0] + disps[i][0]
+                    point[1] = point[1] + disps[i][1]
+                    point[2] = point[2] + disps[i][2]
                 cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
         print("len(cog_points):", len(cog_points))
         quad_util.CreateConditionFromPoint(model_part, cog_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
