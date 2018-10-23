@@ -712,14 +712,15 @@ class FiniteCellSimulator:
 
             ## export the physical integration points for debugging if needed
             if self.params["export_physical_integration_point"]:
-                cog_points = []
-                for elem in self.proper_cut_elems:
-                    points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
-                    for point in points:
-                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
-                print("len(cog_points):", len(cog_points))
-                prop_id = self.params["physical_integration_point_prop_id"]
-                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+#                cog_points = []
+#                for elem in self.proper_cut_elems:
+#                    points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+#                    for point in points:
+#                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+#                print("len(cog_points):", len(cog_points))
+#                prop_id = self.params["physical_integration_point_prop_id"]
+#                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+                self.ExportPhysicalIntegrationPoints(model.model_part, self.proper_cut_elems, self.params["physical_integration_point_prop_id"])
 
             ## export the quadtree for debugging if needed
             if self.params["export_quadtree_cell"]:
@@ -1016,6 +1017,15 @@ class FiniteCellSimulator:
             ghost_penalty_conds = ghost_penalty_util.SetUpSurfacePenaltyConditions(model.model_part, bulk_elements, sample_cond, self.brep, lastCondId, ghost_prop)
 
     # end Initialize
+
+    def ExportPhysicalIntegrationPoints(self, model_part, elements, prop_id):
+        cog_points = []
+        for elem in elements:
+            points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+            for point in points:
+                cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+        print("len(cog_points):", len(cog_points))
+        quad_util.CreateConditionFromPoint(model_part, cog_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
 
     ###COMPUTE GLOBAL DISPLACEMENT (L2) ERROR###
     def compute_L2_error(self, elements, process_info, solution, P):
