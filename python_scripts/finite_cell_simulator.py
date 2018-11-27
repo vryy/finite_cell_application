@@ -1029,9 +1029,11 @@ class FiniteCellSimulator:
             for i in range(0, len(points)):
                 point = points[i]
                 if current_frame:
-                    point[0] = point[0] + disps[i][0]
-                    point[1] = point[1] + disps[i][1]
-                    point[2] = point[2] + disps[i][2]
+                    disp = disps[i]
+                    point[0] = point[0] + disp[0]
+                    point[1] = point[1] + disp[1]
+                    point[2] = point[2] + disp[2]
+            for point in points:
                 cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
         print("len(cog_points):", len(cog_points))
         quad_util.CreateConditionFromPoint(model_part, cog_points, "DummyConditionPoint3D", model_part.Properties[prop_id])
