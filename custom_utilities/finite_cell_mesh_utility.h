@@ -230,6 +230,15 @@ public:
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart);
 
 
+    /// Import the nodes from other model_part to this model_part
+    /// The nodes are offsetted and rotated around the Z-axis.
+    /// This function is useful to import the building model_part
+    /// The rotation angle shall be in radian
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
+        const double& offset_x, const double& offset_y, const double& offset_z,
+        const double& cx, const double& cy, const double& theta);
+
+
     /// Import the elements from list to the this model_part
     static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
         ModelPart::ElementsContainerType& rOtherElements,
@@ -267,6 +276,7 @@ public:
 
             typename TEntityType::Pointer pNewElement;
             pNewElement = r_clone_element.Create(++last_element_id, temp_element_nodes, pProperties);
+            pNewElement->SetValue(OTHER_ID, (*it)->Id());
             rNewElements.push_back(pNewElement);
         }
 

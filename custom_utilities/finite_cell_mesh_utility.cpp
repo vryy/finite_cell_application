@@ -786,11 +786,49 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
 }
 
 
+ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
+        const double& offset_x, const double& offset_y, const double& offset_z,
+        const double& cx, const double& cy, const double& theta)
+{
+    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(rThisModelPart);
+
+    // create nodes and add to model_part
+    ModelPart::NodesContainerType NewNodes;
+    double x, y, z, xnew, ynew;
+    double c = std::cos(theta);
+    double s = std::sin(theta);
+    for(ModelPart::NodeIterator it = rOtherModelPart.NodesBegin(); it != rOtherModelPart.NodesEnd(); ++it)
+    {
+        std::size_t new_node_id = ++last_node_id;
+
+        x = it->X() - cx;
+        y = it->Y() - cy;
+
+        xnew = x*c - y*s;
+        ynew = x*s + y*c;
+
+        x = xnew + cx + offset_x;
+        y = ynew + cy + offset_y;
+        z = it->Z() + offset_z;
+
+        NodeType::Pointer pNewNode = rThisModelPart.CreateNewNode(new_node_id, x, y, z);
+        it->SetValue(OTHER_NODE_ID, new_node_id);
+        NewNodes.push_back(pNewNode);
+    }
+
+    std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
+              << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+    return NewNodes;
+}
+
+
 ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart& rThisModelPart,
     ModelPart::ElementsContainerType& rOtherElements,
     const std::string& sample_element_name, Properties::Pointer pProperties)
 {
     std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(rThisModelPart);
+    if (!KratosComponents<Element>::Has(sample_element_name))
+        KRATOS_THROW_ERROR(std::logic_error, sample_element_name, "is not registerred in Kratos database")
     Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
     ModelPart::ElementsContainerType NewElements;
@@ -808,6 +846,8 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
     const std::string& sample_cond_name, Properties::Pointer pProperties)
 {
     std::size_t last_cond_id = FiniteCellAuxilliaryUtility::GetLastConditionId(rThisModelPart);
+    if (!KratosComponents<Condition>::Has(sample_cond_name))
+        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registerred in Kratos database")
     Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
