@@ -192,7 +192,7 @@ public:
     /// Create a new entity (element/condition) from another entity but not add to the model_part
     template<class TEntityType>
     static typename TEntityType::Pointer CreateEntity(ModelPart& r_model_part, const std::string& sample_entity_name,
-        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::Pointer pEntity)
+        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType& rGeometry)
     {
         if(!KratosComponents<TEntityType>::Has(sample_entity_name))
             KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
@@ -200,14 +200,14 @@ public:
 //        KRATOS_WATCH(r_clone_entity)
 
         // create new entity
-        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, pEntity->pGetGeometry(), pProperties);
+        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, rGeometry, pProperties);
         pNewEntity->SetValue(IS_INACTIVE, false);
         pNewEntity->Set(ACTIVE, true);
 
         return pNewEntity;
     }
 
-    /// Create a new element and add to the model_part
+    /// Create a new element out from list of nodes and add to the model_part
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
@@ -216,16 +216,25 @@ public:
         return pNewElem;
     }
 
-    /// Create a new element and add to the model_part
+    /// Create a new element out from other element and add to the model_part
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
-        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pElement);
+        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pElement->GetGeometry());
         r_model_part.Elements().push_back(pNewElem);
         return pNewElem;
     }
 
-    /// Create a new condition and add to the model_part
+    /// Create a new element out from other condition and add to the model_part
+    static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+    {
+        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pCond->GetGeometry());
+        r_model_part.Elements().push_back(pNewElem);
+        return pNewElem;
+    }
+
+    /// Create a new condition out from list of nodes and add to the model_part
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
@@ -234,15 +243,23 @@ public:
         return pNewCond;
     }
 
-    /// Create a new condition and add to the model_part
+    /// Create a new condition out from other condition and add to the model_part
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
-        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pCond);
+        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pCond->GetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
 
+    /// Create a new condition out from other element and add to the model_part
+    static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+    {
+        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pElement->GetGeometry());
+        r_model_part.Conditions().push_back(pNewCond);
+        return pNewCond;
+    }
 
     /// Get the last node id of the model part
     static std::size_t GetLastNodeId(ModelPart& r_model_part)

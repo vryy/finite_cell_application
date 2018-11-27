@@ -83,6 +83,14 @@ Element::Pointer FiniteCellAuxilliaryUtility_CreateElement2(FiniteCellAuxilliary
     return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, pElement);
 }
 
+/// Create an element from sample element name and from other condition (to provide the geometry)
+Element::Pointer FiniteCellAuxilliaryUtility_CreateElement3(FiniteCellAuxilliaryUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_elem_name,
+    const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+{
+    return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, pCond);
+}
+
 /// Create a condition from sample condition and from list of nodes
 Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition(FiniteCellAuxilliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_cond_name,
@@ -106,6 +114,14 @@ Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition2(FiniteCellAuxill
     const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
 {
     return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, pCond);
+}
+
+/// Create a condition from sample condition and from other element (to provide the geometry)
+Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition3(FiniteCellAuxilliaryUtility& rDummy,
+    ModelPart& r_model_part, const std::string& sample_cond_name,
+    const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+{
+    return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, pElement);
 }
 
 template<class TTreeType, class TBRepType>
@@ -188,8 +204,10 @@ void FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython()
     ("FiniteCellAuxilliaryUtility", init<>())
     .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement)
     .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement2)
+    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement3)
     .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition)
     .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition2)
+    .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition3)
     .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements)
     .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements2)
     .def("Clean", pointer_to_Clean)
