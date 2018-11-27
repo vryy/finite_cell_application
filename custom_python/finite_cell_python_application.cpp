@@ -29,6 +29,7 @@
 #include "custom_python/add_finite_cell_auxilliary_utility_to_python.h"
 #include "custom_python/add_finite_cell_mesh_utility_to_python.h"
 #include "custom_python/add_utility_to_python.h"
+#include "custom_python/add_solvers_to_python.h"
 
 namespace Kratos
 {
@@ -103,12 +104,15 @@ namespace Python
         FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython();
         FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
         FiniteCellApplication_AddUtilityToPython();
+        FiniteCellApplication_AddSolversToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_DOMAIN_SIZE )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_WEIGHTS )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( OTHER_NODE_ID )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( OTHER_ID )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )
