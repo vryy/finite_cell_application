@@ -117,7 +117,6 @@ public:
         mDz = Dz;
         // IMPORTANT REMARK: one should not choose a spacing align with element edge, because it can create missing points.
 
-
         for( typename ModelPart::ElementsContainerType::ptr_iterator it = pElements.ptr_begin();
                 it != pElements.ptr_end(); ++it )
         {
@@ -134,9 +133,9 @@ public:
             for(std::size_t i = 0; i < r_geom.size(); ++i)
             {
                 // find the cell containing point
-                int ix = (mDx != 0.0) ? (int) floor(r_geom[i].X()) / mDx : 0;
-                int iy = (mDy != 0.0) ? (int) floor(r_geom[i].Y()) / mDy : 0;
-                int iz = (mDz != 0.0) ? (int) floor(r_geom[i].Z()) / mDz : 0;
+                int ix = (mDx != 0.0) ? (int) floor(r_geom[i].X() / mDx) : 0;
+                int iy = (mDy != 0.0) ? (int) floor(r_geom[i].Y() / mDy) : 0;
+                int iz = (mDz != 0.0) ? (int) floor(r_geom[i].Z() / mDz) : 0;
 
                 // adjust the maximum and minimum value in each direction
                 if(ix < min_ix) min_ix = ix;
@@ -336,9 +335,9 @@ public:
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
         // get the containing elements from the bin
-        int ix = (mDx != 0.0) ? (int) floor(rSourcePoint.X()) / mDx : 0;
-        int iy = (mDy != 0.0) ? (int) floor(rSourcePoint.Y()) / mDy : 0;
-        int iz = (mDz != 0.0) ? (int) floor(rSourcePoint.Z()) / mDz : 0;
+        int ix = (mDx != 0.0) ? (int) floor(rSourcePoint.X() / mDx) : 0;
+        int iy = (mDy != 0.0) ? (int) floor(rSourcePoint.Y() / mDy) : 0;
+        int iz = (mDz != 0.0) ? (int) floor(rSourcePoint.Z() / mDz) : 0;
 
         SpatialKey key(ix, iy, iz);
         std::map<SpatialKey, std::set<std::size_t> >::const_iterator it_bin_elements = mBinElements.find(key);
@@ -375,7 +374,7 @@ public:
         Element::Pointer pTargetElement;
         int echo_level = _WARNING_FOUND_NO_ELEMENT;
 
-        found = SearchPartnerWithBin( rSourcePoint, pMasterElements, pTargetElement, rLocalTargetPoint, echo_level );
+        found = this->SearchPartnerWithBin( rSourcePoint, pMasterElements, pTargetElement, rLocalTargetPoint, echo_level );
 
         if (!found)
         {
