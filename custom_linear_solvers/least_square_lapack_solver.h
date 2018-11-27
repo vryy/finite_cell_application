@@ -112,6 +112,7 @@ public:
     ///@{
 
 
+    /// Estimate the reciprocal condition number of the matrix
     static double EstimateRCond(Matrix& rA, char* norm_type = "1")
     {
         int M = rA.size1();
@@ -151,6 +152,7 @@ public:
     }
 
 
+    /// Solve the non-square linear system using least square method
     static int SolveDGELSY(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 0.01)
     {
         int M = rA.size1();
@@ -201,6 +203,7 @@ public:
     }
 
 
+    /// Solve the non-square linear system using least square method
     static int SolveDGELSS(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 1.0e-10)
     {
         int M = rA.size1();
