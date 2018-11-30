@@ -143,6 +143,11 @@ public:
         const std::size_t& nsampling);
 
 
+    /// Generate the sampling points on a geometry
+    static void GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
+            GeometryType& r_geom, const std::size_t& nsampling);
+
+
     /// Generate the points for background structure mesh
     static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
         const int& type,

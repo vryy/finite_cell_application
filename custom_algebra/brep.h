@@ -85,13 +85,13 @@ public:
     ///@{
 
     /// Default constructor.
-    BRep() : mTOL(1.0e-10) {}
+    BRep();
 
     /// Copy constructor.
-    BRep(BRep const& rOther) : mTOL(rOther.mTOL) {}
+    BRep(BRep const& rOther);
 
     /// Destructor.
-    virtual ~BRep() {}
+    virtual ~BRep();
 
 
     ///@}
@@ -104,111 +104,58 @@ public:
     ///@{
 
     /// Clone this BRep
-    virtual BRep::Pointer CloneBRep() const
-    {
-        return BRep::Pointer(new BRep(*this));
-    }
+    virtual BRep::Pointer CloneBRep() const;
 
     /// Set for geometric tolerance
-    void SetTolerance(const double& TOL) {mTOL = TOL;}
+    void SetTolerance(const double& TOL);
 
     /// Get for geometric tolerance
-    const double GetTolerance() const {return mTOL;}
+    const double GetTolerance() const;
 
     /// Get working space dimension
-    virtual std::size_t WorkingSpaceDimension() const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual std::size_t WorkingSpaceDimension() const;
 
     /// Get local space dimension
-    virtual std::size_t LocalSpaceDimension() const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual std::size_t LocalSpaceDimension() const;
 
     /// Check if a point is inside/outside of the BRep
-    virtual bool IsInside(const PointType& P) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual bool IsInside(const PointType& P) const;
 
     /// Check if a point is on the boundary within a tolerance
-    virtual bool IsOnBoundary(const PointType& P, const double& tol) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual bool IsOnBoundary(const PointType& P, const double& tol) const;
 
     /// Check if an element is cut by the brep
-    int CutStatus(Element::Pointer p_elem) const
-    {
-        return this->CutStatus(p_elem->GetGeometry());
-    }
-
+    int CutStatus(Element::Pointer p_elem) const;
 
     /// Check if a geometry is cut by the brep
-    int CutStatus(GeometryType::Pointer p_geom) const
-    {
-        return this->CutStatus(*p_geom);
-    }
-
+    int CutStatus(GeometryType::Pointer p_geom) const;
 
     /// Check if a geometry is cut by the level set
     /// 0: the cell is completely inside the domain bounded by level set
     /// 1: completely outside
     /// -1: the cell is cut by level set
-    virtual int CutStatus(GeometryType& r_geom) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual int CutStatus(GeometryType& r_geom) const;
 
     /// Check if a set of points is cut by the level set
     /// 0: the cell is completely inside the domain bounded by level set
     /// 1: completely outside
     /// -1: the cell is cut by level set
-    virtual int CutStatus(const std::vector<PointType>& r_points) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual int CutStatus(const std::vector<PointType>& r_points) const;
 
     /// Check if an element is cut by the brep by sampling the elemental geometry
-    int CutStatusBySampling(Element::Pointer p_elem, const std::size_t& nsampling) const
-    {
-        return this->CutStatusBySampling(p_elem->GetGeometry(), nsampling);
-    }
-
+    int CutStatusBySampling(Element::Pointer p_elem, const std::size_t& nsampling) const;
 
     /// Check if a geometry is cut by the brep by sampling the geometry
-    int CutStatusBySampling(GeometryType::Pointer p_geom, const std::size_t& nsampling) const
-    {
-        return this->CutStatusBySampling(*p_geom, nsampling);
-    }
-
+    int CutStatusBySampling(GeometryType::Pointer p_geom, const std::size_t& nsampling) const;
 
     /// Check if a geometry is cut by the level set by sampling the geometry
     /// 0: the cell is completely inside the domain bounded by level set
     /// 1: completely outside
     /// -1: the cell is cut by level set
-    virtual int CutStatusBySampling(GeometryType& r_geom, const std::size_t& nsampling) const
-    {
-        std::vector<PointType> SamplingPoints;
-        CreateSamplingPoints(SamplingPoints, r_geom, nsampling);
-        return this->CutStatus(SamplingPoints);
-    }
-
+    virtual int CutStatusBySampling(GeometryType& r_geom, const std::size_t& nsampling) const;
 
     /// Compute the intersection of the BRep with a line connect by 2 points.
-    virtual PointType Bisect(const PointType& P1, const PointType& P2, const double& tol) const
-    {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling the base class", __FUNCTION__)
-    }
-
+    virtual PointType Bisect(const PointType& P1, const PointType& P2, const double& tol) const;
 
     ///@}
     ///@name Access
@@ -305,83 +252,6 @@ private:
     ///@}
     ///@name Private Operations
     ///@{
-
-
-    void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
-    {
-        double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
-
-        if(     r_geom.GetGeometryFamily() == GeometryData::Kratos_Quadrilateral
-            || (r_geom.GetGeometryFamily() == GeometryData::Kratos_NURBS && r_geom.GetGeometryType() == GeometryData::Kratos_Bezier2D) )
-        {
-            if(r_geom.GetGeometryFamily() == GeometryData::Kratos_Quadrilateral)
-            {
-                Xmin = -1.0; Xmax = 1.0;
-                Ymin = -1.0; Ymax = 1.0;
-            }
-            else
-            {
-                Xmin = 0.0; Xmax = 1.0;
-                Ymin = 0.0; Ymax = 1.0;
-            }
-
-            double dX = (Xmax - Xmin) / nsampling;
-            double dY = (Ymax - Ymin) / nsampling;
-
-            SamplingPoints.reserve((nsampling+1) * (nsampling+1));
-            CoordinatesArrayType X;
-            PointType P;
-            for(std::size_t i = 0; i < nsampling + 1; ++i)
-            {
-                X[0] = Xmin + i*dX;
-                for(std::size_t j = 0; j < nsampling + 1; ++j)
-                {
-                    X[1] = Ymin + j*dY;
-                    r_geom.GlobalCoordinates(P, X);
-                    SamplingPoints.push_back(P);
-                }
-            }
-        }
-        else if( r_geom.GetGeometryFamily() == GeometryData::Kratos_Hexahedra
-            ||  (r_geom.GetGeometryFamily() == GeometryData::Kratos_NURBS && r_geom.GetGeometryType() == GeometryData::Kratos_Bezier3D) )
-        {
-            if(r_geom.GetGeometryFamily() == GeometryData::Kratos_Hexahedra)
-            {
-                Xmin = -1.0; Xmax = 1.0;
-                Ymin = -1.0; Ymax = 1.0;
-                Zmin = -1.0; Zmax = 1.0;
-            }
-            else
-            {
-                Xmin = 0.0; Xmax = 1.0;
-                Ymin = 0.0; Ymax = 1.0;
-                Zmin = 0.0; Zmax = 1.0;
-            }
-
-            double dX = (Xmax - Xmin) / nsampling;
-            double dY = (Ymax - Ymin) / nsampling;
-            double dZ = (Zmax - Zmin) / nsampling;
-
-            SamplingPoints.reserve((nsampling+1) * (nsampling+1) * (nsampling+1));
-            CoordinatesArrayType X;
-            PointType P;
-            for(std::size_t i = 0; i < nsampling + 1; ++i)
-            {
-                X[0] = Xmin + i*dX;
-                for(std::size_t j = 0; j < nsampling + 1; ++j)
-                {
-                    X[1] = Ymin + j*dY;
-                    for(std::size_t k = 0; k < nsampling + 1; ++k)
-                    {
-                        X[2] = Zmin + k*dZ;
-                        r_geom.GlobalCoordinates(P, X);
-                        SamplingPoints.push_back(P);
-                    }
-                }
-            }
-        }
-    }
 
 
     ///@}
