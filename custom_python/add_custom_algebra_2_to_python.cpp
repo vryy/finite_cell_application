@@ -57,6 +57,27 @@ void InverseLevelSet_SetLevelSet(InverseLevelSet& rDummy, LevelSet::Pointer p_le
 }
 
 template<class TLevelSel>
+boost::python::list LevelSet_CreateQ4Elements(
+    TLevelSel& rDummy,
+    ModelPart& r_model_part,
+    const std::string& sample_element_name,
+    Properties::Pointer pProperties,
+    const std::size_t& nsampling_axial,
+    const std::size_t& nsampling_radial,
+    const double& start_radial_angle, // in degree
+    const double& end_radial_angle) // in degree
+{
+    const double Pi = 3.1415926535897932384626433;
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> Results
+        = rDummy.CreateQ4Elements(r_model_part, sample_element_name, pProperties, nsampling_axial, nsampling_radial,
+                start_radial_angle/180.0*Pi, end_radial_angle/180*Pi);
+    boost::python::list Output;
+    Output.append(Results.first);
+    Output.append(Results.second);
+    return Output;
+}
+
+template<class TLevelSel>
 boost::python::list LevelSet_CreateQ4ElementsClosedLoop(
     TLevelSel& rDummy,
     ModelPart& r_model_part,
@@ -140,6 +161,7 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<CylinderLevelSet, CylinderLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "CylinderLevelSet", init<const double&, const double&, const double&, const double&, const double&, const double&, const double&>() )
+    .def("CreateQ4Elements", &LevelSet_CreateQ4Elements<CylinderLevelSet>)
     .def("CreateQ4ElementsClosedLoop", &LevelSet_CreateQ4ElementsClosedLoop<CylinderLevelSet>)
     .def(self_ns::str(self))
     ;
@@ -182,6 +204,7 @@ void FiniteCellApplication_AddBRepAndLevelSetToPython()
 
     class_<DistanceToCurveLevelSet, DistanceToCurveLevelSet::Pointer, boost::noncopyable, bases<LevelSet> >
     ( "DistanceToCurveLevelSet", init<const FunctionR1R3::Pointer, const double&>() )
+    .def("CreateQ4Elements", &LevelSet_CreateQ4Elements<DistanceToCurveLevelSet>)
     .def("CreateQ4ElementsClosedLoop", &LevelSet_CreateQ4ElementsClosedLoop<DistanceToCurveLevelSet>)
     .def(self_ns::str(self))
     ;

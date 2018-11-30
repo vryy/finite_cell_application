@@ -230,6 +230,25 @@ public:
     }
 
 
+    /// Create the elements based on sampling points on the surface
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQ4Elements(ModelPart& r_model_part,
+        const std::string& sample_element_name,
+        Properties::Pointer pProperties,
+        const std::size_t& nsampling_axial,
+        const std::size_t& nsampling_radial,
+        const double& start_radial_angle,
+        const double& end_radial_angle) const
+    {
+        // firstly create the sampling points on surface
+        std::vector<std::vector<PointType> > sampling_points = this->GeneratePoints(nsampling_axial, nsampling_radial, start_radial_angle, end_radial_angle);
+        int order = 1;
+        int close_dir = 0;
+        int activation_dir = 1;
+        FiniteCellMeshUtility::MeshInfoType Info = FiniteCellMeshUtility::CreateQuadElements(r_model_part, sampling_points, sample_element_name, order, close_dir, activation_dir, pProperties);
+        return std::make_pair(std::get<0>(Info), std::get<1>(Info));
+    }
+
+
     ///@}
     ///@name Access
     ///@{

@@ -127,7 +127,8 @@ public:
 
 
     /// Generate the sampling points on the level set surface
-    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial) const
+    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial,
+        const double& start_angle, const double& end_angle) const
     {
         const double tmin = 0.0;
         const double tmax = 1.0;
@@ -136,6 +137,7 @@ public:
         // KRATOS_WATCH(nsampling_radial)
 
         std::vector<std::vector<PointType> > results;
+        double small_angle = (end_angle - start_angle) / nsampling_radial;
 
         double t, d;
         PointType P, T, N, B, V, Up, Aux;
@@ -183,7 +185,7 @@ public:
             std::vector<PointType> radial_points(nsampling_radial);
             for (std::size_t j = 0; j < nsampling_radial; ++j)
             {
-                d = j*2.0*PI/nsampling_radial;
+                d = start_angle + j*small_angle;
                 noalias(V) = std::cos(d)*N + std::sin(d)*B;
 
                 noalias(radial_points[j]) = P + mR*V;
@@ -193,6 +195,13 @@ public:
         }
 
         return results;
+    }
+
+
+    /// Generate the sampling points on the level set surface
+    std::vector<std::vector<PointType> > GeneratePoints(const std::size_t& nsampling_axial, const std::size_t& nsampling_radial) const
+    {
+        return GeneratePoints(nsampling_axial, nsampling_radial, 0.0, 2*PI);
     }
 
 
@@ -212,6 +221,25 @@ public:
         return std::make_pair(std::get<0>(Info), std::get<1>(Info));
     }
 
+
+    /// Create the elements based on sampling points on the surface
+    std::pair<ModelPart::NodesContainerType, ModelPart::ElementsContainerType> CreateQ4Elements(ModelPart& r_model_part,
+        const std::string& sample_element_name,
+        Properties::Pointer pProperties,
+        const std::size_t& nsampling_axial,
+        const std::size_t& nsampling_radial,
+        const double& start_radial_angle,
+        const double& end_radial_angle) const
+    {
+        // firstly create the sampling points on surface
+        std::vector<std::vector<PointType> > sampling_points = this->GeneratePoints(nsampling_axial, nsampling_radial,
+                start_radial_angle, end_radial_angle);
+        int order = 1;
+        int close_dir = 0;
+        int activation_dir = 1;
+        FiniteCellMeshUtility::MeshInfoType Info = FiniteCellMeshUtility::CreateQuadElements(r_model_part, sampling_points, sample_element_name, order, close_dir, activation_dir, pProperties);
+        return std::make_pair(std::get<0>(Info), std::get<1>(Info));
+    }
 
 
     ///@}
