@@ -231,17 +231,20 @@ class FiniteCellSimulator:
         self.params['export_quadrature_in_reference_frame'] = False
         self.params['export_quadrature_in_current_frame'] = False
 
+        self.forest = {}
+
     ###TREES & FOREST CREATION#############
+    def CleanForest():
+        self.forest = {}
+
     def CreateForest(self, elements, nsampling = 1):
         ###############################################################
         ######### CREATE TREES AND FOREST
         ###############################################################
-        self.forest = {}
         for elem in elements:
             self.forest[elem.Id] = CreateQuadTree(elem, nsampling)
 
     def CreateForestSubCell(self, elements, nsampling = 1):
-        self.forest = {}
         subcell_fit_mode = self.params["subcell_fit_mode"]
         cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
         quad_util = QuadratureUtility()
@@ -692,8 +695,8 @@ class FiniteCellSimulator:
             self.proper_cut_elems = ElementsArray()
             cut_elems = []
             exclude_elems = []
-            for qi, qt in self.forest.iteritems():
-                elem = model.model_part.Elements[qi]
+            for elem in bulk_elements:
+                qt = self.forest[elem.Id]
                 stat = self.brep.CutStatusBySampling(elem, nsampling)
                 if stat == self.brep._CUT:
                     for i in range(0, qt_depth):
@@ -740,7 +743,8 @@ class FiniteCellSimulator:
                     starting_level = 1
                 else:
                     starting_level = self.params["starting_level"]
-                for qi, qt in self.forest.iteritems():
+                for elem in bulk_elements:
+                    qt = self.forest[elem.Id]
                     if starting_level == 1:
                         last_ids = qt.AddToModelPart(model.model_part, sample_quad_element_name, lastNodeId, lastElementId)
                     else:
