@@ -112,7 +112,7 @@ void FiniteCellMeshUtility::GenerateSamplingPoints(std::vector<PointType>& Sampl
             }
         }
     }
-    if(r_geom.GetGeometryFamily() == GeometryData::Kratos_Tetrahedra )
+    else if(r_geom.GetGeometryFamily() == GeometryData::Kratos_Tetrahedra )
     {
         double xi_min = 0.0, xi_max = 1.0;
         double eta_min = 0.0, eta_max = 1.0;
