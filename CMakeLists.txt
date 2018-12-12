@@ -36,19 +36,6 @@ ELSE()
     MESSAGE("nnls is not found")
 ENDIF()
 
-FIND_PACKAGE(Eigen)
-IF(${SPECTRA_FOUND} MATCHES TRUE)
-    MESSAGE("Eigen is found at " ${EIGEN_DIR})
-ENDIF()
-
-FIND_PACKAGE(Spectra)
-IF(${SPECTRA_FOUND} MATCHES TRUE)
-    MESSAGE("Spectra is found at " ${SPECTRA_DIR})
-    ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_SPECTRA)
-ELSE()
-    MESSAGE("Spetra is not found. The eigenvalues solver is not available.")
-ENDIF()
-
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/dummy_element.cpp
@@ -69,7 +56,6 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_moment_fitting_utility_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utility_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_solvers_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )
 #######################################################################

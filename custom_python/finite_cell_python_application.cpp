@@ -29,7 +29,6 @@
 #include "custom_python/add_finite_cell_auxilliary_utility_to_python.h"
 #include "custom_python/add_finite_cell_mesh_utility_to_python.h"
 #include "custom_python/add_utility_to_python.h"
-#include "custom_python/add_solvers_to_python.h"
 
 namespace Kratos
 {
@@ -104,7 +103,6 @@ namespace Python
         FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython();
         FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
         FiniteCellApplication_AddUtilityToPython();
-        FiniteCellApplication_AddSolversToPython();
 
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )
