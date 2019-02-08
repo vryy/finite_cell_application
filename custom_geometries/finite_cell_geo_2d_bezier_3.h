@@ -57,6 +57,11 @@ public:
     typedef Geo2dBezier<TPointType> BaseType;
 
     /**
+     * The original geometry type
+     */
+    typedef typename BaseType::GeometryType GeometryType;
+
+    /**
      * Pointer definition of FiniteCellGeo2dBezier3
      */
     KRATOS_CLASS_POINTER_DEFINITION( FiniteCellGeo2dBezier3 );
@@ -123,15 +128,13 @@ public:
      * A third order tensor used as shape functions' values
      * container.
      */
-    typedef typename BaseType::ShapeFunctionsValuesContainerType
-    ShapeFunctionsValuesContainerType;
+    typedef typename BaseType::ShapeFunctionsValuesContainerType ShapeFunctionsValuesContainerType;
 
     /**
      * A fourth order tensor used as shape functions' local
      * gradients container in geometry.
      */
-    typedef typename BaseType::ShapeFunctionsLocalGradientsContainerType
-    ShapeFunctionsLocalGradientsContainerType;
+    typedef typename BaseType::ShapeFunctionsLocalGradientsContainerType ShapeFunctionsLocalGradientsContainerType;
 
     /**
      * A third order tensor to hold jacobian matrices evaluated at
@@ -152,9 +155,8 @@ public:
      * ShapefunctionsLocalGradients function return this
      * type as its result.
      */
-    typedef typename BaseType::ShapeFunctionsSecondDerivativesType
-    ShapeFunctionsSecondDerivativesType;
-    
+    typedef typename BaseType::ShapeFunctionsSecondDerivativesType ShapeFunctionsSecondDerivativesType;
+
     /**
      * Type of the normal vector used for normal to edges in geomety.
      */
@@ -169,7 +171,7 @@ public:
      * Type of Matrix
      */
     typedef typename BaseType::MatrixType MatrixType;
-    
+
     /**
      * Type of Vector
      */
@@ -185,12 +187,10 @@ public:
      */
 
     FiniteCellGeo2dBezier3()
-//    : BaseType( PointsArrayType(), &msGeometryData )
     : BaseType( PointsArrayType() )
     {}
 
     FiniteCellGeo2dBezier3( const PointsArrayType& ThisPoints )
-//    : BaseType( ThisPoints, &msGeometryData )
     : BaseType( ThisPoints )
     {}
 
@@ -223,9 +223,36 @@ public:
      * source geometry's points too.
      */
     template<class TOtherPointType> FiniteCellGeo2dBezier3( FiniteCellGeo2dBezier3<TOtherPointType> const& rOther )
+    : Geo2dBezier3<TOtherPointType>( rOther )
+    {}
+
+    /**
+     * Copy constructor.
+     * Construct this geometry as a copy of given geometry.
+     *
+     * @note This copy constructor don't copy the points and new
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this new geometry's point affect
+     * source geometry's points too.
+     */
+    FiniteCellGeo2dBezier3( BaseType const& rOther )
     : BaseType( rOther )
-    {
-    }
+    {}
+
+    /**
+     * Copy constructor from a geometry with other point type.
+     * Construct this geometry as a copy of given geometry which
+     * has different type of points. The given goemetry's
+     * TOtherPointType* must be implicity convertible to this
+     * geometry PointType.
+     * @note This copy constructor don't copy the points and new
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this new geometry's point affect
+     * source geometry's points too.
+     */
+    template<class TOtherPointType> FiniteCellGeo2dBezier3( Geo2dBezier3<TOtherPointType> const& rOther )
+    : Geo2dBezier3<TOtherPointType>( rOther )
+    {}
 
     /**
      * Destructor. Does nothing!!!
@@ -267,8 +294,41 @@ public:
     template<class TOtherPointType>
     FiniteCellGeo2dBezier3& operator=( FiniteCellGeo2dBezier3<TOtherPointType> const & rOther )
     {
-        BaseType::operator=( rOther );
+        Geo2dBezier3<TOtherPointType>::operator=( rOther );
+        return *this;
+    }
 
+    /**
+     * Assignment operator.
+     *
+     * @note This operator don't copy the points and this
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this geometry's point affect
+     * source geometry's points too.
+     * @see Clone
+     * @see ClonePoints
+     */
+    FiniteCellGeo2dBezier3& operator=( const BaseType& rOther )
+    {
+        BaseType::operator=( rOther );
+        return *this;
+    }
+
+    /**
+     * Assignment operator for geometries with different point type.
+     *
+     * @note This operator don't copy the points and this
+     * geometry shares points with given source geometry. It's
+     * obvious that any change to this geometry's point affect
+     * source geometry's points too.
+     *
+     * @see Clone
+     * @see ClonePoints
+     */
+    template<class TOtherPointType>
+    FiniteCellGeo2dBezier3& operator=( Geo2dBezier3<TOtherPointType> const & rOther )
+    {
+        Geo2dBezier3<TOtherPointType>::operator=( rOther );
         return *this;
     }
 
@@ -276,9 +336,11 @@ public:
      * Operations
      */
 
-    typename Geometry<TPointType>::Pointer Create( PointsArrayType const& ThisPoints ) const
+    virtual typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const
     {
-        return typename Geometry<TPointType>::Pointer( new FiniteCellGeo2dBezier3( ThisPoints ) );
+        typename BaseType::Pointer pBezierGeometry = boost::dynamic_pointer_cast<BaseType>(BaseType::Create( ThisPoints ));
+        FiniteCellGeo2dBezier3::Pointer pFiniteCellBezierGeometry = FiniteCellGeo2dBezier3::Pointer(new FiniteCellGeo2dBezier3(*pBezierGeometry));
+        return pFiniteCellBezierGeometry;
     }
 
     virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
@@ -370,7 +432,7 @@ public:
     {
         BaseType::mpBezierGeometryData = BezierUtils::CreateIntegrationRule<2, 2, 2>(ThisIntegrationMethod, BaseType::mOrder1, BaseType::mOrder2, integration_points);
 
-        BaseType::mpGeometryData = &(*BaseType::mpBezierGeometryData);
+        GeometryType::mpGeometryData = &(*BaseType::mpBezierGeometryData);
     }
 
 protected:

@@ -75,7 +75,7 @@ public:
     ///@{
 
     /// This FiniteCellGeometry type.
-    typedef FiniteCellGeometry<TBaseGeometryType> GeometryType;
+    typedef FiniteCellGeometry<TBaseGeometryType> FiniteCellGeometryType;
 
     /// Pointer definition of FiniteCellGeometry
     KRATOS_CLASS_POINTER_DEFINITION( FiniteCellGeometry );
@@ -90,8 +90,8 @@ public:
 
     /** original geometry type.
     */
-//    typedef typename BaseType::BaseType SuperType;
-    typedef Geometry<PointType> SuperType;
+//    typedef typename BaseType::BaseType GeometryType;
+    typedef Geometry<PointType> GeometryType;
 
     /** Array of counted pointers to point. This type used to hold
     geometry's points.
@@ -105,7 +105,7 @@ public:
     /** A Vector of counted pointers to Geometries. Used for
     returning edges of the geometry.
      */
-    typedef PointerVector<GeometryType> GeometriesArrayType;
+    typedef PointerVector<FiniteCellGeometryType> GeometriesArrayType;
 
     /** Type used for indexing in geometry class.std::size_t used for indexing
     point or integration point access methods and also all other
@@ -244,37 +244,6 @@ public:
 //        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
     }
 
-    /** Copy constructor.
-    Construct this geometry as a copy of given geometry.
-
-    @note This copy constructor don't copy the points and new
-    geometry shares points with given source geometry. It's
-    obvious that any change to this new geometry's point affect
-    source geometry's points too.
-    */
-    FiniteCellGeometry( const Geometry<PointType>& rOther )
-    : BaseType( rOther )
-    {
-//        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
-    }
-
-    /** Copy constructor from a geometry with other point type.
-    Construct this geometry as a copy of given geometry which
-    has different type of points. The given goemetry's
-    TOtherPointType* must be implicity convertible to this
-    geometry PointType.
-
-    @note This copy constructor don't copy the points and new
-    geometry shares points with given source geometry. It's
-    obvious that any change to this new geometry's point affect
-    source geometry's points too.
-    */
-    template<class TOtherPointType> FiniteCellGeometry( FiniteCellGeometry<TOtherPointType> const & rOther )
-        : BaseType( rOther.begin(), rOther.end() )
-    {
-//        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
-    }
-
     /// Destructor. Do nothing!!!
     virtual ~FiniteCellGeometry() {}
 
@@ -295,25 +264,6 @@ public:
     FiniteCellGeometry& operator=( const FiniteCellGeometry& rOther )
     {
         BaseType::operator=( rOther );
-
-        return *this;
-    }
-
-    /** Assignment operator for geometries with different point type.
-
-    @note This operator don't copy the points and this
-    geometry shares points with given source geometry. It's
-    obvious that any change to this geometry's point affect
-    source geometry's points too.
-
-    @see Clone
-    @see ClonePoints
-    */
-    template<class TOtherPointType>
-    FiniteCellGeometry& operator=( FiniteCellGeometry<TOtherPointType> const & rOther )
-    {
-        BaseType::operator=( rOther );
-
         return *this;
     }
 
@@ -322,9 +272,9 @@ public:
     ///@{
 
 
-    typename SuperType::Pointer Create( PointsArrayType const& ThisPoints ) const
+    virtual typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const
     {
-        return typename SuperType::Pointer( new GeometryType( ThisPoints ) );
+        return typename GeometryType::Pointer( new FiniteCellGeometryType( ThisPoints ) );
     }
 
 
@@ -352,7 +302,7 @@ public:
         // copy the shape function local gradients data
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
 //        shape_functions_local_gradients[ThisIntegrationMethod] = BaseType::ShapeFunctionsLocalGradients(ThisIntegrationMethod); // I do not know why this does not compile. I skip this for now.
-        shape_functions_local_gradients[ThisIntegrationMethod] = SuperType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
+        shape_functions_local_gradients[ThisIntegrationMethod] = GeometryType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
 
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
