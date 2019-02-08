@@ -253,8 +253,7 @@ class FiniteCellSimulator:
             if   subcell_fit_mode == "subcell fit gauss":
                 self.forest[elem.Id].ConstructSubCellsBasedOnGaussQuadrature(cut_cell_quadrature_method)
             elif subcell_fit_mode == "subcell fit equal-dist":
-                cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
-                self.forest[elem.Id].ConstructSubCellsBasedOnEqualDistribution(cut_cell_quadrature_order)
+                self.forest[elem.Id].ConstructSubCellsBasedOnEqualDistribution(cut_cell_quadrature_method)
             elif subcell_fit_mode == "subcell fit two-layer": # for backward compatibility
                 self.forest[elem.Id].ConstructSubCellsBasedOnGaussQuadrature(cut_cell_quadrature_method)
             elif subcell_fit_mode == "subcell nonfit": # for backward compatibility
@@ -373,6 +372,7 @@ class FiniteCellSimulator:
         fit_util = MomentFittingUtility()
         fit_space_dim = self.params["fitting_space_dimension"]
         fit_degree = self.params["fitting_function_degree"]
+        fit_mode = self.params["fit_mode"]
         fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
         print("list of fitting functions for fit_degree = " + str(fit_degree) + ":")
         for func in fit_funcs:
@@ -389,10 +389,14 @@ class FiniteCellSimulator:
         action_on_small_cut_cell = self.params["action_on_small_cut_cell"]
         fict_weight = self.params["fictitious_weight"] if ("fictitious_weight" in self.params) else 0.0
 
-        subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
-        small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
-        save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
+        if fit_mode == 'serial':
+            subcell_fit_func_callback = getattr(fit_util, "FitQuadratureSubCell")
+            small_subcell_fit_func_callback = getattr(fit_util, "FitQuadratureSubCellUnique")
+        elif fit_mode == "multithreaded":
+            subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
+            small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
         generate_physical_integration_points_callback = getattr(aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
+        save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
@@ -541,7 +545,11 @@ class FiniteCellSimulator:
                 print("\nReplace completed, " + str(cnt) + " quadtree subcell will be filled with quadtree quadrature")
 
         start_fit_t = time_module.time()
-        subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+        if fit_mode == 'serial':
+            for qs in proper_cut_qs_elems:
+                subcell_fit_func_callback(qs, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+        elif fit_mode == 'multithreaded':
+            subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
         end_fit_t = time_module.time()
         print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t - start_fit_t) + " s")
 #        sys.exit(0)
@@ -897,7 +905,7 @@ class FiniteCellSimulator:
                     fict_prop = self.params["fictitious_prop"]
             for elem in bulk_elements:
                 if elem.Id in cut_elems:
-#                    print("at cut element " + str(elem.Id))
+                    print("at cut element " + str(elem.Id))
                     if len(cut_cell_quadrature[elem.Id]) == 0: # if cut cell quadrature is empty then skip
                         elem.SetValue(ACTIVATION_LEVEL, -1)
                         elem.SetValue(IS_INACTIVE, True)
@@ -924,6 +932,8 @@ class FiniteCellSimulator:
                             physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                             physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
     #                        physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
+                        print("len(physical_constitutive_laws)", len(physical_constitutive_laws))
+                        print("len(new_sub_elems)", len(new_sub_elems))
 
                         if extrapolation_mode == "extrapolated element" or extrapolation_mode == "extrapolated constant stress element":
                             physical_integration_points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_LOCAL, model.model_part.ProcessInfo)
