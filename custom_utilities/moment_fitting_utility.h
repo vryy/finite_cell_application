@@ -284,17 +284,26 @@ public:
             const double& small_weight) const
     {
         if(echo_level > 0)
-            std::cout << "--------------------------------start fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+        {
+            std::cout << "---------MomentFittingUtility::" << __FUNCTION__ << "--------------start sub-cell fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+            std::cout << "-----------element type: " << typeid(*(p_tree->pGetElement())).name() << std::endl;
+            std::cout << "-----------geometry type: " << typeid(p_tree->pGetElement()->GetGeometry()).name() << std::endl;
+        }
 
         /* firstly get the physical integration point */
         // note that p_tree->GeneratePhysicalIntegrationPoints() must be called before to generate integration points data
         const std::vector<std::size_t>& subcell_index = p_tree->SubCellIndices();
         const GeometryType::IntegrationPointsArrayType& physical_integration_points = p_tree->GetPhysicalIntegrationPoints();
 
-//            std::cout << "list of physical integration points for element " << p_tree->pGetElement()->Id() << std::endl;
-//            for(std::size_t i = 0; i < physical_integration_points.size(); ++i)
-//                std::cout << " " << physical_integration_points[i] << std::endl;
-//            std::cout << std::endl;
+        if(echo_level > 0)
+            std::cout << "-----------number of sub-cells carrying the physical integtation points: " << physical_integration_points.size() << std::endl;
+
+        if(echo_level > 1)
+        {
+            std::cout << "list of " << physical_integration_points.size() << " physical integration points for element " << p_tree->pGetElement()->Id() << std::endl;
+            for(std::size_t i = 0; i < physical_integration_points.size(); ++i)
+               std::cout << "  " << i << ": " << physical_integration_points[i] << std::endl;
+        }
 
         /* secondly assign the physical integration points to the element */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod = p_tree->GetRepresentativeIntegrationMethod();
@@ -315,7 +324,7 @@ public:
         p_tree->pGetElement()->SetValue(SUBCELL_DOMAIN_SIZES, DomainSizes);
 
         if(echo_level > 0)
-            std::cout << "--------------------------------end fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+            std::cout << "--------------------------------end sub-cell fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
     }
 
 
