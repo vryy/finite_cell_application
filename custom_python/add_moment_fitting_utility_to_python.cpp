@@ -54,6 +54,16 @@ void MomentFittingUtility_FitQuadrature(MomentFittingUtility& rDummy,
 
     int fit_quadrature_order = QuadratureUtility::GetQuadratureOrder(fit_quadrature_method);
 
+    if(echo_level > -1)
+    {
+        std::cout << "#############prepare moment-fitting for element " << p_elem->Id()
+                  << " of type " << typeid(*p_elem).name()
+                  << ", geometry type " << typeid(p_elem->GetGeometry()).name()
+                  << std::endl;
+        KRATOS_WATCH(fit_quadrature_type)
+        KRATOS_WATCH(fit_quadrature_order)
+    }
+
     GeometryData::IntegrationMethod ElementalIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
 
@@ -283,6 +293,7 @@ void FiniteCellApplication_AddMomentFittingUtilityToPython()
     .def("MultithreadedFitQuadrature", &MomentFittingUtility_MultithreadedFitQuadrature<FunctionIntegrator>)
     .def("FitQuadratureSubCell", &MomentFittingutility_FitQuadratureSubCell<BaseMomentFittedQuadTreeSubCell, FunctionR3R1>)
     .def("MultithreadedFitQuadratureSubCell", &MomentFittingutility_MultithreadedFitQuadratureSubCell<BaseMomentFittedQuadTreeSubCell, FunctionR3R1>)
+    .def("FitQuadratureSubCellUnique", &MomentFittingUtility_FitQuadrature<FunctionIntegrator>)
     .def("MultithreadedFitQuadratureSubCellUnique", &MomentFittingUtility_MultithreadedFitQuadrature<FunctionIntegrator>)
     ;
 

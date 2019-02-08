@@ -86,6 +86,12 @@ boost::python::list QuadTree_AddToModelPart_WithLevel(TTreeType& rDummy,
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
         rDummy.Get().template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
     }
+    else
+    {
+        std::stringstream ss;
+        ss << sample_entity_name << " is not registerred to the database";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
 
     boost::python::list list;
     list.append(lastNodeId);
@@ -144,6 +150,12 @@ boost::python::list QuadTreeSubCell_AddToModelPart(TTreeType& rDummy,
             if(!TShallow)
                 rDummy.Get(i).template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id+1);
         }
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << sample_entity_name << " is not registerred to the Kratos database";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
 
     boost::python::list list;

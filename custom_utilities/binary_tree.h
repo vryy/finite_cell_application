@@ -402,6 +402,13 @@ public:
 
     void PyAddToModelPart(ModelPart& r_model_part, const std::string sample_element_name) const
     {
+        if (!KratosComponents<Element>::Has(sample_element_name))
+        {
+            std::stringstream ss;
+            ss << sample_element_name << " is not registerred to the Kratos database";
+            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        }
+
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
         this->AddToModelPart(r_model_part, r_clone_element, 1);

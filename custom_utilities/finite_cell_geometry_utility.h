@@ -193,9 +193,14 @@ public:
                 FiniteCellGeometryType& r_fc_geom = dynamic_cast<FiniteCellGeometryType&>(r_geom);
                 r_fc_geom.AssignGeometryData(ElementalIntegrationMethod, rWeights);
             }
+            #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+            // here we don't support the Bezier geometry because they requires the full integration point definition -- hbui (it can be explained better but i can't recall for now'
+            #endif
             else
             {
-                KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", r_geom.GetGeometryType())
+                std::stringstream ss;
+                ss << "The geometry " << typeid(r_geom).name() << " of type " << r_geom.GetGeometryType() << " is not supported";
+                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
             }
         }
         catch(const std::bad_cast& e)
@@ -294,7 +299,9 @@ public:
             #endif
             else
             {
-                KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", r_geom.GetGeometryType())
+                std::stringstream ss;
+                ss << "The geometry " << typeid(r_geom).name() << " of type " << r_geom.GetGeometryType() << " is not supported";
+                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
             }
         }
         catch(const std::bad_cast& e)
