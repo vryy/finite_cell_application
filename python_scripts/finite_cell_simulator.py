@@ -212,7 +212,10 @@ def CreateQuadTreeSubCell(element, nsampling):
 class FiniteCellSimulator:
 
     def __init__(self, params = None):
-        self.params = params
+        if params == None:
+            self.params = {}
+        else:
+            self.params = params
 
         if 'enable_ghost_penalty' not in self.params: # turn off ghost penalty by default
             self.params['enable_ghost_penalty'] = False
@@ -234,7 +237,7 @@ class FiniteCellSimulator:
         self.forest = {}
 
     ###TREES & FOREST CREATION#############
-    def CleanForest():
+    def CleanForest(self):
         self.forest = {}
 
     def CreateForest(self, elements, nsampling = 1):
@@ -392,7 +395,7 @@ class FiniteCellSimulator:
         if fit_mode == 'serial':
             subcell_fit_func_callback = getattr(fit_util, "FitQuadratureSubCell")
             small_subcell_fit_func_callback = getattr(fit_util, "FitQuadratureSubCellUnique")
-        elif fit_mode == "multithreaded":
+        elif fit_mode == "multithread":
             subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
             small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
         generate_physical_integration_points_callback = getattr(aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
@@ -548,7 +551,7 @@ class FiniteCellSimulator:
         if fit_mode == 'serial':
             for qs in proper_cut_qs_elems:
                 subcell_fit_func_callback(qs, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
-        elif fit_mode == 'multithreaded':
+        elif fit_mode == 'multithread':
             subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
         end_fit_t = time_module.time()
         print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t - start_fit_t) + " s")
