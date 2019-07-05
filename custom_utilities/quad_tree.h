@@ -294,6 +294,12 @@ public:
         return this->Get().ConstructCustomQuadrature(quadrature_type, integration_order);
     }
 
+    /// Get the number of cells under the tree node
+    std::size_t NumberOfCells() const
+    {
+        return mpTreeNode->NumberOfCells();
+    }
+
     /// Compute the domain size covered by this quadtree
     double DomainSize(const BRep& r_brep, const int& integration_method) const
     {
@@ -371,6 +377,11 @@ public:
 
         // firstly create an array of integration points of sub-trees
         mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+        // KRATOS_WATCH(typeid(*mpThisGeometry).name())
+        // KRATOS_WATCH(typeid(*mpTreeNode).name())
+        // KRATOS_WATCH(mpThisGeometry->GetGeometryType())
+        // KRATOS_WATCH(integration_method)
+        // KRATOS_WATCH(tmp_integration_points.size())
 
         // fill the integration_point container
         CoordinatesArrayType GlobalCoords;
@@ -391,7 +402,14 @@ public:
             {
                 GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
                 if(r_brep.IsInside(GlobalCoords))
+                {
                     integration_points.push_back(tmp_integration_points[point]);
+                    // std::cout << "point " << point << " is inside, global coords: " << GlobalCoords << std::endl;
+                }
+                else
+                {
+                    // std::cout << "point " << point << " is outside, global coords: " << GlobalCoords << std::endl;
+                }
             }
         }
 

@@ -23,7 +23,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
 
 
 // Project includes
@@ -113,10 +112,19 @@ public:
     typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     /// Default constructor
-    QuadTreeNode() {}
+    QuadTreeNode() : mLevel(1) {}
+
+    /// Constructor with level
+    QuadTreeNode(const std::size_t& Level) : mLevel(Level) {}
 
     /// Destructor
     virtual ~QuadTreeNode() {}
+
+    /// Get the current level of the tree node
+    std::size_t Level() const
+    {
+        return mLevel;
+    }
 
     /// Return the number of children.
     std::size_t Size() const
@@ -139,6 +147,22 @@ public:
         mpChildren.clear();
     }
 
+    /// Get the number of cells associated with this node
+    std::size_t NumberOfCells() const
+    {
+        if(this->IsLeaf())
+        {
+            return 1;
+        }
+        else
+        {
+            std::size_t num_cells = 0;
+            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+                num_cells += mpChildren[i]->NumberOfCells();
+            return num_cells;
+        }
+    }
+
     /*****************************************************************/
     /******* CONSTRUCTION ********************************************/
     /*****************************************************************/
@@ -158,9 +182,14 @@ public:
             std::vector<PointType> SamplingPoints;
             this->CreateSamplingPoints(SamplingPoints, *pParentGeometry, nsampling);
 
+            // for (int i = 0; i < SamplingPoints.size(); ++i)
+            //     std::cout << "sampling point " << i << ": " << SamplingPoints[i]
+            //               << ", status: " << r_brep.IsInside(SamplingPoints[i]) << std::endl;
+
             int stat = r_brep.CutStatus(SamplingPoints);
             if(stat == BRep::_CUT)
             {
+                // std::cout << "cell lv " << Level() << " is refined" << std::endl;
                 this->Refine();
             }
         }
@@ -634,6 +663,10 @@ protected:
 
     std::vector<typename QuadTreeNode::Pointer> mpChildren;
 
+private:
+
+    std::size_t mLevel;
+
 }; // class QuadTreeNode
 
 /// Specialization for QuadTreeNode_AddToModelPart_Helper
@@ -810,16 +843,26 @@ public:
     : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
     {}
 
+    QuadTreeNodeQ4(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
+    {}
+
     virtual ~QuadTreeNodeQ4() {}
+
+    const double& Xmin() const {return mXmin;}
+    const double& Xmax() const {return mXmax;}
+    const double& Ymin() const {return mYmin;}
+    const double& Ymax() const {return mYmax;}
 
     virtual void Refine()
     {
         if(this->IsLeaf())
         {
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax)));
+            std::size_t next_level = this->Level() + 1;
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax)));
         }
         else
         {
@@ -1139,7 +1182,28 @@ public:
     : BaseType(Xmin, Xmax, Ymin, Ymax)
     {}
 
+    QuadTreeNodeBezier2D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    : BaseType(Level, Xmin, Xmax, Ymin, Ymax)
+    {}
+
     virtual ~QuadTreeNodeBezier2D() {}
+
+    virtual void Refine()
+    {
+        if(this->IsLeaf())
+        {
+            std::size_t next_level = this->Level() + 1;
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax())));
+        }
+        else
+        {
+            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+                BaseType::mpChildren[i]->Refine();
+        }
+    }
 
     virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
     {
@@ -1227,20 +1291,32 @@ public:
     : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
     {}
 
+    QuadTreeNodeH8(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
+    {}
+
     virtual ~QuadTreeNodeH8() {}
+
+    const double& Xmin() const {return mXmin;}
+    const double& Xmax() const {return mXmax;}
+    const double& Ymin() const {return mYmin;}
+    const double& Ymax() const {return mYmax;}
+    const double& Zmin() const {return mZmin;}
+    const double& Zmax() const {return mZmax;}
 
     virtual void Refine()
     {
         if(this->IsLeaf())
         {
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+            std::size_t next_level = this->Level() + 1;
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
         }
         else
         {
@@ -1791,7 +1867,32 @@ public:
     : BaseType(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
     {}
 
+    QuadTreeNodeBezier3D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    : BaseType(Level, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
+    {}
+
     virtual ~QuadTreeNodeBezier3D() {}
+
+    virtual void Refine()
+    {
+        if(this->IsLeaf())
+        {
+            std::size_t next_level = this->Level() + 1;
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
+        }
+        else
+        {
+            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+                BaseType::mpChildren[i]->Refine();
+        }
+    }
 
     virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
     {
@@ -1913,16 +2014,21 @@ public:
     : BaseType(), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
     {}
 
+    QuadTreeNodeT3(const std::size_t& Level, const double& X0, const double& Y0, const double& X1, const double& Y1, const double& X2, const double& Y2)
+    : BaseType(Level), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
+    {}
+
     virtual ~QuadTreeNodeT3() {}
 
     virtual void Refine()
     {
         if(this->IsLeaf())
         {
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(mX0, mY0, 0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX0+mX2), 0.5*(mY0+mY2))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(0.5*(mX0+mX1), 0.5*(mY0+mY1), mX1, mY1, 0.5*(mX1+mX2), 0.5*(mY1+mY2))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(0.5*(mX1+mX2), 0.5*(mY1+mY2), mX2, mY2, 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX1+mX2), 0.5*(mY1+mY2), 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
+            std::size_t next_level = this->Level() + 1;
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, mX0, mY0, 0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX0+mX2), 0.5*(mY0+mY2))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX0+mX1), 0.5*(mY0+mY1), mX1, mY1, 0.5*(mX1+mX2), 0.5*(mY1+mY2))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX1+mX2), 0.5*(mY1+mY2), mX2, mY2, 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX1+mX2), 0.5*(mY1+mY2), 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
         }
         else
         {
@@ -2130,6 +2236,17 @@ public:
         mX3(X3), mY3(Y3), mZ3(Z3)
     {}
 
+    QuadTreeNodeT4(const std::size_t& Level,
+                   const double& X0, const double& Y0, const double& Z0,
+                   const double& X1, const double& Y1, const double& Z1,
+                   const double& X2, const double& Y2, const double& Z2,
+                   const double& X3, const double& Y3, const double& Z3)
+    : BaseType(Level), mX0(X0), mY0(Y0), mZ0(Z0),
+        mX1(X1), mY1(Y1), mZ1(Z1),
+        mX2(X2), mY2(Y2), mZ2(Z2),
+        mX3(X3), mY3(Y3), mZ3(Z3)
+    {}
+
     virtual ~QuadTreeNodeT4() {}
 
     /// REF: https://www.semanticscholar.org/paper/Octasection-based-Refinement-of-Finite-Element-Endres-Krysl/7fa050663d1b1627413059943b9143f92b98ef4e/figure/4
@@ -2144,20 +2261,22 @@ public:
             double X8 = 0.5*(mX1 + mX3), Y8 = 0.5*(mY1 + mY3), Z8 = 0.5*(mZ1 + mZ3);
             double X9 = 0.5*(mX2 + mX3), Y9 = 0.5*(mY2 + mY3), Z9 = 0.5*(mZ2 + mZ3);
 
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(mX0, mY0, mZ0, X4, Y4, Z4, X6, Y6, Z6, X7, Y7, Z7))); // 1
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X4, Y4, Z4, mX1, mY1, mZ1, X5, Y5, Z5, X8, Y8, Z8))); // 2
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X6, Y6, Z6, X5, Y5, Z5, mX2, mY2, mZ2, X9, Y9, Z9))); // 3
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X7, Y7, Z7, X8, Y8, Z8, X9, Y9, Z9, mX3, mY3, mZ3))); // 4
+            std::size_t next_level = this->Level() + 1;
+
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, mX0, mY0, mZ0, X4, Y4, Z4, X6, Y6, Z6, X7, Y7, Z7))); // 1
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X4, Y4, Z4, mX1, mY1, mZ1, X5, Y5, Z5, X8, Y8, Z8))); // 2
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X6, Y6, Z6, X5, Y5, Z5, mX2, mY2, mZ2, X9, Y9, Z9))); // 3
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X7, Y7, Z7, X8, Y8, Z8, X9, Y9, Z9, mX3, mY3, mZ3))); // 4
             // // figure 3
             // BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X4, Y4, Z4, X7, Y7, Z7, X8, Y8, Z8, X6, Y6, Z6))); // 5
             // BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X4, Y4, Z4, X5, Y5, Z5, X6, Y6, Z6, X8, Y8, Z8))); // 6
             // BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X9, Y9, Z9, X6, Y6, Z6, X5, Y5, Z5, X8, Y8, Z8))); // 7
             // BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X9, Y9, Z9, X8, Y8, Z8, X7, Y7, Z7, X6, Y6, Z6))); // 8
             // figure 4
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X8, Y8, Z8, X7, Y7, Z7, X9, Y9, Z9, X4, Y4, Z4))); // 5
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X8, Y8, Z8, X5, Y5, Z5, X4, Y4, Z4, X9, Y9, Z9))); // 6
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X6, Y6, Z6, X4, Y4, Z4, X5, Y5, Z5, X9, Y9, Z9))); // 7
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(X9, Y9, Z9, X6, Y6, Z6, X4, Y4, Z4, X7, Y7, Z7))); // 8
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X8, Y8, Z8, X7, Y7, Z7, X9, Y9, Z9, X4, Y4, Z4))); // 5
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X8, Y8, Z8, X5, Y5, Z5, X4, Y4, Z4, X9, Y9, Z9))); // 6
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X6, Y6, Z6, X4, Y4, Z4, X5, Y5, Z5, X9, Y9, Z9))); // 7
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT4<TFrameType>(next_level, X9, Y9, Z9, X6, Y6, Z6, X4, Y4, Z4, X7, Y7, Z7))); // 8
         }
         else
         {
