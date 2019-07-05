@@ -365,6 +365,7 @@ class FiniteCellSimulator:
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
         quad_util = QuadratureUtility()
         aux_util = FiniteCellAuxilliaryUtility()
+        start_fit_t0 = time_module.time()
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
@@ -547,14 +548,14 @@ class FiniteCellSimulator:
             elif (action_on_small_cut_cell == 'replace by subcell quadtree') or (action_on_small_cut_cell == 'replace by quadtree'):
                 print("\nReplace completed, " + str(cnt) + " quadtree subcell will be filled with quadtree quadrature")
 
-        start_fit_t = time_module.time()
+        start_fit_t1 = time_module.time()
         if fit_mode == 'serial':
             for qs in proper_cut_qs_elems:
                 subcell_fit_func_callback(qs, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
         elif fit_mode == 'multithread':
             subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
-        end_fit_t = time_module.time()
-        print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t - start_fit_t) + " s")
+        end_fit_t1 = time_module.time()
+        print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t1 - start_fit_t1) + " s")
 #        sys.exit(0)
         quad_filename = self.params["quad_filename"]
         quad_filetype = self.params["quad_filetype"]
@@ -666,6 +667,8 @@ class FiniteCellSimulator:
             save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, small_qs_elems, accuracy)
             print("generate moment-fit quadrature for small cell completed")
 
+        end_fit_t0 = time_module.time()
+        print("Total fitting time: " + str(end_fit_t0 - start_fit_t0))
         fid = open(quad_filename, "a")
         fid.write("\ndef GetParameter():\n")
         fid.write("    params = " + str(self.params) + "\n")
@@ -701,7 +704,7 @@ class FiniteCellSimulator:
             ###########################################
             self.CreateForest(bulk_elements, nsampling)
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
-            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+            cut_cell_quadrature_order = 1 #quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             total_add_quadrature_pnts = 0
             self.proper_cut_elems = ElementsArray()
             cut_elems = []
@@ -713,6 +716,8 @@ class FiniteCellSimulator:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
                     np = qt.ConstructQuadrature(self.brep, cut_cell_quadrature_method, small_weight)
+                    print("cut element " + str(elem.Id) + " has " + str(np) + " quadrature points")
+                    print("cut element " + str(elem.Id) + " has " + str(qt.NumberOfCells()) + " leaf cells")
                     total_add_quadrature_pnts = total_add_quadrature_pnts + np
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize()
@@ -784,7 +789,7 @@ class FiniteCellSimulator:
             # end if self.quadrature_method == "quadtree":
         elif self.quadrature_method == "quadtree preload":
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
-            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+            cut_cell_quadrature_order = 1 #quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             quadrature_data = self.params["quadrature_data"]
             cut_elems = quadrature_data.GetCutElements()
             exclude_elems = quadrature_data.GetExcludeElements()
@@ -826,7 +831,7 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             #end elif self.quadrature_method == "quadtree":
         elif self.quadrature_method == "moment-fit quadtree":
-            cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
+            cut_cell_quadrature_order = 1 #self.params["cut_cell_quadrature_order"]
             quadrature_data = self.params["quadrature_data"]
             ###########################################
             ##OBTAIN THE PRE-CALCULATED QUADRATURE FROM MOMENT FIT
@@ -865,8 +870,6 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             # end elif self.quadrature_method == "moment-fit quadtree":
         elif self.quadrature_method == "moment-fit subcell":
-            cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
-            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             quadrature_data = self.params["quadrature_data"]
             extrapolation_mode = self.params["extrapolation_mode"]
             if extrapolation_mode == "extrapolated constant stress element":
@@ -906,9 +909,11 @@ class FiniteCellSimulator:
                     fict_prop = "same as parent element"
                 else:
                     fict_prop = self.params["fictitious_prop"]
+            number_of_physical_integration_points = 0
             for elem in bulk_elements:
                 if elem.Id in cut_elems:
                     print("at cut element " + str(elem.Id))
+                    cut_cell_quadrature_order = self.forest[elem.Id].GetRepresentativeIntegrationOrder()
                     if len(cut_cell_quadrature[elem.Id]) == 0: # if cut cell quadrature is empty then skip
                         elem.SetValue(ACTIVATION_LEVEL, -1)
                         elem.SetValue(IS_INACTIVE, True)
@@ -937,6 +942,7 @@ class FiniteCellSimulator:
     #                        physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
                         print("len(physical_constitutive_laws)", len(physical_constitutive_laws))
                         print("len(new_sub_elems)", len(new_sub_elems))
+                        number_of_physical_integration_points = number_of_physical_integration_points + len(physical_constitutive_laws)
 
                         if extrapolation_mode == "extrapolated element" or extrapolation_mode == "extrapolated constant stress element":
                             physical_integration_points = elem.GetValuesOnIntegrationPoints(INTEGRATION_POINT_LOCAL, model.model_part.ProcessInfo)
@@ -962,6 +968,7 @@ class FiniteCellSimulator:
 
                     if self.params["add_fictitious_element"]:
                         if len(cut_cell_fictitious_quadrature[elem.Id]) > 0:
+                            cut_cell_quadrature_order = 1
                             if fict_prop == "same as parent element": # this uses the material proper from the element, even it's nonlinear
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
                                 self.mpu.SetMaterialProperties(model.model_part, fict_elem, mat_type)
@@ -985,6 +992,7 @@ class FiniteCellSimulator:
                     print("element " + str(elem.Id) + " is outside. It will be excluded")
 
                 elif elem.Id in quadtree_elems:
+                    cut_cell_quadrature_order = 1
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, quadtree_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize()
@@ -998,6 +1006,7 @@ class FiniteCellSimulator:
                 else:
                     self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
             print("obtain moment-fit subcell quadrature successfully")
+            print("number of physical integration points: " + str(number_of_physical_integration_points))
             if self.params["export_physical_integration_point"]:
                 prop_id = self.params["physical_integration_point_prop_id"]
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
@@ -1076,12 +1085,12 @@ class FiniteCellSimulator:
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
                 W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
 #                print("number of integration point on element " + str(element.Id) + ":" + str(len(Q)))
-#                if element.Id == 6:
-#                    print("at element ", element.Id)
-#                    print("u:", u)
-#                    print("Q:", Q)
-#                    print("W:", W)
-#                    print("J0:", J0)
+                # if element.Id == 6:
+                #     print("at element ", element.Id)
+                #     print("u:", u)
+                #     print("Q:", Q)
+                #     print("W:", W)
+                #     print("J0:", J0)
                 for i in range(0, len(u)):
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
                     nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
@@ -1096,7 +1105,7 @@ class FiniteCellSimulator:
         else:
             return math.sqrt(abs(nom / denom))
 
-    def compute_L2_error_mfsc(self, elements, all_subcell_elems, process_info, solution, P):
+    def compute_L2_error_mfsc(self, elements, all_subcell_elems, fict_elems, process_info, solution, P):
         print("!!!compute_L2_error_mfsc:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
@@ -1120,6 +1129,16 @@ class FiniteCellSimulator:
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
                     nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0]# * J0[i][0]
                     denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0]# * J0[i][0]
+        for element in fict_elems:
+            if element.Is(ACTIVE):
+                u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                for i in range(0, len(u)):
+                    ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
+                    nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
         print("nom:", nom)
         print("denom:", denom)
         if denom == 0.0:
@@ -1155,7 +1174,7 @@ class FiniteCellSimulator:
         else:
             return math.sqrt(abs(nom / denom))
 
-    def compute_H1_error_mfsc(self, elements, all_subcell_elems, process_info, solution, P):
+    def compute_H1_error_mfsc(self, elements, all_subcell_elems, fict_elems, process_info, solution, P):
         print("!!!compute_H1_error_mfsc:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
         denom = 0.0
@@ -1179,6 +1198,16 @@ class FiniteCellSimulator:
                     ana_o = solution.get_stress_3d(P, Q[i][0], Q[i][1], Q[i][2])
                     nom = nom + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0]# * J0[i][0]
                     denom = denom + (pow(ana_o[0], 2) + pow(ana_o[1], 2) + pow(ana_o[2], 2) + 2.0*(pow(ana_o[3], 2) + pow(ana_o[4], 2) + pow(ana_o[5], 2))) * W[i][0]# * J0[i][0]
+        for element in fict_elems:
+            if element.Is(ACTIVE):
+                o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, process_info)
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                for i in range(0, len(o)):
+                    ana_o = solution.get_stress_3d(P, Q[i][0], Q[i][1], Q[i][2])
+                    nom = nom + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
+                    denom = denom + (pow(ana_o[0], 2) + pow(ana_o[1], 2) + pow(ana_o[2], 2) + 2.0*(pow(ana_o[3], 2) + pow(ana_o[4], 2) + pow(ana_o[5], 2))) * W[i][0] * J0[i][0]
         print("nom:", nom)
         print("denom:", denom)
         if denom == 0.0:

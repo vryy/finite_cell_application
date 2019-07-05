@@ -87,16 +87,18 @@ public:
     }
 
     /// Get the integration order of fitting integration points
-    const int& GetRepresentativeIntegrationOrder() const
+    int GetRepresentativeIntegrationOrder() const
     {
-        return mRepresentativeIntegrationOrder;
+        // return mRepresentativeIntegrationOrder;
+        return 1;
     }
 
 
     /// Get the integration method of fitting integration points
     GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
     {
-        return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
+        // return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
+        return GeometryData::GI_GAUSS_1;
     }
 
 
