@@ -305,12 +305,12 @@ class FiniteCellSimulator:
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
                 stat = self.brep.CutStatusBySampling(elem, nsampling)
-                if stat == self.brep._CUT:
+                if stat == BRep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
                     fit_util.FitQuadrature(elem, fit_funcs, self.brep, qt, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
                     cut_elems.append(elem)
-                elif stat == self.brep._OUT:
+                elif stat == BRep._OUT:
                     exclude_elems.append(elem)
                 if echo_level == -2:
                     if cnt > 0.01*num_elems:
@@ -327,10 +327,10 @@ class FiniteCellSimulator:
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
                 stat = self.brep.CutStatusBySampling(elem, nsampling)
-                if stat == self.brep._CUT:
+                if stat == BRep._CUT:
                     cut_elems.append(elem)
                     integrators.append(qt)
-                elif stat == self.brep._OUT:
+                elif stat == BRep._OUT:
                     exclude_elems.append(elem)
             aux_util = FiniteCellAuxilliaryUtility()
             for i in range(0, qt_depth):
@@ -406,9 +406,9 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == self.brep._CUT:
+            if stat == BRep._CUT:
                 cut_qs_elems.append(qs)
-            elif stat == self.brep._OUT:
+            elif stat == BRep._OUT:
                 exclude_qs_elems.append(qs)
         aux_util = FiniteCellAuxilliaryUtility()
         for i in range(0, qt_depth):
@@ -422,7 +422,7 @@ class FiniteCellSimulator:
                 for i in range(0, qs.NumberOfSubCells()):
                     qt = qs.CreateQuadTree(i)
                     stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
-                    if stat == self.brep._CUT:
+                    if stat == BRep._CUT:
                         cnt = qt_depth
                         found = False
                         while cnt < max_qt_depth:
@@ -712,7 +712,8 @@ class FiniteCellSimulator:
             for elem in bulk_elements:
                 qt = self.forest[elem.Id]
                 stat = self.brep.CutStatusBySampling(elem, nsampling)
-                if stat == self.brep._CUT:
+                elem.SetValue(CUT_STATUS, stat)
+                if stat == BRep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
                     np = qt.ConstructQuadrature(self.brep, cut_cell_quadrature_method, small_weight)
@@ -723,7 +724,7 @@ class FiniteCellSimulator:
                     elem.Initialize()
                     aux_util.AddElement(self.proper_cut_elems, elem)
                     cut_elems.append(elem)
-                elif stat == self.brep._OUT:
+                elif stat == BRep._OUT:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
                     elem.Set(ACTIVE, False)
@@ -799,17 +800,21 @@ class FiniteCellSimulator:
             ###########################################
             total_add_quadrature_pnts = 0
             self.proper_cut_elems = ElementsArray()
+            for elem in model.model_part.Elements:
+                elem.SetValue(CUT_STATUS, BRep._IN)
             for elem_id in cut_elems:
                 elem = model.model_part.Elements[elem_id]
                 quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem_id])
                 total_add_quadrature_pnts = total_add_quadrature_pnts + len(cut_cell_quadrature[elem_id])
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                elem.SetValue(CUT_STATUS, BRep._CUT)
                 elem.Initialize()
                 aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
                 elem.SetValue(IS_INACTIVE, True)
+                elem.SetValue(CUT_STATUS, BRep._OUT)
                 elem.Set(ACTIVE, False)
             print("obtain quadtree quadrature successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             for elem_id in cut_elems:
@@ -840,16 +845,20 @@ class FiniteCellSimulator:
             exclude_elems = quadrature_data.GetExcludeElements()
             cut_cell_quadrature = quadrature_data.GetCutCellQuadrature()
             self.proper_cut_elems = ElementsArray()
+            for elem in model.model_part.Elements:
+                elem.SetValue(CUT_STATUS, BRep._IN)
             for elem_id in cut_elems:
                 elem = model.model_part.Elements[elem_id]
                 quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem_id])
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                elem.SetValue(CUT_STATUS, BRep._CUT)
                 elem.Initialize()
                 aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
                 elem.SetValue(IS_INACTIVE, True)
+                elem.SetValue(CUT_STATUS, BRep._OUT)
                 elem.Set(ACTIVE, False)
             print("obtain moment-fit quadrature successfully")
             for elem in bulk_elements:
@@ -914,6 +923,7 @@ class FiniteCellSimulator:
                 if elem.Id in cut_elems:
                     print("at cut element " + str(elem.Id))
                     cut_cell_quadrature_order = self.forest[elem.Id].GetRepresentativeIntegrationOrder()
+                    elem.SetValue(CUT_STATUS, BRep._CUT)
                     if len(cut_cell_quadrature[elem.Id]) == 0: # if cut cell quadrature is empty then skip
                         elem.SetValue(ACTIVATION_LEVEL, -1)
                         elem.SetValue(IS_INACTIVE, True)
@@ -931,6 +941,11 @@ class FiniteCellSimulator:
                         lastCondId = output[1]
                         new_sub_elems = output[2] # !!!IMPORTANT!!! here it's assumed that the sub-elements are Extrapolated ones
 
+                        for sub_elem in new_sub_elems:
+                            sub_elem.SetValue(IS_INACTIVE, False)
+                            sub_elem.Set(ACTIVE, True)
+                            sub_elem.SetValue(PARENT_ELEMENT_ID, elem.Id)
+
                         self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
                         elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                         elem.Initialize()
@@ -939,7 +954,7 @@ class FiniteCellSimulator:
                         for i in range(0, len(physical_constitutive_laws)):
                             physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                             physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
-    #                        physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
+                            # physical_constitutive_laws[i].SetValue(REPRESENTATIVE_WEIGHT, subcell_domain_sizes[elem.Id][i] / len(cut_cell_full_quadrature[elem.Id]), model.model_part.ProcessInfo) # here we divide to number of integration point of the full quadrature. Because all the subcell element will be added up when calculating the error
                         print("len(physical_constitutive_laws)", len(physical_constitutive_laws))
                         print("len(new_sub_elems)", len(new_sub_elems))
                         number_of_physical_integration_points = number_of_physical_integration_points + len(physical_constitutive_laws)
@@ -973,6 +988,9 @@ class FiniteCellSimulator:
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
                                 self.mpu.SetMaterialProperties(model.model_part, fict_elem, mat_type)
                                 fict_elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                                fict_elem.SetValue(IS_INACTIVE, False)
+                                fict_elem.Set(ACTIVE, True)
+                                fict_elem.SetValue(PARENT_ELEMENT_ID, elem.Id)
                                 fict_elem.Initialize()
                             else: # this allows to set the material property of fictitious element DIFFERENT to the parent element
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
@@ -988,6 +1006,7 @@ class FiniteCellSimulator:
                 elif elem.Id in exclude_elems:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
+                    elem.SetValue(CUT_STATUS, BRep._OUT)
                     elem.Set(ACTIVE, False)
                     print("element " + str(elem.Id) + " is outside. It will be excluded")
 
@@ -995,6 +1014,7 @@ class FiniteCellSimulator:
                     cut_cell_quadrature_order = 1
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, quadtree_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                    elem.SetValue(CUT_STATUS, BRep._CUT)
                     elem.Initialize()
                     self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
 #                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
@@ -1004,6 +1024,7 @@ class FiniteCellSimulator:
                         for point in points:
                             cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 else:
+                    elem.SetValue(CUT_STATUS, BRep._IN)
                     self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
             print("obtain moment-fit subcell quadrature successfully")
             print("number of physical integration points: " + str(number_of_physical_integration_points))
@@ -1091,10 +1112,16 @@ class FiniteCellSimulator:
                 #     print("Q:", Q)
                 #     print("W:", W)
                 #     print("J0:", J0)
+                elem_nom = 0.0
+                elem_denom = 0.0
                 for i in range(0, len(u)):
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
-                    nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
-                    denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    elem_nom = elem_nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    elem_denom = elem_denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
+                # if (element.GetValue(CUT_STATUS) == BRep._CUT):
+                #     print("l2 error on cut element " + str(element.Id) + ": " + str(elem_nom))
+                nom = nom + elem_nom
+                denom = denom + elem_denom
         print("nom:", nom)
         print("denom:", denom)
         if denom == 0.0:
@@ -1105,6 +1132,7 @@ class FiniteCellSimulator:
         else:
             return math.sqrt(abs(nom / denom))
 
+    ###COMPUTE GLOBAL DISPLACEMENT (L2) ERROR FOR MFSC SCHEME###
     def compute_L2_error_mfsc(self, elements, all_subcell_elems, fict_elems, process_info, solution, P):
         print("!!!compute_L2_error_mfsc:Please turn off the MoveMeshFlag in order to have correct results")
         nom = 0.0
@@ -1121,24 +1149,47 @@ class FiniteCellSimulator:
                     denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
         for element in all_subcell_elems:
             if element.Is(ACTIVE):
-                u = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_DISPLACEMENT, process_info)
-#                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
-                Q = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_GLOBAL, process_info)
-                W = element.GetValuesOnIntegrationPoints(SUBCELL_DOMAIN_SIZE, process_info)
+                elem_nom = 0.0
+                elem_denom = 0.0
+                #####method 1
+#                 u = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_DISPLACEMENT, process_info)
+# #                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+#                 Q = element.GetValuesOnIntegrationPoints(PHYSICAL_INTEGRATION_POINT_GLOBAL, process_info)
+#                 W = element.GetValuesOnIntegrationPoints(SUBCELL_DOMAIN_SIZE, process_info)
+#                 for i in range(0, len(u)):
+#                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
+#                     elem_nom = elem_nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0]# * J0[i][0]
+#                     elem_denom = elem_denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0]# * J0[i][0]
+                #####method 2
+                u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                # print("Q:", Q)
+                # print("W:", W)
                 for i in range(0, len(u)):
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
-                    nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0]# * J0[i][0]
-                    denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0]# * J0[i][0]
+                    elem_nom = elem_nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    elem_denom = elem_denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
+                #############
+                nom = nom + elem_nom
+                denom = denom + elem_denom
+                # print("l2 error on mfsc cut element " + str(element.Id) + ", parent = " + str(element.GetValue(PARENT_ELEMENT_ID)) + ": " + str(elem_nom))
         for element in fict_elems:
             if element.Is(ACTIVE):
                 u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
                 W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                elem_nom = 0.0
+                elem_denom = 0.0
                 for i in range(0, len(u)):
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
-                    nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
-                    denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    elem_nom = elem_nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+                    elem_denom = elem_denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2) + pow(ana_u[2], 2)) * W[i][0] * J0[i][0]
+                nom = nom + elem_nom
+                denom = denom + elem_denom
+                # print("l2 error on mfsc fictitious element " + str(element.Id) + ", parent = " + str(element.GetValue(PARENT_ELEMENT_ID)) + ": " + str(elem_nom))
         print("nom:", nom)
         print("denom:", denom)
         if denom == 0.0:
@@ -1218,17 +1269,24 @@ class FiniteCellSimulator:
         else:
             return math.sqrt(abs(nom / denom))
 
-    ###COMPUTE DOMAIN SIZE##############
+    ###COMPUTE DOMAIN SIZE###
     def compute_domain_size(self, elements, process_info):
         domain_size = 0.0
         for element in elements:
             if element.Is(ACTIVE):
                 J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
                 W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                elem_size = 0.0
                 for i in range(0, len(W)):
-                    domain_size = domain_size + W[i][0] * J0[i][0]
+                    elem_size = elem_size + W[i][0] * J0[i][0]
+                if (element.GetValue(CUT_STATUS) == BRep._CUT):
+                    print("domain size of cut element " + str(element.Id) + ": " + str(elem_size))
+                else:
+                    print("domain size of uncut element " + str(element.Id) + ": " + str(elem_size))
+                domain_size = domain_size + elem_size
         return domain_size
 
+    ###COMPUTE DOMAIN SIZE###
     def compute_domain_size_subcell(self, all_subcell_elems, process_info):
         domain_size = 0.0
         for element in all_subcell_elems:
@@ -1236,6 +1294,42 @@ class FiniteCellSimulator:
                 W = element.GetValuesOnIntegrationPoints(SUBCELL_DOMAIN_SIZE, process_info)
                 for i in range(0, len(W)):
                     domain_size = domain_size + W[i][0]
+        return domain_size
+
+    ###COMPUTE DOMAIN SIZE###
+    def compute_domain_size_mfsc(self, elements, all_subcell_elems, fict_elems, process_info):
+        domain_size = 0.0
+        for element in elements:
+            if element.Is(ACTIVE):
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                elem_size = 0.0
+                for i in range(0, len(W)):
+                    elem_size = elem_size + W[i][0] * J0[i][0]
+                domain_size = domain_size + elem_size
+                print("domain size of uncut element " + str(element.Id) + ": " + str(elem_size))
+        mfsc_elems = {}
+        for element in all_subcell_elems:
+            if element.Is(ACTIVE):
+                parent_element_id = element.GetValue(PARENT_ELEMENT_ID)
+                if parent_element_id not in mfsc_elems:
+                    mfsc_elems[parent_element_id] = 0.0
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                for i in range(0, len(W)):
+                    mfsc_elems[parent_element_id] = mfsc_elems[parent_element_id] + W[i][0] * J0[i][0]
+        for element in fict_elems:
+            if element.Is(ACTIVE):
+                parent_element_id = element.GetValue(PARENT_ELEMENT_ID)
+                if parent_element_id not in mfsc_elems:
+                    mfsc_elems[parent_element_id] = 0.0
+                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                for i in range(0, len(W)):
+                    mfsc_elems[parent_element_id] = mfsc_elems[parent_element_id] + W[i][0] * J0[i][0]
+        for elem_id, elem_size in mfsc_elems.iteritems():
+            print("domain size of cut element " + str(elem_id) + ": " + str(elem_size))
+            domain_size = domain_size + elem_size
         return domain_size
 
     ###CHECKING FUNCTIONS#############
@@ -1283,7 +1377,7 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == self.brep._CUT:
+            if stat == BRep._CUT:
                 cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -1298,9 +1392,9 @@ class FiniteCellSimulator:
                 qt = qs.CreateQuadTree(i)
                 stat = self.brep.CutStatusBySampling(qt.pGetGeometry(), nsampling)
                 print("    subcell " + str(i) + " info:")
-                if stat == self.brep._CUT:
+                if stat == BRep._CUT:
                     print("        cut: yes")
-                elif stat == self.brep._OUT:
+                elif stat == BRep._OUT:
                     print("        cut: out")
                 else:
                     print("        cut: in")
@@ -1320,7 +1414,7 @@ class FiniteCellSimulator:
                 elem = qs.GetElement()
                 stat = self.brep.CutStatusBySampling(elem, nsampling)
                 elem.SetValue(CUT_STATUS, stat)
-                if stat == self.brep._CUT:
+                if stat == BRep._CUT:
                     cut_elems.append(qs)
         else:
             for qi, qs in self.forest.iteritems():
@@ -1328,7 +1422,7 @@ class FiniteCellSimulator:
                 if elem.Id in selected_elems:
                     stat = self.brep.CutStatusBySampling(elem, nsampling)
                     elem.SetValue(CUT_STATUS, stat)
-                    if stat == self.brep._CUT:
+                    if stat == BRep._CUT:
                         cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -1370,7 +1464,7 @@ class FiniteCellSimulator:
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling)
             elem.SetValue(CUT_STATUS, stat)
-            if stat == self.brep._CUT:
+            if stat == BRep._CUT:
                 cut_elems.append(qs)
 
         aux_util = FiniteCellAuxilliaryUtility()
@@ -1385,7 +1479,7 @@ class FiniteCellSimulator:
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
                 stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
-                if stat == self.brep._CUT:
+                if stat == BRep._CUT:
 #                    domain_size = qt.DomainSize(self.brep)
 #                    domain_size = qt.Integrate(Hf, 0x12) # Gauss Legendre order 2
 #                    domain_size = qt.Integrate(Hf, 0x13) # Gauss Legendre order 3
