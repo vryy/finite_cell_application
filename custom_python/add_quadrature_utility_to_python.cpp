@@ -580,13 +580,13 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
         Properties::Pointer pProperties)
 {
     // find the maximum node Id
-    std::size_t lastNodeId = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t lastNodeId = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
 
     // find the maximum condition Id
-    std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
+    std::size_t lastCondId = FiniteCellAuxiliaryUtility::GetLastConditionId(r_model_part);
 
     // find the maximum properties Id
-    std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
+    std::size_t lastPropId = FiniteCellAuxiliaryUtility::GetLastPropertiesId(r_model_part);
 
     // get the sample condition
     if(!KratosComponents<Condition>::Has(sample_cond_name))
@@ -619,7 +619,7 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
         const std::string& sample_cond_name)
 {
     // find the maximum properties Id
-    std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
+    std::size_t lastPropId = FiniteCellAuxiliaryUtility::GetLastPropertiesId(r_model_part);
 
     // create new properties
     Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));
@@ -636,13 +636,13 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
         const double& max_weight)
 {
     // find the maximum node Id
-    std::size_t lastNodeId = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t lastNodeId = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
 
     // find the maximum condition Id
-    std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
+    std::size_t lastCondId = FiniteCellAuxiliaryUtility::GetLastConditionId(r_model_part);
 
     // find the maximum properties Id
-    std::size_t lastPropId = FiniteCellAuxilliaryUtility::GetLastPropertiesId(r_model_part);
+    std::size_t lastPropId = FiniteCellAuxiliaryUtility::GetLastPropertiesId(r_model_part);
 
     // create new properties
     Properties::Pointer pProperties = Properties::Pointer(new Properties(++lastPropId));

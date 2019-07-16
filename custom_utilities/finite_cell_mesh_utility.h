@@ -37,8 +37,6 @@
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
-#include "custom_utilities/finite_cell_auxilliary_utility.h"
-#include "custom_utilities/finite_cell_geometry_utility.h"
 #include "finite_cell_application/finite_cell_application.h"
 
 

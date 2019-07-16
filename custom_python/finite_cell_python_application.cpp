@@ -26,7 +26,7 @@
 #include "custom_python/add_div_free_basis_utility_to_python.h"
 #include "custom_python/add_moment_fitting_utility_to_python.h"
 #include "custom_python/add_ghost_penalty_utility_to_python.h"
-#include "custom_python/add_finite_cell_auxilliary_utility_to_python.h"
+#include "custom_python/add_finite_cell_auxiliary_utility_to_python.h"
 #include "custom_python/add_finite_cell_mesh_utility_to_python.h"
 #include "custom_python/add_utility_to_python.h"
 
@@ -100,7 +100,7 @@ namespace Python
         FiniteCellApplication_AddDivFreeBasisUtilityToPython();
         FiniteCellApplication_AddMomentFittingUtilityToPython();
         FiniteCellApplication_AddGhostPenaltyUtilityToPython();
-        FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython();
+        FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython();
         FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
         FiniteCellApplication_AddUtilityToPython();
 

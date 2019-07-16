@@ -52,7 +52,7 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_quadrature_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_div_free_basis_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_mesh_utility_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_auxilliary_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_auxiliary_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_moment_fitting_utility_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utility_to_python.cpp

@@ -12,8 +12,8 @@
 //
 
 
-#if !defined(KRATOS_FINITE_CELL_AUXILLIARY_UTILITY_H_INCLUDED )
-#define  KRATOS_FINITE_CELL_AUXILLIARY_UTILITY_H_INCLUDED
+#if !defined(KRATOS_FINITE_CELL_AUXILIARY_UTILITY_H_INCLUDED )
+#define  KRATOS_FINITE_CELL_AUXILIARY_UTILITY_H_INCLUDED
 
 
 
@@ -67,14 +67,14 @@ namespace Kratos
 /// Short class definition.
 /** class for auxilliary routines
 */
-class FiniteCellAuxilliaryUtility
+class FiniteCellAuxiliaryUtility
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of FiniteCellAuxilliaryUtility
-    KRATOS_CLASS_POINTER_DEFINITION(FiniteCellAuxilliaryUtility);
+    /// Pointer definition of FiniteCellAuxiliaryUtility
+    KRATOS_CLASS_POINTER_DEFINITION(FiniteCellAuxiliaryUtility);
 
     typedef typename Element::GeometryType GeometryType;
 
@@ -89,10 +89,10 @@ public:
     ///@{
 
     /// Default constructor.
-    FiniteCellAuxilliaryUtility() {}
+    FiniteCellAuxiliaryUtility() {}
 
     /// Destructor.
-    virtual ~FiniteCellAuxilliaryUtility() {}
+    virtual ~FiniteCellAuxiliaryUtility() {}
 
 
     ///@}
@@ -191,7 +191,7 @@ public:
 
     /// Create a new entity (element/condition) from another entity but not add to the model_part
     template<class TEntityType>
-    static typename TEntityType::Pointer CreateEntity(ModelPart& r_model_part, const std::string& sample_entity_name,
+    static typename TEntityType::Pointer CreateEntity(const std::string& sample_entity_name,
         const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType& rGeometry)
     {
         if(!KratosComponents<TEntityType>::Has(sample_entity_name))
@@ -220,7 +220,7 @@ public:
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
-        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pElement->GetGeometry());
+        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pElement->GetGeometry());
         r_model_part.Elements().push_back(pNewElem);
         return pNewElem;
     }
@@ -229,7 +229,7 @@ public:
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
-        Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, pCond->GetGeometry());
+        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pCond->GetGeometry());
         r_model_part.Elements().push_back(pNewElem);
         return pNewElem;
     }
@@ -247,7 +247,7 @@ public:
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
-        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pCond->GetGeometry());
+        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pCond->GetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
@@ -256,7 +256,7 @@ public:
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
-        Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, pElement->GetGeometry());
+        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pElement->GetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
@@ -551,15 +551,15 @@ private:
     ///@{
 
     /// Assignment operator.
-    FiniteCellAuxilliaryUtility& operator=(FiniteCellAuxilliaryUtility const& rOther);
+    FiniteCellAuxiliaryUtility& operator=(FiniteCellAuxiliaryUtility const& rOther);
 
     /// Copy constructor.
-    FiniteCellAuxilliaryUtility(FiniteCellAuxilliaryUtility const& rOther);
+    FiniteCellAuxiliaryUtility(FiniteCellAuxiliaryUtility const& rOther);
 
 
     ///@}
 
-}; // Class FiniteCellAuxilliaryUtility
+}; // Class FiniteCellAuxiliaryUtility
 
 ///@}
 
@@ -573,13 +573,13 @@ private:
 
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, FiniteCellAuxilliaryUtility& rThis)
+inline std::istream& operator >> (std::istream& rIStream, FiniteCellAuxiliaryUtility& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellAuxilliaryUtility& rThis)
+inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellAuxiliaryUtility& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -594,4 +594,4 @@ inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellAuxill
 }  // namespace Kratos.
 
 
-#endif // KRATOS_FINITE_CELL_AUXILLIARY_UTILITY_H_INCLUDED  defined
+#endif // KRATOS_FINITE_CELL_AUXILIARY_UTILITY_H_INCLUDED  defined

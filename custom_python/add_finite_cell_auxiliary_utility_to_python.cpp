@@ -11,10 +11,10 @@
 
 // Project includes
 #include "includes/element.h"
-#include "custom_python/add_finite_cell_auxilliary_utility_to_python.h"
+#include "custom_python/add_finite_cell_auxiliary_utility_to_python.h"
 #include "custom_algebra/brep.h"
 #include "custom_utilities/quad_tree.h"
-#include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/moment_fitted_quad_tree_subcell.h"
 
 
@@ -26,40 +26,40 @@ namespace Python
 
 using namespace boost::python;
 
-std::size_t FiniteCellAuxilliaryUtility_GetLastNodeId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+std::size_t FiniteCellAuxiliaryUtility_GetLastNodeId(FiniteCellAuxiliaryUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastNodeId(r_model_part);
 }
 
-std::size_t FiniteCellAuxilliaryUtility_GetLastElementId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+std::size_t FiniteCellAuxiliaryUtility_GetLastElementId(FiniteCellAuxiliaryUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastElementId(r_model_part);
 }
 
-std::size_t FiniteCellAuxilliaryUtility_GetLastConditionId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+std::size_t FiniteCellAuxiliaryUtility_GetLastConditionId(FiniteCellAuxiliaryUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastConditionId(r_model_part);
 }
 
-std::size_t FiniteCellAuxilliaryUtility_GetLastPropertiesId(FiniteCellAuxilliaryUtility& rDummy, ModelPart& r_model_part)
+std::size_t FiniteCellAuxiliaryUtility_GetLastPropertiesId(FiniteCellAuxiliaryUtility& rDummy, ModelPart& r_model_part)
 {
     return rDummy.GetLastPropertiesId(r_model_part);
 }
 
-void FiniteCellAuxilliaryUtility_AddElement(FiniteCellAuxilliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
+void FiniteCellAuxiliaryUtility_AddElement(FiniteCellAuxiliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
         Element::Pointer pElement)
 {
     rDummy.AddElement(rpElements, pElement);
 }
 
-void FiniteCellAuxilliaryUtility_RemoveElement(FiniteCellAuxilliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
+void FiniteCellAuxiliaryUtility_RemoveElement(FiniteCellAuxiliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
         Element::Pointer pElement)
 {
     rDummy.RemoveElement(rpElements, pElement);
 }
 
 /// Create an element from sample element name and from list of nodes
-Element::Pointer FiniteCellAuxilliaryUtility_CreateElement(FiniteCellAuxilliaryUtility& rDummy,
+Element::Pointer FiniteCellAuxiliaryUtility_CreateElement(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_elem_name,
     const std::size_t& Id, Properties::Pointer pProperties, boost::python::list& node_ids)
 {
@@ -76,7 +76,7 @@ Element::Pointer FiniteCellAuxilliaryUtility_CreateElement(FiniteCellAuxilliaryU
 }
 
 /// Create an element from sample element name and from other element (to provide the geometry)
-Element::Pointer FiniteCellAuxilliaryUtility_CreateElement2(FiniteCellAuxilliaryUtility& rDummy,
+Element::Pointer FiniteCellAuxiliaryUtility_CreateElement2(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_elem_name,
     const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
 {
@@ -84,7 +84,7 @@ Element::Pointer FiniteCellAuxilliaryUtility_CreateElement2(FiniteCellAuxilliary
 }
 
 /// Create an element from sample element name and from other condition (to provide the geometry)
-Element::Pointer FiniteCellAuxilliaryUtility_CreateElement3(FiniteCellAuxilliaryUtility& rDummy,
+Element::Pointer FiniteCellAuxiliaryUtility_CreateElement3(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_elem_name,
     const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
 {
@@ -92,7 +92,7 @@ Element::Pointer FiniteCellAuxilliaryUtility_CreateElement3(FiniteCellAuxilliary
 }
 
 /// Create a condition from sample condition and from list of nodes
-Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition(FiniteCellAuxilliaryUtility& rDummy,
+Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_cond_name,
     const std::size_t& Id, Properties::Pointer pProperties, boost::python::list& node_ids)
 {
@@ -109,7 +109,7 @@ Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition(FiniteCellAuxilli
 }
 
 /// Create a condition from sample condition and from other condition (to provide the geometry)
-Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition2(FiniteCellAuxilliaryUtility& rDummy,
+Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition2(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_cond_name,
     const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
 {
@@ -117,7 +117,7 @@ Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition2(FiniteCellAuxill
 }
 
 /// Create a condition from sample condition and from other element (to provide the geometry)
-Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition3(FiniteCellAuxilliaryUtility& rDummy,
+Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition3(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, const std::string& sample_cond_name,
     const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
 {
@@ -125,7 +125,7 @@ Condition::Pointer FiniteCellAuxilliaryUtility_CreateCondition3(FiniteCellAuxill
 }
 
 template<class TTreeType, class TBRepType>
-void FiniteCellAuxilliaryUtility_MultithreadedRefineBy(FiniteCellAuxilliaryUtility& rDummy, boost::python::list& r_trees,
+void FiniteCellAuxiliaryUtility_MultithreadedRefineBy(FiniteCellAuxiliaryUtility& rDummy, boost::python::list& r_trees,
         const TBRepType& r_brep)
 {
     typedef typename TTreeType::Pointer TTreePointerType;
@@ -142,7 +142,7 @@ void FiniteCellAuxilliaryUtility_MultithreadedRefineBy(FiniteCellAuxilliaryUtili
 }
 
 template<class TCellType, class TBRepType>
-void FiniteCellAuxilliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints(FiniteCellAuxilliaryUtility& rDummy,
+void FiniteCellAuxiliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints(FiniteCellAuxiliaryUtility& rDummy,
     boost::python::list& r_cells, typename TBRepType::Pointer p_brep, int integrator_integration_method)
 {
     PointerVectorSet<TCellType> cells;
@@ -158,7 +158,7 @@ void FiniteCellAuxilliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints(
 }
 
 /// Extract the element from the list of ids
-ModelPart::ElementsContainerType FiniteCellAuxilliaryUtility_GetElements(FiniteCellAuxilliaryUtility& rDummy,
+ModelPart::ElementsContainerType FiniteCellAuxiliaryUtility_GetElements(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart& r_model_part, boost::python::list& element_list)
 {
     std::set<std::size_t> element_ids;
@@ -175,7 +175,7 @@ ModelPart::ElementsContainerType FiniteCellAuxilliaryUtility_GetElements(FiniteC
 }
 
 /// Extract the element from the list of ids
-void FiniteCellAuxilliaryUtility_GetElements2(FiniteCellAuxilliaryUtility& rDummy,
+void FiniteCellAuxiliaryUtility_GetElements2(FiniteCellAuxiliaryUtility& rDummy,
     ModelPart::ElementsContainerType& rpElements,
     ModelPart& r_model_part, boost::python::list& element_list)
 {
@@ -192,33 +192,33 @@ void FiniteCellAuxilliaryUtility_GetElements2(FiniteCellAuxilliaryUtility& rDumm
     rDummy.GetElements(rpElements, r_model_part, element_ids);
 }
 
-void FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython()
+void FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython()
 {
 
-    void(FiniteCellAuxilliaryUtility::*pointer_to_Clean)(ModelPart&,
-            ModelPart::ConditionsContainerType&, const int&) const = &FiniteCellAuxilliaryUtility::Clean;
+    void(FiniteCellAuxiliaryUtility::*pointer_to_Clean)(ModelPart&,
+            ModelPart::ConditionsContainerType&, const int&) const = &FiniteCellAuxiliaryUtility::Clean;
 
-    void(FiniteCellAuxilliaryUtility::*pointer_to_PrintGeometry)(Element::GeometryType::Pointer) const = &FiniteCellAuxilliaryUtility::Print;
+    void(FiniteCellAuxiliaryUtility::*pointer_to_PrintGeometry)(Element::GeometryType::Pointer) const = &FiniteCellAuxiliaryUtility::Print;
 
-    class_<FiniteCellAuxilliaryUtility, FiniteCellAuxilliaryUtility::Pointer, boost::noncopyable>
-    ("FiniteCellAuxilliaryUtility", init<>())
-    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement)
-    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement2)
-    .def("CreateElement", &FiniteCellAuxilliaryUtility_CreateElement3)
-    .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition)
-    .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition2)
-    .def("CreateCondition", &FiniteCellAuxilliaryUtility_CreateCondition3)
-    .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements)
-    .def("GetElements", &FiniteCellAuxilliaryUtility_GetElements2)
+    class_<FiniteCellAuxiliaryUtility, FiniteCellAuxiliaryUtility::Pointer, boost::noncopyable>
+    ("FiniteCellAuxiliaryUtility", init<>())
+    .def("CreateElement", &FiniteCellAuxiliaryUtility_CreateElement)
+    .def("CreateElement", &FiniteCellAuxiliaryUtility_CreateElement2)
+    .def("CreateElement", &FiniteCellAuxiliaryUtility_CreateElement3)
+    .def("CreateCondition", &FiniteCellAuxiliaryUtility_CreateCondition)
+    .def("CreateCondition", &FiniteCellAuxiliaryUtility_CreateCondition2)
+    .def("CreateCondition", &FiniteCellAuxiliaryUtility_CreateCondition3)
+    .def("GetElements", &FiniteCellAuxiliaryUtility_GetElements)
+    .def("GetElements", &FiniteCellAuxiliaryUtility_GetElements2)
     .def("Clean", pointer_to_Clean)
-    .def("GetLastNodeId", &FiniteCellAuxilliaryUtility_GetLastNodeId)
-    .def("GetLastElementId", &FiniteCellAuxilliaryUtility_GetLastElementId)
-    .def("GetLastConditionId", &FiniteCellAuxilliaryUtility_GetLastConditionId)
-    .def("GetLastPropertiesId", &FiniteCellAuxilliaryUtility_GetLastPropertiesId)
-    .def("AddElement", &FiniteCellAuxilliaryUtility_AddElement)
-    .def("RemoveElement", &FiniteCellAuxilliaryUtility_RemoveElement)
-    .def("MultithreadedRefineBy", &FiniteCellAuxilliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
-    .def("MultithreadedGeneratePhysicalIntegrationPoints", &FiniteCellAuxilliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints<BaseMomentFittedQuadTreeSubCell, BRep>)
+    .def("GetLastNodeId", &FiniteCellAuxiliaryUtility_GetLastNodeId)
+    .def("GetLastElementId", &FiniteCellAuxiliaryUtility_GetLastElementId)
+    .def("GetLastConditionId", &FiniteCellAuxiliaryUtility_GetLastConditionId)
+    .def("GetLastPropertiesId", &FiniteCellAuxiliaryUtility_GetLastPropertiesId)
+    .def("AddElement", &FiniteCellAuxiliaryUtility_AddElement)
+    .def("RemoveElement", &FiniteCellAuxiliaryUtility_RemoveElement)
+    .def("MultithreadedRefineBy", &FiniteCellAuxiliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
+    .def("MultithreadedGeneratePhysicalIntegrationPoints", &FiniteCellAuxiliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints<BaseMomentFittedQuadTreeSubCell, BRep>)
     .def("Print", pointer_to_PrintGeometry)
     ;
 

@@ -40,7 +40,7 @@
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/moment_fitting_utility.h"
-#include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_mesh_utility.h"
 

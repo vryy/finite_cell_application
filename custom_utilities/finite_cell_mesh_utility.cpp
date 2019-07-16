@@ -15,6 +15,8 @@
 
 // Project includes
 #include "custom_utilities/finite_cell_mesh_utility.h"
+#include "custom_utilities/finite_cell_geometry_utility.h"
+#include "custom_utilities/finite_cell_auxiliary_utility.h"
 
 
 namespace Kratos
@@ -284,7 +286,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateLineElements(Mo
         const bool& close, // if false: open loop; true: close loop
         Properties::Pointer pProperties)
 {
-    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
     std::size_t last_node_id_old = last_node_id;
     std::size_t num_division_1 = sampling_points.size() - 1;
     // KRATOS_WATCH(last_node_id)
@@ -310,7 +312,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateLineElements(Mo
     }
 
     // secondly create elements
-    std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
+    std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(r_model_part);
     // KRATOS_WATCH(last_element_id)
     Element const& rCloneElement = KratosComponents<Element>::Get(sample_element_name);
     Element::NodesArrayType temp_element_nodes;
@@ -382,7 +384,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(Mo
     const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir
     Properties::Pointer pProperties)
 {
-    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
     std::size_t last_node_id_old = last_node_id;
     std::size_t num_division_1 = sampling_points.size() - 1;
     std::size_t num_division_2 = sampling_points[0].size() - 1;
@@ -421,7 +423,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(Mo
     }
 
     // secondly create elements
-    std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
+    std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(r_model_part);
     // KRATOS_WATCH(last_element_id)
     Element const& rCloneElement = KratosComponents<Element>::Get(sample_element_name);
     Element::NodesArrayType temp_element_nodes;
@@ -517,7 +519,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateHexElements(Mod
     const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir; r: activation on 3rd dir
     Properties::Pointer pProperties)
 {
-    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(r_model_part);
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
     std::size_t last_node_id_old = last_node_id;
     std::size_t num_division_1, num_division_2, num_division_3;
     std::size_t num_1, num_2, num_3;
@@ -563,7 +565,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateHexElements(Mod
     }
 
     // secondly create elements
-    std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
+    std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(r_model_part);
     // KRATOS_WATCH(last_element_id)
     Element const& rCloneElement = KratosComponents<Element>::Get(sample_element_name);
     Element::NodesArrayType temp_element_nodes;
@@ -909,7 +911,7 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
 
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart)
 {
-    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(rThisModelPart);
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
     // create nodes and add to model_part
     ModelPart::NodesContainerType NewNodes;
@@ -931,7 +933,7 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
         const double& offset_x, const double& offset_y, const double& offset_z,
         const double& cx, const double& cy, const double& theta)
 {
-    std::size_t last_node_id = FiniteCellAuxilliaryUtility::GetLastNodeId(rThisModelPart);
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
     // create nodes and add to model_part
     ModelPart::NodesContainerType NewNodes;
@@ -967,7 +969,7 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
     ModelPart::ElementsContainerType& rOtherElements,
     const std::string& sample_element_name, Properties::Pointer pProperties)
 {
-    std::size_t last_element_id = FiniteCellAuxilliaryUtility::GetLastElementId(rThisModelPart);
+    std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(rThisModelPart);
     if (!KratosComponents<Element>::Has(sample_element_name))
         KRATOS_THROW_ERROR(std::logic_error, sample_element_name, "is not registerred in Kratos database")
     Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
@@ -986,7 +988,7 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
     ModelPart::ConditionsContainerType& rOtherConditions,
     const std::string& sample_cond_name, Properties::Pointer pProperties)
 {
-    std::size_t last_cond_id = FiniteCellAuxilliaryUtility::GetLastConditionId(rThisModelPart);
+    std::size_t last_cond_id = FiniteCellAuxiliaryUtility::GetLastConditionId(rThisModelPart);
     if (!KratosComponents<Condition>::Has(sample_cond_name))
         KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registerred in Kratos database")
     Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);

@@ -45,7 +45,7 @@
 #include "custom_linear_solvers/nnls_solver.h"
 #endif
 #include "custom_utilities/quadrature_utility.h"
-#include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "finite_cell_application/finite_cell_application.h"
 
@@ -344,7 +344,7 @@ public:
 #endif
         std::cout << "number_of_threads for MultithreadedFitQuadratureSubCell: " << number_of_threads << std::endl;
         std::vector<unsigned int> tree_partition;
-        FiniteCellAuxilliaryUtility::CreatePartition(number_of_threads, r_trees.size(), tree_partition);
+        FiniteCellAuxiliaryUtility::CreatePartition(number_of_threads, r_trees.size(), tree_partition);
         std::cout << "tree_partition:";
         for(std::size_t i = 0; i < tree_partition.size(); ++i)
             std::cout << " " << tree_partition[i];

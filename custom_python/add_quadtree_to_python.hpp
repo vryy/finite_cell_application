@@ -25,7 +25,7 @@
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/moment_fitted_quad_tree_subcell.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
-#include "custom_utilities/finite_cell_auxilliary_utility.h"
+#include "custom_utilities/finite_cell_auxiliary_utility.h"
 
 
 namespace Kratos
@@ -382,10 +382,10 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
 
     /* next create the sub-elements */
     // find the last element id
-    std::size_t lastElementId = FiniteCellAuxilliaryUtility::GetLastElementId(r_model_part);
+    std::size_t lastElementId = FiniteCellAuxiliaryUtility::GetLastElementId(r_model_part);
 
     // find the last condition id
-    std::size_t lastCondId = FiniteCellAuxilliaryUtility::GetLastConditionId(r_model_part);
+    std::size_t lastCondId = FiniteCellAuxiliaryUtility::GetLastConditionId(r_model_part);
 
     ModelPart::ElementsContainerType NewSubCellElements = rDummy.CreateSubCellElements(r_model_part, sample_element_name, Weights, lastElementId, lastCondId);
 

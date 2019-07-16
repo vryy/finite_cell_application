@@ -31,7 +31,7 @@ namespace Python
 
 using namespace boost::python;
 
-void  FiniteCellApplication_AddFiniteCellAuxilliaryUtilityToPython();
+void  FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython();
 
 }  // namespace Python.
 

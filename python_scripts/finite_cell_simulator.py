@@ -332,7 +332,7 @@ class FiniteCellSimulator:
                     integrators.append(qt)
                 elif stat == BRep._OUT:
                     exclude_elems.append(elem)
-            aux_util = FiniteCellAuxilliaryUtility()
+            aux_util = FiniteCellAuxiliaryUtility()
             for i in range(0, qt_depth):
                 print("Refine level " + str(i+1) + " ...")
 #                aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
@@ -364,7 +364,7 @@ class FiniteCellSimulator:
         number_of_minimum_physical_points = self.params["number_of_minimum_physical_points"]
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
         quad_util = QuadratureUtility()
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         start_fit_t0 = time_module.time()
         ###########################################
         ##QUADTREE QUADRATURE
@@ -410,7 +410,7 @@ class FiniteCellSimulator:
                 cut_qs_elems.append(qs)
             elif stat == BRep._OUT:
                 exclude_qs_elems.append(qs)
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
             print("Refine level " + str(i+1) + " ...")
 #            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_qs_elems, self.brep)
@@ -693,7 +693,7 @@ class FiniteCellSimulator:
         print("simulator parameters:")
         pprint.pprint(self.params)
         quad_util = QuadratureUtility()
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         mesh_util = FiniteCellMeshUtility()
 
         if self.quadrature_method == "quadtree":
@@ -1380,7 +1380,7 @@ class FiniteCellSimulator:
             if stat == BRep._CUT:
                 cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
 #            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
             aux_util.MultithreadedRefineBy(cut_elems, self.brep)
@@ -1425,7 +1425,7 @@ class FiniteCellSimulator:
                     if stat == BRep._CUT:
                         cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
 #            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
             aux_util.MultithreadedRefineBy(cut_elems, self.brep)
@@ -1467,7 +1467,7 @@ class FiniteCellSimulator:
             if stat == BRep._CUT:
                 cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxilliaryUtility()
+        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
 #            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
             aux_util.MultithreadedRefineBy(cut_elems, self.brep)

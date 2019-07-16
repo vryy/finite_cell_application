@@ -153,7 +153,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
     number_of_threads = omp_get_max_threads();
 #endif
     KRATOS_WATCH(number_of_threads)
-    FiniteCellAuxilliaryUtility::CreatePartition(number_of_threads, elements.size(), element_partition);
+    FiniteCellAuxiliaryUtility::CreatePartition(number_of_threads, elements.size(), element_partition);
     std::cout << "element_partition:";
     for(std::size_t i = 0; i < element_partition.size(); ++i)
         std::cout << " " << element_partition[i];
