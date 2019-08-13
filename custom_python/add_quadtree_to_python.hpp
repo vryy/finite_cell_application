@@ -365,8 +365,9 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
 //        KRATOS_WATCH(RepresentativeIntegrationMethod)
     FiniteCellGeometryUtility::AssignGeometryData(*(rDummy.pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
     Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+    ProcessInfo& CurrentProcessInfo =  r_model_part.GetProcessInfo();
     rDummy.pGetElement()->SetValue(INTEGRATION_ORDER_var, rDummy.GetRepresentativeIntegrationOrder());
-    rDummy.pGetElement()->Initialize();
+    rDummy.pGetElement()->Initialize(CurrentProcessInfo);
 
     /* thirdly fit the sub-cell */
     std::vector<FunctionR3R1::Pointer> funcs;

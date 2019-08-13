@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 28 Mar 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_DUMMY_ELEMENT_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 // Project includes
@@ -31,8 +31,8 @@ class DummyElement : public Element
     public:
         // Counted pointer of DummyElement
         KRATOS_CLASS_POINTER_DEFINITION(DummyElement);
-        
-        /** 
+
+        /**
          * Default constructor.
          */
         DummyElement();
@@ -43,7 +43,7 @@ class DummyElement : public Element
          * Destructor.
          */
         virtual ~DummyElement();
-  
+
         /**
          * Operations.
          */
@@ -57,26 +57,26 @@ class DummyElement : public Element
         /**
          * Calculates the local system contributions for this contact element
          */
-        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                   VectorType& rRightHandSideVector, 
+        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                   VectorType& rRightHandSideVector,
                                    ProcessInfo& rCurrentProcessInfo);
 
-        void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+        void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                      ProcessInfo& rCurrentProcessInfo);
 
-        void EquationIdVector( EquationIdVectorType& rResult, 
+        void EquationIdVector( EquationIdVectorType& rResult,
                                ProcessInfo& rCurrentProcessInfo);
 
         void GetDofList( DofsVectorType& ElementalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
-        void Initialize();
+        void Initialize(const ProcessInfo& rCurrentProcessInfo);
         /**
          * Turn back information as a string.
          * (DEACTIVATED)
          */
         //std::string Info();
-  
+
         /**
          * Print information about this object.
          * (DEACTIVATED)
@@ -88,10 +88,10 @@ class DummyElement : public Element
          * (DEACTIVATED)
          */
         //virtual void PrintData(std::ostream& rOStream) const;
-  
+
     protected:
-    
-    
+
+
     private:
 
         friend class Serializer;
@@ -106,16 +106,16 @@ class DummyElement : public Element
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Element )
         }
 
-        void CalculateAll( MatrixType& rLeftHandSideMatrix, 
+        void CalculateAll( MatrixType& rLeftHandSideMatrix,
                            VectorType& rRightHandSideVector,
                            ProcessInfo& rCurrentProcessInfo,
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag);
 
-}; // Class DummyElement 
+}; // Class DummyElement
 
 }  // namespace Kratos.
-  
 
-#endif // KRATOS_DUMMY_ELEMENT_H_INCLUDED defined 
+
+#endif // KRATOS_DUMMY_ELEMENT_H_INCLUDED defined
 

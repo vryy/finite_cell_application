@@ -1,15 +1,15 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 28 Mar 2017$
 //   Revision:            $Revision: 1.0 $
 //
 //
-// System includes 
+// System includes
 
-// External includes 
+// External includes
 
-// Project includes 
+// Project includes
 #include "custom_elements/dummy_element.h"
 
 namespace Kratos
@@ -21,13 +21,13 @@ DummyElement::DummyElement()
 {
 }
 
-DummyElement::DummyElement( IndexType NewId, 
+DummyElement::DummyElement( IndexType NewId,
                               GeometryType::Pointer pGeometry)
 : Element( NewId, pGeometry )
 {
 }
 
-DummyElement::DummyElement( IndexType NewId, 
+DummyElement::DummyElement( IndexType NewId,
                               GeometryType::Pointer pGeometry,
                               PropertiesType::Pointer pProperties)
 : Element( NewId, pGeometry, pProperties )
@@ -58,29 +58,29 @@ Element::Pointer DummyElement::Create(IndexType NewId, GeometryType::Pointer pGe
     return Element::Pointer(new DummyElement(NewId, pGeom, pProperties));
 }
 
-void DummyElement::Initialize()
+void DummyElement::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
     KRATOS_CATCH("")
 }
 
-//************************************************************************************ 
+//************************************************************************************
 //************************************************************************************
 //************************************************************************************
 //************************************************************************************
 /**
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
-void DummyElement::CalculateRightHandSide( VectorType& rRightHandSideVector, 
+void DummyElement::CalculateRightHandSide( VectorType& rRightHandSideVector,
         ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
     bool CalculateResidualVectorFlag = true;
     MatrixType matrix = Matrix();
-    CalculateAll( matrix, rRightHandSideVector, 
+    CalculateAll( matrix, rRightHandSideVector,
                   rCurrentProcessInfo,
-                  CalculateStiffnessMatrixFlag, 
+                  CalculateStiffnessMatrixFlag,
                   CalculateResidualVectorFlag);
 }
 
@@ -89,8 +89,8 @@ void DummyElement::CalculateRightHandSide( VectorType& rRightHandSideVector,
 /**
  * calculates this contact element's local contributions
  */
-void DummyElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                                          VectorType& rRightHandSideVector, 
+void DummyElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                                          VectorType& rRightHandSideVector,
                                           ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
@@ -104,10 +104,10 @@ void DummyElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
 /**
  * This function calculates all system contributions due to the contact problem
  * with regard to the current master and slave partners.
- * All Conditions are assumed to be defined in 2D/3D space and having 2/3 DOFs per node 
+ * All Conditions are assumed to be defined in 2D/3D space and having 2/3 DOFs per node
  */
-void DummyElement::CalculateAll( MatrixType& rLeftHandSideMatrix, 
-                                  VectorType& rRightHandSideVector, 
+void DummyElement::CalculateAll( MatrixType& rLeftHandSideMatrix,
+                                  VectorType& rRightHandSideVector,
                                   ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
                                   bool CalculateResidualVectorFlag)
@@ -123,11 +123,11 @@ void DummyElement::CalculateAll( MatrixType& rLeftHandSideMatrix,
 //************************************************************************************
 //************************************************************************************
 /**
-* Setting up the EquationIdVector for the current partners.    
+* Setting up the EquationIdVector for the current partners.
 * All conditions are assumed to be defined in 2D/3D space with 2/3 DOFs per node.
 * All Equation IDs are given Master first, Slave second
 */
-void DummyElement::EquationIdVector( EquationIdVectorType& rResult, 
+void DummyElement::EquationIdVector( EquationIdVectorType& rResult,
                                       ProcessInfo& CurrentProcessInfo)
 {
     rResult.resize(0);

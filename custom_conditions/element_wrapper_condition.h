@@ -67,7 +67,7 @@ class ElementWrapperCondition : public Condition
         virtual void GetDofList( DofsVectorType& ConditionalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
-        virtual void Initialize();
+        virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
         /**
          * Turn back information as a string.

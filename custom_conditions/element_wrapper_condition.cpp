@@ -46,9 +46,9 @@ ElementWrapperCondition::~ElementWrapperCondition()
 //**** Operations ****************************************
 //********************************************************
 
-void ElementWrapperCondition::Initialize()
+void ElementWrapperCondition::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
-    mpElement->Initialize();
+    mpElement->Initialize(rCurrentProcessInfo);
 }
 
 //************************************************************************************

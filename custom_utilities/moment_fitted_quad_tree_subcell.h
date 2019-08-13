@@ -655,6 +655,7 @@ public:
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
+        ProcessInfo& rCurrentProcessInfo = r_model_part.GetProcessInfo();
 
         for(std::size_t i = 0; i < num_physical_point; ++i)
         {
@@ -671,7 +672,7 @@ public:
 
             FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
-            pNewElement->Initialize();
+            pNewElement->Initialize(rCurrentProcessInfo);
             NewElements.push_back(pNewElement);
         }
 

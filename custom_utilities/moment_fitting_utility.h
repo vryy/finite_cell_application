@@ -281,7 +281,8 @@ public:
             const int& integrator_integration_method,
             const std::string& solver_type,
             const int& echo_level,
-            const double& small_weight) const
+            const double& small_weight,
+            const ProcessInfo& rCurrentProcessInfo) const
     {
         if(echo_level > 0)
         {
@@ -310,7 +311,7 @@ public:
         FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetElement()->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
         p_tree->pGetElement()->SetValue(INTEGRATION_ORDER_var, p_tree->GetRepresentativeIntegrationOrder());
-        p_tree->pGetElement()->Initialize();
+        p_tree->pGetElement()->Initialize(rCurrentProcessInfo);
 
         /* thirdly fit the subcell */
         Matrix Weights = p_tree->FitQuadratureSubCell(subcell_index, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
@@ -335,7 +336,8 @@ public:
             const int& integrator_integration_method,
             const std::string& solver_type,
             const int& echo_level,
-            const double& small_weight) const
+            const double& small_weight,
+            const ProcessInfo& rCurrentProcessInfo) const
     {
         /* multithreaded fit quadrature subcell */
         unsigned int number_of_threads = 1;
@@ -380,7 +382,7 @@ public:
 
                 for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
                 {
-                    this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, clone_funcs[k], *(clone_breps[k]), integrator_integration_method, solver_type, echo_level, small_weight);
+                    this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, clone_funcs[k], *(clone_breps[k]), integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
                     ++show_progress;
                 }
             }
@@ -390,7 +392,7 @@ public:
         {
             for(typename std::vector<typename TTreeType::Pointer>::iterator it = r_trees.begin(); it != r_trees.end(); ++it)
             {
-                this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
+                this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
                 ++show_progress;
             }
         }

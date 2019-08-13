@@ -68,7 +68,7 @@ class DummyCondition : public Condition
         void GetDofList( DofsVectorType& ConditionalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
-        void Initialize();
+        void Initialize(const ProcessInfo& rCurrentProcessInfo);
         /**
          * Turn back information as a string.
          * (DEACTIVATED)

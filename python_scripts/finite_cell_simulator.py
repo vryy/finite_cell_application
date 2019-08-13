@@ -366,6 +366,7 @@ class FiniteCellSimulator:
         quad_util = QuadratureUtility()
         aux_util = FiniteCellAuxiliaryUtility()
         start_fit_t0 = time_module.time()
+        model_part.ProcessInfo[RESET_CONFIGURATION] = 0 # this to ensure that the default initialization behaviour is invoked
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
@@ -551,9 +552,9 @@ class FiniteCellSimulator:
         start_fit_t1 = time_module.time()
         if fit_mode == 'serial':
             for qs in proper_cut_qs_elems:
-                subcell_fit_func_callback(qs, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+                subcell_fit_func_callback(qs, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight, model_part.ProcessInfo)
         elif fit_mode == 'multithread':
-            subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight)
+            subcell_fit_func_callback(proper_cut_qs_elems, fit_funcs, self.brep, integrator_quadrature_method, solver_type, echo_level, fit_small_weight, model_part.ProcessInfo)
         end_fit_t1 = time_module.time()
         print("construct quadrature using moment fitting for subcell successfully in " + str(end_fit_t1 - start_fit_t1) + " s")
 #        sys.exit(0)
@@ -663,7 +664,7 @@ class FiniteCellSimulator:
             small_fit_solver_type = self.params["small_fit_solver_type"]
             small_fit_echo_level = self.params["small_fit_echo_level"]
             small_fit_small_weight = self.params["small_fit_small_weight"]
-            small_subcell_fit_func_callback(small_elems, fit_funcs, self.brep, small_qs_elems, small_cut_cell_quadrature_method, integrator_quadrature_method, small_fit_solver_type, small_fit_echo_level, small_fit_small_weight)
+            small_subcell_fit_func_callback(small_elems, fit_funcs, self.brep, small_qs_elems, small_cut_cell_quadrature_method, integrator_quadrature_method, small_fit_solver_type, small_fit_echo_level, small_fit_small_weight, model_part.ProcessInfo)
             save_quadrature_subcell_callback(quad_filename, quad_filetype, proper_cut_qs_elems, exclude_qs_elems, small_qs_elems, accuracy)
             print("generate moment-fit quadrature for small cell completed")
 
@@ -696,6 +697,9 @@ class FiniteCellSimulator:
         aux_util = FiniteCellAuxiliaryUtility()
         mesh_util = FiniteCellMeshUtility()
 
+        # this to ensure that the default initialization behaviour is set
+        model.model_part.ProcessInfo[RESET_CONFIGURATION] = 0
+
         if self.quadrature_method == "quadtree":
             qt_depth = self.params["qt_depth"]
             small_weight = self.params["small_weight"]
@@ -721,7 +725,7 @@ class FiniteCellSimulator:
                     print("cut element " + str(elem.Id) + " has " + str(qt.NumberOfCells()) + " leaf cells")
                     total_add_quadrature_pnts = total_add_quadrature_pnts + np
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                    elem.Initialize()
+                    elem.Initialize(model.model_part.ProcessInfo)
                     aux_util.AddElement(self.proper_cut_elems, elem)
                     cut_elems.append(elem)
                 elif stat == BRep._OUT:
@@ -808,7 +812,7 @@ class FiniteCellSimulator:
                 total_add_quadrature_pnts = total_add_quadrature_pnts + len(cut_cell_quadrature[elem_id])
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                 elem.SetValue(CUT_STATUS, BRep._CUT)
-                elem.Initialize()
+                elem.Initialize(model.model_part.ProcessInfo)
                 aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
@@ -852,7 +856,7 @@ class FiniteCellSimulator:
                 quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem_id])
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                 elem.SetValue(CUT_STATUS, BRep._CUT)
-                elem.Initialize()
+                elem.Initialize(model.model_part.ProcessInfo)
                 aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
@@ -934,7 +938,7 @@ class FiniteCellSimulator:
 
                         quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem.Id])
                         elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                        elem.Initialize()
+                        elem.Initialize(model.model_part.ProcessInfo)
 
                         output = self.forest[elem.Id].CreateSubCellElements(model.model_part, subcell_element_type, cut_cell_quadrature_order, cut_cell_full_quadrature[elem.Id], subcell_weights[elem.Id], lastElementId, lastCondId, extrapolated_prop)
                         lastElementId = output[0]
@@ -948,7 +952,7 @@ class FiniteCellSimulator:
 
                         self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
                         elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                        elem.Initialize()
+                        elem.Initialize(model.model_part.ProcessInfo)
 
                         physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
                         for i in range(0, len(physical_constitutive_laws)):
@@ -986,12 +990,13 @@ class FiniteCellSimulator:
                             cut_cell_quadrature_order = 1
                             if fict_prop == "same as parent element": # this uses the material proper from the element, even it's nonlinear
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
+                                fict_elem.Initialize(model.model_part.ProcessInfo)
                                 self.mpu.SetMaterialProperties(model.model_part, fict_elem, mat_type)
                                 fict_elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                                 fict_elem.SetValue(IS_INACTIVE, False)
                                 fict_elem.Set(ACTIVE, True)
                                 fict_elem.SetValue(PARENT_ELEMENT_ID, elem.Id)
-                                fict_elem.Initialize()
+                                fict_elem.Initialize(model.model_part.ProcessInfo)
                             else: # this allows to set the material property of fictitious element DIFFERENT to the parent element
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
                             print("fictitious element " + str(fict_elem.Id) + " is created out from element " + str(elem.Id))
@@ -1015,7 +1020,7 @@ class FiniteCellSimulator:
                     quad_util.SetQuadrature(elem, cut_cell_quadrature_order, quadtree_quadrature[elem.Id])
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.SetValue(CUT_STATUS, BRep._CUT)
-                    elem.Initialize()
+                    elem.Initialize(model.model_part.ProcessInfo)
                     self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
 #                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
                     print("element " + str(elem.Id) + " is assigned " + str(len(quadtree_quadrature[elem.Id])) + " quadrature points")

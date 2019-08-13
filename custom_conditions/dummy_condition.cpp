@@ -58,7 +58,7 @@ Condition::Pointer DummyCondition::Create(IndexType NewId, GeometryType::Pointer
     return Condition::Pointer(new DummyCondition(NewId, pGeom, pProperties));
 }
 
-void DummyCondition::Initialize()
+void DummyCondition::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
     KRATOS_CATCH("")

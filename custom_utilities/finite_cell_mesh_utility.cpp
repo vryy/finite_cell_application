@@ -903,7 +903,6 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
 
     FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, integration_points);
     pNewElement->SetValue(INTEGRATION_ORDER_var, RepresentativeIntegrationOrder);
-    pNewElement->Initialize();
 
     return pNewElement;
 }

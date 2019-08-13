@@ -235,7 +235,8 @@ void MomentFittingutility_FitQuadratureSubCell(MomentFittingUtility& rDummy,
         const int& integrator_integration_method,
         const std::string& solver_type,
         const int& echo_level,
-        const double& small_weight)
+        const double& small_weight,
+        const ProcessInfo& rCurrentProcessInfo)
 {
     /* extract the fitting functions */
     std::vector<typename TFunctionType::Pointer> funcs;
@@ -247,7 +248,7 @@ void MomentFittingutility_FitQuadratureSubCell(MomentFittingUtility& rDummy,
         funcs.push_back(f);
     }
 
-    rDummy.FitQuadratureSubCell<TTreeType, TFunctionType>(p_tree, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
+    rDummy.FitQuadratureSubCell<TTreeType, TFunctionType>(p_tree, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
 }
 
 
@@ -259,7 +260,8 @@ void MomentFittingutility_MultithreadedFitQuadratureSubCell(MomentFittingUtility
         const int& integrator_integration_method,
         const std::string& solver_type,
         const int& echo_level,
-        const double& small_weight)
+        const double& small_weight,
+        const ProcessInfo& rCurrentProcessInfo)
 {
     /* extract the tree with subcell */
     std::vector<typename TTreeType::Pointer> trees;
@@ -281,7 +283,7 @@ void MomentFittingutility_MultithreadedFitQuadratureSubCell(MomentFittingUtility
         funcs.push_back(f);
     }
 
-    rDummy.MultithreadedFitQuadratureSubCell<TTreeType, TFunctionType>(trees, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight);
+    rDummy.MultithreadedFitQuadratureSubCell<TTreeType, TFunctionType>(trees, funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
 }
 
 void FiniteCellApplication_AddMomentFittingUtilityToPython()

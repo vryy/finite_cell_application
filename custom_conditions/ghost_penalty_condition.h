@@ -113,7 +113,7 @@ class GhostPenaltyCondition : public Condition
             ConditionalDofList.resize(0);
         }
 
-        virtual void Initialize()
+        virtual void Initialize(const ProcessInfo& rCurrentProcessInfo)
         {
             KRATOS_TRY
 
