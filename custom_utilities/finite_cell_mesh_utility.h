@@ -38,6 +38,8 @@
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
 #include "finite_cell_application/finite_cell_application.h"
+#include "brep_application/custom_utilities/brep_utility.h"
+#include "brep_application/custom_utilities/brep_mesh_utility.h"
 
 
 namespace Kratos
@@ -94,12 +96,11 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
-    typedef std::map<std::string, std::set<std::size_t> > BoundaryNodesInfoType;
+    typedef BRepMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
 
-    typedef std::map<std::string, std::vector<std::vector<std::size_t> > > BoundaryLayerInfoType;
+    typedef BRepMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
 
-    typedef std::tuple<ModelPart::NodesContainerType, ModelPart::ElementsContainerType,
-        BoundaryNodesInfoType, BoundaryLayerInfoType> MeshInfoType;
+    typedef BRepMeshUtility::MeshInfoType MeshInfoType;
 
     ///@}
     ///@name Life Cycle
@@ -180,7 +181,7 @@ public:
         const std::vector<std::vector<double> >& sampling);
 
 
-    /// Create the quad elements based on given points list
+    /// Create the line elements based on given points list
     static MeshInfoType CreateLineElements(ModelPart& r_model_part,
         const std::vector<PointType>& sampling_points,
         const std::string& sample_element_name,
@@ -207,11 +208,6 @@ public:
         const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir; 3: close on 3rd dir
         const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir; r: activation on 3rd dir
         Properties::Pointer pProperties);
-
-
-    /// Find the node by key
-    static ModelPart::NodesContainerType::iterator FindKey(ModelPart::NodesContainerType& ThisContainer,
-            std::size_t& ThisKey, const std::string& ComponentName);
 
 
     /// Create an element taking the same nodes as the original one, but taking the type of geometry from sample_element_name
@@ -274,7 +270,7 @@ public:
             for (std::size_t i = 0; i < r_geom.size(); ++i)
             {
                 std::size_t other_node_id = static_cast<std::size_t>(r_geom[i].GetValue(OTHER_NODE_ID));
-                temp_element_nodes.push_back(*(FindKey(rThisModelPart.Nodes(), other_node_id, "Node").base()));
+                temp_element_nodes.push_back(*(BRepUtility::FindKey(rThisModelPart.Nodes(), other_node_id, "Node").base()));
             }
 
             typename TEntityType::Pointer pNewElement;

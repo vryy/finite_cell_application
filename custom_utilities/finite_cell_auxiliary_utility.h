@@ -37,7 +37,7 @@
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
 #include "containers/pointer_vector_set.h"
-#include "custom_algebra/function/function.h"
+#include "brep_application/custom_algebra/function/function.h"
 
 
 namespace Kratos

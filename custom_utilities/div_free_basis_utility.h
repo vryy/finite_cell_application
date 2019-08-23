@@ -35,7 +35,7 @@
 #include "geometries/line_2d_2.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
-#include "custom_algebra/level_set/level_set.h"
+#include "brep_application/custom_algebra/level_set/level_set.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 
 

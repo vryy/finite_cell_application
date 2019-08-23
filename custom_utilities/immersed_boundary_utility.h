@@ -37,7 +37,7 @@
 #include "geometries/line_3d_2.h"
 #include "geometries/quadrilateral_3d_4.h"
 #include "utilities/math_utils.h"
-#include "custom_algebra/function/function.h"
+#include "brep_application/custom_algebra/function/function.h"
 
 
 namespace Kratos

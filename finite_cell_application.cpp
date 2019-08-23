@@ -45,8 +45,6 @@
 namespace Kratos
 {
 
-    KRATOS_CREATE_VARIABLE( boost::python::object, LOAD_FUNCTION )
-    KRATOS_CREATE_VARIABLE( int, CUT_STATUS )
     KRATOS_CREATE_VARIABLE( Matrix, SUBCELL_WEIGHTS )
     KRATOS_CREATE_VARIABLE( double, SUBCELL_DOMAIN_SIZE )
     KRATOS_CREATE_VARIABLE( Vector, SUBCELL_DOMAIN_SIZES )
@@ -58,7 +56,8 @@ namespace Kratos
     KRATOS_CREATE_VARIABLE( int, OTHER_ID )
 
     KratosFiniteCellApplication::KratosFiniteCellApplication()
-    : mDummySurfaceCondition2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
+    : KratosApplication()
+    , mDummySurfaceCondition2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
     , mDummySurfaceCondition2D6N( 0, Element::GeometryType::Pointer( new Triangle2D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
     , mDummySurfaceCondition2D4N( 0, Element::GeometryType::Pointer( new Quadrilateral2D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
     , mDummySurfaceCondition2D8N( 0, Element::GeometryType::Pointer( new Quadrilateral2D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
@@ -106,8 +105,6 @@ namespace Kratos
         std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
 
         // register variables to Kratos kernel
-        KRATOS_REGISTER_VARIABLE( LOAD_FUNCTION )
-        KRATOS_REGISTER_VARIABLE( CUT_STATUS )
         KRATOS_REGISTER_VARIABLE( SUBCELL_WEIGHTS )
         KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZE )
         KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZES )

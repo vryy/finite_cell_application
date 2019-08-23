@@ -33,8 +33,8 @@
 #include "geometries/line_3d_2.h"
 #include "geometries/quadrilateral_3d_4.h"
 #include "geometries/hexahedra_3d_8.h"
-#include "custom_algebra/function/function.h"
-#include "custom_algebra/level_set/level_set.h"
+#include "brep_application/custom_algebra/function/function.h"
+#include "brep_application/custom_algebra/level_set/level_set.h"
 #include "custom_geometries/finite_cell_geometry.h"
 
 

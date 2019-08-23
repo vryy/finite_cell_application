@@ -1,7 +1,7 @@
 PROJECT_NAME           = "finite_cell_application"
 PROJECT_BRIEF          = "Documentation and manual for finite_cell_application"
 OUTPUT_DIRECTORY       = "/media/Data/Documentation/finite_cell_application"
-INPUT                  = custom_utilities/ custom_conditions/ custom_elements/ custom_geometries/ custom_algebra/
+INPUT                  = custom_utilities/ custom_conditions/ custom_elements/ custom_geometries/
 FILE_PATTERNS          = *.py *.cpp *.h
 RECURSIVE              = YES
 

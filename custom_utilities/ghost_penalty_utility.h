@@ -43,7 +43,7 @@
 #include "geometries/quadrilateral_3d_4.h"
 #include "geometries/quadrilateral_3d_8.h"
 #include "geometries/quadrilateral_3d_9.h"
-#include "custom_algebra/brep.h"
+#include "brep_application/custom_algebra/brep.h"
 #include "custom_conditions/ghost_penalty_condition.h"
 
 

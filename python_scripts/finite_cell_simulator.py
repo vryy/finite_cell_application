@@ -3,6 +3,7 @@ import pprint
 import time as time_module
 from KratosMultiphysics import *
 from KratosMultiphysics.StructuralApplication import *
+from KratosMultiphysics.BRepApplication import *
 from KratosMultiphysics.FiniteCellApplication import *
 #from KratosMultiphysics.FiniteCellStructuralApplication import *
 CheckForPreviousImport()

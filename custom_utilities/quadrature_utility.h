@@ -35,7 +35,7 @@
 #include "includes/kratos_flags.h"
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
-#include "custom_algebra/function/function.h"
+#include "brep_application/custom_algebra/function/function.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "finite_cell_application/finite_cell_application.h"

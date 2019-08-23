@@ -29,17 +29,17 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/foreach.hpp>
 #include <boost/progress.hpp>
+#include <boost/numeric/ublas/lu.hpp>
 
 
 // Project includes
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
 #include "utilities/timer.h"
-#include <boost/numeric/ublas/lu.hpp>
-#include "custom_algebra/brep.h"
-#include "custom_algebra/function/function.h"
-#include "custom_algebra/function/product_function.h"
-#include "custom_algebra/function/heaviside_function.h"
+#include "brep_application/custom_algebra/brep.h"
+#include "brep_application/custom_algebra/function/function.h"
+#include "brep_application/custom_algebra/function/product_function.h"
+#include "brep_application/custom_algebra/function/heaviside_function.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
 #ifdef FINITE_CELL_APPLICATION_USE_NNLS
 #include "custom_linear_solvers/nnls_solver.h"

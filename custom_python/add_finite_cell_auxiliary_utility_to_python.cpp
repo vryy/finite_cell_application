@@ -12,7 +12,7 @@
 // Project includes
 #include "includes/element.h"
 #include "custom_python/add_finite_cell_auxiliary_utility_to_python.h"
-#include "custom_algebra/brep.h"
+#include "brep_application/custom_algebra/brep.h"
 #include "custom_utilities/quad_tree.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/moment_fitted_quad_tree_subcell.h"

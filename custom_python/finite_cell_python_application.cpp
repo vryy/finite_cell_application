@@ -19,7 +19,6 @@
 // Project includes
 #include "includes/define.h"
 #include "finite_cell_application.h"
-#include "custom_python/add_custom_algebra_to_python.h"
 #include "custom_python/add_custom_conditions_to_python.h"
 #include "custom_python/add_quadtree_to_python.hpp"
 #include "custom_python/add_quadrature_utility_to_python.h"
@@ -43,8 +42,6 @@ namespace Python
         class_<KratosFiniteCellApplication, KratosFiniteCellApplication::Pointer, bases<KratosApplication>, boost::noncopyable>
         ("KratosFiniteCellApplication");
 
-        FiniteCellApplication_AddFunctionsToPython();
-        FiniteCellApplication_AddBRepAndLevelSetToPython();
         FiniteCellApplication_AddRefinableTreeToPython();
         FiniteCellApplication_AddFunctionIntegratorToPython();
 
@@ -104,8 +101,6 @@ namespace Python
         FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
         FiniteCellApplication_AddUtilityToPython();
 
-        KRATOS_REGISTER_IN_PYTHON_VARIABLE( LOAD_FUNCTION )
-        KRATOS_REGISTER_IN_PYTHON_VARIABLE( CUT_STATUS )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_DOMAIN_SIZE )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_WEIGHTS )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
