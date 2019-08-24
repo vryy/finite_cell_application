@@ -242,7 +242,8 @@ public:
         }
 
         // check the cut status with the level set
-        int stat = r_level_set.CutStatus(r_geom);
+        int configuration = 0; // check the cut status in the initial configuration
+        int stat = r_level_set.CutStatus(r_geom, configuration);
 //KRATOS_WATCH(stat)
 
         if(stat == -1) // the cell is cut

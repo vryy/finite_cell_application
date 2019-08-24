@@ -287,6 +287,7 @@ class FiniteCellSimulator:
         fit_space_dim = self.params["fitting_space_dimension"]
         fit_degree = self.params["fitting_function_degree"]
         fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
+        configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
 
         cut_elems = []
         exclude_elems = []
@@ -305,7 +306,7 @@ class FiniteCellSimulator:
                 print("moment-fitting begins")
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
-                stat = self.brep.CutStatusBySampling(elem, nsampling)
+                stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 if stat == BRep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
@@ -327,7 +328,7 @@ class FiniteCellSimulator:
             integrators = []
             for qi, qt in self.forest.iteritems():
                 elem = self.elements[qi]
-                stat = self.brep.CutStatusBySampling(elem, nsampling)
+                stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 if stat == BRep._CUT:
                     cut_elems.append(elem)
                     integrators.append(qt)
@@ -383,6 +384,7 @@ class FiniteCellSimulator:
         print("list of fitting functions for fit_degree = " + str(fit_degree) + ":")
         for func in fit_funcs:
             print(func)
+        configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
 
         cut_qs_elems = []
         exclude_qs_elems = []
@@ -406,7 +408,7 @@ class FiniteCellSimulator:
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatusBySampling(elem, nsampling)
+            stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
             if stat == BRep._CUT:
                 cut_qs_elems.append(qs)
@@ -423,7 +425,7 @@ class FiniteCellSimulator:
             for qs in cut_qs_elems:
                 for i in range(0, qs.NumberOfSubCells()):
                     qt = qs.CreateQuadTree(i)
-                    stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
+                    stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling, configuration)
                     if stat == BRep._CUT:
                         cnt = qt_depth
                         found = False
@@ -704,6 +706,7 @@ class FiniteCellSimulator:
         if self.quadrature_method == "quadtree":
             qt_depth = self.params["qt_depth"]
             small_weight = self.params["small_weight"]
+            configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
             ###########################################
             ##QUADTREE
             ###########################################
@@ -716,7 +719,7 @@ class FiniteCellSimulator:
             exclude_elems = []
             for elem in bulk_elements:
                 qt = self.forest[elem.Id]
-                stat = self.brep.CutStatusBySampling(elem, nsampling)
+                stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 elem.SetValue(CUT_STATUS, stat)
                 if stat == BRep._CUT:
                     for i in range(0, qt_depth):
@@ -1375,13 +1378,14 @@ class FiniteCellSimulator:
 
     def InspectQuadTreeSubCell(self, bulk_elements, qt_depth):
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        configuration = 1 # we check the cut status in the current configuration
         self.CreateForestSubCell(bulk_elements, nsampling)
 
         cut_elems = []
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatusBySampling(elem, nsampling)
+            stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
             if stat == BRep._CUT:
                 cut_elems.append(qs)
@@ -1396,7 +1400,7 @@ class FiniteCellSimulator:
             print("    number of subcells: " + str(qs.NumberOfSubCells()))
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
-                stat = self.brep.CutStatusBySampling(qt.pGetGeometry(), nsampling)
+                stat = self.brep.CutStatusBySampling(qt.pGetGeometry(), nsampling, configuration)
                 print("    subcell " + str(i) + " info:")
                 if stat == BRep._CUT:
                     print("        cut: yes")
@@ -1411,6 +1415,7 @@ class FiniteCellSimulator:
 
     def ExportQuadTreeSubCell(self, model, bulk_elements, qt_depth, sample_element_name, sample_cond_name, integrator_quadrature_method, selected_elems = "all"):
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        configuration = 1 # we check the cut status in the current configuration
         self.CreateForestSubCell(bulk_elements, nsampling)
 
         cut_elems = []
@@ -1418,7 +1423,7 @@ class FiniteCellSimulator:
         if selected_elems == "all":
             for qi, qs in self.forest.iteritems():
                 elem = qs.GetElement()
-                stat = self.brep.CutStatusBySampling(elem, nsampling)
+                stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 elem.SetValue(CUT_STATUS, stat)
                 if stat == BRep._CUT:
                     cut_elems.append(qs)
@@ -1426,7 +1431,7 @@ class FiniteCellSimulator:
             for qi, qs in self.forest.iteritems():
                 elem = qs.GetElement()
                 if elem.Id in selected_elems:
-                    stat = self.brep.CutStatusBySampling(elem, nsampling)
+                    stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                     elem.SetValue(CUT_STATUS, stat)
                     if stat == BRep._CUT:
                         cut_elems.append(qs)
@@ -1462,13 +1467,14 @@ class FiniteCellSimulator:
     ## Check if any quadtree subcell is integrable by refinement to some depth
     def CheckQuadTreeSubCell(self, bulk_elements, qt_depth):
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        configuration = 1 # we check the cut status in the current configuration
         self.CreateForestSubCell(bulk_elements, nsampling)
 
         cut_elems = []
 
         for qi, qs in self.forest.iteritems():
             elem = qs.GetElement()
-            stat = self.brep.CutStatusBySampling(elem, nsampling)
+            stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
             if stat == BRep._CUT:
                 cut_elems.append(qs)
@@ -1484,7 +1490,7 @@ class FiniteCellSimulator:
         for qs in cut_elems:
             for i in range(0, qs.NumberOfSubCells()):
                 qt = qs.CreateQuadTree(i)
-                stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling)
+                stat = self.brep.CutStatusBySampling(qt.pCreateGeometry(), nsampling, configuration)
                 if stat == BRep._CUT:
 #                    domain_size = qt.DomainSize(self.brep)
 #                    domain_size = qt.Integrate(Hf, 0x12) # Gauss Legendre order 2

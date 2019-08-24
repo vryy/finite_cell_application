@@ -150,8 +150,9 @@ public:
         // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
         bool is_ghost = false;
 
-        int stat1 = r_brep.CutStatus(p_element_1->GetGeometry());
-        int stat2 = r_brep.CutStatus(p_element_2->GetGeometry());
+        int configuration = 0; // check the cut status in the initial configuration
+        int stat1 = r_brep.CutStatus(p_element_1->GetGeometry(), configuration);
+        int stat2 = r_brep.CutStatus(p_element_2->GetGeometry(), configuration);
 
         if (stat1 == BRep::_CUT)
         {
