@@ -706,6 +706,10 @@ class FiniteCellSimulator:
         if self.quadrature_method == "quadtree":
             qt_depth = self.params["qt_depth"]
             small_weight = self.params["small_weight"]
+            if "set_small_weight" in self.params:
+                set_small_weight = self.params["set_small_weight"]
+            else:
+                set_small_weight = True # set the small weight by default
             configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
             ###########################################
             ##QUADTREE
@@ -724,7 +728,10 @@ class FiniteCellSimulator:
                 if stat == BRep._CUT:
                     for i in range(0, qt_depth):
                         qt.RefineBy(self.brep)
-                    np = qt.ConstructQuadrature(self.brep, cut_cell_quadrature_method, small_weight)
+                    if set_small_weight:
+                        np = qt.ConstructQuadrature(self.brep, cut_cell_quadrature_method, small_weight)
+                    else:
+                        np = qt.ConstructQuadrature(cut_cell_quadrature_method)
                     print("cut element " + str(elem.Id) + " has " + str(np) + " quadrature points")
                     print("cut element " + str(elem.Id) + " has " + str(qt.NumberOfCells()) + " leaf cells")
                     total_add_quadrature_pnts = total_add_quadrature_pnts + np
