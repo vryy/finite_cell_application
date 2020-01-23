@@ -50,22 +50,22 @@ namespace Python
         FiniteCellApplication_AddQuadTreeToPython<3, GLOBAL_REFERENCE>();
         FiniteCellApplication_AddQuadTreeToPython<4, GLOBAL_REFERENCE>();
         FiniteCellApplication_AddQuadTreeToPython<5, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_REFERENCE>();
 
         FiniteCellApplication_AddQuadTreeToPython<1, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeToPython<2, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeToPython<3, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeToPython<4, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeToPython<5, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<6, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<7, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<8, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<9, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeToPython<10, GLOBAL_CURRENT>();
 
         FiniteCellApplication_AddBaseMomentFittedQuadTreeSubCellToPython();
 
@@ -74,22 +74,22 @@ namespace Python
         FiniteCellApplication_AddQuadTreeSubCellToPython<3, GLOBAL_REFERENCE>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<4, GLOBAL_REFERENCE>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<5, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_REFERENCE>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_REFERENCE>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_REFERENCE>();
 
         FiniteCellApplication_AddQuadTreeSubCellToPython<1, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<2, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<3, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<4, GLOBAL_CURRENT>();
         FiniteCellApplication_AddQuadTreeSubCellToPython<5, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_CURRENT>();
-//        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<6, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<7, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<8, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<9, GLOBAL_CURRENT>();
+        FiniteCellApplication_AddQuadTreeSubCellToPython<10, GLOBAL_CURRENT>();
 
         FiniteCellApplication_AddCustomConditionsToPython();
 
@@ -106,6 +106,7 @@ namespace Python
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( OTHER_NODE_ID )
         KRATOS_REGISTER_IN_PYTHON_VARIABLE( OTHER_ID )
+        KRATOS_REGISTER_IN_PYTHON_VARIABLE( NUMBER_OF_PHYSICAL_POINTS )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
         KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )

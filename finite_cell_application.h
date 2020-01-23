@@ -45,6 +45,7 @@ namespace Kratos
     KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(PHYSICAL_INTEGRATION_POINT_DISPLACEMENT)
     KRATOS_DEFINE_VARIABLE( int, OTHER_NODE_ID )
     KRATOS_DEFINE_VARIABLE( int, OTHER_ID )
+    KRATOS_DEFINE_VARIABLE( int, NUMBER_OF_PHYSICAL_POINTS )
 
     ///@}
     ///@name Type Definitions
@@ -70,13 +71,13 @@ namespace Kratos
     public:
         ///@name Type Definitions
         ///@{
-        
+
         /// Pointer definition of KratosMultiphaseApplication
         KRATOS_CLASS_POINTER_DEFINITION(KratosFiniteCellApplication);
 
         ///@}
         ///@name Life Cycle
-        ///@{ 
+        ///@{
 
         /// Default constructor.
         KratosFiniteCellApplication();
@@ -172,7 +173,7 @@ namespace Kratos
 
         ///@}
         ///@name Protected Inquiry
-        ///@{ 
+        ///@{
 
 
         ///@}
