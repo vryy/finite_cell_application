@@ -196,15 +196,7 @@ public:
         return Results;
     }
 
-    /// Cut a geometry by a level set and 
-    /// We assume that the geometry is a polytope, that said, in 2D the geometry is a triangle or quadrilateral. If it's second order, then the edges are still defined by the 3 (or 4) vertices.
-    void AssignQuadrature2D(Element::Pointer& p_elem, const LevelSet& r_level_set,
-            const unsigned int& integration_order, const unsigned int& div_free_order)
-    {
-        this->AssignQuadrature2D(p_elem->GetGeometry(), r_level_set, integration_order, div_free_order);
-    }
-
-    /// Cut a geometry by a level set and 
+    /// Cut a geometry by a level set and construct the quadrature
     /// We assume that the geometry is a polytope, that said, in 2D the geometry is a triangle or quadrilateral. If it's second order, then the edges are still defined by the 3 (or 4) vertices.
     void AssignQuadrature2D(GeometryType& r_geom, const LevelSet& r_level_set,
             const unsigned int& integration_order, const unsigned int& div_free_order)

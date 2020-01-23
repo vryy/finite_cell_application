@@ -41,15 +41,19 @@ Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, c
     }
 }
 
+void DivFreeBasisUtility_AssignQuadrature2D(DivFreeBasisUtility& rDummy, Element::Pointer p_elem,
+    LevelSet::Pointer p_level_set, const unsigned int& integration_order, const unsigned int& div_free_order)
+{
+    rDummy.AssignQuadrature2D(p_elem->GetGeometry(), *p_level_set, integration_order, div_free_order);
+}
+
 void FiniteCellApplication_AddDivFreeBasisUtilityToPython()
 {
-
-    void(DivFreeBasisUtility::*pointer_to_AssignQuadrature2D)(Element::Pointer&, const LevelSet&, const unsigned int&, const unsigned int&) = &DivFreeBasisUtility::AssignQuadrature2D;
 
     class_<DivFreeBasisUtility, DivFreeBasisUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("DivFreeBasisUtility", init<>() )
     .def("GetValues", &ComputeDivFreeBasis)
-    .def("AssignQuadrature2D", pointer_to_AssignQuadrature2D)
+    .def("AssignQuadrature2D", &DivFreeBasisUtility_AssignQuadrature2D)
     ;
 
 }
