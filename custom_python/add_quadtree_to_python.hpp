@@ -418,16 +418,24 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
+    std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature1)(const int&) const = &QuadTreeType::ConstructQuadrature;
+    std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature2)(const BRep&, const int&, const double&) const = &QuadTreeType::ConstructQuadrature;
+
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
     .def(init<Condition::Pointer>())
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
+    .def("Reset", &QuadTreeType::Reset)
+    .def("LastLevel", &QuadTreeType::LastLevel)
     .def("NumberOfCells", &QuadTreeType::NumberOfCells)
+    .def("NumberOfPhysicalPoints", &QuadTreeType::NumberOfPhysicalPoints)
+    .def("NumberOfFictitiousPoints", &QuadTreeType::NumberOfFictitiousPoints)
     .def("DomainSize", &QuadTreeType::DomainSize)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
-    .def("ConstructQuadrature", &QuadTreeType::ConstructQuadrature)
+    .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
+    .def("ConstructQuadrature", pointer_to_ConstructQuadrature2)
     .def(self_ns::str(self))
     ;
 }
@@ -440,6 +448,8 @@ void FiniteCellApplication_AddQuadTreeSubCellToPython()
 
     double(QuadTreeSubCellType::*pointer_to_DomainSize1)(const std::size_t&, const BRep&, const int&) const = &QuadTreeSubCellType::DomainSize;
     double(QuadTreeSubCellType::*pointer_to_DomainSize2)(const BRep&, const int&) const = &QuadTreeSubCellType::DomainSize;
+    std::size_t(QuadTreeSubCellType::*pointer_to_ConstructQuadrature1)(const int&) const = &QuadTreeSubCellType::ConstructQuadrature;
+    std::size_t(QuadTreeSubCellType::*pointer_to_ConstructQuadrature2)(const BRep&, const int&, const double&) const = &QuadTreeSubCellType::ConstructQuadrature;
 
     std::stringstream QuadTreeSubCellName;
     QuadTreeSubCellName << "QuadTreeSubCell";
@@ -457,7 +467,8 @@ void FiniteCellApplication_AddQuadTreeSubCellToPython()
     .def("DomainSize", pointer_to_DomainSize1)
     .def("DomainSize", pointer_to_DomainSize2)
     .def("CreateQuadTree", &QuadTreeSubCellType::CreateQuadTree)
-    .def("ConstructQuadrature", &QuadTreeSubCellType::ConstructQuadrature)
+    .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
+    .def("ConstructQuadrature", pointer_to_ConstructQuadrature2)
     .def("ShallowAddToModelPart", &QuadTreeSubCell_AddToModelPart<QuadTreeSubCellType, true>) // only add the sub-cell
     .def("DeepAddToModelPart", &QuadTreeSubCell_AddToModelPart<QuadTreeSubCellType, false>) // add the sub-cell and all the quad-trees
     .def("ShallowAddToModelPart", &QuadTreeSubCell_AddToModelPart2<QuadTreeSubCellType, true>) // only add the sub-cell, the properties id starts from 1

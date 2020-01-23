@@ -197,6 +197,12 @@ public:
     /// Destructor.
     virtual ~ QuadTree() {}
 
+    /// Reset the quadtree node
+    void Reset()
+    {
+        mpTreeNode.reset();
+        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType());
+    }
 
     /// Get the template parameter
     const std::size_t GetNsampling() const
@@ -204,13 +210,11 @@ public:
         return TNsampling;
     }
 
-
     /// Access the underlying quad-tree node
     const QuadTreeNodeType& Get() const {return *mpTreeNode;}
     QuadTreeNodeType& Get() {return *mpTreeNode;}
     const typename QuadTreeNodeType::Pointer pGet() const {return mpTreeNode;}
     typename QuadTreeNodeType::Pointer pGet() {return mpTreeNode;}
-
 
     /// Access the underlying quad-tree node
     /// These functions are provided so that quadtree-subcell can work interchangeably with quadtree
@@ -219,11 +223,9 @@ public:
     const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNode;}
     typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNode;}
 
-
     /// Access the underlying (operating) geometry
     GeometryType& GetGeometry() const {return *mpThisGeometry;}
     GeometryType::Pointer pGetGeometry() const {return mpThisGeometry;}
-
 
     /// Create the sub-cells
     /// Implement function from abstract class RefinableTree
@@ -232,7 +234,6 @@ public:
         mpTreeNode->Refine();
     }
 
-
     /// Refine the tree by the BRep
     /// Implement function from abstract class RefinableTree
     virtual void RefineBy(const BRep& r_brep)
@@ -240,14 +241,12 @@ public:
         mpTreeNode->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
     }
 
-
     /// Clear the underlying quadtree node
     /// Implement function from abstract class RefinableTree
     virtual void Clear()
     {
         mpTreeNode->Clear();
     }
-
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
@@ -294,10 +293,70 @@ public:
         return this->Get().ConstructCustomQuadrature(quadrature_type, integration_order);
     }
 
+    /// Get the last level of the tree node
+    std::size_t LastLevel() const
+    {
+        return mpTreeNode->LastLevel();
+    }
+
     /// Get the number of cells under the tree node
     std::size_t NumberOfCells() const
     {
         return mpTreeNode->NumberOfCells();
+    }
+
+    /// Compute the number of points in the physical domain
+    std::size_t NumberOfPhysicalPoints(const BRep& r_brep, const int& integration_method) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        GeometryType::IntegrationPointsArrayType tmp_integration_points;
+
+        // firstly create an array of integration points of sub-trees
+        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+
+        // compute the number of physical integration points
+        CoordinatesArrayType GlobalCoords;
+        std::size_t num_points = 0;
+        for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
+        {
+            if(TFrameType == GLOBAL_CURRENT)
+                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+            else if(TFrameType == GLOBAL_REFERENCE)
+                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
+            if(r_brep.IsInside(GlobalCoords))
+                ++num_points;
+        }
+
+        return num_points;
+    }
+
+    /// Compute the number of points in the fictitious domain
+    std::size_t NumberOfFictitiousPoints(const BRep& r_brep, const int& integration_method) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        GeometryType::IntegrationPointsArrayType tmp_integration_points;
+
+        // firstly create an array of integration points of sub-trees
+        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+
+        // compute the number of fictitious integration points
+        CoordinatesArrayType GlobalCoords;
+        std::size_t num_points = 0;
+        for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
+        {
+            if(TFrameType == GLOBAL_CURRENT)
+                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+            else if(TFrameType == GLOBAL_REFERENCE)
+                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
+            if(!r_brep.IsInside(GlobalCoords))
+                ++num_points;
+        }
+
+        return num_points;
     }
 
     /// Compute the domain size covered by this quadtree
@@ -305,7 +364,6 @@ public:
     {
         return mpTreeNode->DomainSize(mpThisGeometry, r_brep, integration_method);
     }
-
 
     /// Compute the center of gravity of this quadtree
     PointType CenterOfGravity(const BRep& r_brep, const int& integration_method) const
@@ -317,7 +375,6 @@ public:
         return COG;
     }
 
-
     /// Integrate a function using the underlying geometry of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType, int TFuncFrameType>
@@ -328,7 +385,6 @@ public:
         mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
 
-
     /// Integrate a function using the sample geometry and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType, int TFuncFrameType>
@@ -338,7 +394,6 @@ public:
     {
         mpTreeNode->template Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_points);
     }
-
 
     /// Integrate a function using the underlying geometry limited by a BRep of the quadtree and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
@@ -352,7 +407,6 @@ public:
         mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
 
-
     /// Integrate a function using the underlying geometry limited by a BRep and a set of sample integration points
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType, int TFuncFrameType>
@@ -365,11 +419,28 @@ public:
         mpTreeNode->template Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
 
-
     /// Construct the finite cell quadrature
     /// Returns the number of quadrature points created
+    std::size_t ConstructQuadrature(const int& integration_method) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        // firstly create an array of integration points of sub-trees
+        mpTreeNode->ConstructQuadrature(mpThisGeometry, integration_points, integration_method);
+
+        /* create new quadrature and assign to the geometry */
+        int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
+
+        return integration_points.size();
+    }
+
+    /// Construct the finite cell quadrature
+    /// The quadrature point not in the physical domain will be penalized
+    /// Returns the number of quadrature points created
     std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-            const double small_weight = 0.0) const
+            const double& small_weight = 0.0) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -389,7 +460,11 @@ public:
         {
             for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
-                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                if(TFrameType == GLOBAL_CURRENT)
+                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                else if(TFrameType == GLOBAL_REFERENCE)
+                    FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
                 // modify the weight if needed
                 if(!r_brep.IsInside(GlobalCoords))
                     tmp_integration_points[point].SetWeight(small_weight);
@@ -400,7 +475,11 @@ public:
         {
             for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
-                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                if(TFrameType == GLOBAL_CURRENT)
+                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                else if(TFrameType == GLOBAL_REFERENCE)
+                    FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
                 if(r_brep.IsInside(GlobalCoords))
                 {
                     integration_points.push_back(tmp_integration_points[point]);
@@ -420,7 +499,6 @@ public:
 
         return integration_points.size();
     }
-
 
     static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
     {
@@ -471,7 +549,6 @@ public:
 
         return pTreeNode;
     }
-
 
     /// Turn back information as a string.
     virtual std::string Info() const
@@ -560,13 +637,11 @@ public:
     /// Destructor.
     virtual ~ QuadTreeSubCell() {}
 
-
     /// Get the pointer to the underlying geometry
     GeometryType::Pointer pGetGeometry() const
     {
         return mpThisGeometry;
     }
-
 
     /// Get the number of subcells
     std::size_t NumberOfSubCells() const
@@ -574,13 +649,11 @@ public:
         return mpTreeNodes.size();
     }
 
-
     /// Get the template parameter
     const std::size_t GetNsampling() const
     {
         return TNsampling;
     }
-
 
     /// Access the underlying quad-tree nodes
     const QuadTreeNodeType& Get(const std::size_t& i) const {return *mpTreeNodes[i];}
@@ -597,7 +670,6 @@ public:
             mpTreeNodes[i]->Refine();
     }
 
-
     /// Refine the tree by the level set
     /// Implement function from abstract class RefinableTree
     virtual void RefineBy(const BRep& r_brep)
@@ -606,7 +678,6 @@ public:
             mpTreeNodes[i]->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
     }
 
-
     /// Clear the underlying quadtree nodes
     /// Implement function from abstract class RefinableTree
     virtual void Clear()
@@ -614,7 +685,6 @@ public:
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
             mpTreeNodes[i]->Clear();
     }
-
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
@@ -661,13 +731,11 @@ public:
         return this->Get(0).ConstructCustomQuadrature(quadrature_type, integration_order);
     }
 
-
     /// Compute the domain size of the subcell i
     double DomainSize(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
     {
         return mpTreeNodes[i]->DomainSize(mpThisGeometry, r_brep, integration_method);
     }
-
 
     /// Compute the domain size covered by this quadtree (including all subcells)
     double DomainSize(const BRep& r_brep, const int& integration_method) const
@@ -678,14 +746,12 @@ public:
         return domain_size;
     }
 
-
     /// Create a quadtree out from a subcell
     /// Fundamentally we can use this function to extract out a subcell and refine it since it's a quadtree node
     typename QuadTree<TNsampling, TFrameType>::Pointer CreateQuadTree(const std::size_t& i) const
     {
         return typename QuadTree<TNsampling, TFrameType>::Pointer(new QuadTree<TNsampling, TFrameType>(mpThisGeometry, mpTreeNodes[i]));
     }
-
 
     /// Integrate a function using the underlying geometry of the quadtree subcell and integration rule
     /// The caller has to manually set rOutput to zero before calling this function
@@ -696,7 +762,6 @@ public:
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
             mpTreeNodes[i]->template Integrate<TOutputType, Frame>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
-
 
     //////////////////////
 
@@ -713,8 +778,35 @@ public:
     //////////////////////
 
     /// Construct the finite cell quadrature
+    std::size_t ConstructQuadrature(const int& integration_method) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        // firstly create an array of integration points of sub-trees of sub-cells
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+        {
+            GeometryType::IntegrationPointsArrayType tmp_integration_points;
+
+            mpTreeNodes[i]->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+
+            for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
+            {
+                integration_points.push_back(tmp_integration_points[point]);
+            }
+        }
+
+        /* create new quadrature and assign to the geometry */
+        int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
+
+        return integration_points.size();
+    }
+
+    /// Construct the finite cell quadrature
+    /// The quadrature point not in the physical domain will be penalized
     std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-            const double small_weight = 0.0) const
+            const double& small_weight = 0.0) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -730,7 +822,11 @@ public:
             {
                 for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
-                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    if(TFrameType == GLOBAL_CURRENT)
+                        GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    else if(TFrameType == GLOBAL_REFERENCE)
+                        FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
                     // modify the weight if needed
                     if(!r_brep.IsInside(GlobalCoords))
                         tmp_integration_points[point].SetWeight(small_weight);
@@ -741,7 +837,11 @@ public:
             {
                 for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
-                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    if(TFrameType == GLOBAL_CURRENT)
+                        GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    else if(TFrameType == GLOBAL_REFERENCE)
+                        FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
                     if(r_brep.IsInside(GlobalCoords))
                         integration_points.push_back(tmp_integration_points[point]);
                 }
@@ -755,7 +855,6 @@ public:
 
         return integration_points.size();
     }
-
 
     /// Turn back information as a string.
     virtual std::string Info() const

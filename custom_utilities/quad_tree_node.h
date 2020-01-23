@@ -126,6 +126,26 @@ public:
         return mLevel;
     }
 
+    /// Get the last level of the tree node
+    std::size_t LastLevel() const
+    {
+        if(this->IsLeaf())
+        {
+            return this->Level();
+        }
+        else
+        {
+            std::size_t last_level = 0;
+            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
+                std::size_t tmp = mpChildren[i]->LastLevel();
+                if (tmp > last_level)
+                    last_level = tmp;
+            }
+            return last_level;
+        }
+    }
+
     /// Return the number of children.
     std::size_t Size() const
     {
