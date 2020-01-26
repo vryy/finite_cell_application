@@ -278,6 +278,33 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
 }
 
 
+ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
+        const Transformation<double>& rTrans)
+{
+    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
+
+    // create nodes and add to model_part
+    ModelPart::NodesContainerType NewNodes;
+    array_1d<double, 3> point;
+    for(ModelPart::NodeIterator it = rOtherModelPart.NodesBegin(); it != rOtherModelPart.NodesEnd(); ++it)
+    {
+        std::size_t new_node_id = ++last_node_id;
+
+        point[0] = it->X();
+        point[1] = it->Y();
+        point[2] = it->Z();
+        rTrans.ApplyTransformation(point);
+
+        NodeType::Pointer pNewNode = rThisModelPart.CreateNewNode(new_node_id, point[0], point[1], point[2]);
+        it->SetValue(OTHER_NODE_ID, new_node_id);
+        NewNodes.push_back(pNewNode);
+    }
+
+    std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
+              << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+    return NewNodes;
+}
+
 ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart& rThisModelPart,
     ModelPart::ElementsContainerType& rOtherElements,
     const std::string& sample_element_name, Properties::Pointer pProperties)

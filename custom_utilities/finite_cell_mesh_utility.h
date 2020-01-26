@@ -38,6 +38,7 @@
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
 #include "finite_cell_application/finite_cell_application.h"
+#include "brep_application/custom_algebra/trans/transformation.h"
 #include "brep_application/custom_utilities/brep_utility.h"
 #include "brep_application/custom_utilities/brep_mesh_utility.h"
 
@@ -236,6 +237,12 @@ public:
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
         const double& offset_x, const double& offset_y, const double& offset_z,
         const double& cx, const double& cy, const double& theta);
+
+
+    /// Import the nodes from other model_part to this model_part
+    /// The nodes will be applied first with the transformation matrix before importing
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
+        const Transformation<double>& rTrans);
 
 
     /// Import the elements from list to the this model_part

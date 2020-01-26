@@ -302,6 +302,13 @@ ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshU
     return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta);
 }
 
+ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshUtility& rDummy,
+    ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
+    const Transformation<double>& rTrans)
+{
+    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, rTrans);
+}
+
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements(FiniteCellMeshUtility& rDummy,
     ModelPart& rThisModelPart, ModelPart::ElementsContainerType& rOtherElements,
     const std::string& sample_element_name, Properties::Pointer pProperties)
@@ -331,6 +338,7 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
     .def("CreateParasiteElement", &FiniteCellMeshUtility_CreateParasiteElement2)
     .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes)
     .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes2)
+    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes3)
     .def("ImportElements", &FiniteCellMeshUtility_ImportElements)
     .def("ImportConditions", &FiniteCellMeshUtility_ImportConditions)
     ;
