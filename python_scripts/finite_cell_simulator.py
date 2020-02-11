@@ -166,27 +166,27 @@ def CreateFittingFunctions(fit_space_dim, fit_degree):
 
     return fit_funcs
 
-def CreateQuadTree(element, nsampling):
+def CreateQuadTree(element, nsampling, quadtree_configuration = 0):
     if nsampling == 1:
-        return QuadTreeLocalReference(element)
+        return QuadTreeLocalReference(element, quadtree_configuration)
     elif nsampling == 2:
-        return QuadTreeLocalReference2(element)
+        return QuadTreeLocalReference2(element, quadtree_configuration)
     elif nsampling == 3:
-        return QuadTreeLocalReference3(element)
+        return QuadTreeLocalReference3(element, quadtree_configuration)
     elif nsampling == 4:
-        return QuadTreeLocalReference4(element)
+        return QuadTreeLocalReference4(element, quadtree_configuration)
     elif nsampling == 5:
-        return QuadTreeLocalReference5(element)
+        return QuadTreeLocalReference5(element, quadtree_configuration)
     elif nsampling == 6:
-        return QuadTreeLocalReference6(element)
+        return QuadTreeLocalReference6(element, quadtree_configuration)
     elif nsampling == 7:
-        return QuadTreeLocalReference7(element)
+        return QuadTreeLocalReference7(element, quadtree_configuration)
     elif nsampling == 8:
-        return QuadTreeLocalReference8(element)
+        return QuadTreeLocalReference8(element, quadtree_configuration)
     elif nsampling == 9:
-        return QuadTreeLocalReference9(element)
+        return QuadTreeLocalReference9(element, quadtree_configuration)
     elif nsampling == 10:
-        return QuadTreeLocalReference10(element)
+        return QuadTreeLocalReference10(element, quadtree_configuration)
 
 def CreateQuadTreeSubCell(element, nsampling):
     if nsampling == 1:
@@ -231,9 +231,16 @@ class FiniteCellSimulator:
             if 'sample_quad_element_name' not in self.params:
                 self.params["sample_quad_element_name"] = "DummySurfaceElement2D4N"
 
-        self.params['write_quadrature_to_file'] = False
-        self.params['export_quadrature_in_reference_frame'] = False
-        self.params['export_quadrature_in_current_frame'] = False
+        if 'write_quadrature_to_file' not in self.params:
+            self.params['write_quadrature_to_file'] = False
+            self.params['export_quadrature_in_reference_frame'] = False
+            self.params['export_quadrature_in_current_frame'] = False
+
+        if 'number_of_samplings' not in self.params:
+            self.params['number_of_samplings'] = 1
+
+        if 'quadtree_configuration' not in self.params:
+            self.params['quadtree_configuration'] = 0
 
         self.forest = {}
 
@@ -241,12 +248,12 @@ class FiniteCellSimulator:
     def CleanForest(self):
         self.forest = {}
 
-    def CreateForest(self, elements, nsampling = 1):
+    def CreateForest(self, elements, nsampling, quadtree_configuration):
         ###############################################################
         ######### CREATE TREES AND FOREST
         ###############################################################
         for elem in elements:
-            self.forest[elem.Id] = CreateQuadTree(elem, nsampling)
+            self.forest[elem.Id] = CreateQuadTree(elem, nsampling, quadtree_configuration)
 
     def CreateForestSubCell(self, elements, nsampling = 1):
         subcell_fit_mode = self.params["subcell_fit_mode"]
@@ -271,11 +278,12 @@ class FiniteCellSimulator:
         print("fit parameters:")
         pprint.pprint(self.params)
         qt_depth = self.params["qt_depth"]
-        nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        nsampling = self.params["number_of_samplings"]
+        quadtree_configuration = self.params["quadtree_configuration"]
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
-        self.CreateForest(bulk_elements, nsampling)
+        self.CreateForest(bulk_elements, nsampling, quadtree_configuration)
         self.elements = {}
         for elem in bulk_elements:
             self.elements[elem.Id] = elem
@@ -287,7 +295,7 @@ class FiniteCellSimulator:
         fit_space_dim = self.params["fitting_space_dimension"]
         fit_degree = self.params["fitting_function_degree"]
         fit_funcs = CreateFittingFunctions(fit_space_dim, fit_degree)
-        configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
+        configuration = 0 # reference configuration
 
         cut_elems = []
         exclude_elems = []
@@ -384,7 +392,7 @@ class FiniteCellSimulator:
         print("list of fitting functions for fit_degree = " + str(fit_degree) + ":")
         for func in fit_funcs:
             print(func)
-        configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
+        configuration = 0 # reference configuration
 
         cut_qs_elems = []
         exclude_qs_elems = []
@@ -693,7 +701,7 @@ class FiniteCellSimulator:
         """
         self.quadrature_method = self.params["quadrature_method"]
         self.mpu = self.params["material_properties_utility"]
-        nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
+        nsampling = self.params["number_of_samplings"]
         print("simulator parameters:")
         pprint.pprint(self.params)
         quad_util = QuadratureUtility()
@@ -710,13 +718,14 @@ class FiniteCellSimulator:
                 set_small_weight = self.params["set_small_weight"]
             else:
                 set_small_weight = True # set the small weight by default
-            configuration = 1 # at this point, the reference configuration is the same as current configuration, but we take the current configuration for better efficiency
+            configuration = 0 # reference configuration
+            quadtree_configuration = self.params['quadtree_configuration']
             ###########################################
             ##QUADTREE
             ###########################################
-            self.CreateForest(bulk_elements, nsampling)
+            self.CreateForest(bulk_elements, nsampling, quadtree_configuration)
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
-            cut_cell_quadrature_order = 1 #quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             total_add_quadrature_pnts = 0
             self.proper_cut_elems = ElementsArray()
             cut_elems = []
@@ -789,23 +798,21 @@ class FiniteCellSimulator:
                 quad_filename = self.params["quad_filename"]
                 quad_filetype = self.params["quad_filetype"]
                 accuracy = self.params["quad_accuracy"]
-                self.params["material_properties_utility"] = ""
                 quad_util.SaveQuadrature(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
                 fid = open(quad_filename, "a")
                 fid.write("\ndef GetParameter():\n")
                 fid.write("    params = " + str(self.params) + "\n")
                 fid.write("    return params\n")
                 fid.close()
-            if self.params["export_quadrature_in_reference_frame"] == True:
-                quad_filename = self.params["quad_filename_reference"]
-                quad_filetype = self.params["quad_filetype_reference"]
-                accuracy = self.params["quad_accuracy"]
-                self.params["material_properties_utility"] = ""
-                quad_util.ExportQuadratureInReferenceFrame(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
+                if self.params["export_quadrature_in_reference_frame"] == True:
+                    quad_filename = self.params["quad_filename_reference"]
+                    quad_filetype = self.params["quad_filetype_reference"]
+                    accuracy = self.params["quad_accuracy"]
+                    quad_util.ExportQuadratureInReferenceFrame(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
             # end if self.quadrature_method == "quadtree":
         elif self.quadrature_method == "quadtree preload":
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
-            cut_cell_quadrature_order = 1 #quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
+            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             quadrature_data = self.params["quadrature_data"]
             cut_elems = quadrature_data.GetCutElements()
             exclude_elems = quadrature_data.GetExcludeElements()
@@ -851,7 +858,7 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             #end elif self.quadrature_method == "quadtree":
         elif self.quadrature_method == "moment-fit quadtree":
-            cut_cell_quadrature_order = 1 #self.params["cut_cell_quadrature_order"]
+            cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
             quadrature_data = self.params["quadrature_data"]
             ###########################################
             ##OBTAIN THE PRE-CALCULATED QUADRATURE FROM MOMENT FIT
@@ -1350,8 +1357,9 @@ class FiniteCellSimulator:
 
     ###CHECKING FUNCTIONS#############
     def ExportQuadTree(self, model, sample_element, group = None):
-        nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
-        self.CreateForest(model.model_part.Elements, nsampling)
+        nsampling = self.params["number_of_samplings"]
+        quadtree_configuration = self.params["quadtree_configuration"]
+        self.CreateForest(model.model_part.Elements, nsampling, quadtree_configuration)
         #######QUAD TREE POST PROCESSING###########
         qt_depth = self.params["qt_depth"]
         for qi, qt in self.forest.iteritems():
