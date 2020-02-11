@@ -101,7 +101,7 @@ public:
 
     typedef BRepMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
 
-    typedef BRepMeshUtility::MeshInfoType MeshInfoType;
+    typedef BRepMeshUtility::ElementMeshInfoType ElementMeshInfoType;
 
     ///@}
     ///@name Life Cycle
@@ -183,7 +183,7 @@ public:
 
 
     /// Create the line elements based on given points list
-    static MeshInfoType CreateLineElements(ModelPart& r_model_part,
+    static ElementMeshInfoType CreateLineElements(ModelPart& r_model_part,
         const std::vector<PointType>& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate L2 elements; 2: L3 elements;
@@ -192,7 +192,7 @@ public:
 
 
     /// Create the quad elements based on given points list
-    static MeshInfoType CreateQuadElements(ModelPart& r_model_part,
+    static ElementMeshInfoType CreateQuadElements(ModelPart& r_model_part,
         const std::vector<std::vector<PointType> >& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
@@ -202,7 +202,7 @@ public:
 
 
     /// Create the hex elements based on given points list
-    static MeshInfoType CreateHexElements(ModelPart& r_model_part,
+    static ElementMeshInfoType CreateHexElements(ModelPart& r_model_part,
         const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
@@ -262,7 +262,7 @@ public:
     static void ImportEntities(ModelPart& rThisModelPart,
         TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
         TEntityContainerType& rNewElements, // the added elements to rThisElements
-        TEntityContainerType& rOtherElements,
+        TEntityContainerType& rOtherElements, // other elements to be imported from
         std::size_t& last_element_id,
         TEntityType const& r_clone_element,
         Properties::Pointer pProperties)

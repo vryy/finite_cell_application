@@ -114,7 +114,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCe
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
@@ -156,7 +156,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSam
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateQuadElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
@@ -193,7 +193,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCe
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
@@ -241,7 +241,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSam
 
     int close_dir = 0; // open loop
     int activation_dir = 0;
-    FiniteCellMeshUtility::MeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points,
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points,
         sample_element_name, type, close_dir, activation_dir, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;

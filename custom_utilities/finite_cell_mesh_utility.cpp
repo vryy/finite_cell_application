@@ -145,7 +145,7 @@ void FiniteCellMeshUtility::GenerateStructuredPoints3D(std::vector<std::vector<s
 }
 
 
-FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateLineElements(ModelPart& r_model_part,
+FiniteCellMeshUtility::ElementMeshInfoType FiniteCellMeshUtility::CreateLineElements(ModelPart& r_model_part,
         const std::vector<PointType>& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate L2 elements; 2: L3 elements;
@@ -156,7 +156,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateLineElements(Mo
 }
 
 
-FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
+FiniteCellMeshUtility::ElementMeshInfoType FiniteCellMeshUtility::CreateQuadElements(ModelPart& r_model_part,
     const std::vector<std::vector<PointType> >& sampling_points,
     const std::string& sample_element_name,
     const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
@@ -168,7 +168,7 @@ FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateQuadElements(Mo
 }
 
 
-FiniteCellMeshUtility::MeshInfoType FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
+FiniteCellMeshUtility::ElementMeshInfoType FiniteCellMeshUtility::CreateHexElements(ModelPart& r_model_part,
     const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
     const std::string& sample_element_name,
     const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
