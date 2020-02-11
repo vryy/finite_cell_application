@@ -152,6 +152,12 @@ public:
         return mpChildren.size();
     }
 
+    /// Return the configuration of the quadtree node.
+    virtual int Configuration() const
+    {
+        return 0;
+    }
+
     /// Get the children node
     typename QuadTreeNode::Pointer pChild(const std::size_t& i) const {return mpChildren[i];}
 
@@ -1289,7 +1295,11 @@ public:
 
 
 /// Hexahedral quad-tree node in reference coordinates
-template<int TFrameType>
+/// Configuration = 0: normal sub-division to 8 hexas
+/// Configuration = 1: sub-division to 4 hexas in Oyz surface
+/// Configuration = 2: sub-division to 4 hexas in Oxz surface
+/// Configuration = 3: sub-division to 4 hexas in Oxy surface
+template<int TFrameType, int TConfiguration = 0>
 class QuadTreeNodeH8 : public QuadTreeNode<TFrameType>
 {
 public:
@@ -1324,19 +1334,49 @@ public:
     const double& Zmin() const {return mZmin;}
     const double& Zmax() const {return mZmax;}
 
+    virtual int Configuration() const
+    {
+        return TConfiguration;
+    }
+
     virtual void Refine()
     {
         if(this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+
+            if (TConfiguration == 0)
+            {
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+            }
+            else if (TConfiguration == 1)
+            {
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+            }
+            else if (TConfiguration == 2)
+            {
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, mYmax, mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, mYmax, mZmin, 0.5*(mZmin+mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, mYmax, 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, mYmax, 0.5*(mZmin+mZmax), mZmax)));
+            }
+            else if (TConfiguration == 3)
+            {
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, mZmax)));
+            }
         }
         else
         {

@@ -424,6 +424,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
     .def(init<Condition::Pointer>())
+    .def(init<Element::Pointer, const int&>())
+    .def(init<Condition::Pointer, const int&>())
     .def("pGetGeometry", &QuadTreeType::pGetGeometry)
     .def("Reset", &QuadTreeType::Reset)
     .def("LastLevel", &QuadTreeType::LastLevel)

@@ -178,19 +178,35 @@ public:
 
     /// Constructor taking the element geometry and initialize the quad tree as reference coordinates of the element
     QuadTree(Element::Pointer p_elem)
+    : mConfiguration(0)
     {
-        this->Initialize(p_elem->pGetGeometry());
+        this->Initialize(p_elem->pGetGeometry(), 0);
+    }
+
+    /// Constructor taking the element geometry and initialize the quad tree as reference coordinates of the element
+    QuadTree(Element::Pointer p_elem, const int& Configuration)
+    : mConfiguration(Configuration)
+    {
+        this->Initialize(p_elem->pGetGeometry(), Configuration);
     }
 
     /// Constructor taking the condition geometry and initialize the quad tree as reference coordinates of the condition
     QuadTree(Condition::Pointer p_cond)
+    : mConfiguration(0)
     {
-        this->Initialize(p_cond->pGetGeometry());
+        this->Initialize(p_cond->pGetGeometry(), 0);
+    }
+
+    /// Constructor taking the condition geometry and initialize the quad tree as reference coordinates of the condition
+    QuadTree(Condition::Pointer p_cond, const int& Configuration)
+    : mConfiguration(Configuration)
+    {
+        this->Initialize(p_cond->pGetGeometry(), Configuration);
     }
 
     /// Constructor taking the geometry and the quad-tree node. This constructor allows for arbitrary reference coordinates of the initial quad-tree node.
     QuadTree(GeometryType::Pointer pGeometry, typename QuadTreeNodeType::Pointer pTreeNode)
-    : mpThisGeometry(pGeometry), mpTreeNode(pTreeNode)
+    : mpThisGeometry(pGeometry), mpTreeNode(pTreeNode), mConfiguration(pTreeNode->Configuration())
     {
     }
 
@@ -201,7 +217,7 @@ public:
     void Reset()
     {
         mpTreeNode.reset();
-        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType());
+        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType(), mConfiguration);
     }
 
     /// Get the template parameter
@@ -500,7 +516,7 @@ public:
         return integration_points.size();
     }
 
-    static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType)
+    static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType, const int& configuration = 0)
     {
         typename QuadTreeNodeType::Pointer pTreeNode;
 
@@ -524,7 +540,14 @@ public:
              || ThisGeometryType == GeometryData::Kratos_Hexahedra3D20
              || ThisGeometryType == GeometryData::Kratos_Hexahedra3D27 )
         {
-            pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+            if (configuration == 0)
+                pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+            else if (configuration == 1)
+                pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType, 1>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+            else if (configuration == 2)
+                pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType, 2>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+            else if (configuration == 3)
+                pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType, 3>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
         }
         else if(ThisGeometryType == GeometryData::Kratos_Tetrahedra3D4
              || ThisGeometryType == GeometryData::Kratos_Tetrahedra3D10 )
@@ -580,11 +603,12 @@ private:
 
     GeometryType::Pointer mpThisGeometry;
     typename QuadTreeNodeType::Pointer mpTreeNode;
+    int mConfiguration; // this variable stores a specific configuration of the quadtree
 
-    void Initialize(GeometryType::Pointer pGeometry)
+    void Initialize(GeometryType::Pointer pGeometry, const int& Configuration)
     {
         mpThisGeometry = pGeometry;
-        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType());
+        mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType(), Configuration);
     }
 
     /// Assignment operator.
