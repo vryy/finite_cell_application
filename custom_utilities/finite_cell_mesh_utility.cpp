@@ -56,7 +56,7 @@ void FiniteCellMeshUtility::GenerateSampling(std::vector<double>& sampling,
 void FiniteCellMeshUtility::GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
         FiniteCellMeshUtility::GeometryType& r_geom, const std::size_t& nsampling)
 {
-    BRepMeshUtility::GenerateSamplingPoints(SamplingPoints, r_geom, nsampling);
+    BRepMeshUtility::GenerateSamplingPoints<1>(SamplingPoints, r_geom, nsampling);
 }
 
 
