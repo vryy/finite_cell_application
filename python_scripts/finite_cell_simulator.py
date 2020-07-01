@@ -235,6 +235,11 @@ class FiniteCellSimulator:
             self.params['write_quadrature_to_file'] = False
             self.params['export_quadrature_in_reference_frame'] = False
             self.params['export_quadrature_in_current_frame'] = False
+        else:
+            if 'export_quadrature_in_reference_frame' not in self.params:
+                self.params['export_quadrature_in_reference_frame'] = False
+            if 'export_quadrature_in_current_frame' not in self.params:
+                self.params['export_quadrature_in_current_frame'] = False
 
         if 'number_of_samplings' not in self.params:
             self.params['number_of_samplings'] = 1
@@ -690,14 +695,7 @@ class FiniteCellSimulator:
     ###SIMULATION DRIVER#############
     def Initialize(self, model, bulk_elements):
         """
-        Initialize the finite cell model assuming homogeneous material
-        """
-        self.mat_type = self.params["mat_type"]
-        self.InitializeWithMaterial(model, bulk_elements, self.mat_type)
-
-    def InitializeWithMaterial(self, model, bulk_elements, mat_type):
-        """
-        Initialize the finite cell model with mat_type. All the bulk_elements will be initialized with mat_type
+        Initialize the finite cell model
         """
         self.quadrature_method = self.params["quadrature_method"]
         self.mpu = self.params["material_properties_utility"]
@@ -756,12 +754,12 @@ class FiniteCellSimulator:
                     print("element " + str(elem.Id) + " is outside the physical domain. It will be deactivated.")
             print("construct quadrature using quad-tree successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             for elem in bulk_elements:
-                self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                self.mpu.SetMaterialProperties(model.model_part, elem)
                 physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
                 for i in range(0, len(physical_constitutive_laws)):
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
-            print("reading " + mat_type + " material completed")
+            print("reading material completed")
 
             ## export the physical integration points for debugging if needed
             if self.params["export_physical_integration_point"]:
@@ -841,12 +839,12 @@ class FiniteCellSimulator:
             print("obtain quadtree quadrature successfully, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             for elem_id in cut_elems:
                 elem = model.model_part.Elements[elem_id]
-                self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                self.mpu.SetMaterialProperties(model.model_part, elem)
                 physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
                 for i in range(0, len(physical_constitutive_laws)):
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
-            print("reading " + mat_type + " material completed")
+            print("reading material completed")
             if self.params["export_physical_integration_point"]:
                 cog_points = []
                 for elem in self.proper_cut_elems:
@@ -884,12 +882,12 @@ class FiniteCellSimulator:
                 elem.Set(ACTIVE, False)
             print("obtain moment-fit quadrature successfully")
             for elem in bulk_elements:
-                self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                self.mpu.SetMaterialProperties(model.model_part, elem)
                 physical_constitutive_laws = elem.GetValuesOnIntegrationPoints(CONSTITUTIVE_LAW, model.model_part.ProcessInfo)
                 for i in range(0, len(physical_constitutive_laws)):
                     physical_constitutive_laws[i].SetValue(PARENT_ELEMENT_ID, elem.Id, model.model_part.ProcessInfo)
                     physical_constitutive_laws[i].SetValue(INTEGRATION_POINT_INDEX, i, model.model_part.ProcessInfo)
-            print("reading " + mat_type + " material completed")
+            print("reading material completed")
             if self.params["export_physical_integration_point"]:
                 cog_points = []
                 for elem in self.proper_cut_elems:
@@ -968,7 +966,7 @@ class FiniteCellSimulator:
                             sub_elem.Set(ACTIVE, True)
                             sub_elem.SetValue(PARENT_ELEMENT_ID, elem.Id)
 
-                        self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                        self.mpu.SetMaterialProperties(model.model_part, elem)
                         elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                         elem.Initialize(model.model_part.ProcessInfo)
 
@@ -1009,7 +1007,7 @@ class FiniteCellSimulator:
                             if fict_prop == "same as parent element": # this uses the material proper from the element, even it's nonlinear
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], elem.Properties)
                                 fict_elem.Initialize(model.model_part.ProcessInfo)
-                                self.mpu.SetMaterialProperties(model.model_part, fict_elem, mat_type)
+                                self.mpu.SetMaterialProperties(model.model_part, fict_elem)
                                 fict_elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                                 fict_elem.SetValue(IS_INACTIVE, False)
                                 fict_elem.Set(ACTIVE, True)
@@ -1039,7 +1037,7 @@ class FiniteCellSimulator:
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.SetValue(CUT_STATUS, BRep._CUT)
                     elem.Initialize(model.model_part.ProcessInfo)
-                    self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                    self.mpu.SetMaterialProperties(model.model_part, elem)
 #                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
                     print("element " + str(elem.Id) + " is assigned " + str(len(quadtree_quadrature[elem.Id])) + " quadrature points")
                     if self.params["export_physical_integration_point"]:
@@ -1048,7 +1046,7 @@ class FiniteCellSimulator:
                             cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
                 else:
                     elem.SetValue(CUT_STATUS, BRep._IN)
-                    self.mpu.SetMaterialProperties(model.model_part, elem, mat_type)
+                    self.mpu.SetMaterialProperties(model.model_part, elem)
             print("obtain moment-fit subcell quadrature successfully")
             print("number of physical integration points: " + str(number_of_physical_integration_points))
             if self.params["export_physical_integration_point"]:
