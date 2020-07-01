@@ -206,6 +206,8 @@ namespace Kratos
 
         const DummyCondition mDummyConditionPoint2D;
         const DummyCondition mDummyConditionPoint3D;
+        const DummyCondition mDummyConditionLine2N;
+        const DummyCondition mDummyConditionLine3N;
         const DummyCondition mDummyCondition2D3N;
         const DummyCondition mDummyCondition2D4N;
         const DummyCondition mDummyCondition2D6N;

@@ -70,6 +70,8 @@ namespace Kratos
     , mDummySurfaceCondition3D9N( 0, Element::GeometryType::Pointer( new Quadrilateral3D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
     , mDummyConditionPoint2D( 0, Element::GeometryType::Pointer( new Point2D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
     , mDummyConditionPoint3D( 0, Element::GeometryType::Pointer( new Point3D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
+    , mDummyConditionLine2N( 0, Element::GeometryType::Pointer( new Line3D2 <Node<3> >( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) ) )
+    , mDummyConditionLine3N( 0, Element::GeometryType::Pointer( new Line3D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
     , mDummyCondition2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
     , mDummyCondition2D4N( 0, Element::GeometryType::Pointer( new Quadrilateral2D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
     , mDummyCondition2D6N( 0, Element::GeometryType::Pointer( new Triangle2D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
@@ -120,6 +122,8 @@ namespace Kratos
         // register conditions to Kratos kernel
         KRATOS_REGISTER_CONDITION("DummyConditionPoint2D", mDummyConditionPoint2D)
         KRATOS_REGISTER_CONDITION("DummyConditionPoint3D", mDummyConditionPoint3D)
+        KRATOS_REGISTER_CONDITION( "DummyConditionLine2N", mDummyConditionLine2N )
+        KRATOS_REGISTER_CONDITION( "DummyConditionLine3N", mDummyConditionLine3N )
         KRATOS_REGISTER_CONDITION( "DummyCondition2D3N", mDummyCondition2D3N )
         KRATOS_REGISTER_CONDITION( "DummyCondition2D4N", mDummyCondition2D4N )
         KRATOS_REGISTER_CONDITION( "DummyCondition2D6N", mDummyCondition2D6N )
