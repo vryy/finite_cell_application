@@ -438,6 +438,7 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
     .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
     .def("ConstructQuadrature", pointer_to_ConstructQuadrature2)
+    .def("ConstructQuadratureNoSkip", &QuadTreeType::ConstructQuadratureNoSkip)
     .def(self_ns::str(self))
     ;
 }

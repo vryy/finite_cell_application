@@ -453,10 +453,11 @@ public:
     }
 
     /// Construct the finite cell quadrature
-    /// The quadrature point not in the physical domain will be penalized
+    /// The quadrature point outside the physical domain will be penalized
+    /// If the small_weight is zero, the quadrature point outside the physical domain will be skipped
     /// Returns the number of quadrature points created
     std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-            const double& small_weight = 0.0) const
+            const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -506,6 +507,42 @@ public:
                     // std::cout << "point " << point << " is outside, global coords: " << GlobalCoords << std::endl;
                 }
             }
+        }
+
+        /* create new quadrature and assign to the geometry */
+        int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
+
+        return integration_points.size();
+    }
+
+    /// Construct the finite cell quadrature
+    /// The quadrature point outside the physical domain will be penalized
+    /// Returns the number of quadrature points created
+    std::size_t ConstructQuadratureNoSkip(const BRep& r_brep, const int& integration_method,
+            const double& small_weight) const
+    {
+        GeometryType::IntegrationPointsArrayType integration_points;
+
+        GeometryType::IntegrationPointsArrayType tmp_integration_points;
+
+        // firstly create an array of integration points of sub-trees
+        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+
+        // fill the integration_point container
+        CoordinatesArrayType GlobalCoords;
+        for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
+        {
+            if(TFrameType == GLOBAL_CURRENT)
+                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+            else if(TFrameType == GLOBAL_REFERENCE)
+                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+
+            // modify the weight if needed
+            if(!r_brep.IsInside(GlobalCoords))
+                tmp_integration_points[point].SetWeight(small_weight);
+            integration_points.push_back(tmp_integration_points[point]);
         }
 
         /* create new quadrature and assign to the geometry */
@@ -830,7 +867,7 @@ public:
     /// Construct the finite cell quadrature
     /// The quadrature point not in the physical domain will be penalized
     std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-            const double& small_weight = 0.0) const
+            const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
