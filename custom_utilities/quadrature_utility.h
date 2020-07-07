@@ -276,6 +276,33 @@ public:
         return pNewCond;
     }
 
+    /// Create a new condition from point with initial displacement
+    static Condition::Pointer CreateConditionFromPoint(ModelPart& r_model_part,
+            const PointType& r_point,
+            const array_1d<double, 3>& r_disp,
+            Condition const& r_sample_cond,
+            Properties::Pointer pProperties,
+            std::size_t& lastNodeId,
+            std::size_t& lastCondId)
+    {
+        NodeType::Pointer pNewNode(new NodeType(++lastNodeId, r_point));
+        pNewNode->SetSolutionStepVariablesList(&r_model_part.GetNodalSolutionStepVariablesList());
+        pNewNode->SetBufferSize(r_model_part.GetBufferSize());
+        if (pNewNode->Has(DISPLACEMENT))
+        {
+            pNewNode->SetSolutionStepValue(DISPLACEMENT_X, r_disp[0]);
+            pNewNode->SetSolutionStepValue(DISPLACEMENT_Y, r_disp[1]);
+            pNewNode->SetSolutionStepValue(DISPLACEMENT_Z, r_disp[2]);
+        }
+        r_model_part.AddNode(pNewNode);
+//            NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++lastNodeId, GlobalCoords[0], GlobalCoords[1], GlobalCoords[2]);
+//            KRATOS_WATCH(*pNewNode)
+        GeometryType::Pointer pTempGeometry = GeometryType::Pointer( new Point3D<NodeType>(pNewNode) );
+        Condition::Pointer pNewCond = r_sample_cond.Create(++lastCondId, pTempGeometry, pProperties);
+        pNewCond->Set(ACTIVE, true);
+        return pNewCond;
+    }
+
     /// Create a point from the global coordinates
     static PointType CreatePoint(const double& rX, const double& rY, const double& rZ)
     {

@@ -616,6 +616,45 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
 ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(QuadratureUtility& rDummy,
         ModelPart& r_model_part,
         boost::python::list& pyPointList,
+        boost::python::list& pyDispList,
+        const std::string& sample_cond_name,
+        Properties::Pointer pProperties)
+{
+    // find the maximum node Id
+    std::size_t lastNodeId = FiniteCellAuxiliaryUtility::GetLastNodeId(r_model_part);
+
+    // find the maximum condition Id
+    std::size_t lastCondId = FiniteCellAuxiliaryUtility::GetLastConditionId(r_model_part);
+
+    // find the maximum properties Id
+    std::size_t lastPropId = FiniteCellAuxiliaryUtility::GetLastPropertiesId(r_model_part);
+
+    // get the sample condition
+    if(!KratosComponents<Condition>::Has(sample_cond_name))
+        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+
+    typedef Element::GeometryType::PointType::PointType PointType;
+    ModelPart::ConditionsContainerType NewConditions;
+    for (std::size_t i = 0; i < boost::python::len(pyPointList); ++i)
+    {
+        PointType& p = boost::python::extract<PointType>(pyPointList[i]);
+        array_1d<double, 3>& d = boost::python::extract<array_1d<double, 3> >(pyDispList[i]);
+        Condition::Pointer pNewCond = rDummy.CreateConditionFromPoint(r_model_part, p, d, r_clone_condition, pProperties, lastNodeId, lastCondId);
+        NewConditions.push_back(pNewCond);
+    }
+
+    for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+            it != NewConditions.ptr_end(); ++it)
+        r_model_part.Conditions().push_back(*it);
+
+    return NewConditions;
+}
+
+/// Create a new condition from point
+ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint3(QuadratureUtility& rDummy,
+        ModelPart& r_model_part,
+        boost::python::list& pyPointList,
         const std::string& sample_cond_name)
 {
     // find the maximum properties Id
@@ -704,6 +743,7 @@ void FiniteCellApplication_AddQuadratureUtilityToPython()
     .def("CreateConditionFromQuadraturePoint", &QuadratureUtility_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint2)
+    .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint3)
     .def("CreatePoint", &QuadratureUtility_CreatePoint1)
     .def("CreatePoint", &QuadratureUtility_CreatePoint2<Element>)
     .def("CreatePoint", &QuadratureUtility_CreatePoint2<Condition>)
