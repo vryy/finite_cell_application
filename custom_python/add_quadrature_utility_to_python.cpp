@@ -638,8 +638,8 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
     ModelPart::ConditionsContainerType NewConditions;
     for (std::size_t i = 0; i < boost::python::len(pyPointList); ++i)
     {
-        PointType& p = boost::python::extract<PointType>(pyPointList[i]);
-        array_1d<double, 3>& d = boost::python::extract<array_1d<double, 3> >(pyDispList[i]);
+        PointType p = boost::python::extract<PointType>(pyPointList[i]);
+        array_1d<double, 3> d = boost::python::extract<array_1d<double, 3> >(pyDispList[i]);
         Condition::Pointer pNewCond = rDummy.CreateConditionFromPoint(r_model_part, p, d, r_clone_condition, pProperties, lastNodeId, lastCondId);
         NewConditions.push_back(pNewCond);
     }

@@ -290,9 +290,9 @@ public:
         pNewNode->SetBufferSize(r_model_part.GetBufferSize());
         if (pNewNode->Has(DISPLACEMENT))
         {
-            pNewNode->SetSolutionStepValue(DISPLACEMENT_X, r_disp[0]);
-            pNewNode->SetSolutionStepValue(DISPLACEMENT_Y, r_disp[1]);
-            pNewNode->SetSolutionStepValue(DISPLACEMENT_Z, r_disp[2]);
+            pNewNode->GetSolutionStepValue(DISPLACEMENT_X) = r_disp[0];
+            pNewNode->GetSolutionStepValue(DISPLACEMENT_Y) = r_disp[1];
+            pNewNode->GetSolutionStepValue(DISPLACEMENT_Z) = r_disp[2];
         }
         r_model_part.AddNode(pNewNode);
 //            NodeType::Pointer pNewNode = r_model_part.CreateNewNode(++lastNodeId, GlobalCoords[0], GlobalCoords[1], GlobalCoords[2]);
