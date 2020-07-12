@@ -206,8 +206,6 @@ public:
         const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
         const std::string& sample_element_name,
         const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
-        const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir; 3: close on 3rd dir
-        const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir; r: activation on 3rd dir
         Properties::Pointer pProperties);
 
 
@@ -227,7 +225,7 @@ public:
 
 
     /// Import the nodes from other model_part to this model_part
-    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart);
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int& echo_level);
 
 
     /// Import the nodes from other model_part to this model_part
@@ -236,25 +234,25 @@ public:
     /// The rotation angle shall be in radian
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
         const double& offset_x, const double& offset_y, const double& offset_z,
-        const double& cx, const double& cy, const double& theta);
+        const double& cx, const double& cy, const double& theta, const int& echo_level);
 
 
     /// Import the nodes from other model_part to this model_part
     /// The nodes will be applied first with the transformation matrix before importing
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-        const Transformation<double>& rTrans);
+        const Transformation<double>& rTrans, const int& echo_level);
 
 
     /// Import the elements from list to the this model_part
     static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
         ModelPart::ElementsContainerType& rOtherElements,
-        const std::string& sample_element_name, Properties::Pointer pProperties);
+        const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level);
 
 
     /// Import the conditions from list to the this model_part
     static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
         ModelPart::ConditionsContainerType& rOtherConditions,
-        const std::string& sample_cond_name, Properties::Pointer pProperties);
+        const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level);
 
 
     /// Import the elements from list to the other list
@@ -265,7 +263,8 @@ public:
         TEntityContainerType& rOtherElements, // other elements to be imported from
         std::size_t& last_element_id,
         TEntityType const& r_clone_element,
-        Properties::Pointer pProperties)
+        Properties::Pointer pProperties,
+        const int& echo_level)
     {
         typename TEntityType::NodesArrayType temp_element_nodes;
         for (typename TEntityContainerType::ptr_iterator it = rOtherElements.ptr_begin(); it != rOtherElements.ptr_end(); ++it)

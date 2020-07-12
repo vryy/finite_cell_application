@@ -191,9 +191,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCe
     std::vector<std::size_t> nsampling = {nsampling1, nsampling2, nsampling3};
     rDummy.GenerateStructuredPoints3D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
-    int close_dir = 0; // open loop
-    int activation_dir = 0;
-    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
@@ -239,10 +237,8 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSam
 //    KRATOS_WATCH(sampling_points[0].size())
 //    KRATOS_WATCH(sampling_points[0][0].size())
 
-    int close_dir = 0; // open loop
-    int activation_dir = 0;
     FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points,
-        sample_element_name, type, close_dir, activation_dir, pProperties);
+        sample_element_name, type, pProperties);
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
@@ -289,38 +285,38 @@ Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtil
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes(FiniteCellMeshUtility& rDummy,
-    ModelPart& rThisModelPart, ModelPart& rOtherModelPart)
+    ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int& echo_level)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart);
+    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshUtility& rDummy,
     ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
     const double& offset_x, const double& offset_y, const double& offset_z,
-    const double& cx, const double& cy, const double& theta)
+    const double& cx, const double& cy, const double& theta, const int& echo_level)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta);
+    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshUtility& rDummy,
     ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-    const Transformation<double>& rTrans)
+    const Transformation<double>& rTrans, const int& echo_level)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, rTrans);
+    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, rTrans, echo_level);
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements(FiniteCellMeshUtility& rDummy,
     ModelPart& rThisModelPart, ModelPart::ElementsContainerType& rOtherElements,
-    const std::string& sample_element_name, Properties::Pointer pProperties)
+    const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level)
 {
-    return rDummy.ImportElements(rThisModelPart, rOtherElements, sample_element_name, pProperties);
+    return rDummy.ImportElements(rThisModelPart, rOtherElements, sample_element_name, pProperties, echo_level);
 }
 
 ModelPart::ConditionsContainerType FiniteCellMeshUtility_ImportConditions(FiniteCellMeshUtility& rDummy,
     ModelPart& rThisModelPart, ModelPart::ConditionsContainerType& rOtherConditions,
-    const std::string& sample_cond_name, Properties::Pointer pProperties)
+    const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level)
 {
-    return rDummy.ImportConditions(rThisModelPart, rOtherConditions, sample_cond_name, pProperties);
+    return rDummy.ImportConditions(rThisModelPart, rOtherConditions, sample_cond_name, pProperties, echo_level);
 }
 
 void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()

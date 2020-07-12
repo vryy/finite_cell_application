@@ -172,11 +172,9 @@ FiniteCellMeshUtility::ElementMeshInfoType FiniteCellMeshUtility::CreateHexEleme
     const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
     const std::string& sample_element_name,
     const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
-    const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir; 3: close on 3rd dir
-    const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir; r: activation on 3rd dir
     Properties::Pointer pProperties)
 {
-    return BRepMeshUtility::CreateHexElements(r_model_part, sampling_points, sample_element_name, type, close_dir, activation_dir, pProperties);
+    return BRepMeshUtility::CreateHexElements(r_model_part, sampling_points, sample_element_name, type, pProperties);
 }
 
 
@@ -222,7 +220,7 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
 }
 
 
-ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart)
+ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int& echo_level)
 {
     std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
@@ -236,15 +234,17 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
         NewNodes.push_back(pNewNode);
     }
 
-    std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
-              << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+    if (echo_level > 0)
+        std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
+                  << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+
     return NewNodes;
 }
 
 
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
         const double& offset_x, const double& offset_y, const double& offset_z,
-        const double& cx, const double& cy, const double& theta)
+        const double& cx, const double& cy, const double& theta, const int& echo_level)
 {
     std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
@@ -272,14 +272,16 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
         NewNodes.push_back(pNewNode);
     }
 
-    std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
-              << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+    if (echo_level > 0)
+        std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
+                  << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+
     return NewNodes;
 }
 
 
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-        const Transformation<double>& rTrans)
+        const Transformation<double>& rTrans, const int& echo_level)
 {
     std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
@@ -300,14 +302,16 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
         NewNodes.push_back(pNewNode);
     }
 
-    std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
-              << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+    if (echo_level > 0)
+        std::cout << NewNodes.size() << " nodes from " << rOtherModelPart.Name()
+                  << " are added to the model_part " << rThisModelPart.Name() << std::endl;
+
     return NewNodes;
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart& rThisModelPart,
     ModelPart::ElementsContainerType& rOtherElements,
-    const std::string& sample_element_name, Properties::Pointer pProperties)
+    const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level)
 {
     std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(rThisModelPart);
     if (!KratosComponents<Element>::Has(sample_element_name))
@@ -315,10 +319,11 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
     Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
     ModelPart::ElementsContainerType NewElements;
-    ImportEntities(rThisModelPart, rThisModelPart.Elements(), NewElements, rOtherElements, last_element_id, r_clone_element, pProperties);
+    ImportEntities(rThisModelPart, rThisModelPart.Elements(), NewElements, rOtherElements, last_element_id, r_clone_element, pProperties, echo_level);
 
-    std::cout << NewElements.size() << " " << sample_element_name
-              << " elements are created and added to the model_part " << rThisModelPart.Name() << std::endl;
+    if (echo_level > 0)
+        std::cout << NewElements.size() << " " << sample_element_name
+                  << " elements are created and added to the model_part " << rThisModelPart.Name() << std::endl;
 
     return NewElements;
 }
@@ -326,7 +331,7 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
 
 ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(ModelPart& rThisModelPart,
     ModelPart::ConditionsContainerType& rOtherConditions,
-    const std::string& sample_cond_name, Properties::Pointer pProperties)
+    const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level)
 {
     std::size_t last_cond_id = FiniteCellAuxiliaryUtility::GetLastConditionId(rThisModelPart);
     if (!KratosComponents<Condition>::Has(sample_cond_name))
@@ -334,10 +339,11 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
     Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
-    ImportEntities(rThisModelPart, rThisModelPart.Conditions(), NewConditions, rOtherConditions, last_cond_id, r_clone_condition, pProperties);
+    ImportEntities(rThisModelPart, rThisModelPart.Conditions(), NewConditions, rOtherConditions, last_cond_id, r_clone_condition, pProperties, echo_level);
 
-    std::cout << NewConditions.size() << " " << sample_cond_name
-              << " conditions are created and added to the model_part " << rThisModelPart.Name() << std::endl;
+    if (echo_level > 0)
+        std::cout << NewConditions.size() << " " << sample_cond_name
+                  << " conditions are created and added to the model_part " << rThisModelPart.Name() << std::endl;
 
     return NewConditions;
 }
