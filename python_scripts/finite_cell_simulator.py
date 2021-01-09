@@ -166,27 +166,49 @@ def CreateFittingFunctions(fit_space_dim, fit_degree):
 
     return fit_funcs
 
-def CreateQuadTree(element, nsampling, quadtree_configuration = 0):
-    if nsampling == 1:
-        return QuadTreeLocalReference(element, quadtree_configuration)
-    elif nsampling == 2:
-        return QuadTreeLocalReference2(element, quadtree_configuration)
-    elif nsampling == 3:
-        return QuadTreeLocalReference3(element, quadtree_configuration)
-    elif nsampling == 4:
-        return QuadTreeLocalReference4(element, quadtree_configuration)
-    elif nsampling == 5:
-        return QuadTreeLocalReference5(element, quadtree_configuration)
-    elif nsampling == 6:
-        return QuadTreeLocalReference6(element, quadtree_configuration)
-    elif nsampling == 7:
-        return QuadTreeLocalReference7(element, quadtree_configuration)
-    elif nsampling == 8:
-        return QuadTreeLocalReference8(element, quadtree_configuration)
-    elif nsampling == 9:
-        return QuadTreeLocalReference9(element, quadtree_configuration)
-    elif nsampling == 10:
-        return QuadTreeLocalReference10(element, quadtree_configuration)
+def CreateQuadTree(element, nsampling, quadtree_frame = 0, quadtree_configuration = 0):
+    if quadtree_frame == 0:
+        if nsampling == 1:
+            return QuadTreeLocalReference(element, quadtree_configuration)
+        elif nsampling == 2:
+            return QuadTreeLocalReference2(element, quadtree_configuration)
+        elif nsampling == 3:
+            return QuadTreeLocalReference3(element, quadtree_configuration)
+        elif nsampling == 4:
+            return QuadTreeLocalReference4(element, quadtree_configuration)
+        elif nsampling == 5:
+            return QuadTreeLocalReference5(element, quadtree_configuration)
+        elif nsampling == 6:
+            return QuadTreeLocalReference6(element, quadtree_configuration)
+        elif nsampling == 7:
+            return QuadTreeLocalReference7(element, quadtree_configuration)
+        elif nsampling == 8:
+            return QuadTreeLocalReference8(element, quadtree_configuration)
+        elif nsampling == 9:
+            return QuadTreeLocalReference9(element, quadtree_configuration)
+        elif nsampling == 10:
+            return QuadTreeLocalReference10(element, quadtree_configuration)
+    elif quadtree_frame == 1:
+        if nsampling == 1:
+            return QuadTreeLocalCurrent(element, quadtree_configuration)
+        elif nsampling == 2:
+            return QuadTreeLocalCurrent2(element, quadtree_configuration)
+        elif nsampling == 3:
+            return QuadTreeLocalCurrent3(element, quadtree_configuration)
+        elif nsampling == 4:
+            return QuadTreeLocalCurrent4(element, quadtree_configuration)
+        elif nsampling == 5:
+            return QuadTreeLocalCurrent5(element, quadtree_configuration)
+        elif nsampling == 6:
+            return QuadTreeLocalCurrent6(element, quadtree_configuration)
+        elif nsampling == 7:
+            return QuadTreeLocalCurrent7(element, quadtree_configuration)
+        elif nsampling == 8:
+            return QuadTreeLocalCurrent8(element, quadtree_configuration)
+        elif nsampling == 9:
+            return QuadTreeLocalCurrent9(element, quadtree_configuration)
+        elif nsampling == 10:
+            return QuadTreeLocalCurrent10(element, quadtree_configuration)
 
 def CreateQuadTreeSubCell(element, nsampling):
     if nsampling == 1:
@@ -247,18 +269,22 @@ class FiniteCellSimulator:
         if 'quadtree_configuration' not in self.params:
             self.params['quadtree_configuration'] = 0
 
+        if 'quadtree_frame' not in self.params:
+            self.params['quadtree_frame'] = 0
+
         self.forest = {}
 
     ###TREES & FOREST CREATION#############
     def CleanForest(self):
         self.forest = {}
 
-    def CreateForest(self, elements, nsampling, quadtree_configuration):
-        ###############################################################
-        ######### CREATE TREES AND FOREST
-        ###############################################################
+    def CreateForest(self, elements, nsampling, quadtree_frame, quadtree_configuration):
+        print("###############################################################")
+        print("######### CREATE TREES AND FOREST FOR ADAPTIVE QUADRATURE")
+        print("Frame of the quadtree: " + str(quadtree_frame))
+        print("###############################################################")
         for elem in elements:
-            self.forest[elem.Id] = CreateQuadTree(elem, nsampling, quadtree_configuration)
+            self.forest[elem.Id] = CreateQuadTree(elem, nsampling, quadtree_frame, quadtree_configuration)
 
     def CreateForestSubCell(self, elements, nsampling = 1):
         subcell_fit_mode = self.params["subcell_fit_mode"]
@@ -284,11 +310,12 @@ class FiniteCellSimulator:
         pprint.pprint(self.params)
         qt_depth = self.params["qt_depth"]
         nsampling = self.params["number_of_samplings"]
+        quadtree_frame = self.params["quadtree_frame"]
         quadtree_configuration = self.params["quadtree_configuration"]
         ###########################################
         ##QUADTREE QUADRATURE
         ###########################################
-        self.CreateForest(bulk_elements, nsampling, quadtree_configuration)
+        self.CreateForest(bulk_elements, nsampling, quadtree_frame, quadtree_configuration)
         self.elements = {}
         for elem in bulk_elements:
             self.elements[elem.Id] = elem
@@ -717,11 +744,12 @@ class FiniteCellSimulator:
             else:
                 set_small_weight = True # set the small weight by default
             configuration = 0 # reference configuration
+            quadtree_frame = self.params['quadtree_frame']
             quadtree_configuration = self.params['quadtree_configuration']
             ###########################################
             ##QUADTREE
             ###########################################
-            self.CreateForest(bulk_elements, nsampling, quadtree_configuration)
+            self.CreateForest(bulk_elements, nsampling, quadtree_frame, quadtree_configuration)
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
             cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             total_add_quadrature_pnts = 0
@@ -1356,8 +1384,9 @@ class FiniteCellSimulator:
     ###CHECKING FUNCTIONS#############
     def ExportQuadTree(self, model, sample_element, group = None):
         nsampling = self.params["number_of_samplings"]
+        quadtree_frame = self.params["quadtree_frame"]
         quadtree_configuration = self.params["quadtree_configuration"]
-        self.CreateForest(model.model_part.Elements, nsampling, quadtree_configuration)
+        self.CreateForest(model.model_part.Elements, nsampling, quadtree_frame, quadtree_configuration)
         #######QUAD TREE POST PROCESSING###########
         qt_depth = self.params["qt_depth"]
         for qi, qt in self.forest.iteritems():
