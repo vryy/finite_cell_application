@@ -321,6 +321,21 @@ public:
     }
 
 
+    /// Get the last constraint id of the model_part
+    static std::size_t GetLastConstraintId(ModelPart& r_model_part)
+    {
+        std::size_t lastConstraintId = 0;
+        for(typename ModelPart::MasterSlaveConstraintContainerType::ptr_iterator it = r_model_part.MasterSlaveConstraints().ptr_begin();
+                it != r_model_part.MasterSlaveConstraints().ptr_end(); ++it)
+        {
+            if((*it)->Id() > lastConstraintId)
+                lastConstraintId = (*it)->Id();
+        }
+
+        return lastConstraintId;
+    }
+
+
     /// Create a partitioning for multithreaded parallelization
     template<class TValueContainerType>
     static inline void CreatePartition(const unsigned int& number_of_threads,

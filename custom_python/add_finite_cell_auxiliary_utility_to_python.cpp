@@ -46,6 +46,11 @@ std::size_t FiniteCellAuxiliaryUtility_GetLastPropertiesId(FiniteCellAuxiliaryUt
     return rDummy.GetLastPropertiesId(r_model_part);
 }
 
+std::size_t FiniteCellAuxiliaryUtility_GetLastConstraintId(FiniteCellAuxiliaryUtility& rDummy, ModelPart& r_model_part)
+{
+    return rDummy.GetLastConstraintId(r_model_part);
+}
+
 void FiniteCellAuxiliaryUtility_AddElement(FiniteCellAuxiliaryUtility& rDummy, ModelPart::ElementsContainerType& rpElements,
         Element::Pointer pElement)
 {
@@ -215,6 +220,7 @@ void FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython()
     .def("GetLastElementId", &FiniteCellAuxiliaryUtility_GetLastElementId)
     .def("GetLastConditionId", &FiniteCellAuxiliaryUtility_GetLastConditionId)
     .def("GetLastPropertiesId", &FiniteCellAuxiliaryUtility_GetLastPropertiesId)
+    .def("GetLastConstraintId", &FiniteCellAuxiliaryUtility_GetLastConstraintId)
     .def("AddElement", &FiniteCellAuxiliaryUtility_AddElement)
     .def("RemoveElement", &FiniteCellAuxiliaryUtility_RemoveElement)
     .def("MultithreadedRefineBy", &FiniteCellAuxiliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
