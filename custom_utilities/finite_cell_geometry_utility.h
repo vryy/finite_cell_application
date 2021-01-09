@@ -313,8 +313,8 @@ public:
     /// Helper function to compute the global coordinates in the reference frame
     static CoordinatesArrayType& GlobalCoordinates0( GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
     {
-		if (rResult.size() != 3)
-			rResult.resize(3, false);
+        if (rResult.size() != 3)
+            rResult.resize(3, false);
         noalias( rResult ) = ZeroVector( 3 );
 
         Vector N( rGeometry.size() );

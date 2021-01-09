@@ -84,9 +84,10 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
-    static const int _REPORT_NUMBER_OF_CREATED_CONDITIONS = 0x01;
-    static const int _WARNING_FOUND_NO_ELEMENT = 0x02;
-    static const int _REPORT_CONDITION_CREATED = 0x04;
+    static const int _REPORT_NUMBER_OF_CREATED_CONDITIONS_ = 0x01;
+    static const int _WARNING_FOUND_NO_ELEMENT_ = 0x02;
+    static const int _REPORT_CONDITION_CREATED_ = 0x04;
+    static const int _WARNING_ELEMENT_IS_INACTIVE_ = 0x08;
 
     ///@}
     ///@name Life Cycle
@@ -279,7 +280,7 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     static bool SearchPartner( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const int& echo_level )
+            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level )
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
@@ -316,11 +317,17 @@ public:
             if( is_inside )
             {
                 pTargetElement = *it;
-                return true;
+                if(force_active)
+                {
+                    if(pTargetElement->Is(ACTIVE))
+                        return true;
+                }
+                else
+                    return true;
             }
         }
 
-        if((echo_level & _WARNING_FOUND_NO_ELEMENT) == _WARNING_FOUND_NO_ELEMENT)
+        if((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
 
         return false;
@@ -330,7 +337,7 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     bool SearchPartnerWithBin( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const int& echo_level ) const
+            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level ) const
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
@@ -352,12 +359,19 @@ public:
                 if( is_inside )
                 {
                     pTargetElement = pMasterElements(*it);
-                    return true;
+
+                    if(force_active)
+                    {
+                        if(pTargetElement->Is(ACTIVE))
+                            return true;
+                    }
+                    else
+                        return true;
                 }
             }
         }
 
-        if((echo_level & _WARNING_FOUND_NO_ELEMENT) == _WARNING_FOUND_NO_ELEMENT)
+        if((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
 
         return false;
@@ -372,9 +386,10 @@ public:
         bool found;
         PointType rLocalTargetPoint;
         Element::Pointer pTargetElement;
-        int echo_level = _WARNING_FOUND_NO_ELEMENT;
+        const bool force_active = false;
+        int echo_level = _WARNING_FOUND_NO_ELEMENT_;
 
-        found = this->SearchPartnerWithBin( rSourcePoint, pMasterElements, pTargetElement, rLocalTargetPoint, echo_level );
+        found = this->SearchPartnerWithBin( rSourcePoint, pMasterElements, pTargetElement, rLocalTargetPoint, force_active, echo_level );
 
         if (!found)
         {
