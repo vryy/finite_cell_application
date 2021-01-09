@@ -329,7 +329,7 @@ public:
         GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+        mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // compute the number of physical integration points
         CoordinatesArrayType GlobalCoords;
@@ -356,7 +356,7 @@ public:
         GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+        mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // compute the number of fictitious integration points
         CoordinatesArrayType GlobalCoords;
@@ -442,7 +442,7 @@ public:
         GeometryType::IntegrationPointsArrayType integration_points;
 
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, integration_points, integration_method);
+        mpTreeNode->ConstructQuadrature(integration_points, integration_method);
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
@@ -464,7 +464,7 @@ public:
         GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+        mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
         // KRATOS_WATCH(typeid(*mpThisGeometry).name())
         // KRATOS_WATCH(typeid(*mpTreeNode).name())
         // KRATOS_WATCH(mpThisGeometry->GetGeometryType())
@@ -528,7 +528,7 @@ public:
         GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
         // firstly create an array of integration points of sub-trees
-        mpTreeNode->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+        mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // fill the integration_point container
         CoordinatesArrayType GlobalCoords;
@@ -848,7 +848,7 @@ public:
         {
             GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
-            mpTreeNodes[i]->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+            mpTreeNodes[i]->ConstructQuadrature(tmp_integration_points, integration_method);
 
             for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
@@ -877,7 +877,7 @@ public:
         {
             GeometryType::IntegrationPointsArrayType tmp_integration_points;
 
-            mpTreeNodes[i]->ConstructQuadrature(mpThisGeometry, tmp_integration_points, integration_method);
+            mpTreeNodes[i]->ConstructQuadrature(tmp_integration_points, integration_method);
 
             if(small_weight != 0.0)
             {

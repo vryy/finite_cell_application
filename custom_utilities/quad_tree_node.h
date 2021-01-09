@@ -384,7 +384,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+        this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
 
         this->IntegrateImpl<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(*pParentGeometry, rFunc, rOutput, integration_points);
     }
@@ -402,7 +402,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+        this->ConstructQuadrature(integration_points, sample_integration_points);
 
         this->IntegrateImpl<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(*pParentGeometry, rFunc, rOutput, integration_points);
     }
@@ -449,7 +449,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+        this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
 
         this->IntegrateImpl<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(*pParentGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
@@ -469,7 +469,7 @@ public:
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
-        this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+        this->ConstructQuadrature(integration_points, sample_integration_points);
 
         this->IntegrateImpl<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(*pParentGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
@@ -487,8 +487,7 @@ public:
 
     /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system
-    void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
-            GeometryType::IntegrationPointsArrayType& integration_points,
+    void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
             const int& integration_method) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
@@ -497,20 +496,19 @@ public:
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
-            this->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+            this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
         }
         else // use custom quadrature
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryType::IntegrationPointsArrayType sample_integration_points = this->ConstructCustomQuadrature(quadrature_type, quadrature_order);
-            this->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+            this->ConstructQuadrature(integration_points, sample_integration_points);
         }
     }
 
     /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system.
-    void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
-            GeometryType::IntegrationPointsArrayType& integration_points,
+    void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         if(this->IsLeaf())
@@ -544,15 +542,14 @@ public:
         {
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
             {
-                mpChildren[i]->ConstructQuadrature(pParentGeometry, integration_points, ThisIntegrationMethod);
+                mpChildren[i]->ConstructQuadrature(integration_points, ThisIntegrationMethod);
             }
         }
     }
 
     /// Construct the recursive integration point array using provided sample quadrature on a reference cell
     /// REMARKS: the integration_points is in local coordinates system
-    void ConstructQuadrature(GeometryType::Pointer pParentGeometry,
-            GeometryType::IntegrationPointsArrayType& integration_points,
+    void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
             const GeometryType::IntegrationPointsArrayType& sample_integration_points) const
     {
         if(this->IsLeaf())
@@ -583,7 +580,7 @@ public:
         {
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
             {
-                mpChildren[i]->ConstructQuadrature(pParentGeometry, integration_points, sample_integration_points);
+                mpChildren[i]->ConstructQuadrature(integration_points, sample_integration_points);
             }
         }
     }
@@ -826,7 +823,7 @@ bool QuadTreeNode<TFrameType>::CenterOfGravity(PointType& COG, GeometryType::Poi
     FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
 
     GeometryType::IntegrationPointsArrayType integration_points;
-    this->ConstructQuadrature(pParentGeometry, integration_points, integration_method);
+    this->ConstructQuadrature(integration_points, integration_method);
 
     double X = 0.0, Y = 0.0, Z = 0.0, A = 0.0;
     this->IntegrateImpl<double, GeometryType::IntegrationPointsArrayType, GLOBAL>(*pParentGeometry, ProductFunction<FunctionR3R1>(FX, FH), X, integration_points);
