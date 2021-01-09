@@ -319,6 +319,13 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility_ImportConditions(Finite
     return rDummy.ImportConditions(rThisModelPart, rOtherConditions, sample_cond_name, pProperties, echo_level);
 }
 
+template<typename TEntityContainerType, typename TVariableType>
+void FiniteCellMeshUtility_AssignValues(FiniteCellMeshUtility& rDummy,
+    TEntityContainerType& rElements, TEntityContainerType& rOtherElements, const TVariableType& rVariable)
+{
+    rDummy.AssignValues(rElements, rOtherElements, rVariable);
+}
+
 void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
 {
 
@@ -337,6 +344,14 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
     .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes3)
     .def("ImportElements", &FiniteCellMeshUtility_ImportElements)
     .def("ImportConditions", &FiniteCellMeshUtility_ImportConditions)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ElementsContainerType, Variable<int> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ElementsContainerType, Variable<bool> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ElementsContainerType, Variable<double> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ElementsContainerType, Variable<array_1d<double, 3> > >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ConditionsContainerType, Variable<int> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ConditionsContainerType, Variable<bool> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ConditionsContainerType, Variable<double> >)
+    .def("AssignValues", &FiniteCellMeshUtility_AssignValues<ModelPart::ConditionsContainerType, Variable<array_1d<double, 3> > >)
     ;
 
 }

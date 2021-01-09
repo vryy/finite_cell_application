@@ -319,7 +319,9 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
     Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
     ModelPart::ElementsContainerType NewElements;
-    ImportEntities(rThisModelPart, rThisModelPart.Elements(), NewElements, rOtherElements, last_element_id, r_clone_element, pProperties, echo_level);
+    FiniteCellMeshUtility_Helper<Element, ModelPart::ElementsContainerType>::ImportEntities(rThisModelPart,
+        rThisModelPart.Elements(), NewElements, rOtherElements,
+        last_element_id, r_clone_element, pProperties, echo_level);
 
     if (echo_level > 0)
         std::cout << NewElements.size() << " " << sample_element_name
@@ -339,7 +341,9 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
     Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
-    ImportEntities(rThisModelPart, rThisModelPart.Conditions(), NewConditions, rOtherConditions, last_cond_id, r_clone_condition, pProperties, echo_level);
+    FiniteCellMeshUtility_Helper<Condition, ModelPart::ConditionsContainerType>::ImportEntities(rThisModelPart,
+        rThisModelPart.Conditions(), NewConditions, rOtherConditions,
+        last_cond_id, r_clone_condition, pProperties, echo_level);
 
     if (echo_level > 0)
         std::cout << NewConditions.size() << " " << sample_cond_name
@@ -347,6 +351,50 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
 
     return NewConditions;
 }
+
+template<class TEntityType, class TEntityContainerType>
+void FiniteCellMeshUtility_Helper<TEntityType, TEntityContainerType>::ImportEntities(ModelPart& rThisModelPart,
+    TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
+    TEntityContainerType& rNewElements, // the added elements to rThisElements
+    TEntityContainerType& rOtherElements, // other elements to be imported from
+    std::size_t& last_element_id,
+    TEntityType const& r_clone_element,
+    Properties::Pointer pProperties,
+    const int& echo_level)
+{
+    typedef typename TEntityType::GeometryType GeometryType;
+
+    typename TEntityType::NodesArrayType temp_element_nodes;
+    for (typename TEntityContainerType::ptr_iterator it = rOtherElements.ptr_begin(); it != rOtherElements.ptr_end(); ++it)
+    {
+        GeometryType& r_geom = (*it)->GetGeometry();
+
+        temp_element_nodes.clear();
+
+        for (std::size_t i = 0; i < r_geom.size(); ++i)
+        {
+            std::size_t other_node_id = static_cast<std::size_t>(r_geom[i].GetValue(OTHER_NODE_ID));
+            temp_element_nodes.push_back(*(BRepUtility::FindKey(rThisModelPart.Nodes(), other_node_id, "Node").base()));
+        }
+
+        typename GeometryType::Pointer pNewGeometry = r_geom.Create(temp_element_nodes);
+
+        typename TEntityType::Pointer pNewElement;
+        pNewElement = r_clone_element.Create(++last_element_id, pNewGeometry, pProperties);
+        pNewElement->SetValue(OTHER_ID, (*it)->Id());
+        rNewElements.push_back(pNewElement);
+    }
+
+    for (typename TEntityContainerType::ptr_iterator it = rNewElements.ptr_begin(); it != rNewElements.ptr_end(); ++it)
+    {
+        rThisElements.push_back(*it);
+    }
+
+    rThisElements.Unique();
+}
+
+template struct FiniteCellMeshUtility_Helper<Element, ModelPart::ElementsContainerType>;
+template struct FiniteCellMeshUtility_Helper<Condition, ModelPart::ConditionsContainerType>;
 
 }  // namespace Kratos.
 

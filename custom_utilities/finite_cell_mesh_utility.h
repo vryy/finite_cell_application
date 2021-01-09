@@ -65,6 +65,20 @@ struct GenerateStructuredPoints_Helper
     typedef typename NodeType::PointType PointType;
 };
 
+template<class TEntityType, class TEntityContainerType>
+struct FiniteCellMeshUtility_Helper
+{
+    /// Import the elements from list to the other list
+    static void ImportEntities(ModelPart& rThisModelPart,
+        TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
+        TEntityContainerType& rNewElements, // the added elements to rThisElements
+        TEntityContainerType& rOtherElements, // other elements to be imported from
+        std::size_t& last_element_id,
+        TEntityType const& r_clone_element,
+        Properties::Pointer pProperties,
+        const int& echo_level);
+};
+
 ///@}
 ///@name  Enum's
 ///@{
@@ -255,42 +269,15 @@ public:
         const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level);
 
 
-    /// Import the elements from list to the other list
-    template<class TEntityType, class TEntityContainerType>
-    static void ImportEntities(ModelPart& rThisModelPart,
-        TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
-        TEntityContainerType& rNewElements, // the added elements to rThisElements
-        TEntityContainerType& rOtherElements, // other elements to be imported from
-        std::size_t& last_element_id,
-        TEntityType const& r_clone_element,
-        Properties::Pointer pProperties,
-        const int& echo_level)
+    template<typename TEntityContainerType, typename TVariableType>
+    static void AssignValues(TEntityContainerType& rElements, TEntityContainerType& rOtherElements, const TVariableType& rVariable)
     {
-        typename TEntityType::NodesArrayType temp_element_nodes;
-        for (typename TEntityContainerType::ptr_iterator it = rOtherElements.ptr_begin(); it != rOtherElements.ptr_end(); ++it)
+        std::size_t cnt = 0;
+        for (typename TEntityContainerType::ptr_iterator it = rElements.ptr_begin(); it != rElements.ptr_end(); ++it, ++cnt)
         {
-            typename TEntityType::GeometryType r_geom = (*it)->GetGeometry();
-
-            temp_element_nodes.clear();
-
-            for (std::size_t i = 0; i < r_geom.size(); ++i)
-            {
-                std::size_t other_node_id = static_cast<std::size_t>(r_geom[i].GetValue(OTHER_NODE_ID));
-                temp_element_nodes.push_back(*(BRepUtility::FindKey(rThisModelPart.Nodes(), other_node_id, "Node").base()));
-            }
-
-            typename TEntityType::Pointer pNewElement;
-            pNewElement = r_clone_element.Create(++last_element_id, temp_element_nodes, pProperties);
-            pNewElement->SetValue(OTHER_ID, (*it)->Id());
-            rNewElements.push_back(pNewElement);
+            auto it_other = rOtherElements.ptr_begin() + cnt;
+            (*it)->SetValue(rVariable, (*it_other)->GetValue(rVariable));
         }
-
-        for (typename TEntityContainerType::ptr_iterator it = rNewElements.ptr_begin(); it != rNewElements.ptr_end(); ++it)
-        {
-            rThisElements.push_back(*it);
-        }
-
-        rThisElements.Unique();
     }
 
     ///@}
