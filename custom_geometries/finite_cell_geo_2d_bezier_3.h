@@ -366,12 +366,12 @@ public:
      * Informations
      */
 
-    virtual GeometryData::KratosGeometryFamily GetGeometryFamily()
+    virtual GeometryData::KratosGeometryFamily GetGeometryFamily() const final
     {
         return GeometryData::Kratos_NURBS;
     }
 
-    virtual GeometryData::KratosGeometryType GetGeometryType()
+    virtual GeometryData::KratosGeometryType GetGeometryType() const final
     {
         return GeometryData::Kratos_Bezier2D3;
     }
