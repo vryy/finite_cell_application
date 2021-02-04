@@ -4,6 +4,9 @@ message("**** configuring KratosFiniteCellApplication ****")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
 
+# #include cotire (CMake module to hep generating precompiled header to speed-up the build process)
+# include(cotire)
+
 ######### add include directory here
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications )
@@ -44,9 +47,9 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_mesh_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_finite_cell_auxiliary_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_moment_fitting_utility_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utility_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )
 #######################################################################
 
@@ -58,13 +61,14 @@ target_link_libraries(KratosFiniteCellApplication ${LAPACK_LIBRARIES})
 IF(${NNLS_FOUND} MATCHES TRUE)
     target_link_libraries(KratosFiniteCellApplication ${NNLS_LIBRARIES})
 ENDIF()
+# cotire(KratosFiniteCellApplication)
 set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFiniteCellApplication DESTINATION libs )
 #######################################################################
 
 ## changing the .dll suffix to .pyd for Windows compatibility
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set_target_properties(KratosFiniteCellApplication PROPERTIES SUFFIX .pyd)
+    set_target_properties(KratosFiniteCellApplication PROPERTIES SUFFIX .pyd)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 #######################################################################
 
