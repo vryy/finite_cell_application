@@ -20,10 +20,10 @@ class FiniteCellMpiSimulator(FiniteCellSimulator, object):
         denom = 0.0
         for element in elements:
             if element.GetValue(IS_INACTIVE) == False:
-                u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
-                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
-                Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
-                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                u = element.CalculateOnIntegrationPoints(DISPLACEMENT, process_info)
+                J0 = element.CalculateOnIntegrationPoints(JACOBIAN_0, process_info)
+                Q = element.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+                W = element.CalculateOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
                 for i in range(0, len(u)):
                     ana_u = solution.get_displacement(P, Q[i][0], Q[i][1], Q[i][2])
                     nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
@@ -65,10 +65,10 @@ class FiniteCellMpiSimulator(FiniteCellSimulator, object):
         denom = 0.0
         for element in elements:
             if element.GetValue(IS_INACTIVE) == False:
-                o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, process_info)
-                J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
-                Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
-                W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                o = element.CalculateOnIntegrationPoints(THREED_STRESSES, process_info)
+                J0 = element.CalculateOnIntegrationPoints(JACOBIAN_0, process_info)
+                Q = element.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+                W = element.CalculateOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
                 for i in range(0, len(o)):
                     ana_o = solution.get_stress_3d(P, Q[i][0], Q[i][1], Q[i][2])
                     nom = nom + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
