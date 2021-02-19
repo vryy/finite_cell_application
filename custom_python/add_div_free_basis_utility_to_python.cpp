@@ -11,6 +11,7 @@
 #include <boost/python.hpp>
 
 // Project includes
+#include "includes/define.h"
 #include "custom_python/add_div_free_basis_utility_to_python.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/div_free_basis_utility.h"

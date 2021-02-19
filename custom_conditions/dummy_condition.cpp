@@ -72,7 +72,7 @@ void DummyCondition::Initialize(const ProcessInfo& rCurrentProcessInfo)
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
 void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo)
+        const ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
@@ -91,7 +91,7 @@ void DummyCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
  */
 void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                           VectorType& rRightHandSideVector,
-                                          ProcessInfo& rCurrentProcessInfo)
+                                          const ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;
@@ -108,7 +108,7 @@ void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
  */
 void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                   VectorType& rRightHandSideVector,
-                                  ProcessInfo& rCurrentProcessInfo,
+                                  const ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
                                   bool CalculateResidualVectorFlag)
 {
@@ -128,7 +128,7 @@ void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
 * All Equation IDs are given Master first, Slave second
 */
 void DummyCondition::EquationIdVector( EquationIdVectorType& rResult,
-                                      ProcessInfo& CurrentProcessInfo)
+                                       const ProcessInfo& CurrentProcessInfo) const
 {
     rResult.resize(0);
 }
@@ -142,7 +142,8 @@ void DummyCondition::EquationIdVector( EquationIdVectorType& rResult,
  */
 //************************************************************************************
 //************************************************************************************
-void DummyCondition::GetDofList( DofsVectorType& ConditionalDofList, ProcessInfo& CurrentProcessInfo)
+void DummyCondition::GetDofList( DofsVectorType& ConditionalDofList,
+                                 const ProcessInfo& CurrentProcessInfo) const
 {
     ConditionalDofList.resize(0);
 }

@@ -10,10 +10,8 @@
 
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "includes/define.h"
 #include "includes/element.h"
 #include "includes/condition.h"
 #include "includes/serializer.h"
@@ -46,28 +44,28 @@ class ElementWrapperCondition : public Condition
          * Operations.
          */
 
-        virtual void InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo);
+        void InitializeSolutionStep(const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
+        void InitializeNonLinearIteration(const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                    VectorType& rRightHandSideVector,
-                                   ProcessInfo& rCurrentProcessInfo);
+                                   const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                     ProcessInfo& rCurrentProcessInfo);
+        void CalculateRightHandSide( VectorType& rRightHandSideVector,
+                                     const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void FinalizeNonLinearIteration(ProcessInfo& rCurrentProcessInfo);
+        void FinalizeNonLinearIteration(const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo);
+        void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) final;
 
-        virtual void EquationIdVector( EquationIdVectorType& rResult,
-                               ProcessInfo& rCurrentProcessInfo);
+        void EquationIdVector( EquationIdVectorType& rResult,
+                               const ProcessInfo& rCurrentProcessInfo) const final;
 
-        virtual void GetDofList( DofsVectorType& ConditionalDofList,
-                         ProcessInfo& CurrentProcessInfo);
+        void GetDofList( DofsVectorType& ConditionalDofList,
+                         const ProcessInfo& CurrentProcessInfo) const final;
 
-        virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+        void Initialize(const ProcessInfo& rCurrentProcessInfo) final;
 
         /**
          * Turn back information as a string.
@@ -93,12 +91,12 @@ class ElementWrapperCondition : public Condition
 
         friend class Serializer;
 
-        virtual void save ( Serializer& rSerializer ) const
+        void save ( Serializer& rSerializer ) const final
         {
             KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Condition )
         }
 
-        virtual void load ( Serializer& rSerializer )
+        void load ( Serializer& rSerializer ) final
         {
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }

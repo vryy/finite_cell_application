@@ -72,7 +72,7 @@ void DummyElement::Initialize(const ProcessInfo& rCurrentProcessInfo)
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
 void DummyElement::CalculateRightHandSide( VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo)
+        const ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
@@ -91,7 +91,7 @@ void DummyElement::CalculateRightHandSide( VectorType& rRightHandSideVector,
  */
 void DummyElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                           VectorType& rRightHandSideVector,
-                                          ProcessInfo& rCurrentProcessInfo)
+                                          const ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;
@@ -108,7 +108,7 @@ void DummyElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
  */
 void DummyElement::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                   VectorType& rRightHandSideVector,
-                                  ProcessInfo& rCurrentProcessInfo,
+                                  const ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
                                   bool CalculateResidualVectorFlag)
 {
@@ -128,7 +128,7 @@ void DummyElement::CalculateAll( MatrixType& rLeftHandSideMatrix,
 * All Equation IDs are given Master first, Slave second
 */
 void DummyElement::EquationIdVector( EquationIdVectorType& rResult,
-                                      ProcessInfo& CurrentProcessInfo)
+                                     const ProcessInfo& CurrentProcessInfo) const
 {
     rResult.resize(0);
 }
@@ -142,7 +142,8 @@ void DummyElement::EquationIdVector( EquationIdVectorType& rResult,
  */
 //************************************************************************************
 //************************************************************************************
-void DummyElement::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo)
+void DummyElement::GetDofList( DofsVectorType& ElementalDofList,
+                               const ProcessInfo& CurrentProcessInfo) const
 {
     ElementalDofList.resize(0);
 }

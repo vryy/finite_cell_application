@@ -7,7 +7,8 @@
 //
 //
 
-
+// External includes
+#include <boost/python.hpp>
 
 // Project includes
 #include "includes/element.h"

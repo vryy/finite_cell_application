@@ -10,10 +10,8 @@
 
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "includes/define.h"
 #include "includes/element.h"
 #include "includes/condition.h"
 #include "includes/serializer.h"
@@ -46,27 +44,27 @@ class DummyCondition : public Condition
          * Operations.
          */
 
-        virtual Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
-                                PropertiesType::Pointer pProperties) const;
+        Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
+                                PropertiesType::Pointer pProperties) const final;
 
-        virtual Condition::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
-                                PropertiesType::Pointer pProperties) const;
+        Condition::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
+                                PropertiesType::Pointer pProperties) const final;
 
         /**
          * Calculates the local system contributions for this contact element
          */
         void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                    VectorType& rRightHandSideVector,
-                                   ProcessInfo& rCurrentProcessInfo);
+                                   const ProcessInfo& rCurrentProcessInfo) final;
 
         void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                     ProcessInfo& rCurrentProcessInfo);
+                                     const ProcessInfo& rCurrentProcessInfo) final;
 
         void EquationIdVector( EquationIdVectorType& rResult,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo) const final;
 
         void GetDofList( DofsVectorType& ConditionalDofList,
-                         ProcessInfo& CurrentProcessInfo);
+                         const ProcessInfo& CurrentProcessInfo) const final;
 
         void Initialize(const ProcessInfo& rCurrentProcessInfo);
         /**
@@ -94,19 +92,19 @@ class DummyCondition : public Condition
 
         friend class Serializer;
 
-        virtual void save ( Serializer& rSerializer ) const
+        void save ( Serializer& rSerializer ) const final
         {
             KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Condition )
         }
 
-        virtual void load ( Serializer& rSerializer )
+        void load ( Serializer& rSerializer ) final
         {
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }
 
         void CalculateAll( MatrixType& rLeftHandSideMatrix,
                            VectorType& rRightHandSideVector,
-                           ProcessInfo& rCurrentProcessInfo,
+                           const ProcessInfo& rCurrentProcessInfo,
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag);
 

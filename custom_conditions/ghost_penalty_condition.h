@@ -10,10 +10,8 @@
 
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "includes/define.h"
 #include "includes/element.h"
 #include "includes/condition.h"
 #include "includes/serializer.h"
@@ -64,7 +62,7 @@ class GhostPenaltyCondition : public Condition
             GeometryType::Pointer pGeometry,
             Element::Pointer pSlaveElement,
             Element::Pointer pMasterElement,
-            PropertiesType::Pointer pProperties)
+            PropertiesType::Pointer pProperties) const
         {
             return GhostPenaltyCondition::Pointer(new GhostPenaltyCondition(NewId,
                 pGeometry, pSlaveElement, pMasterElement, pProperties));
@@ -77,9 +75,9 @@ class GhostPenaltyCondition : public Condition
         /**
          * Calculates the local system contributions for this contact element
          */
-        virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+        void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                    VectorType& rRightHandSideVector,
-                                   ProcessInfo& rCurrentProcessInfo)
+                                   const ProcessInfo& rCurrentProcessInfo) override
         {
             //calculation flags
             bool CalculateStiffnessMatrixFlag = true;
@@ -88,8 +86,8 @@ class GhostPenaltyCondition : public Condition
                           CalculateStiffnessMatrixFlag, CalculateResidualVectorFlag);
         }
 
-        virtual void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                     ProcessInfo& rCurrentProcessInfo)
+        void CalculateRightHandSide( VectorType& rRightHandSideVector,
+                                     const ProcessInfo& rCurrentProcessInfo) override
         {
             //calculation flags
             bool CalculateStiffnessMatrixFlag = false;
@@ -101,19 +99,19 @@ class GhostPenaltyCondition : public Condition
                           CalculateResidualVectorFlag);
         }
 
-        virtual void EquationIdVector( EquationIdVectorType& rResult,
-                               ProcessInfo& rCurrentProcessInfo)
+        void EquationIdVector( EquationIdVectorType& rResult,
+                               const ProcessInfo& rCurrentProcessInfo) const override
         {
             rResult.resize(0);
         }
 
-        virtual void GetDofList( DofsVectorType& ConditionalDofList,
-                         ProcessInfo& CurrentProcessInfo)
+        void GetDofList( DofsVectorType& ConditionalDofList,
+                         const ProcessInfo& CurrentProcessInfo) const override
         {
             ConditionalDofList.resize(0);
         }
 
-        virtual void Initialize(const ProcessInfo& rCurrentProcessInfo)
+        void Initialize(const ProcessInfo& rCurrentProcessInfo) override
         {
             KRATOS_TRY
 
@@ -180,7 +178,7 @@ class GhostPenaltyCondition : public Condition
          * Turn back information as a string.
          * (DEACTIVATED)
          */
-        virtual std::string Info() const
+        std::string Info() const override
         {
             std::stringstream buffer;
             buffer << "GhostPenaltyCondition #" << Id();
@@ -190,7 +188,7 @@ class GhostPenaltyCondition : public Condition
         /**
          * Print information about this object.
          */
-        virtual void PrintInfo(std::ostream& rOStream) const
+        void PrintInfo(std::ostream& rOStream) const override
         {
             rOStream << Info();
         }
@@ -198,7 +196,7 @@ class GhostPenaltyCondition : public Condition
         /**
          * Print object's data.
          */
-        virtual void PrintData(std::ostream& rOStream) const
+        void PrintData(std::ostream& rOStream) const override
         {
             rOStream << " faces:";
             for (std::size_t i = 0; i < GetGeometry().size(); ++i)
@@ -222,19 +220,19 @@ class GhostPenaltyCondition : public Condition
 
         friend class Serializer;
 
-        virtual void save ( Serializer& rSerializer ) const
+        void save ( Serializer& rSerializer ) const override
         {
             KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Condition )
         }
 
-        virtual void load ( Serializer& rSerializer )
+        void load ( Serializer& rSerializer ) override
         {
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Condition )
         }
 
         void CalculateAll( MatrixType& rLeftHandSideMatrix,
                            VectorType& rRightHandSideVector,
-                           ProcessInfo& rCurrentProcessInfo,
+                           const ProcessInfo& rCurrentProcessInfo,
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag)
         {

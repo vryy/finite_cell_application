@@ -10,10 +10,8 @@
 
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "includes/define.h"
 #include "includes/element.h"
 #include "includes/condition.h"
 #include "includes/serializer.h"
@@ -48,29 +46,29 @@ class DummyElement : public Element
          * Operations.
          */
 
-        virtual Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
-                                PropertiesType::Pointer pProperties) const;
+        Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
+                                PropertiesType::Pointer pProperties) const final;
 
-        virtual Element::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
-                                PropertiesType::Pointer pProperties) const;
+        Element::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
+                                PropertiesType::Pointer pProperties) const final;
 
         /**
          * Calculates the local system contributions for this contact element
          */
         void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                    VectorType& rRightHandSideVector,
-                                   ProcessInfo& rCurrentProcessInfo);
+                                   const ProcessInfo& rCurrentProcessInfo) final;
 
         void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                     ProcessInfo& rCurrentProcessInfo);
+                                     const ProcessInfo& rCurrentProcessInfo) final;
 
         void EquationIdVector( EquationIdVectorType& rResult,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo) const final;
 
         void GetDofList( DofsVectorType& ElementalDofList,
-                         ProcessInfo& CurrentProcessInfo);
+                         const ProcessInfo& CurrentProcessInfo) const final;
 
-        void Initialize(const ProcessInfo& rCurrentProcessInfo);
+        void Initialize(const ProcessInfo& rCurrentProcessInfo) final;
         /**
          * Turn back information as a string.
          * (DEACTIVATED)
@@ -96,19 +94,19 @@ class DummyElement : public Element
 
         friend class Serializer;
 
-        virtual void save ( Serializer& rSerializer ) const
+        void save ( Serializer& rSerializer ) const final
         {
             KRATOS_SERIALIZE_SAVE_BASE_CLASS ( rSerializer, Element )
         }
 
-        virtual void load ( Serializer& rSerializer )
+        void load ( Serializer& rSerializer ) final
         {
             KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Element )
         }
 
         void CalculateAll( MatrixType& rLeftHandSideMatrix,
                            VectorType& rRightHandSideVector,
-                           ProcessInfo& rCurrentProcessInfo,
+                           const ProcessInfo& rCurrentProcessInfo,
                            bool CalculateStiffnessMatrixFlag,
                            bool CalculateResidualVectorFlag);
 

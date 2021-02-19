@@ -54,7 +54,7 @@ void ElementWrapperCondition::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //************************************************************************************
 //************************************************************************************
 
-void ElementWrapperCondition::InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo)
+void ElementWrapperCondition::InitializeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->InitializeSolutionStep(rCurrentProcessInfo);
 }
@@ -62,7 +62,7 @@ void ElementWrapperCondition::InitializeSolutionStep(ProcessInfo& rCurrentProces
 //************************************************************************************
 //************************************************************************************
 
-void ElementWrapperCondition::InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
+void ElementWrapperCondition::InitializeNonLinearIteration(const ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->InitializeNonLinearIteration(rCurrentProcessInfo);
 }
@@ -74,7 +74,7 @@ void ElementWrapperCondition::InitializeNonLinearIteration(ProcessInfo& rCurrent
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
 void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo)
+        const ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->CalculateRightHandSide( rRightHandSideVector, rCurrentProcessInfo );
 }
@@ -86,7 +86,7 @@ void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSide
  */
 void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                           VectorType& rRightHandSideVector,
-                                          ProcessInfo& rCurrentProcessInfo)
+                                          const ProcessInfo& rCurrentProcessInfo)
 {
 //    std::cout << "---------------------start condition " << Id() << "---------------------------" << std::endl;
 //    std::cout << "Condition " << Id() << " wraps element " << mpElement->Id() << ":";
@@ -102,7 +102,7 @@ void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMat
 //************************************************************************************
 //************************************************************************************
 
-void ElementWrapperCondition::FinalizeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
+void ElementWrapperCondition::FinalizeNonLinearIteration(const ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->FinalizeNonLinearIteration(rCurrentProcessInfo);
 }
@@ -110,7 +110,7 @@ void ElementWrapperCondition::FinalizeNonLinearIteration(ProcessInfo& rCurrentPr
 //************************************************************************************
 //************************************************************************************
 
-void ElementWrapperCondition::FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo)
+void ElementWrapperCondition::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
 {
     mpElement->FinalizeSolutionStep(rCurrentProcessInfo);
 }
@@ -123,7 +123,7 @@ void ElementWrapperCondition::FinalizeSolutionStep(ProcessInfo& rCurrentProcessI
 * All Equation IDs are given Master first, Slave second
 */
 void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult,
-                                      ProcessInfo& rCurrentProcessInfo)
+                                        const ProcessInfo& rCurrentProcessInfo) const
 {
     mpElement->EquationIdVector( rResult, rCurrentProcessInfo );
 }
@@ -137,7 +137,8 @@ void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult,
  */
 //************************************************************************************
 //************************************************************************************
-void ElementWrapperCondition::GetDofList( DofsVectorType& rConditionalDofList, ProcessInfo& rCurrentProcessInfo)
+void ElementWrapperCondition::GetDofList( DofsVectorType& rConditionalDofList,
+                                          const ProcessInfo& rCurrentProcessInfo) const
 {
     mpElement->GetDofList( rConditionalDofList, rCurrentProcessInfo );
 }
