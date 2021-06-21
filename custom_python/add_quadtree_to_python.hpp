@@ -40,6 +40,9 @@ void FiniteCellApplication_AddRefinableTreeToPython()
     ("RefinableTree", init<>())
     .def("Refine", &RefinableTree::Refine)
     .def("RefineBy", &RefinableTree::RefineBy)
+    .def("RefineWithGeometryBy", &RefinableTree::RefineWithGeometryBy)
+    .def("RefineUpToLevelBy", &RefinableTree::RefineUpToLevelBy)
+    .def("RefineWithGeometryUpToLevelBy", &RefinableTree::RefineWithGeometryUpToLevelBy)
     .def("Clear", &RefinableTree::Clear)
     ;
 }
@@ -117,6 +120,28 @@ boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
     std::size_t lastNodeId, std::size_t lastEntityId)
 {
     return QuadTree_AddToModelPart_WithLevel(rDummy, r_model_part, sample_entity_name, lastNodeId, lastEntityId, 1);
+}
+
+template<class TTreeType>
+boost::python::list QuadTree_ConstructQuadrature(TTreeType& rDummy,
+    const BRep& r_brep, const int& integration_method, const double& small_weight)
+{
+    std::vector<std::size_t> output = rDummy.ConstructQuadrature(r_brep, integration_method, small_weight);
+    boost::python::list list_output;
+    for (std::size_t i = 0; i < output.size(); ++i)
+        list_output.append(output[i]);
+    return list_output;
+}
+
+template<class TTreeType>
+boost::python::list QuadTree_ConstructQuadratureNoSkip(TTreeType& rDummy,
+    const BRep& r_brep, const int& integration_method, const double& small_weight)
+{
+    std::vector<std::size_t> output = rDummy.ConstructQuadratureNoSkip(r_brep, integration_method, small_weight);
+    boost::python::list list_output;
+    for (std::size_t i = 0; i < output.size(); ++i)
+        list_output.append(output[i]);
+    return list_output;
 }
 
 /// construct the element out from quad-tree and add to model_part
@@ -233,8 +258,8 @@ boost::python::list MomentFittedQuadTreeSubCell_CreateSubCellElements(TTreeType&
         ModelPart& r_model_part,
         const std::string& subcell_element_type,
         const int& cut_cell_quadrature_order,
-        boost::python::list& cut_cell_full_quadrature,
-        boost::python::list& subcell_weights,
+        const boost::python::list& cut_cell_full_quadrature,
+        const boost::python::list& subcell_weights,
         const std::size_t& lastElementId,
         const std::size_t& lastCondId,
         Properties::Pointer pProperties)
@@ -417,7 +442,6 @@ void FiniteCellApplication_AddQuadTreeToPython()
         QuadTreeName << TNsampling;
 
     std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature1)(const int&) const = &QuadTreeType::ConstructQuadrature;
-    std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature2)(const BRep&, const int&, const double&) const = &QuadTreeType::ConstructQuadrature;
 
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
@@ -435,8 +459,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
     .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
-    .def("ConstructQuadrature", pointer_to_ConstructQuadrature2)
-    .def("ConstructQuadratureNoSkip", &QuadTreeType::ConstructQuadratureNoSkip)
+    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature<QuadTreeType>)
+    .def("ConstructQuadratureNoSkip", &QuadTree_ConstructQuadratureNoSkip<QuadTreeType>)
     .def(self_ns::str(self))
     ;
 }
@@ -462,8 +486,8 @@ void FiniteCellApplication_AddQuadTreeSubCellToPython()
         QuadTreeSubCellName << TNsampling;
 
     class_<QuadTreeSubCellType, typename QuadTreeSubCellType::Pointer, boost::noncopyable, bases<RefinableTree> >
-    (QuadTreeSubCellName.str().c_str(), init<Element::Pointer&>())
-    .def(init<Condition::Pointer&>())
+    (QuadTreeSubCellName.str().c_str(), init<Element::Pointer>())
+    .def(init<Condition::Pointer>())
     .def("NumberOfSubCells", &QuadTreeSubCellType::NumberOfSubCells)
     .def("DomainSize", pointer_to_DomainSize1)
     .def("DomainSize", pointer_to_DomainSize2)

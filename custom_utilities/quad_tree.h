@@ -23,7 +23,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
 
 
 // Project includes
@@ -80,6 +79,21 @@ public:
     }
 
     virtual void RefineBy(const BRep& r_brep)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+    }
+
+    virtual void RefineWithGeometryBy(const BRep& r_brep)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+    }
+
+    virtual void RefineUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
+    {
+        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+    }
+
+    virtual void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
     }
@@ -245,29 +259,50 @@ public:
 
     /// Create the sub-cells
     /// Implement function from abstract class RefinableTree
-    virtual void Refine()
+    void Refine() final
     {
         mpTreeNode->Refine();
     }
 
     /// Refine the tree by the BRep
     /// Implement function from abstract class RefinableTree
-    virtual void RefineBy(const BRep& r_brep)
+    void RefineBy(const BRep& r_brep) final
     {
-        mpTreeNode->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
+        mpTreeNode->template RefineBySampling<false>(mpThisGeometry, r_brep, TNsampling);
+    }
+
+    /// Refine the tree by the BRep
+    /// Implement function from abstract class RefinableTree
+    void RefineWithGeometryBy(const BRep& r_brep) final
+    {
+        mpTreeNode->template RefineBySampling<true>(mpThisGeometry, r_brep, TNsampling);
+    }
+
+    /// Refine the tree by the BRep up to certain level
+    /// Implement function from abstract class RefinableTree
+    void RefineUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels) final
+    {
+        mpTreeNode->template RefineBySamplingUpTo<false>(mpThisGeometry, r_brep, TNsampling, nLevels);
+    }
+
+    /// Refine the tree by the BRep up to certain level
+    /// Implement function from abstract class RefinableTree
+    void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels) final
+    {
+        mpTreeNode->template RefineBySamplingUpTo<true>(mpThisGeometry, r_brep, TNsampling, nLevels);
     }
 
     /// Clear the underlying quadtree node
     /// Implement function from abstract class RefinableTree
-    virtual void Clear()
+    void Clear() final
     {
         mpTreeNode->Clear();
     }
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -276,7 +311,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
@@ -285,8 +320,8 @@ public:
 
     /// Integrate a global function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -295,7 +330,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
@@ -304,7 +339,7 @@ public:
 
     /// Construct a custom quadrature on the support domain
     /// Implement function from abstrat class FunctionIntegrator
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
         return this->Get().ConstructCustomQuadrature(quadrature_type, integration_order);
     }
@@ -332,16 +367,16 @@ public:
         mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // compute the number of physical integration points
-        CoordinatesArrayType GlobalCoords;
         std::size_t num_points = 0;
+        bool is_inside;
         for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
             if(TFrameType == GLOBAL_CURRENT)
-                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             else if(TFrameType == GLOBAL_REFERENCE)
-                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
-            if(r_brep.IsInside(GlobalCoords))
+            if(is_inside)
                 ++num_points;
         }
 
@@ -359,16 +394,16 @@ public:
         mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // compute the number of fictitious integration points
-        CoordinatesArrayType GlobalCoords;
         std::size_t num_points = 0;
+        bool is_inside;
         for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
             if(TFrameType == GLOBAL_CURRENT)
-                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             else if(TFrameType == GLOBAL_REFERENCE)
-                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
-            if(!r_brep.IsInside(GlobalCoords))
+            if(!is_inside)
                 ++num_points;
         }
 
@@ -455,8 +490,8 @@ public:
     /// Construct the finite cell quadrature
     /// The quadrature point outside the physical domain will be penalized
     /// If the small_weight is zero, the quadrature point outside the physical domain will be skipped
-    /// Returns the number of quadrature points created
-    std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
+    /// Returns the number of quadrature points created and number of physical points
+    std::vector<std::size_t> ConstructQuadrature(const BRep& r_brep, const int& integration_method,
             const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
@@ -472,19 +507,22 @@ public:
         // KRATOS_WATCH(tmp_integration_points.size())
 
         // fill the integration_point container
-        CoordinatesArrayType GlobalCoords;
+        bool is_inside;
+        std::size_t number_of_physical_points = 0;
         if(small_weight != 0.0)
         {
             for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
                 if(TFrameType == GLOBAL_CURRENT)
-                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                 else if(TFrameType == GLOBAL_REFERENCE)
-                    FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                    is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
                 // modify the weight if needed
-                if(!r_brep.IsInside(GlobalCoords))
+                if(!is_inside)
                     tmp_integration_points[point].SetWeight(small_weight);
+                else
+                    ++number_of_physical_points;
                 integration_points.push_back(tmp_integration_points[point]);
             }
         }
@@ -493,12 +531,13 @@ public:
             for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
                 if(TFrameType == GLOBAL_CURRENT)
-                    GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                    is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                 else if(TFrameType == GLOBAL_REFERENCE)
-                    FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                    is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
-                if(r_brep.IsInside(GlobalCoords))
+                if(is_inside)
                 {
+                    ++number_of_physical_points;
                     integration_points.push_back(tmp_integration_points[point]);
                     // std::cout << "point " << point << " is inside, global coords: " << GlobalCoords << std::endl;
                 }
@@ -514,13 +553,14 @@ public:
         GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
-        return integration_points.size();
+        return std::vector<std::size_t> {integration_points.size(), number_of_physical_points};
     }
 
     /// Construct the finite cell quadrature
     /// The quadrature point outside the physical domain will be penalized
-    /// Returns the number of quadrature points created
-    std::size_t ConstructQuadratureNoSkip(const BRep& r_brep, const int& integration_method,
+    /// Even if the small_weight is zero, the quadrature point outside the physical domain will NOT be skipped
+    /// Returns the number of quadrature points created and number of physical points
+    std::vector<std::size_t> ConstructQuadratureNoSkip(const BRep& r_brep, const int& integration_method,
             const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
@@ -531,17 +571,20 @@ public:
         mpTreeNode->ConstructQuadrature(tmp_integration_points, integration_method);
 
         // fill the integration_point container
-        CoordinatesArrayType GlobalCoords;
+        std::size_t number_of_physical_points = 0;
+        bool is_inside;
         for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
             if(TFrameType == GLOBAL_CURRENT)
-                GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             else if(TFrameType == GLOBAL_REFERENCE)
-                FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
             // modify the weight if needed
-            if(!r_brep.IsInside(GlobalCoords))
+            if(!is_inside)
                 tmp_integration_points[point].SetWeight(small_weight);
+            else
+                ++number_of_physical_points;
             integration_points.push_back(tmp_integration_points[point]);
         }
 
@@ -550,7 +593,7 @@ public:
         GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
-        return integration_points.size();
+        return std::vector<std::size_t> {integration_points.size(), number_of_physical_points};
     }
 
     static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType, const int& configuration = 0)
@@ -611,19 +654,19 @@ public:
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "QuadTree";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
         rOStream << *mpTreeNode;
     }
@@ -687,11 +730,11 @@ public:
     ///@{
 
     /// Constructor.
-    QuadTreeSubCell(Element::Pointer& p_elem) : mpThisGeometry(p_elem->pGetGeometry())
+    QuadTreeSubCell(Element::Pointer p_elem) : mpThisGeometry(p_elem->pGetGeometry())
     {
     }
 
-    QuadTreeSubCell(Condition::Pointer& p_cond) : mpThisGeometry(p_cond->pGetGeometry())
+    QuadTreeSubCell(Condition::Pointer p_cond) : mpThisGeometry(p_cond->pGetGeometry())
     {
     }
 
@@ -722,26 +765,33 @@ public:
     const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNodes[i];}
     typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNodes[i];}
 
-
     /// Refine the sub-cells
     /// Implement function from abstract class RefinableTree
-    virtual void Refine()
+    void Refine() final
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
             mpTreeNodes[i]->Refine();
     }
 
-    /// Refine the tree by the level set
+    /// Refine the tree by the BRep
     /// Implement function from abstract class RefinableTree
-    virtual void RefineBy(const BRep& r_brep)
+    void RefineBy(const BRep& r_brep) final
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
-            mpTreeNodes[i]->RefineBySampling(mpThisGeometry, r_brep, TNsampling);
+            mpTreeNodes[i]->template RefineBySampling<false>(mpThisGeometry, r_brep, TNsampling);
+    }
+
+    /// Refine the tree by the BRep
+    /// Implement function from abstract class RefinableTree
+    void RefineWithGeometryBy(const BRep& r_brep) final
+    {
+        for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
+            mpTreeNodes[i]->template RefineBySampling<true>(mpThisGeometry, r_brep, TNsampling);
     }
 
     /// Clear the underlying quadtree nodes
     /// Implement function from abstract class RefinableTree
-    virtual void Clear()
+    void Clear() final
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
             mpTreeNodes[i]->Clear();
@@ -749,8 +799,8 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -759,7 +809,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
@@ -768,8 +818,8 @@ public:
 
     /// Integrate a global function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-        const BRep& r_brep, const int& integration_method, const double& small_weight) const
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
+        const BRep& r_brep, const int& integration_method, const double& small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -778,7 +828,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
@@ -787,7 +837,7 @@ public:
 
     /// Construct a custom quadrature on the support domain
     /// Implement function from abstrat class FunctionIntegrator
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
         return this->Get(0).ConstructCustomQuadrature(quadrature_type, integration_order);
     }
@@ -872,7 +922,7 @@ public:
         GeometryType::IntegrationPointsArrayType integration_points;
 
         // firstly create an array of integration points of sub-trees of sub-cells
-        CoordinatesArrayType GlobalCoords;
+        bool is_inside;
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
         {
             GeometryType::IntegrationPointsArrayType tmp_integration_points;
@@ -884,12 +934,12 @@ public:
                 for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
                     if(TFrameType == GLOBAL_CURRENT)
-                        GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                        is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                     else if(TFrameType == GLOBAL_REFERENCE)
-                        FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                        is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
                     // modify the weight if needed
-                    if(!r_brep.IsInside(GlobalCoords))
+                    if(!is_inside)
                         tmp_integration_points[point].SetWeight(small_weight);
                     integration_points.push_back(tmp_integration_points[point]);
                 }
@@ -899,11 +949,11 @@ public:
                 for(std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
                     if(TFrameType == GLOBAL_CURRENT)
-                        GlobalCoords = mpThisGeometry->GlobalCoordinates(GlobalCoords, tmp_integration_points[point]);
+                        is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                     else if(TFrameType == GLOBAL_REFERENCE)
-                        FiniteCellGeometryUtility::GlobalCoordinates0(*mpThisGeometry, GlobalCoords, tmp_integration_points[point]);
+                        is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
 
-                    if(r_brep.IsInside(GlobalCoords))
+                    if(is_inside)
                         integration_points.push_back(tmp_integration_points[point]);
                 }
             }
@@ -918,19 +968,19 @@ public:
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const override
     {
         return "QuadTreeSubCell";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const override
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const override
     {
         for(std::size_t i = 0; i < mpTreeNodes.size(); ++i)
         {

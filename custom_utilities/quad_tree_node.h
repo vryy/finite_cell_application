@@ -45,10 +45,14 @@
 #include "geometries/hexahedra_3d_8.h"
 #include "geometries/hexahedra_3d_20.h"
 #include "geometries/hexahedra_3d_27.h"
-#include "integration/quadrilateral_gauss_lobatto_integration_points.h"
 #include "integration/quadrilateral_gauss_legendre_integration_points.h"
 #include "integration/hexahedron_gauss_legendre_integration_points.h"
+#include "integration/quadrilateral_gauss_lobatto_integration_points.h"
 #include "integration/hexahedron_gauss_lobatto_integration_points.h"
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+#include "custom_integration/quadrilateral_gauss_lobatto_integration_points.h"
+#include "custom_integration/hexahedron_gauss_lobatto_integration_points.h"
+#endif
 #include "brep_application/custom_algebra/brep.h"
 #include "brep_application/custom_algebra/function/function.h"
 #include "brep_application/custom_algebra/function/monomial_function.h"
@@ -90,10 +94,11 @@ struct QuadTreeNode_AddToModelPart_Helper
 };
 
 
-/// Abstract quad tree node description in reference coordinates
-/// The frame argument defines the behaviour of the quadtree with respect to the parent geometry. If TFrameType == GLOBAL_REFERENCE, the quadtree will
-/// assume the global coordinates in reference frame. This is useful for small strain mechanics. For fluid dynamics or large strain mechanics, TFrameType == GLOBAL_CURRENT
-/// shall be used so that the QuadTree always interpret the current location of the geometry
+/// Abstract quad tree node description in reference/current coordinates
+/// The frame argument defines the behaviour of the quadtree with respect to the parent geometry.
+/// If TFrameType == GLOBAL_REFERENCE, the quadtree will assume the global coordinates in reference frame.
+/// This is useful for small strain mechanics. For fluid dynamics or large strain mechanics,
+/// TFrameType == GLOBAL_CURRENT shall be used so that the QuadTree always interprets the current configuration of the geometry
 template<int TFrameType>
 class QuadTreeNode
 {
@@ -199,20 +204,41 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
+    /// Refine up to a certain level
+    void RefineUpTo(const std::size_t& nLevels)
+    {
+        if (this->Level() < nLevels)
+            this->Refine();
+    }
+
     /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
     /// This routine tests the inside/outside against a set of sampling points. It's more computationally expensive but is more robust and applicable to a large types of geometries.
+    /// if TUseGeometryInformation is true, the local coordinates and geometry is also pass to BRep for cut checking
+    template<bool TUseGeometryInformation>
     void RefineBySampling(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
     {
         if(this->IsLeaf())
         {
+            std::vector<CoordinatesArrayType> SamplingLocalPoints;
+            this->CreateSamplingLocalPoints(SamplingLocalPoints, nsampling);
+
             std::vector<PointType> SamplingPoints;
-            this->CreateSamplingPoints(SamplingPoints, *pParentGeometry, nsampling);
+            this->CreateSamplingPoints(SamplingPoints, *pParentGeometry, SamplingLocalPoints);
 
-            // for (int i = 0; i < SamplingPoints.size(); ++i)
-            //     std::cout << "sampling point " << i << ": " << SamplingPoints[i]
-            //               << ", status: " << r_brep.IsInside(SamplingPoints[i]) << std::endl;
+            int stat;
+            if (!TUseGeometryInformation)
+            {
+                // for (int i = 0; i < SamplingPoints.size(); ++i)
+                //     std::cout << "sampling point " << i << ": " << SamplingPoints[i]
+                //               << ", status: " << r_brep.IsInside(SamplingPoints[i]) << std::endl;
 
-            int stat = r_brep.CutStatus(SamplingPoints);
+                stat = r_brep.CutStatus(SamplingPoints);
+            }
+            else
+            {
+                stat = r_brep.CutStatus(*pParentGeometry, SamplingLocalPoints, SamplingPoints);
+            }
+
             if(stat == BRep::_CUT)
             {
                 // std::cout << "cell lv " << Level() << " is refined" << std::endl;
@@ -223,7 +249,51 @@ public:
         {
             for(std::size_t i = 0; i < mpChildren.size(); ++i)
             {
-                mpChildren[i]->RefineBySampling(pParentGeometry, r_brep, nsampling);
+                mpChildren[i]->template RefineBySampling<TUseGeometryInformation>(pParentGeometry, r_brep, nsampling);
+            }
+        }
+    }
+
+    /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
+    /// This routine tests the inside/outside against a set of sampling points. It's more computationally expensive but is more robust and applicable to a large types of geometries.
+    /// if TUseGeometryInformation is true, the local coordinates and geometry is also pass to BRep for cut checking
+    /// The refinement is bounded by certain level
+    template<bool TUseGeometryInformation>
+    void RefineBySamplingUpTo(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling, const std::size_t& nLevels)
+    {
+        if(this->IsLeaf())
+        {
+            std::vector<CoordinatesArrayType> SamplingLocalPoints;
+            this->CreateSamplingLocalPoints(SamplingLocalPoints, nsampling);
+
+            std::vector<PointType> SamplingPoints;
+            this->CreateSamplingPoints(SamplingPoints, *pParentGeometry, SamplingLocalPoints);
+
+            int stat;
+            if (!TUseGeometryInformation)
+            {
+                // for (int i = 0; i < SamplingPoints.size(); ++i)
+                //     std::cout << "sampling point " << i << ": " << SamplingPoints[i]
+                //               << ", status: " << r_brep.IsInside(SamplingPoints[i]) << std::endl;
+
+                stat = r_brep.CutStatus(SamplingPoints);
+            }
+            else
+            {
+                stat = r_brep.CutStatus(*pParentGeometry, SamplingLocalPoints, SamplingPoints);
+            }
+
+            if(stat == BRep::_CUT)
+            {
+                // std::cout << "cell lv " << Level() << " is refined" << std::endl;
+                this->RefineUpTo(nLevels);
+            }
+        }
+        else
+        {
+            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
+                mpChildren[i]->template RefineBySamplingUpTo<TUseGeometryInformation>(pParentGeometry, r_brep, nsampling, nLevels);
             }
         }
     }
@@ -323,7 +393,7 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
 
-            if(r_brep.IsInside(GlobalCoords))
+            if(r_brep.IsInside(static_cast<BRep::PointType>(GlobalCoords)))
             {
                 if(TFuncFrameType == LOCAL)
                     rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
@@ -650,11 +720,27 @@ public:
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
     }
 
-    /// Create a list of sampling points on the geometry. The local coordinates of the sampling points must be taken from the quadtree parameter range.
-    virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
+    /// Create a list of sampling points on the geometry. If overriding, the local coordinates of the sampling points must be taken from the quadtree parameter range.
+    virtual void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
+            const std::size_t& nsampling) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+    }
+
+    void CreateSamplingPoints(std::vector<PointType>& SamplingPoints, const GeometryType& r_geom,
+            const std::vector<CoordinatesArrayType>& SamplingLocalPoints) const
+    {
+        SamplingPoints.resize(SamplingLocalPoints.size());
+
+        PointType P;
+        for(std::size_t j = 0; j < SamplingLocalPoints.size(); ++j)
+        {
+            if(TFrameType == GLOBAL_CURRENT)
+                FiniteCellGeometryUtility::GlobalCoordinates(r_geom, P, SamplingLocalPoints[j]);
+            else if(TFrameType == GLOBAL_REFERENCE)
+                FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, SamplingLocalPoints[j]);
+            SamplingPoints[j] = P;
+        }
     }
 
     /// Turn back information as a string.
@@ -877,7 +963,7 @@ public:
     const double& Ymin() const {return mYmin;}
     const double& Ymax() const {return mYmax;}
 
-    virtual void Refine()
+    void Refine() override
     {
         if(this->IsLeaf())
         {
@@ -894,7 +980,7 @@ public:
         }
     }
 
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
     {
         if(quadrature_type == 1) // Gauss-Legendre
         {
@@ -908,6 +994,7 @@ public:
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 5)
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            #ifndef SD_APP_FORWARD_COMPATIBILITY
             else if(integration_order == 6)
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 7)
@@ -918,6 +1005,7 @@ public:
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 10)
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            #endif
             else
                 KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
         }
@@ -925,16 +1013,23 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
     }
 
-    virtual typename GeometryType::Pointer pCreateReferenceGeometry() const
+    typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+        typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+        typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+        typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
+        #else
         NodeType P1(0, mXmin, mYmin);
         NodeType P2(1, mXmax, mYmin);
         NodeType P3(2, mXmax, mYmax);
         NodeType P4(3, mXmin, mYmax);
+        #endif
         return typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const override
     {
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
@@ -942,7 +1037,18 @@ public:
         if(    pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
             || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4 )
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            #else
             NodeType P1, P2, P3, P4;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -968,15 +1074,41 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(pP1, pP2, pP3, pP4));
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(pP1, pP2, pP3, pP4));
+            #else
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(P1, P2, P3, P4));
+            #endif
         }
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
              || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8 )
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -1026,15 +1158,43 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
+            #else
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
+            #endif
         }
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
              || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0));
+            typename NodeType::Pointer pP9 = typename NodeType::Pointer(new NodeType(8, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            NodeType& P9 = *pP9;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8, P9;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -1090,10 +1250,17 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
+                pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
+            #else
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
+            #endif
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
@@ -1104,7 +1271,7 @@ public:
         return pNewGeometry;
     }
 
-    virtual bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const
+    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const final
     {
         bool is_onboundary = false;
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
@@ -1117,12 +1284,12 @@ public:
         return is_onboundary;
     }
 
-    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    bool IsInside(const CoordinatesArrayType& rLocalPoint) const final
     {
         return (mXmin < rLocalPoint[0]) && (rLocalPoint[0] < mXmax) && (mYmin < rLocalPoint[1]) && (rLocalPoint[1] < mYmax);
     }
 
-    virtual CoordinatesArrayType ReferenceCenter() const
+    CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
         C[0] = 0.5*(mXmin + mXmax);
@@ -1131,13 +1298,13 @@ public:
         return C;
     }
 
-    virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
+    void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
+            const std::size_t& nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
 
-        SamplingPoints.reserve((nsampling+1) * (nsampling+1));
+        SamplingLocalPoints.reserve((nsampling+1) * (nsampling+1));
         CoordinatesArrayType X;
         PointType P;
         X[2] = 0.0;
@@ -1147,29 +1314,25 @@ public:
             for(std::size_t j = 0; j < nsampling + 1; ++j)
             {
                 X[1] = mYmin + j*dY;
-                if(TFrameType == GLOBAL_CURRENT)
-                    r_geom.GlobalCoordinates(P, X);
-                else if(TFrameType == GLOBAL_REFERENCE)
-                    FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, X);
-                SamplingPoints.push_back(P);
+                SamplingLocalPoints.push_back(X);
             }
         }
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const override
     {
         return "QuadTreeNodeQ4";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
         rOStream << "(" << mXmin << ", " << mYmin << ") - (" << mXmax << ", " << mYmax << ")";
     }
@@ -1211,7 +1374,7 @@ public:
 
     virtual ~QuadTreeNodeBezier2D() {}
 
-    virtual void Refine()
+    void Refine() final
     {
         if(this->IsLeaf())
         {
@@ -1228,7 +1391,7 @@ public:
         }
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
         if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D
         || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D3)
@@ -1239,7 +1402,7 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
     }
 
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
         if(quadrature_type == 1) // Gauss-Legendre
         {
@@ -1283,7 +1446,7 @@ public:
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "QuadTreeNodeBezier2D";
     }
@@ -1331,12 +1494,12 @@ public:
     const double& Zmin() const {return mZmin;}
     const double& Zmax() const {return mZmax;}
 
-    virtual int Configuration() const
+    int Configuration() const final
     {
         return TConfiguration;
     }
 
-    virtual void Refine()
+    void Refine() override
     {
         if(this->IsLeaf())
         {
@@ -1382,7 +1545,7 @@ public:
         }
     }
 
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
     {
         if(quadrature_type == 1) // Gauss-Legendre
         {
@@ -1396,12 +1559,14 @@ public:
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 5)
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            #ifndef SD_APP_FORWARD_COMPATIBILITY
             else if(integration_order == 6)
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 7)
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
             else if(integration_order == 8)
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            #endif
             else
                 KRATOS_THROW_ERROR(std::logic_error, "This integration_order of Gauss-Legendre is not supported:", integration_order);
         }
@@ -1434,8 +1599,18 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "This quadrature type is not supported:", quadrature_type);
     }
 
-    virtual typename GeometryType::Pointer pCreateReferenceGeometry() const
+    typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mXmin, mYmin, mZmin));
+        typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mXmax, mYmin, mZmin));
+        typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mXmax, mYmax, mZmin));
+        typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, mXmin, mYmax, mZmin));
+        typename NodeType::Pointer P5 = typename NodeType::Pointer(new NodeType(4, mXmin, mYmin, mZmax));
+        typename NodeType::Pointer P6 = typename NodeType::Pointer(new NodeType(5, mXmax, mYmin, mZmax));
+        typename NodeType::Pointer P7 = typename NodeType::Pointer(new NodeType(6, mXmax, mYmax, mZmax));
+        typename NodeType::Pointer P8 = typename NodeType::Pointer(new NodeType(7, mXmin, mYmax, mZmax));
+        #else
         NodeType P1(0, mXmin, mYmin, mZmin);
         NodeType P2(1, mXmax, mYmin, mZmin);
         NodeType P3(2, mXmax, mYmax, mZmin);
@@ -1444,17 +1619,37 @@ public:
         NodeType P6(5, mXmax, mYmin, mZmax);
         NodeType P7(6, mXmax, mYmax, mZmax);
         NodeType P8(7, mXmin, mYmax, mZmax);
+        #endif
         return typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const override
     {
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
         if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
             if(TFrameType == GLOBAL_CURRENT)
@@ -1504,12 +1699,59 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
+            #else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
+            #endif
         }
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP9 = typename NodeType::Pointer(new NodeType(8, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP10 = typename NodeType::Pointer(new NodeType(9, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP11 = typename NodeType::Pointer(new NodeType(10, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP12 = typename NodeType::Pointer(new NodeType(11, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP13 = typename NodeType::Pointer(new NodeType(12, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP14 = typename NodeType::Pointer(new NodeType(13, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP15 = typename NodeType::Pointer(new NodeType(14, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP16 = typename NodeType::Pointer(new NodeType(15, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP17 = typename NodeType::Pointer(new NodeType(16, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP18 = typename NodeType::Pointer(new NodeType(17, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP19 = typename NodeType::Pointer(new NodeType(18, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP20 = typename NodeType::Pointer(new NodeType(19, 0.0, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            NodeType& P9 = *pP9;
+            NodeType& P10 = *pP10;
+            NodeType& P11 = *pP11;
+            NodeType& P12 = *pP12;
+            NodeType& P13 = *pP13;
+            NodeType& P14 = *pP14;
+            NodeType& P15 = *pP15;
+            NodeType& P16 = *pP16;
+            NodeType& P17 = *pP17;
+            NodeType& P18 = *pP18;
+            NodeType& P19 = *pP19;
+            NodeType& P20 = *pP20;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8,
                     P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
             if(TFrameType == GLOBAL_CURRENT)
@@ -1631,13 +1873,74 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P20, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D20<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10, pP11, pP12, pP13, pP14, pP15, pP16, pP17, pP18, pP19, pP20));
+            #else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D20<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20));
+            #endif
         }
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP9 = typename NodeType::Pointer(new NodeType(8, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP10 = typename NodeType::Pointer(new NodeType(9, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP11 = typename NodeType::Pointer(new NodeType(10, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP12 = typename NodeType::Pointer(new NodeType(11, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP13 = typename NodeType::Pointer(new NodeType(12, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP14 = typename NodeType::Pointer(new NodeType(13, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP15 = typename NodeType::Pointer(new NodeType(14, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP16 = typename NodeType::Pointer(new NodeType(15, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP17 = typename NodeType::Pointer(new NodeType(16, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP18 = typename NodeType::Pointer(new NodeType(17, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP19 = typename NodeType::Pointer(new NodeType(18, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP20 = typename NodeType::Pointer(new NodeType(19, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP21 = typename NodeType::Pointer(new NodeType(20, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP22 = typename NodeType::Pointer(new NodeType(21, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP23 = typename NodeType::Pointer(new NodeType(22, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP24 = typename NodeType::Pointer(new NodeType(23, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP25 = typename NodeType::Pointer(new NodeType(24, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP26 = typename NodeType::Pointer(new NodeType(25, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP27 = typename NodeType::Pointer(new NodeType(26, 0.0, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            NodeType& P9 = *pP9;
+            NodeType& P10 = *pP10;
+            NodeType& P11 = *pP11;
+            NodeType& P12 = *pP12;
+            NodeType& P13 = *pP13;
+            NodeType& P14 = *pP14;
+            NodeType& P15 = *pP15;
+            NodeType& P16 = *pP16;
+            NodeType& P17 = *pP17;
+            NodeType& P18 = *pP18;
+            NodeType& P19 = *pP19;
+            NodeType& P20 = *pP20;
+            NodeType& P21 = *pP21;
+            NodeType& P22 = *pP22;
+            NodeType& P23 = *pP23;
+            NodeType& P24 = *pP24;
+            NodeType& P25 = *pP25;
+            NodeType& P26 = *pP26;
+            NodeType& P27 = *pP27;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8,
                     P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20,
                     P21, P22, P23, P24, P25, P26, P27;
+            #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
             if(TFrameType == GLOBAL_CURRENT)
@@ -1801,7 +2104,11 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P27, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D27<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10, pP11, pP12, pP13, pP14, pP15, pP16, pP17, pP18, pP19, pP20, pP21, pP22, pP23, pP24, pP25, pP26, pP27));
+            #else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D27<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22, P23, P24, P25, P26, P27));
+            #endif
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
@@ -1812,7 +2119,7 @@ public:
         return pNewGeometry;
     }
 
-    virtual bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const
+    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const final
     {
         bool is_onboundary =             ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
         if(is_onboundary) return true;
@@ -1829,14 +2136,14 @@ public:
         return false;
     }
 
-    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    bool IsInside(const CoordinatesArrayType& rLocalPoint) const final
     {
         return (mXmin < rLocalPoint[0]) && (rLocalPoint[0] < mXmax)
             && (mYmin < rLocalPoint[1]) && (rLocalPoint[1] < mYmax)
             && (mZmin < rLocalPoint[2]) && (rLocalPoint[2] < mZmax);
     }
 
-    virtual CoordinatesArrayType ReferenceCenter() const
+    CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
         C[0] = 0.5*(mXmin + mXmax);
@@ -1845,16 +2152,15 @@ public:
         return C;
     }
 
-    virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
+    void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
+            const std::size_t& nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
         double dZ = (mZmax - mZmin) / nsampling;
 
-        SamplingPoints.reserve((nsampling+1) * (nsampling+1) * (nsampling+1));
+        SamplingLocalPoints.reserve((nsampling+1) * (nsampling+1) * (nsampling+1));
         CoordinatesArrayType X;
-        PointType P;
         for(std::size_t i = 0; i < nsampling + 1; ++i)
         {
             X[0] = mXmin + i*dX;
@@ -1864,30 +2170,26 @@ public:
                 for(std::size_t k = 0; k < nsampling + 1; ++k)
                 {
                     X[2] = mZmin + k*dZ;
-                    if(TFrameType == GLOBAL_CURRENT)
-                        r_geom.GlobalCoordinates(P, X);
-                    else if(TFrameType == GLOBAL_REFERENCE)
-                        FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, X);
-                    SamplingPoints.push_back(P);
+                    SamplingLocalPoints.push_back(X);
                 }
             }
         }
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const override
     {
         return "QuadTreeNodeH8";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
         rOStream << "(" << mXmin << ", " << mYmin << ", " << mZmin << ") - (" << mXmax << ", " << mYmax << ", " << mZmax << ")";
     }
@@ -1930,7 +2232,7 @@ public:
 
     virtual ~QuadTreeNodeBezier3D() {}
 
-    virtual void Refine()
+    void Refine() final
     {
         if(this->IsLeaf())
         {
@@ -1951,7 +2253,7 @@ public:
         }
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
         if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier3D)
         {
@@ -1961,7 +2263,7 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
     }
 
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
         if(quadrature_type == 1) // Gauss-Legendre
         {
@@ -2040,7 +2342,7 @@ public:
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "QuadTreeNodeBezier3D";
     }
@@ -2077,7 +2379,7 @@ public:
 
     virtual ~QuadTreeNodeT3() {}
 
-    virtual void Refine()
+    void Refine() final
     {
         if(this->IsLeaf())
         {
@@ -2094,15 +2396,21 @@ public:
         }
     }
 
-    virtual typename GeometryType::Pointer pCreateReferenceGeometry() const
+    typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mX0, mY0));
+        typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mX1, mY1));
+        typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mX2, mY2));
+        #else
         NodeType P1(0, mX0, mY0);
         NodeType P2(1, mX1, mY1);
         NodeType P3(2, mX2, mY2);
+        #endif
         return typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
@@ -2110,7 +2418,16 @@ public:
         if(    pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3
             || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3 )
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            #else
             NodeType P1, P2, P3;
+            #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -2130,15 +2447,37 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3)
+                pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(pP1, pP2, pP3));
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3)
+                pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(pP1, pP2, pP3));
+            #else
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(P1, P2, P3));
+            #endif
         }
         else if( pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6
               || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6 )
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            #else
             NodeType P1, P2, P3, P4, P5, P6;
+            #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -2176,10 +2515,17 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6)
+                pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
+            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6)
+                pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
+            #else
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(P1, P2, P3, P4, P5, P6));
             if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(P1, P2, P3, P4, P5, P6));
+            #endif
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
@@ -2190,7 +2536,7 @@ public:
         return pNewGeometry;
     }
 
-    virtual CoordinatesArrayType ReferenceCenter() const
+    CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
         C[0] = (mX0 + mX1 + mX2) / 3;
@@ -2199,7 +2545,7 @@ public:
         return C;
     }
 
-    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    bool IsInside(const CoordinatesArrayType& rLocalPoint) const final
     {
         // REF: https://stackoverflow.com/ques
         // tions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
@@ -2209,12 +2555,11 @@ public:
         return (s > 0.0) && (s < 1.0) && (t > 0.0) && (t < 1.0) && (s + t < 1.0);
     }
 
-    virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
+    void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
+            const std::size_t& nsampling) const final
     {
-        SamplingPoints.reserve((nsampling+1)*(nsampling+2) / 2);
+        SamplingLocalPoints.reserve((nsampling+1)*(nsampling+2) / 2);
         CoordinatesArrayType X;
-        PointType P;
 
         X[2] = 0.0;
         for (std::size_t row = 0; row < nsampling+1; ++row)
@@ -2230,29 +2575,25 @@ public:
             {
                 X[0] = xstart + i*xend/n;
                 X[1] = ystart + i*yend/n;
-                if(TFrameType == GLOBAL_CURRENT)
-                    r_geom.GlobalCoordinates(P, X);
-                else if(TFrameType == GLOBAL_REFERENCE)
-                    FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, X);
-                SamplingPoints.push_back(P);
+                SamplingLocalPoints.push_back(X);
             }
         }
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "QuadTreeNodeT3";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
         rOStream << "(" << mX0 << ", " << mY0 << ") - (" << mX1 << ", " << mY1 << ") - (" << mX2 << ", " << mY2 << ")";
     }
@@ -2307,7 +2648,7 @@ public:
     virtual ~QuadTreeNodeT4() {}
 
     /// REF: https://www.semanticscholar.org/paper/Octasection-based-Refinement-of-Finite-Element-Endres-Krysl/7fa050663d1b1627413059943b9143f92b98ef4e/figure/4
-    virtual void Refine()
+    void Refine() final
     {
         if(this->IsLeaf())
         {
@@ -2342,23 +2683,41 @@ public:
         }
     }
 
-    virtual typename GeometryType::Pointer pCreateReferenceGeometry() const
+    typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mX0, mY0, mZ0));
+        typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mX1, mY1, mZ1));
+        typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mX2, mY2, mZ2));
+        typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, mX3, mY3, mZ3));
+        #else
         NodeType P1(0, mX0, mY0, mZ0);
         NodeType P2(1, mX1, mY1, mZ1);
         NodeType P3(2, mX2, mY2, mZ2);
         NodeType P4(3, mX3, mY3, mZ3);
+        #endif
         return typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(P1, P2, P3, P4));
     }
 
-    virtual typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const
+    typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
         if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            #else
             NodeType P1, P2, P3, P4;
+            #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -2384,11 +2743,38 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(pP1, pP2, pP3, pP4));
+            #else
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(P1, P2, P3, P4));
+            #endif
         }
         else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP5 = typename NodeType::Pointer(new NodeType(4, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP6 = typename NodeType::Pointer(new NodeType(5, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP7 = typename NodeType::Pointer(new NodeType(6, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP8 = typename NodeType::Pointer(new NodeType(7, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP9 = typename NodeType::Pointer(new NodeType(8, 0.0, 0.0, 0.0));
+            typename NodeType::Pointer pP10 = typename NodeType::Pointer(new NodeType(9, 0.0, 0.0, 0.0));
+            NodeType& P1 = *pP1;
+            NodeType& P2 = *pP2;
+            NodeType& P3 = *pP3;
+            NodeType& P4 = *pP4;
+            NodeType& P5 = *pP5;
+            NodeType& P6 = *pP6;
+            NodeType& P7 = *pP7;
+            NodeType& P8 = *pP8;
+            NodeType& P9 = *pP9;
+            NodeType& P10 = *pP10;
+            #else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8, P9, P10;
+            #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
             if(TFrameType == GLOBAL_CURRENT)
@@ -2450,7 +2836,11 @@ public:
             else if(TFrameType == GLOBAL_REFERENCE)
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
 
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D10<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10));
+            #else
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D10<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10));
+            #endif
         }
         else
             KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
@@ -2461,7 +2851,7 @@ public:
         return pNewGeometry;
     }
 
-    virtual CoordinatesArrayType ReferenceCenter() const
+    CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
         C[0] = 0.25*(mX0 + mX1 + mX2 + mX3);
@@ -2470,17 +2860,17 @@ public:
         return C;
     }
 
-    virtual bool IsInside(const CoordinatesArrayType& rLocalPoint) const
+    bool IsInside(const CoordinatesArrayType& rLocalPoint) const final
     {
+        // TODO
         KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "Not implemented")
     }
 
-    virtual void CreateSamplingPoints(std::vector<PointType>& SamplingPoints,
-            GeometryType& r_geom, const std::size_t& nsampling) const
+    void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
+            const std::size_t& nsampling) const final
     {
-        SamplingPoints.reserve((nsampling+1)*(nsampling+2)*(nsampling+3) / 6);
+        SamplingLocalPoints.reserve((nsampling+1)*(nsampling+2)*(nsampling+3) / 6);
         CoordinatesArrayType X;
-        PointType P;
 
         for (std::size_t row = 0; row < nsampling+1; ++row)
         {
@@ -2512,30 +2902,26 @@ public:
                     X[0] = xstart + i*xend/n;
                     X[1] = ystart + i*yend/n;
                     X[2] = zstart + i*zend/n;
-                    if(TFrameType == GLOBAL_CURRENT)
-                        r_geom.GlobalCoordinates(P, X);
-                    else if(TFrameType == GLOBAL_REFERENCE)
-                        FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, X);
-                    SamplingPoints.push_back(P);
+                    SamplingLocalPoints.push_back(X);
                 }
             }
         }
     }
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "QuadTreeNodeT4";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
         rOStream << "(" << mX0 << ", " << mY0 << ", " << mZ0
              << ") - (" << mX1 << ", " << mY1 << ", " << mZ1
