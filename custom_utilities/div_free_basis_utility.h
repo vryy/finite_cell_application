@@ -303,7 +303,7 @@ public:
                 if(phi1 * phi2 < 0.0)
                 {
                     // find the intersection point
-                    P1 = r_level_set.Bisect(r_geom[edge[0]], r_geom[edge[1]], 1.0e-10); // TODO parameterize this
+                    r_level_set.Bisect(P1, r_geom[edge[0]], r_geom[edge[1]], r_level_set.Tolerance());
 
                     // the other point
                     P2 = (phi1 < 0.0 ? r_geom[edge[0]] : r_geom[edge[1]]);
