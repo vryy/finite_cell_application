@@ -23,19 +23,27 @@ namespace Kratos
 
 ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
     GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
-    std::size_t& lastCondId, Properties::Pointer pProperties)
+    std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const
 {
     // setup all the element neighbour couples in the model
     std::set<std::pair<std::size_t, std::size_t> > edges;
     for (ModelPart::ElementsContainerType::iterator it = r_model_part.Elements().begin();
         it != r_model_part.Elements().end(); ++it)
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        GlobalPointersVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #else
         WeakPointerVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #endif
 
         for (std::size_t i = 0; i < rNeighbours.size(); ++i)
         {
             const std::size_t& id1 = it->Id();
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            const std::size_t& id2 = rNeighbours(i)->Id();
+            #else
             const std::size_t& id2 = rNeighbours(i).lock()->Id();
+            #endif
             if (id1 < id2)
                 edges.insert(std::make_pair(id1, id2));
             else if (id2 > id1)
@@ -53,7 +61,7 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         Element::Pointer p_element_2 = r_model_part.pGetElement(it->second);
 
         Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element_1, p_element_2,
-                p_sample_condition, r_brep, lastCondId, pProperties);
+                p_sample_condition, r_brep, lastCondId, pProperties, echo_level);
         if (pNewCond != NULL)
             pNewConditions.push_back(pNewCond);
     }
@@ -64,8 +72,10 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         r_model_part.Conditions().push_back(*it);
     }
 
-    std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
-              << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part" << std::endl;
+    if (echo_level > 0)
+        std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
+                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << std::endl;
 
     return pNewConditions;
 }
@@ -73,25 +83,40 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
 ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
         ModelPart::ElementsContainerType& pElements,
         GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
-        std::size_t& lastCondId, Properties::Pointer pProperties)
+        std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const
 {
     // setup all the element neighbour couples in the list of elements
     std::set<std::pair<std::size_t, std::size_t> > edges;
     for (ModelPart::ElementsContainerType::iterator it = pElements.begin();
         it != pElements.end(); ++it)
     {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        GlobalPointersVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #else
         WeakPointerVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #endif
 
-        // std::cout << "neighbours of element " << it->Id() << ":";
-        // for (std::size_t i = 0; i < rNeighbours.size(); ++i)
-        // {
-        //     std::cout << " " << rNeighbours(i).lock()->Id();
-        // }
-        // std::cout << std::endl;
+        if (echo_level > 3)
+        {
+            std::cout << "neighbours of element " << it->Id() << ":";
+            for (std::size_t i = 0; i < rNeighbours.size(); ++i)
+            {
+                #ifdef SD_APP_FORWARD_COMPATIBILITY
+                std::cout << " " << rNeighbours(i)->Id();
+                #else
+                std::cout << " " << rNeighbours(i).lock()->Id();
+                #endif
+            }
+            std::cout << std::endl;
+        }
 
         for (std::size_t i = 0; i < rNeighbours.size(); ++i)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            const std::size_t& id2 = rNeighbours(i)->Id();
+            #else
             const std::size_t& id2 = rNeighbours(i).lock()->Id();
+            #endif
             if (pElements.find(id2) == pElements.end())
                 continue;
 
@@ -103,12 +128,15 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         }
     }
 
-    // std::cout << "neighbour couples:";
-    // for (std::set<std::pair<std::size_t, std::size_t> >::iterator it = edges.begin(); it != edges.end(); ++it)
-    // {
-    //     std::cout << " (" << it->first << ", " << it->second << ")";
-    // }
-    // std::cout << std::endl;
+    if (echo_level > 3)
+    {
+        std::cout << " neighbour couples:";
+        for (std::set<std::pair<std::size_t, std::size_t> >::iterator it = edges.begin(); it != edges.end(); ++it)
+        {
+            std::cout << " (" << it->first << ", " << it->second << ")";
+        }
+        std::cout << std::endl;
+    }
 
     // setup the ghost penalty condition from the edges
     ModelPart::ConditionsContainerType pNewConditions;
@@ -120,9 +148,13 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         Element::Pointer p_element_2 = pElements(it->second);
 
         Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element_1, p_element_2,
-                p_sample_condition, r_brep, lastCondId, pProperties);
+                p_sample_condition, r_brep, lastCondId, pProperties, echo_level);
         if (pNewCond != NULL)
+        {
+            if (echo_level > 2)
+                std::cout << "ghost penalty condition " << pNewCond->Info() << " is created" << std::endl;
             pNewConditions.push_back(pNewCond);
+        }
     }
 
     for (ModelPart::ConditionsContainerType::ptr_iterator it = pNewConditions.ptr_begin();
@@ -131,17 +163,116 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         r_model_part.Conditions().push_back(*it);
     }
 
-    std::cout << __FUNCTION__ << " on " << pElements.size() << " elements completed: " << pNewConditions.size() << " new ghost conditions"
-              << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part" << std::endl;
+    if (echo_level > 0)
+        std::cout << __FUNCTION__ << " on " << pElements.size() << " elements completed: " << pNewConditions.size() << " new ghost conditions"
+                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << std::endl;
+
+    return pNewConditions;
+}
+
+ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
+        ModelPart::ElementsContainerType& pElements,
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
+        std::size_t& lastCondId, Properties::Pointer pProperties,
+        const int& nsampling, const int& configuration, const int& echo_level) const
+{
+    // setup all the element neighbour couples in the list of elements
+    std::set<std::pair<std::size_t, std::size_t> > edges;
+    for (ModelPart::ElementsContainerType::iterator it = pElements.begin();
+        it != pElements.end(); ++it)
+    {
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        GlobalPointersVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #else
+        WeakPointerVector<Element>& rNeighbours = it->GetValue(NEIGHBOUR_ELEMENTS);
+        #endif
+
+        if (echo_level > 3)
+        {
+            std::cout << "neighbours of element " << it->Id() << ":";
+            for (std::size_t i = 0; i < rNeighbours.size(); ++i)
+            {
+                #ifdef SD_APP_FORWARD_COMPATIBILITY
+                std::cout << " " << rNeighbours(i)->Id();
+                #else
+                std::cout << " " << rNeighbours(i).lock()->Id();
+                #endif
+            }
+            std::cout << std::endl;
+        }
+
+        for (std::size_t i = 0; i < rNeighbours.size(); ++i)
+        {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            const std::size_t& id2 = rNeighbours(i)->Id();
+            #else
+            const std::size_t& id2 = rNeighbours(i).lock()->Id();
+            #endif
+            if (pElements.find(id2) == pElements.end())
+                continue;
+
+            const std::size_t& id1 = it->Id();
+            if (id1 < id2)
+                edges.insert(std::make_pair(id1, id2));
+            else if (id2 > id1)
+                edges.insert(std::make_pair(id2, id1));
+        }
+    }
+
+    if (echo_level > 3)
+    {
+        std::cout << " neighbour couples:";
+        for (std::set<std::pair<std::size_t, std::size_t> >::iterator it = edges.begin(); it != edges.end(); ++it)
+        {
+            std::cout << " (" << it->first << ", " << it->second << ")";
+        }
+        std::cout << std::endl;
+    }
+
+    // setup the ghost penalty condition from the edges
+    ModelPart::ConditionsContainerType pNewConditions;
+
+    for (std::set<std::pair<std::size_t, std::size_t> >::iterator it = edges.begin();
+        it != edges.end(); ++it)
+    {
+        Element::Pointer p_element_1 = pElements(it->first);
+        Element::Pointer p_element_2 = pElements(it->second);
+
+        Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element_1, p_element_2,
+                p_sample_condition, r_brep, lastCondId, pProperties, nsampling, configuration, echo_level);
+        if (pNewCond != NULL)
+        {
+            if (echo_level > 2)
+                std::cout << "ghost penalty condition " << pNewCond->Info() << " is created" << std::endl;
+            pNewConditions.push_back(pNewCond);
+        }
+    }
+
+    for (ModelPart::ConditionsContainerType::ptr_iterator it = pNewConditions.ptr_begin();
+        it != pNewConditions.ptr_end(); ++it)
+    {
+        r_model_part.Conditions().push_back(*it);
+    }
+
+    if (echo_level > 0)
+        std::cout << __FUNCTION__ << " on " << pElements.size() << " elements completed: " << pNewConditions.size() << " new ghost conditions"
+                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << std::endl;
 
     return pNewConditions;
 }
 
 ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyConditions(Element::Pointer p_element,
-        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties)
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t& lastCondId,
+        Properties::Pointer pProperties, const int& echo_level) const
 {
     // firstly obtain all neighbour elements of the current element
+    #ifdef SD_APP_FORWARD_COMPATIBILITY
+    GlobalPointersVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
+    #else
     WeakPointerVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
+    #endif
 
     ModelPart::ConditionsContainerType pNewConditions;
 
@@ -150,22 +281,29 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     {
         if (rNeighbours[i].Id() != p_element->Id())
         {
-            Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element, rNeighbours(i).lock(),
-                p_sample_condition, r_brep, lastCondId, pProperties);
+            Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element,
+                #ifdef SD_APP_FORWARD_COMPATIBILITY
+                *rNeighbours(i),
+                #else
+                rNeighbours(i).lock(),
+                #endif
+                p_sample_condition, r_brep, lastCondId, pProperties, echo_level);
             if (pNewCond != NULL)
                 pNewConditions.push_back(pNewCond);
         }
     }
 
-    std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
-              << " of type " << typeid(*p_sample_condition).name() << " are created" << std::endl;
+    if (echo_level > 0)
+        std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
+                  << " of type " << typeid(*p_sample_condition).name() << " are created" << std::endl;
 
     return pNewConditions;
 }
 
 
 Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Pointer p_element_1, Element::Pointer p_element_2,
-        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties)
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t& lastCondId,
+        Properties::Pointer pProperties, const int& echo_level) const
 {
     Condition::Pointer pNewCond = NULL;
 
@@ -174,10 +312,63 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     if (edge.first == GeometryData::Kratos_generic_type)
         return pNewCond;
 
+    if (edge.first == GeometryData::Kratos_Line2D2)
+    {
+        if (edge.second.size () != 2)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Line2D3)
+    {
+        if (edge.second.size () != 3)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Triangle3D3)
+    {
+        if (edge.second.size () != 3)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Triangle3D6)
+    {
+        if (edge.second.size () != 6)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D4)
+    {
+        if (edge.second.size () != 4)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D8)
+    {
+        if (edge.second.size () != 8)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D9)
+    {
+        if (edge.second.size () != 9)
+            return pNewCond;
+    }
+
     // create the edge geometry
     typename Element::NodesArrayType temp_nodes;
     for (std::size_t j = 0; j < edge.second.size(); ++j)
         temp_nodes.push_back(p_element_1->GetGeometry().pGetPoint(edge.second[j]));
+
+    // if (temp_nodes.size() == 0)
+    // {
+    //     KRATOS_WATCH(p_element_1->Id())
+    //     KRATOS_WATCH(typeid(p_element_1->GetGeometry()).name())
+    //     KRATOS_WATCH(p_element_2->Id())
+    //     KRATOS_WATCH(typeid(p_element_2->GetGeometry()).name())
+    //     std::cout << "Element " << p_element_1->Id() << " nodes:";
+    //     for (std::size_t i = 0; i < p_element_1->GetGeometry().size(); ++i)
+    //         std::cout << " " << p_element_1->GetGeometry()[i].Id();
+    //     std::cout << std::endl;
+    //     std::cout << "Element " << p_element_2->Id() << " nodes:";
+    //     for (std::size_t i = 0; i < p_element_2->GetGeometry().size(); ++i)
+    //         std::cout << " " << p_element_2->GetGeometry()[i].Id();
+    //     std::cout << std::endl;
+    //     KRATOS_THROW_ERROR(std::logic_error, "The two elements do not have common face", "")
+    // }
 
     GeometryType::Pointer p_temp_geometry;
 
@@ -220,7 +411,9 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     {
         // create the ghost penalty condition
         pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element_1, p_element_2, pProperties);
+        #ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewCond->SetValue(IS_INACTIVE, false);
+        #endif
         pNewCond->Set(ACTIVE, true);
     }
 
@@ -229,7 +422,127 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
 
 
 Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Pointer p_element_1, Element::Pointer p_element_2,
-        GhostPenaltyCondition::Pointer p_sample_condition, std::size_t& lastCondId, Properties::Pointer pProperties)
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep, std::size_t& lastCondId,
+        Properties::Pointer pProperties, const int& nsampling, const int& configuration, const int& echo_level) const
+{
+    Condition::Pointer pNewCond = NULL;
+
+    std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > edge = FindCommonFace(p_element_1->GetGeometry(), p_element_2->GetGeometry());
+
+    if (edge.first == GeometryData::Kratos_generic_type)
+        return pNewCond;
+
+    if (edge.first == GeometryData::Kratos_Line2D2)
+    {
+        if (edge.second.size () != 2)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Line2D3)
+    {
+        if (edge.second.size () != 3)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Triangle3D3)
+    {
+        if (edge.second.size () != 3)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Triangle3D6)
+    {
+        if (edge.second.size () != 6)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D4)
+    {
+        if (edge.second.size () != 4)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D8)
+    {
+        if (edge.second.size () != 8)
+            return pNewCond;
+    }
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D9)
+    {
+        if (edge.second.size () != 9)
+            return pNewCond;
+    }
+
+    // create the edge geometry
+    typename Element::NodesArrayType temp_nodes;
+    for (std::size_t j = 0; j < edge.second.size(); ++j)
+        temp_nodes.push_back(p_element_1->GetGeometry().pGetPoint(edge.second[j]));
+
+    // if (temp_nodes.size() == 0)
+    // {
+    //     KRATOS_WATCH(p_element_1->Id())
+    //     KRATOS_WATCH(typeid(p_element_1->GetGeometry()).name())
+    //     KRATOS_WATCH(p_element_2->Id())
+    //     KRATOS_WATCH(typeid(p_element_2->GetGeometry()).name())
+    //     std::cout << "Element " << p_element_1->Id() << " nodes:";
+    //     for (std::size_t i = 0; i < p_element_1->GetGeometry().size(); ++i)
+    //         std::cout << " " << p_element_1->GetGeometry()[i].Id();
+    //     std::cout << std::endl;
+    //     std::cout << "Element " << p_element_2->Id() << " nodes:";
+    //     for (std::size_t i = 0; i < p_element_2->GetGeometry().size(); ++i)
+    //         std::cout << " " << p_element_2->GetGeometry()[i].Id();
+    //     std::cout << std::endl;
+    //     KRATOS_THROW_ERROR(std::logic_error, "The two elements do not have common face", "")
+    // }
+
+    GeometryType::Pointer p_temp_geometry;
+
+    if (edge.first == GeometryData::Kratos_Line2D2)
+        p_temp_geometry = GeometryType::Pointer(new Line2D2<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Line2D3)
+        p_temp_geometry = GeometryType::Pointer(new Line2D3<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Triangle3D3)
+        p_temp_geometry = GeometryType::Pointer(new Triangle3D3<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Triangle3D6)
+        p_temp_geometry = GeometryType::Pointer(new Triangle3D6<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D4)
+        p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D4<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D8)
+        p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D8<NodeType>(temp_nodes));
+    else if (edge.first == GeometryData::Kratos_Quadrilateral3D9)
+        p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
+    else
+        KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", edge.first)
+
+    // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
+    bool is_ghost = false;
+
+    int stat1 = r_brep.CutStatusBySampling(p_element_1->GetGeometry(), nsampling, configuration);
+    int stat2 = r_brep.CutStatusBySampling(p_element_2->GetGeometry(), nsampling, configuration);
+
+    if (stat1 == BRep::_CUT)
+    {
+        if (stat2 == BRep::_CUT || stat2 == BRep::_IN)
+            is_ghost = true;
+    }
+    else if (stat1 == BRep::_IN)
+    {
+        if (stat2 == BRep::_CUT)
+            is_ghost = true;
+    }
+
+    if (is_ghost)
+    {
+        // create the ghost penalty condition
+        pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element_1, p_element_2, pProperties);
+        #ifndef SD_APP_FORWARD_COMPATIBILITY
+        pNewCond->SetValue(IS_INACTIVE, false);
+        #endif
+        pNewCond->Set(ACTIVE, true);
+    }
+
+    return pNewCond;
+}
+
+
+Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Pointer p_element_1, Element::Pointer p_element_2,
+        GhostPenaltyCondition::Pointer p_sample_condition, std::size_t& lastCondId,
+        Properties::Pointer pProperties, const int& echo_level) const
 {
     Condition::Pointer pNewCond = NULL;
 
@@ -264,11 +577,14 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
 
     // create the ghost penalty condition
     pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element_1, p_element_2, pProperties);
+    #ifndef SD_APP_FORWARD_COMPATIBILITY
     pNewCond->SetValue(IS_INACTIVE, false);
+    #endif
     pNewCond->Set(ACTIVE, true);
 
-    std::cout << __FUNCTION__ << " completed, new ghost condition of type "
-              << typeid(*p_sample_condition).name() << " is created" << std::endl;
+    if (echo_level > 0)
+        std::cout << __FUNCTION__ << " completed, new ghost condition of type "
+                  << typeid(*p_sample_condition).name() << " is created" << std::endl;
 
     return pNewCond;
 }
@@ -634,7 +950,11 @@ GhostPenaltyUtility::IntegrationPointType GhostPenaltyUtility::ComputeIntegratio
 
 void GhostPenaltyUtility::ProbeNeighbourElements(Element::Pointer p_element)
 {
+    #ifdef SD_APP_FORWARD_COMPATIBILITY
+    GlobalPointersVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
+    #else
     WeakPointerVector<Element>& rNeighbours = p_element->GetValue(NEIGHBOUR_ELEMENTS);
+    #endif
     std::cout << "Neighbour elements of element " << p_element->Id() << ":";
     for (std::size_t i = 0; i < rNeighbours.size(); ++i)
     {
@@ -1094,11 +1414,14 @@ std::vector<Vector>& GhostPenalty_Helper::ComputeShapeFunctionSecondDerivatives(
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::msEdges[][2] = { {0, 1}, {1, 2}, {2, 0} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::msEdges[][2] = {
+    {0, 1},
+    {1, 2},
+    {2, 0} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 3; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1143,11 +1466,14 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>::ComputeShap
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::msEdges[][3] = { {0, 1, 3}, {1, 2, 4}, {2, 0, 5} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::msEdges[][3] = {
+    {0, 1, 3},
+    {1, 2, 4},
+    {2, 0, 5} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 3; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1195,11 +1521,15 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>::ComputeShap
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::msEdges[][2] = { {0, 1}, {1, 2}, {2, 3}, {3, 0} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::msEdges[][2] = {
+    {0, 1},
+    {1, 2},
+    {2, 3},
+    {3, 0} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 4; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1244,11 +1574,15 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>::Comput
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::msEdges[][3] = { {0, 1, 4}, {1, 2, 5}, {2, 3, 6}, {3, 0, 7} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::msEdges[][3] = {
+    {0, 1, 4},
+    {1, 2, 5},
+    {2, 3, 6},
+    {3, 0, 7} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 4; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1296,11 +1630,15 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>::Comput
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::msEdges[][3] = { {0, 1, 4}, {1, 2, 5}, {2, 3, 6}, {3, 0, 7} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::msEdges[][3] = {
+    {0, 1, 4},
+    {1, 2, 5},
+    {2, 3, 6},
+    {3, 0, 7} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 4; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1348,11 +1686,15 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>::Comput
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::msFaces[][3] = { {0, 2, 1}, {0, 3, 2}, {0, 1, 3}, {2, 3, 1} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::msFaces[][3] = {
+    {0, 2, 1},
+    {0, 3, 2},
+    {0, 1, 3},
+    {2, 3, 1} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 4; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1400,11 +1742,15 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>::ComputeSh
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::msFaces[][6] = { {0, 2, 1, 6, 5, 4}, {0, 3, 2, 7, 9, 6}, {0, 1, 3, 4, 8, 7}, {2, 3, 1, 9, 8, 5} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::msFaces[][6] = {
+    {0, 2, 1, 6, 5, 4},
+    {0, 3, 2, 7, 9, 6},
+    {0, 1, 3, 4, 8, 7},
+    {2, 3, 1, 9, 8, 5} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 4; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1461,11 +1807,17 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>::ComputeS
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::msFaces[][4] = { {3, 2, 1, 0}, {0, 1, 5, 4}, {2, 6, 5, 1}, {7, 6, 2, 3}, {7, 3, 0, 4}, {4, 5, 6, 7} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::msFaces[][4] = {
+    {3, 2, 1, 0},
+    {0, 1, 5, 4},
+    {2, 6, 5, 1},
+    {7, 6, 2, 3},
+    {7, 3, 0, 4},
+    {4, 5, 6, 7} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 8; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1516,11 +1868,17 @@ void GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>::ComputeSha
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::msFaces[][8] = { {3, 2, 1, 0, 10, 9, 8, 11}, {0, 1, 5, 4, 8, 13, 16, 12}, {2, 6, 5, 1, 14, 17, 13, 9}, {7, 6, 2, 3, 14, 18, 10, 15}, {7, 3, 0, 4, 15, 11, 12, 19}, {4, 5, 6, 7, 16, 17, 18, 19} };
+const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::msFaces[][8] = {
+    {3, 2, 1, 0, 10, 9, 8, 11},
+    {0, 1, 5, 4, 8, 13, 16, 12},
+    {2, 6, 5, 1, 14, 17, 13, 9},
+    {7, 6, 2, 3, 18, 14, 10, 15},
+    {7, 3, 0, 4, 15, 11, 12, 19},
+    {4, 5, 6, 7, 16, 17, 18, 19} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 8; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];
@@ -1587,13 +1945,13 @@ const int GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::msFa
     {3, 2, 1, 0, 10, 9, 8, 11, 20},
     {0, 1, 5, 4, 8, 13, 16, 12, 21},
     {2, 6, 5, 1, 14, 17, 13, 9, 22},
-    {7, 6, 2, 3, 14, 18, 10, 15, 23},
+    {7, 6, 2, 3, 18, 14, 10, 15, 23},
     {7, 3, 0, 4, 15, 11, 12, 19, 24},
     {4, 5, 6, 7, 16, 17, 18, 19, 25} };
 
 std::vector<std::size_t> GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
-    for (std::size_t i = 0; i < 8; ++i)
+    for (std::size_t i = 0; i < NumberOfSides(); ++i)
     {
         const std::size_t& i1 = Faces(i)[0];
         const std::size_t& i2 = Faces(i)[1];

@@ -25,9 +25,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/foreach.hpp>
 
 
 // Project includes
@@ -243,29 +240,43 @@ public:
     /// Setup the ghost penalty conditions for the model_part
     /*static*/ ConditionsContainerType SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
         GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
-        std::size_t& lastCondId, Properties::Pointer pProperties);
+        std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const;
 
     /// Setup the ghost penalty conditions for the model_part on a subset of elements
     /*static*/ ConditionsContainerType SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
         ModelPart::ElementsContainerType& pElements,
         GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
-        std::size_t& lastCondId, Properties::Pointer pProperties);
+        std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const;
+
+    /// Setup the ghost penalty conditions for the model_part on a subset of elements
+    /*static*/ ConditionsContainerType SetUpSurfacePenaltyConditions(ModelPart& r_model_part,
+        ModelPart::ElementsContainerType& pElements,
+        GhostPenaltyCondition::Pointer p_sample_condition, const BRep& r_brep,
+        std::size_t& lastCondId, Properties::Pointer pProperties,
+        const int& nsampling, const int& configuration,
+        const int& echo_level) const;
 
     /// Setup the ghost penalty conditions between an element and its neighbour
     /// Note: user must call FindElementalNeighboursProcess(model.model_part, 2, 10).Execute() to setup first the neighbour elements
     /*static*/ ConditionsContainerType SetUpSurfacePenaltyConditions(Element::Pointer p_element,
         GhostPenaltyCondition::Pointer p_sample_condition,
-        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
+        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const;
 
     /// Setup the ghost penalty conditions between two elements. The BRep is to check the validity of the ghost penalty condition
     /*static*/ virtual Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
         Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
-        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties);
+        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const;
+
+    /// Setup the ghost penalty conditions between two elements. The BRep is to check the validity of the ghost penalty condition
+    /*static*/ virtual Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
+        Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
+        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties,
+        const int& nsampling, const int& configuration, const int& echo_level) const;
 
     /// Merely setup the ghost penalty conditions between two elements. This is useful to debug the ghost penalties.
     /*static*/ Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
         Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
-        std::size_t& lastCondId, Properties::Pointer pProperties);
+        std::size_t& lastCondId, Properties::Pointer pProperties, const int& echo_level) const;
 
     /// Compute the shape function, the edge geometry must be on the edge of the element.
     static void ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
