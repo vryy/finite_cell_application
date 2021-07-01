@@ -1,0 +1,116 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
+
+message("**** configuring KratosFiniteCellApplication ****")
+
+################### PYBIND11
+include(pybind11Tools)
+
+# kratos_add_dependency(${CMAKE_CURRENT_SOURCE_DIR}/../brep_application)
+
+include_directories( ${CMAKE_SOURCE_DIR}/kratos )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/.. )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../brep_application )
+
+add_definitions(-DSD_APP_FORWARD_COMPATIBILITY)
+if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
+    include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
+    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
+endif()
+
+if(EXISTS ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes)
+    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_BOOST_BINDINGS)
+endif()
+
+#######################################################################
+
+FIND_PACKAGE(NNLS REQUIRED)
+IF(${NNLS_FOUND} MATCHES TRUE)
+    MESSAGE("nnls is found at " ${NNLS_DIR})
+    ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_NNLS)
+ELSE()
+    MESSAGE("nnls is not found")
+ENDIF()
+
+set( KRATOS_FINITE_CELL_APPLICATION_CORE
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/dummy_element.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/dummy_condition.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/element_wrapper_condition.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/quad_tree_node.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/ghost_penalty_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/finite_cell_mesh_utility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application_variables.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/finite_cell_application.cpp
+)
+
+## FiniteCell testing sources
+if(${KRATOS_BUILD_TESTING} MATCHES ON)
+    file(GLOB_RECURSE KRATOS_FINITE_CELL_APPLICATION_TESTING_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests_python3/*.cpp)
+endif(${KRATOS_BUILD_TESTING} MATCHES ON)
+
+## FiniteCell python interface sources
+set(KRATOS_FINITE_CELL_APPLICATION_PYTHON_INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_custom_conditions_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_quadrature_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_div_free_basis_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_finite_cell_mesh_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_finite_cell_auxiliary_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_moment_fitting_utility_to_python.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_ghost_penalty_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/add_utility_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python3/finite_cell_python_application.cpp
+)
+
+add_library(KratosFiniteCellCore SHARED ${KRATOS_FINITE_CELL_APPLICATION_CORE} ${KRATOS_FINITE_CELL_APPLICATION_TESTING_SOURCES})
+target_link_libraries(KratosFiniteCellCore PUBLIC KratosCore)
+target_link_libraries(KratosFiniteCellCore PRIVATE KratosBRepCore)
+target_link_libraries(KratosFiniteCellCore ${LAPACK_LIBRARIES})
+IF(${NNLS_FOUND} MATCHES TRUE)
+    target_link_libraries(KratosFiniteCellCore ${NNLS_LIBRARIES})
+ENDIF()
+set_target_properties(KratosFiniteCellCore PROPERTIES COMPILE_DEFINITIONS "FINITE_CELL_APPLICATION=EXPORT,API")
+
+###############################################################
+## define library Kratos which defines the basic python interface
+pybind11_add_module(KratosFiniteCellApplication MODULE THIN_LTO ${KRATOS_FINITE_CELL_APPLICATION_PYTHON_INTERFACE})
+target_link_libraries(KratosFiniteCellApplication PRIVATE KratosFiniteCellCore)
+set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
+
+#add_subdirectory(tests)
+
+# changing the .dll suffix to .pyd (Windows)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set_target_properties(KratosFiniteCellApplication PROPERTIES SUFFIX .pyd)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+# changing the .dylib suffix to .so (OS X)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set_target_properties(KratosFiniteCellApplication PROPERTIES SUFFIX .so)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+# # Cotire
+# if(USE_COTIRE MATCHES ON)
+#     cotire(KratosFiniteCellCore)
+#     cotire(KratosFiniteCellApplication)
+# endif(USE_COTIRE MATCHES ON)
+
+# Add to the KratosMultiphisics Python module
+kratos_python_install(${INSTALL_PYTHON_USING_LINKS} ${CMAKE_CURRENT_SOURCE_DIR}/FiniteCellApplication3.py KratosMultiphysics/FiniteCellApplication/__init__.py )
+
+# Install python files
+kratos_python_install_directory(${INSTALL_PYTHON_USING_LINKS} ${CMAKE_CURRENT_SOURCE_DIR}/python_scripts3 KratosMultiphysics/FiniteCellApplication )
+
+# Kratos Testing. Install everything except sources to ensure that reference and configuration files are copied.
+if(${INSTALL_TESTING_FILES} MATCHES ON )
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests_python3 DESTINATION applications/FiniteCellApplication
+        PATTERN "*.git" EXCLUDE
+        PATTERN "*.c" EXCLUDE
+        PATTERN "*.h" EXCLUDE
+        PATTERN "*.cpp" EXCLUDE
+        PATTERN "*.hpp" EXCLUDE
+  )
+endif(${INSTALL_TESTING_FILES} MATCHES ON)
+
+# Install targets
+install(TARGETS KratosFiniteCellCore DESTINATION libs )
+install(TARGETS KratosFiniteCellApplication DESTINATION libs )
