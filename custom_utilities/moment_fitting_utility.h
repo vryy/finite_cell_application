@@ -25,12 +25,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/foreach.hpp>
-#include <boost/progress.hpp>
-#include <boost/numeric/ublas/lu.hpp>
-
 
 // Project includes
 #include "includes/define.h"
@@ -47,7 +41,7 @@
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
-#include "finite_cell_application/finite_cell_application.h"
+#include "finite_cell_application_variables.h"
 
 //#define ENABLE_PROFILING // WARNING: Using this can lose the performance because the Timer limits one thread when updating.
 

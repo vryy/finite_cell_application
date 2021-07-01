@@ -18,6 +18,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "finite_cell_application_variables.h"
 #include "finite_cell_application.h"
 #include "custom_python/add_custom_conditions_to_python.h"
 #include "custom_python/add_quadtree_to_python.hpp"

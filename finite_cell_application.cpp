@@ -5,7 +5,7 @@
 //   Date:                $Date: Feb 7, 2017$
 //   Revision:            $Revision: 1.0 $
 //
-// 
+//
 
 
 // System includes
@@ -15,7 +15,6 @@
 
 
 // Project includes
-#include "finite_cell_application/finite_cell_application.h"
 #include "geometries/quadrilateral_2d_4.h"
 #include "geometries/quadrilateral_2d_8.h"
 #include "geometries/quadrilateral_2d_9.h"
@@ -33,72 +32,77 @@
 #include "geometries/hexahedra_3d_8.h"
 #include "geometries/hexahedra_3d_20.h"
 #include "geometries/hexahedra_3d_27.h"
-#include "geometries/line_2d.h"
 #include "geometries/line_2d_2.h"
 #include "geometries/line_3d_2.h"
 #include "geometries/line_3d_3.h"
 #include "geometries/point_2d.h"
 #include "geometries/point_3d.h"
 #include "custom_geometries/finite_cell_geometry.h"
+#include "finite_cell_application.h"
+#include "finite_cell_application_variables.h"
 
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+#define FINITE_CELL_APP_CREATE_ELEMENT(element_type, geometry_type, number_of_nodes) \
+    element_type( 0, Element::GeometryType::Pointer( new geometry_type <Node<3> >( Element::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
+#define FINITE_CELL_APP_CREATE_CONDITION(condition_type, geometry_type, number_of_nodes) \
+    condition_type( 0, Condition::GeometryType::Pointer( new geometry_type <Node<3> >( Condition::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
+#else
+#define FINITE_CELL_APP_CREATE_ELEMENT(element_type, geometry_type, number_of_nodes) \
+    element_type( 0, Element::GeometryType::Pointer( new geometry_type <Node<3> >( Element::GeometryType::PointsArrayType( number_of_nodes, Node<3>() ) ) ) )
+#define FINITE_CELL_APP_CREATE_CONDITION(condition_type, geometry_type, number_of_nodes) \
+    condition_type( 0, Condition::GeometryType::Pointer( new geometry_type <Node<3> >( Condition::GeometryType::PointsArrayType( number_of_nodes, Node<3>() ) ) ) )
+#endif
 
 namespace Kratos
 {
 
-    KRATOS_CREATE_VARIABLE( Matrix, SUBCELL_WEIGHTS )
-    KRATOS_CREATE_VARIABLE( double, SUBCELL_DOMAIN_SIZE )
-    KRATOS_CREATE_VARIABLE( Vector, SUBCELL_DOMAIN_SIZES )
-    KRATOS_CREATE_VARIABLE( Vector, PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
-    KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
-    KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
-    KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )
-    KRATOS_CREATE_VARIABLE( int, OTHER_NODE_ID )
-    KRATOS_CREATE_VARIABLE( int, OTHER_ID )
-    KRATOS_CREATE_VARIABLE( int, NUMBER_OF_PHYSICAL_POINTS )
-
     KratosFiniteCellApplication::KratosFiniteCellApplication()
+    #ifdef SD_APP_FORWARD_COMPATIBILITY
+    : KratosApplication("KratosFiniteCellApplication")
+    #else
     : KratosApplication()
-    , mDummySurfaceCondition2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummySurfaceCondition2D6N( 0, Element::GeometryType::Pointer( new Triangle2D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummySurfaceCondition2D4N( 0, Element::GeometryType::Pointer( new Quadrilateral2D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummySurfaceCondition2D8N( 0, Element::GeometryType::Pointer( new Quadrilateral2D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummySurfaceCondition2D9N( 0, Element::GeometryType::Pointer( new Quadrilateral2D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
-    , mDummySurfaceCondition3D3N( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummySurfaceCondition3D6N( 0, Element::GeometryType::Pointer( new Triangle3D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummySurfaceCondition3D4N( 0, Element::GeometryType::Pointer( new Quadrilateral3D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummySurfaceCondition3D8N( 0, Element::GeometryType::Pointer( new Quadrilateral3D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummySurfaceCondition3D9N( 0, Element::GeometryType::Pointer( new Quadrilateral3D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
-    , mDummyConditionPoint2D( 0, Element::GeometryType::Pointer( new Point2D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
-    , mDummyConditionPoint3D( 0, Element::GeometryType::Pointer( new Point3D <Node<3> >( Element::GeometryType::PointsArrayType( 1, Node<3>() ) ) ) )
-    , mDummyConditionLine2N( 0, Element::GeometryType::Pointer( new Line3D2 <Node<3> >( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) ) )
-    , mDummyConditionLine3N( 0, Element::GeometryType::Pointer( new Line3D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummyCondition2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummyCondition2D4N( 0, Element::GeometryType::Pointer( new Quadrilateral2D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummyCondition2D6N( 0, Element::GeometryType::Pointer( new Triangle2D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummyCondition2D8N( 0, Element::GeometryType::Pointer( new Quadrilateral2D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummyCondition2D9N( 0, Element::GeometryType::Pointer( new Quadrilateral2D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
-    , mDummyCondition3D4N( 0, Element::GeometryType::Pointer( new Tetrahedra3D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummyCondition3D10N( 0, Element::GeometryType::Pointer( new Tetrahedra3D10 <Node<3> >( Element::GeometryType::PointsArrayType( 10, Node<3>() ) ) ) )
-    , mDummyCondition3D8N( 0, Element::GeometryType::Pointer( new Hexahedra3D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummyCondition3D20N( 0, Element::GeometryType::Pointer( new Hexahedra3D20 <Node<3> >( Element::GeometryType::PointsArrayType( 20, Node<3>() ) ) ) )
-    , mDummyCondition3D27N( 0, Element::GeometryType::Pointer( new Hexahedra3D27 <Node<3> >( Element::GeometryType::PointsArrayType( 27, Node<3>() ) ) ) )
-    , mDummyCondition3D6N( 0, Element::GeometryType::Pointer( new Prism3D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummyCondition3D15N( 0, Element::GeometryType::Pointer( new Prism3D15 <Node<3> >( Element::GeometryType::PointsArrayType( 15, Node<3>() ) ) ) )
-    , mDummySurfaceElement2D3N( 0, Element::GeometryType::Pointer( new Triangle2D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummySurfaceElement2D6N( 0, Element::GeometryType::Pointer( new Triangle2D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummySurfaceElement2D4N( 0, Element::GeometryType::Pointer( new Quadrilateral2D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummySurfaceElement2D8N( 0, Element::GeometryType::Pointer( new Quadrilateral2D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummySurfaceElement2D9N( 0, Element::GeometryType::Pointer( new Quadrilateral2D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
-    , mDummySurfaceElement3D3N( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType( 3, Node<3>() ) ) ) )
-    , mDummySurfaceElement3D6N( 0, Element::GeometryType::Pointer( new Triangle3D6 <Node<3> >( Element::GeometryType::PointsArrayType( 6, Node<3>() ) ) ) )
-    , mDummySurfaceElement3D4N( 0, Element::GeometryType::Pointer( new Quadrilateral3D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummySurfaceElement3D8N( 0, Element::GeometryType::Pointer( new Quadrilateral3D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummySurfaceElement3D9N( 0, Element::GeometryType::Pointer( new Quadrilateral3D9 <Node<3> >( Element::GeometryType::PointsArrayType( 9, Node<3>() ) ) ) )
-    , mDummyVolumeElement3D4N( 0, Element::GeometryType::Pointer( new Tetrahedra3D4 <Node<3> >( Element::GeometryType::PointsArrayType( 4, Node<3>() ) ) ) )
-    , mDummyVolumeElement3D10N( 0, Element::GeometryType::Pointer( new Tetrahedra3D10 <Node<3> >( Element::GeometryType::PointsArrayType( 10, Node<3>() ) ) ) )
-    , mDummyVolumeElement3D8N( 0, Element::GeometryType::Pointer( new Hexahedra3D8 <Node<3> >( Element::GeometryType::PointsArrayType( 8, Node<3>() ) ) ) )
-    , mDummyVolumeElement3D20N( 0, Element::GeometryType::Pointer( new Hexahedra3D20 <Node<3> >( Element::GeometryType::PointsArrayType( 20, Node<3>() ) ) ) )
-    , mDummyVolumeElement3D27N( 0, Element::GeometryType::Pointer( new Hexahedra3D27 <Node<3> >( Element::GeometryType::PointsArrayType( 27, Node<3>() ) ) ) )
+    #endif
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition2D3N, Triangle2D3, 3 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition2D6N, Triangle2D6, 6 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition2D4N, Quadrilateral2D4, 4 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition2D8N, Quadrilateral2D8, 8 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition2D9N, Quadrilateral2D9, 9 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition3D3N, Triangle3D3, 3 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition3D6N, Triangle3D6, 6 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition3D4N, Quadrilateral3D4, 4 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition3D8N, Quadrilateral3D8, 8 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummySurfaceCondition3D9N, Quadrilateral3D9, 9 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyConditionPoint2D, Point2D, 1 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyConditionPoint3D, Point3D, 1 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyConditionLine2N, Line3D2, 2 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyConditionLine3N, Line3D3, 3 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition2D3N, Triangle2D3, 3 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition2D4N, Quadrilateral2D4, 4 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition2D6N, Triangle2D6, 6 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition2D8N, Quadrilateral2D8, 8 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition2D9N, Quadrilateral2D9, 9 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D4N, Tetrahedra3D4, 4 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D10N, Tetrahedra3D10, 10 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D8N, Hexahedra3D8, 8 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D20N, Hexahedra3D20, 20 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D27N, Hexahedra3D27, 27 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D6N, Prism3D6, 6 )
+    , FINITE_CELL_APP_CREATE_CONDITION( mDummyCondition3D15N, Prism3D15, 15 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement2D3N, Triangle2D3, 3 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement2D6N, Triangle2D6, 6 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement2D4N, Quadrilateral2D4, 4 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement2D8N, Quadrilateral2D8, 8 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement2D9N, Quadrilateral2D9, 9 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement3D3N, Triangle3D3, 3 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement3D6N, Triangle3D6, 6 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement3D4N, Quadrilateral3D4, 4 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement3D8N, Quadrilateral3D8, 8 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummySurfaceElement3D9N, Quadrilateral3D9, 9 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummyVolumeElement3D4N, Tetrahedra3D4, 4 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummyVolumeElement3D10N, Tetrahedra3D10, 10 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummyVolumeElement3D8N, Hexahedra3D8, 8 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummyVolumeElement3D20N, Hexahedra3D20, 20 )
+    , FINITE_CELL_APP_CREATE_ELEMENT( mDummyVolumeElement3D27N, Hexahedra3D27, 27 )
     {}
 
     void KratosFiniteCellApplication::Register()
