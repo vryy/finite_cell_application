@@ -24,9 +24,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/foreach.hpp>
 #include <boost/progress.hpp>
 
 
@@ -183,7 +180,9 @@ public:
 
         // create new entity
         typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, Points, pProperties);
+        #ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewEntity->SetValue(IS_INACTIVE, false);
+        #endif
         pNewEntity->Set(ACTIVE, true);
 
         return pNewEntity;
@@ -201,7 +200,9 @@ public:
 
         // create new entity
         typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, rGeometry, pProperties);
+        #ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewEntity->SetValue(IS_INACTIVE, false);
+        #endif
         pNewEntity->Set(ACTIVE, true);
 
         return pNewEntity;
