@@ -44,7 +44,6 @@
 #include "geometries/hexahedra_3d_8.h"
 #include "geometries/hexahedra_3d_20.h"
 #include "geometries/hexahedra_3d_27.h"
-#include "geometries/line_2d.h"
 #include "geometries/line_2d_2.h"
 #include "geometries/line_3d_2.h"
 #include "geometries/line_3d_3.h"
@@ -128,8 +127,8 @@ public:
 
     /// Helper function to assign the geometry_data for finite_cell_geometry
     static void AssignGeometryData(GeometryType& r_geom,
-            const GeometryData::IntegrationMethod ElementalIntegrationMethod,
-            Vector& rWeights)
+            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
+            const Vector& rWeights)
     {
         try
         {
@@ -212,7 +211,7 @@ public:
 
     /// Helper function to assign the geometry_data for finite_cell_geometry
     static void AssignGeometryData(GeometryType& r_geom,
-            const GeometryData::IntegrationMethod ElementalIntegrationMethod,
+            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
             const IntegrationPointsArrayType& integration_points)
     {
         try
@@ -311,7 +310,7 @@ public:
     }
 
     /// Helper function to compute the global coordinates in the reference frame
-    static CoordinatesArrayType& GlobalCoordinates0( GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
+    static CoordinatesArrayType& GlobalCoordinates0( const GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
     {
         if (rResult.size() != 3)
             rResult.resize(3, false);
@@ -322,6 +321,22 @@ public:
 
         for ( std::size_t i = 0 ; i < rGeometry.size() ; ++i )
             noalias( rResult ) += N[i] * rGeometry[i].GetInitialPosition();
+
+        return rResult;
+    }
+
+    /// Helper function to compute the global coordinates in the current frame
+    static CoordinatesArrayType& GlobalCoordinates( const GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
+    {
+        if (rResult.size() != 3)
+            rResult.resize(3, false);
+        noalias( rResult ) = ZeroVector( 3 );
+
+        Vector N( rGeometry.size() );
+        rGeometry.ShapeFunctionsValues( N, LocalCoordinates );
+
+        for ( std::size_t i = 0 ; i < rGeometry.size() ; ++i )
+            noalias( rResult ) += N[i] * rGeometry[i];
 
         return rResult;
     }
