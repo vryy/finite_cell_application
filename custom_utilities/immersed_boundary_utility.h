@@ -201,9 +201,9 @@ public:
 
             rCoordinates[point] = t;
 
-            rPoints[point] = rCurve.GetValue(t);
+            noalias(rPoints[point]) = rCurve.GetValue(t);
 
-            PointType tangent = rCurve.GetDerivative(0, t);
+            PointType tangent = static_cast<PointType>(rCurve.GetDerivative(0, t));
             rDlength[point] = norm_2(tangent);
 
             rWeights[point] = integration_points[point].Weight() * 0.5 * (tmax-tmin);
@@ -258,10 +258,10 @@ public:
             rCoordinates[point][0] = t1;
             rCoordinates[point][1] = t2;
 
-            rPoints[point] = rSurface.GetValue(rCoordinates[point]);
+            noalias(rPoints[point]) = rSurface.GetValue(rCoordinates[point]);
 
-            PointType tangent1 = rSurface.GetDerivative(0, rCoordinates[point]);
-            PointType tangent2 = rSurface.GetDerivative(1, rCoordinates[point]);
+            PointType tangent1 = static_cast<PointType>(rSurface.GetDerivative(0, rCoordinates[point]));
+            PointType tangent2 = static_cast<PointType>(rSurface.GetDerivative(1, rCoordinates[point]));
             rDarea[point] = norm_2(MathUtils<double>::CrossProduct(tangent1, tangent2));
 
             rWeights[point] = integration_points[point].Weight() * 0.25 * (t1max-t1min) * (t2max-t2min);
