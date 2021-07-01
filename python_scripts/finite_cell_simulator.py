@@ -274,6 +274,8 @@ class FiniteCellSimulator:
 
         self.forest = {}
 
+        self.aux_util = FiniteCellAuxiliaryUtility()
+
     ###TREES & FOREST CREATION#############
     def CleanForest(self):
         self.forest = {}
@@ -374,11 +376,10 @@ class FiniteCellSimulator:
                     integrators.append(qt)
                 elif stat == BRep._OUT:
                     exclude_elems.append(elem)
-            aux_util = FiniteCellAuxiliaryUtility()
             for i in range(0, qt_depth):
                 print("Refine level " + str(i+1) + " ...")
-#                aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
-                aux_util.MultithreadedRefineBy(integrators, self.brep)
+#                self.aux_util.MultithreadedQuadTreeRefineBy(integrators, self.brep)
+                self.aux_util.MultithreadedRefineBy(integrators, self.brep)
                 print("###################################################")
             fit_util.MultithreadedFitQuadrature(cut_elems, fit_funcs, self.brep, integrators, cut_cell_quadrature_method, integrator_quadrature_method, solver_type, echo_level, small_weight)
         else:
@@ -406,7 +407,6 @@ class FiniteCellSimulator:
         number_of_minimum_physical_points = self.params["number_of_minimum_physical_points"]
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
         quad_util = QuadratureUtility()
-        aux_util = FiniteCellAuxiliaryUtility()
         start_fit_t0 = time_module.time()
         model_part.ProcessInfo[RESET_CONFIGURATION] = 0 # this to ensure that the default initialization behaviour is invoked
         ###########################################
@@ -443,7 +443,7 @@ class FiniteCellSimulator:
         elif fit_mode == "multithread":
             subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCell")
             small_subcell_fit_func_callback = getattr(fit_util, "MultithreadedFitQuadratureSubCellUnique")
-        generate_physical_integration_points_callback = getattr(aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
+        generate_physical_integration_points_callback = getattr(self.aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
         save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
 
         for qi, qs in self.forest.iteritems():
@@ -454,11 +454,10 @@ class FiniteCellSimulator:
                 cut_qs_elems.append(qs)
             elif stat == BRep._OUT:
                 exclude_qs_elems.append(qs)
-        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
             print("Refine level " + str(i+1) + " ...")
-#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_qs_elems, self.brep)
-            aux_util.MultithreadedRefineBy(cut_qs_elems, self.brep)
+#            self.aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_qs_elems, self.brep)
+            self.aux_util.MultithreadedRefineBy(cut_qs_elems, self.brep)
             print("###################################################")
         # recursive refine the subcell that are cut but not integrable by the quadtree # this is required if Gauss-Legendre quadrature is used
         if max_qt_depth > qt_depth:
@@ -631,8 +630,8 @@ class FiniteCellSimulator:
 
         ## export the quadtree for debugging if needed
         if self.params["export_quadtree_cell"]:
-            lastNodeId = aux_util.GetLastNodeId(model_part)
-            lastElementId = aux_util.GetLastElementId(model_part)
+            lastNodeId = self.aux_util.GetLastNodeId(model_part)
+            lastElementId = self.aux_util.GetLastElementId(model_part)
             sample_quad_element_name = self.params["sample_quad_element_name"]
             sample_quad_element_prop_id = self.params["sample_quad_element_prop_id"]
             for qs in cut_qs_elems:
@@ -665,8 +664,8 @@ class FiniteCellSimulator:
             print("generate quadtree quadrature for small cell completed, " + str(total_add_quadrature_pnts) + " quadrature points are added")
             ## export the quadtree for debugging if needed
             if self.params["export_small_quadtree_cell"]:
-                lastNodeId = aux_util.GetLastNodeId(model_part)
-                lastElementId = aux_util.GetLastElementId(model_part)
+                lastNodeId = self.aux_util.GetLastNodeId(model_part)
+                lastElementId = self.aux_util.GetLastElementId(model_part)
                 sample_quad_element_name = self.params["sample_quad_element_name"]
                 for qs in small_qs_elems:
                     last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, 51)
@@ -730,7 +729,6 @@ class FiniteCellSimulator:
         print("simulator parameters:")
         pprint.pprint(self.params)
         quad_util = QuadratureUtility()
-        aux_util = FiniteCellAuxiliaryUtility()
         mesh_util = FiniteCellMeshUtility()
 
         # this to ensure that the default initialization behaviour is set
@@ -769,10 +767,10 @@ class FiniteCellSimulator:
                         np = qt.ConstructQuadrature(cut_cell_quadrature_method)
                     print("cut element " + str(elem.Id) + " has " + str(np) + " quadrature points")
                     print("cut element " + str(elem.Id) + " has " + str(qt.NumberOfCells()) + " leaf cells")
-                    total_add_quadrature_pnts = total_add_quadrature_pnts + np
+                    total_add_quadrature_pnts = total_add_quadrature_pnts + np[0]
                     elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                     elem.Initialize(model.model_part.ProcessInfo)
-                    aux_util.AddElement(self.proper_cut_elems, elem)
+                    self.aux_util.AddElement(self.proper_cut_elems, elem)
                     cut_elems.append(elem)
                 elif stat == BRep._OUT:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
@@ -790,21 +788,46 @@ class FiniteCellSimulator:
             print("reading material completed")
 
             ## export the physical integration points for debugging if needed
-            if self.params["export_physical_integration_point"]:
-#                cog_points = []
-#                for elem in self.proper_cut_elems:
-#                    points = elem.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
-#                    for point in points:
-#                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
-#                print("len(cog_points):", len(cog_points))
-#                prop_id = self.params["physical_integration_point_prop_id"]
-#                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
-                self.ExportPhysicalIntegrationPoints(model.model_part, self.proper_cut_elems, self.params["physical_integration_point_prop_id"])
+#             if self.params["export_physical_integration_point"]:
+# #                cog_points = []
+# #                for elem in self.proper_cut_elems:
+# #                    points = elem.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
+# #                    for point in points:
+# #                        cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+# #                print("len(cog_points):", len(cog_points))
+# #                prop_id = self.params["physical_integration_point_prop_id"]
+# #                quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+#                 self.ExportPhysicalIntegrationPoints(model.model_part, self.proper_cut_elems, self.params["physical_integration_point_prop_id"])
+
+            if self.params["export_physical_integration_point"] or self.params['export_fictitious_integration_point']:
+                cog_points = []
+                fict_cog_points = []
+                for elem in self.proper_cut_elems:
+                    points = elem.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL_IN_REFERENCE_CONFIGURATION, model.model_part.ProcessInfo)
+                    weights = elem.CalculateOnIntegrationPoints(INTEGRATION_WEIGHT, model.model_part.ProcessInfo)
+                    num_points = len(points)
+                    for i in range(0, num_points):
+                        point = points[i]
+                        weight = weights[i][0]
+                        if weight > 1.1*small_weight: # coefficient 1.1 is used to improve the stability of the numerical comparison
+                            cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                        else:
+                            fict_cog_points.append(quad_util.CreatePoint(point[0], point[1], point[2]))
+                print("len(cog_points):", len(cog_points))
+                print("len(fict_cog_points):", len(fict_cog_points))
+                if self.params["export_physical_integration_point"]:
+                    prop_id = self.params["physical_integration_point_prop_id"]
+                    cog_conds = quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+                    # model.model_part.Properties[prop_id].SetValue(LAYER_NAME, "physical quadrature points")
+                if self.params["export_fictitious_integration_point"]:
+                    prop_id = self.params["fictitious_integration_point_prop_id"]
+                    fict_cog_conds = quad_util.CreateConditionFromPoint(model.model_part, fict_cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
+                    # model.model_part.Properties[prop_id].SetValue(LAYER_NAME, "fictitious quadrature points")
 
             ## export the quadtree for debugging if needed
             if self.params["export_quadtree_cell"]:
-                lastNodeId = aux_util.GetLastNodeId(model.model_part)
-                lastElementId = aux_util.GetLastElementId(model.model_part)
+                lastNodeId = self.aux_util.GetLastNodeId(model.model_part)
+                lastElementId = self.aux_util.GetLastElementId(model.model_part)
                 sample_quad_element_name = self.params["sample_quad_element_name"]
                 if not ("starting_level" in self.params):
                     starting_level = 1
@@ -857,7 +880,7 @@ class FiniteCellSimulator:
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                 elem.SetValue(CUT_STATUS, BRep._CUT)
                 elem.Initialize(model.model_part.ProcessInfo)
-                aux_util.AddElement(self.proper_cut_elems, elem)
+                self.aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
@@ -901,7 +924,7 @@ class FiniteCellSimulator:
                 elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
                 elem.SetValue(CUT_STATUS, BRep._CUT)
                 elem.Initialize(model.model_part.ProcessInfo)
-                aux_util.AddElement(self.proper_cut_elems, elem)
+                self.aux_util.AddElement(self.proper_cut_elems, elem)
             for elem_id in exclude_elems:
                 elem = model.model_part.Elements[elem_id]
                 elem.SetValue(ACTIVATION_LEVEL, -1)
@@ -952,8 +975,8 @@ class FiniteCellSimulator:
             subcell_domain_sizes = quadrature_data.GetCutCellSubCellDomainSizes()
             quadtree_quadrature = quadrature_data.GetQuadTreeQuadrature()
             self.proper_cut_elems = ElementsArray()
-            lastElementId = aux_util.GetLastElementId(model.model_part)
-            lastCondId = aux_util.GetLastConditionId(model.model_part)
+            lastElementId = self.aux_util.GetLastElementId(model.model_part)
+            lastCondId = self.aux_util.GetLastConditionId(model.model_part)
             self.all_subcell_elems = []
             extrapolated_prop = model.model_part.Properties[self.params["extrapolated_prop_id"]]
             if self.params["export_physical_integration_point"]:
@@ -978,7 +1001,7 @@ class FiniteCellSimulator:
                         elem.Set(ACTIVE, False)
                         print("element " + str(elem.Id) + " has no physical integration points. It will be excluded.")
                     else:
-                        aux_util.AddElement(self.proper_cut_elems, elem)
+                        self.aux_util.AddElement(self.proper_cut_elems, elem)
 
                         quad_util.SetQuadrature(elem, cut_cell_quadrature_order, cut_cell_quadrature[elem.Id])
                         elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
@@ -1044,7 +1067,7 @@ class FiniteCellSimulator:
                             else: # this allows to set the material property of fictitious element DIFFERENT to the parent element
                                 fict_elem = mesh_util.CreateParasiteElement(sample_fictitious_element_name, lastElementId, elem, cut_cell_quadrature_order, cut_cell_fictitious_quadrature[elem.Id], fict_prop)
                             print("fictitious element " + str(fict_elem.Id) + " is created out from element " + str(elem.Id))
-                            aux_util.AddElement(self.fict_elems, fict_elem)
+                            self.aux_util.AddElement(self.fict_elems, fict_elem)
                             lastElementId = fict_elem.Id
 
                             if self.params["export_fictitious_integration_point"]:
@@ -1066,7 +1089,7 @@ class FiniteCellSimulator:
                     elem.SetValue(CUT_STATUS, BRep._CUT)
                     elem.Initialize(model.model_part.ProcessInfo)
                     self.mpu.SetMaterialProperties(model.model_part, elem)
-#                    aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
+#                    self.aux_util.AddElement(self.proper_cut_elems, elem) # a quadtree element is NOT considered as proper_cut_elems
                     print("element " + str(elem.Id) + " is assigned " + str(len(quadtree_quadrature[elem.Id])) + " quadrature points")
                     if self.params["export_physical_integration_point"]:
                         points = elem.CalculateOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model.model_part.ProcessInfo)
@@ -1106,20 +1129,29 @@ class FiniteCellSimulator:
         if self.params["enable_skeleton_penalty"] == True:
             ghost_penalty_util = SkeletonPenaltyUtility()
 
-        if self.params["enable_ghost_penalty"] == True and self.params["enable_skeleton_penalty"] == True:
+        if self.params["enable_ghost_penalty"] and self.params["enable_skeleton_penalty"]:
             print("Both ghost_penalty and skeleton_penalty are activated. You should choose only one.")
             sys.exit(0)
 
-        if self.params["enable_ghost_penalty"] == True or self.params["enable_skeleton_penalty"] == True:
+        if self.params["enable_ghost_penalty"] or self.params["enable_skeleton_penalty"]:
             space_dim = self.params["space_dim"]
             estimated_neighbours = self.params["estimated_number_of_neighbours"]
 
             FindElementalNeighboursProcess(model.model_part, space_dim, estimated_neighbours).Execute()
 
             sample_cond = self.params["sample_ghost_penalty_condition"]
-            ghost_prop = self.params["ghost_penalty_properties"]
-            lastCondId = aux_util.GetLastConditionId(model.model_part)
-            ghost_penalty_conds = ghost_penalty_util.SetUpSurfacePenaltyConditions(model.model_part, bulk_elements, sample_cond, self.brep, lastCondId, ghost_prop)
+            # ghost_prop = self.params["ghost_penalty_properties"]
+            ghost_prop_id = self.params["ghost_penalty_prop_id"]
+            ghost_prop = model.model_part.Properties[ghost_prop_id]
+            self.params['ghost_penalty_setting_callback'](ghost_prop)
+            lastCondId = self.aux_util.GetLastConditionId(model.model_part)
+            if "ghost_echo_level" in self.params:
+                ghost_echo_level = self.params["ghost_echo_level"]
+            else:
+                ghost_echo_level = 1
+            ghost_penalty_conds = ghost_penalty_util.SetUpSurfacePenaltyConditions(model.model_part, bulk_elements, sample_cond, self.brep, lastCondId, ghost_prop, ghost_echo_level)
+            for cond in ghost_penalty_conds:
+                cond.Initialize(model.model_part.ProcessInfo)
 
     # end Initialize
 
@@ -1432,10 +1464,9 @@ class FiniteCellSimulator:
             if stat == BRep._CUT:
                 cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
-#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
-            aux_util.MultithreadedRefineBy(cut_elems, self.brep)
+#            self.aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
+            self.aux_util.MultithreadedRefineBy(cut_elems, self.brep)
 
         for qs in cut_elems:
             print("checking quadtree subcell of element " + str(qs.GetElement().Id) + ":")
@@ -1453,7 +1484,7 @@ class FiniteCellSimulator:
                 print("        domain size: " + str(qt.DomainSize(self.brep)))
                 print("        center of gravity: " + str(qt.CenterOfGravity(self.brep)))
                 print("        occupied geometry:")
-                aux_util.Print(qt.pCreateGeometry())
+                self.aux_util.Print(qt.pCreateGeometry())
 
     def ExportQuadTreeSubCell(self, model, bulk_elements, qt_depth, sample_element_name, sample_cond_name, integrator_quadrature_method, selected_elems = "all"):
         nsampling = self.params["number_of_samplings"] if ("number_of_samplings" in self.params) else 1
@@ -1478,16 +1509,15 @@ class FiniteCellSimulator:
                     if stat == BRep._CUT:
                         cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
-#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
-            aux_util.MultithreadedRefineBy(cut_elems, self.brep)
+#            self.aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
+            self.aux_util.MultithreadedRefineBy(cut_elems, self.brep)
 
         # add to the model_part
         cog_points = []
         for qs in cut_elems:
-            lastNodeId = aux_util.GetLastNodeId(model.model_part)
-            lastElementId = aux_util.GetLastElementId(model.model_part)
+            lastNodeId = self.aux_util.GetLastNodeId(model.model_part)
+            lastElementId = self.aux_util.GetLastElementId(model.model_part)
             # print("qs.NumberOfSubCells():", qs.NumberOfSubCells())
             qs.DeepAddToModelPart(model.model_part, sample_element_name, lastNodeId, lastElementId)
             for i in range(0, qs.NumberOfSubCells()):
@@ -1521,10 +1551,9 @@ class FiniteCellSimulator:
             if stat == BRep._CUT:
                 cut_elems.append(qs)
 
-        aux_util = FiniteCellAuxiliaryUtility()
         for i in range(0, qt_depth):
-#            aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
-            aux_util.MultithreadedRefineBy(cut_elems, self.brep)
+#            self.aux_util.MultithreadedQuadTreeSubCellRefineBy(cut_elems, self.brep)
+            self.aux_util.MultithreadedRefineBy(cut_elems, self.brep)
 
         Hf = HeavisideFunctionR3R1(self.brep)
 
