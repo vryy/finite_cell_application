@@ -31,6 +31,9 @@
 #include "integration/integration_point.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+#include "geometries/geometry_dimension.h"
+#endif
 
 
 namespace Kratos
@@ -183,12 +186,14 @@ public:
      */
     typedef typename BaseType::iterator                     iterator;
     typedef typename BaseType::const_iterator               const_iterator;
-    typedef typename BaseType::reverse_iterator             reverse_iterator;
-    typedef typename BaseType::const_reverse_iterator       const_reverse_iterator;
     typedef typename BaseType::ptr_iterator                 ptr_iterator;
     typedef typename BaseType::ptr_const_iterator           ptr_const_iterator;
+    #ifndef SD_APP_FORWARD_COMPATIBILITY
+    typedef typename BaseType::reverse_iterator             reverse_iterator;
+    typedef typename BaseType::const_reverse_iterator       const_reverse_iterator;
     typedef typename BaseType::ptr_reverse_iterator         ptr_reverse_iterator;
     typedef typename BaseType::ptr_const_reverse_iterator   ptr_const_reverse_iterator;
+    #endif
 
     /**
      * Type of Matrix
@@ -272,7 +277,7 @@ public:
     ///@{
 
 
-    virtual typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const
+    typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const override
     {
         return typename GeometryType::Pointer( new FiniteCellGeometryType( ThisPoints ) );
     }
@@ -282,7 +287,7 @@ public:
     /// + the finite cell geometry uses the same quadrature location as the base geometry, however the weight are passed to the finite cell geometry
     /// + the finite cell geometry only supports single integration rule, which is passed in the arguments
     /// + the shape function and local gradients are the same as the base geometry
-    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod, Vector& rWeights)
+    void AssignGeometryData(const GeometryData::IntegrationMethod& ThisIntegrationMethod, const Vector& rWeights)
     {
         // copy the integration points data
         IntegrationPointsContainerType all_integration_points;
@@ -297,13 +302,35 @@ public:
 
         // copy the shape function values data
         ShapeFunctionsValuesContainerType shape_functions_values;
-        shape_functions_values[ThisIntegrationMethod] = BaseType::ShapeFunctionsValues(ThisIntegrationMethod);
+        shape_functions_values[ThisIntegrationMethod] = GeometryType::ShapeFunctionsValues(ThisIntegrationMethod);
 
         // copy the shape function local gradients data
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
 //        shape_functions_local_gradients[ThisIntegrationMethod] = BaseType::ShapeFunctionsLocalGradients(ThisIntegrationMethod); // I do not know why this does not compile. I skip this for now.
         shape_functions_local_gradients[ThisIntegrationMethod] = GeometryType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
 
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
+            new GeometryDimension(
+                BaseType::Dimension(),
+                BaseType::WorkingSpaceDimension(),
+                BaseType::LocalSpaceDimension())
+        );
+
+        // create new geometry data
+        mpFiniteCellGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                &(*pGeometryDimension),
+                ThisIntegrationMethod,              //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        // assign the geometry data back to the original geometry
+        BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
+        #else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
             new GeometryData(
@@ -319,12 +346,13 @@ public:
 
         // assign the geometry data back to the original geometry
         BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
+        #endif
     }
 
 
     /// Assign a list of integration points to the geometry. The ThisIntegrationMethod will
     /// ultimately becomes the default integration rule on the geometry.
-    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod,
+    void AssignGeometryData(const GeometryData::IntegrationMethod& ThisIntegrationMethod,
             const IntegrationPointsArrayType& integration_points)
     {
         // create the integration points data
@@ -355,6 +383,28 @@ public:
             noalias( rLocalGradients[i] ) = BaseType::ShapeFunctionsLocalGradients( rLocalGradients[i], integration_points[i] );
         }
 
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
+            new GeometryDimension(
+                BaseType::Dimension(),
+                BaseType::WorkingSpaceDimension(),
+                BaseType::LocalSpaceDimension())
+        );
+
+        // create new geometry data
+        mpFiniteCellGeometryData = GeometryData::Pointer(
+            new GeometryData(
+                &(*pGeometryDimension),
+                ThisIntegrationMethod,              //ThisDefaultMethod
+                all_integration_points,             //ThisIntegrationPoints
+                shape_functions_values,             //ThisShapeFunctionsValues
+                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+            )
+        );
+
+        // assign the geometry data back to the original geometry
+        BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
+        #else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
             new GeometryData(
@@ -370,6 +420,7 @@ public:
 
         // assign the geometry data back to the original geometry
         BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
+        #endif
     }
 
 
@@ -383,7 +434,7 @@ public:
     @see PrintData()
     @see PrintInfo()
     */
-    virtual std::string Info() const
+    std::string Info() const override
     {
         std::stringstream buffer;
         buffer << BaseType::Dimension()
@@ -399,7 +450,7 @@ public:
     @see PrintData()
     @see Info()
     */
-    virtual void PrintInfo( std::ostream& rOStream ) const
+    void PrintInfo( std::ostream& rOStream ) const override
     {
         rOStream << BaseType::Dimension()
                  << " dimensional finite cell geometry in "
@@ -415,7 +466,7 @@ public:
     @see PrintInfo()
     @see Info()
     */
-    virtual void PrintData( std::ostream& rOStream ) const
+    void PrintData( std::ostream& rOStream ) const override
     {
         BaseType::PrintData(rOStream);
     }
@@ -491,12 +542,12 @@ private:
 
     friend class Serializer;
 
-    virtual void save( Serializer& rSerializer ) const
+    void save( Serializer& rSerializer ) const override
     {
         KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
     }
 
-    virtual void load( Serializer& rSerializer )
+    void load( Serializer& rSerializer ) override
     {
         KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
     }
