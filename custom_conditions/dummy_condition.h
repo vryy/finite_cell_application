@@ -60,11 +60,17 @@ class DummyCondition : public Condition
         void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                      const ProcessInfo& rCurrentProcessInfo) final;
 
+        void CalculateDampingMatrix( MatrixType& rDampingMatrix,
+                                     const ProcessInfo& rCurrentProcessInfo ) final;
+
+        void CalculateMassMatrix( MatrixType& rMassMatrix,
+                                  const ProcessInfo& rCurrentProcessInfo ) final;
+
         void EquationIdVector( EquationIdVectorType& rResult,
-                               const ProcessInfo& rCurrentProcessInfo) const final;
+                               const ProcessInfo& rCurrentProcessInfo ) const final;
 
         void GetDofList( DofsVectorType& ConditionalDofList,
-                         const ProcessInfo& CurrentProcessInfo) const final;
+                         const ProcessInfo& CurrentProcessInfo ) const final;
 
         void Initialize(const ProcessInfo& rCurrentProcessInfo);
         /**

@@ -64,7 +64,7 @@ class GhostPenaltyCondition : public Condition
             Element::Pointer pMasterElement,
             PropertiesType::Pointer pProperties) const
         {
-            return GhostPenaltyCondition::Pointer(new GhostPenaltyCondition(NewId,
+            return Condition::Pointer(new GhostPenaltyCondition(NewId,
                 pGeometry, pSlaveElement, pMasterElement, pProperties));
         }
 
@@ -97,6 +97,11 @@ class GhostPenaltyCondition : public Condition
                           rCurrentProcessInfo,
                           CalculateStiffnessMatrixFlag,
                           CalculateResidualVectorFlag);
+        }
+
+        void CalculateDampingMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo ) override
+        {
+            rDampMatrix.resize(0, 0, false);
         }
 
         void EquationIdVector( EquationIdVectorType& rResult,
@@ -176,7 +181,6 @@ class GhostPenaltyCondition : public Condition
 
         /**
          * Turn back information as a string.
-         * (DEACTIVATED)
          */
         std::string Info() const override
         {

@@ -99,7 +99,8 @@ void DummyCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
     CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo,
                   CalculateStiffnessMatrixFlag, CalculateResidualVectorFlag);
 }
-    //************************************************************************************
+
+//************************************************************************************
 //************************************************************************************    /
 /**
  * This function calculates all system contributions due to the contact problem
@@ -116,6 +117,26 @@ void DummyCondition::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
     rLeftHandSideMatrix.resize(0, 0, false);
     rRightHandSideVector.resize(0, false);
+
+    KRATOS_CATCH("")
+}
+
+void DummyCondition::CalculateDampingMatrix( MatrixType& rDampingMatrix,
+                                             const ProcessInfo& rCurrentProcessInfo )
+{
+    KRATOS_TRY
+
+    rDampingMatrix.resize(0, 0, false);
+
+    KRATOS_CATCH("")
+}
+
+void DummyCondition::CalculateMassMatrix( MatrixType& rMassMatrix,
+                                          const ProcessInfo& rCurrentProcessInfo )
+{
+    KRATOS_TRY
+
+    rMassMatrix.resize(0, 0, false);
 
     KRATOS_CATCH("")
 }
