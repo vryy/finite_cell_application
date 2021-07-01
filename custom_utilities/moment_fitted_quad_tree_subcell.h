@@ -212,6 +212,8 @@ public:
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
 
+    typedef typename GeometryType::IntegrationPointType IntegrationPointType;
+
     typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     ///@}
@@ -413,7 +415,17 @@ public:
 
         for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
+            #ifdef SD_APP_FORWARD_COMPATIBILITY
+            CoordinatesArrayType p = BaseType::mpTreeNodes[i]->ReferenceCenter();
+            IntegrationPointType ip;
+            ip.Weight() = 1.0;
+            ip.X() = p[0];
+            ip.Y() = p[1];
+            ip.Z() = p[2];
+            RefType::mRepresentativeIntegrationPoints.push_back(ip);
+            #else
             RefType::mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
+            #endif
         }
     }
 
@@ -443,8 +455,10 @@ public:
             // KRATOS_WATCH(*pSubCellGeometry)
             // #endif
 
+            std::vector<CoordinatesArrayType> SamplingLocalPoints;
+            BaseType::mpTreeNodes[i]->CreateSamplingLocalPoints(SamplingLocalPoints, TNsampling);
             std::vector<PointType> SamplingPoints;
-            BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), TNsampling);
+            BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), SamplingLocalPoints);
 
             #ifdef ENABLE_PROFILING
             std::stringstream time_mark_name; time_mark_name << "CutStatus at " << __LINE__;
@@ -705,19 +719,19 @@ public:
 
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "MomentFittedQuadTreeSubCell";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
     }
 
