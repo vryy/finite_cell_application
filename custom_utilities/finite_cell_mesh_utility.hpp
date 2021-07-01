@@ -35,6 +35,7 @@ namespace Kratos
 template<>
 struct GenerateStructuredPoints_Helper<2, 1> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -58,6 +59,7 @@ struct GenerateStructuredPoints_Helper<2, 1> : public GenerateStructuredPoints_H
         }
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -67,11 +69,34 @@ struct GenerateStructuredPoints_Helper<2, 1> : public GenerateStructuredPoints_H
         ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 1";
         KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
+    {
+        double s0, s1;
+
+        rPoints.resize(nsampling[1]+1);
+        for (std::size_t j = 0; j < nsampling[1]+1; ++j)
+        {
+            rPoints[j].resize(nsampling[0]+1);
+            s1 = (double)j / nsampling[1];
+
+            for (std::size_t i = 0; i < nsampling[0]+1; ++i)
+            {
+                s0 = (double)i / nsampling[0];
+                noalias(rPoints[j][i]) = StartPoint + s0*Axis[0] + s1*Axis[1];
+            }
+        }
+    }
 };
 
 template<>
 struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -82,10 +107,22 @@ struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_H
         KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 2";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
     {
         std::stringstream ss;
         ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 2";
@@ -96,6 +133,7 @@ struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_H
 template<>
 struct GenerateStructuredPoints_Helper<2, 3> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -119,6 +157,7 @@ struct GenerateStructuredPoints_Helper<2, 3> : public GenerateStructuredPoints_H
         }
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<PointType> >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -128,11 +167,34 @@ struct GenerateStructuredPoints_Helper<2, 3> : public GenerateStructuredPoints_H
         ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 3";
         KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
+    {
+        double s0, s1;
+
+        rPoints.resize(2*nsampling[1]+1);
+        for (std::size_t j = 0; j < 2*nsampling[1]+1; ++j)
+        {
+            rPoints[j].resize(2*nsampling[0]+1);
+            s1 = (double)j / (2*nsampling[1]);
+
+            for (std::size_t i = 0; i < 2*nsampling[0]+1; ++i)
+            {
+                s0 = (double)i / (2*nsampling[0]);
+                noalias(rPoints[j][i]) = StartPoint + s0*Axis[0] + s1*Axis[1];
+            }
+        }
+    }
 };
 
 template<>
 struct GenerateStructuredPoints_Helper<3, 1> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -163,6 +225,7 @@ struct GenerateStructuredPoints_Helper<3, 1> : public GenerateStructuredPoints_H
         }
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -192,11 +255,40 @@ struct GenerateStructuredPoints_Helper<3, 1> : public GenerateStructuredPoints_H
             }
         }
     }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
+    {
+        double s0, s1, s2;
+
+        rPoints.resize(nsampling[2]+1);
+        for (std::size_t k = 0; k < nsampling[2]+1; ++k)
+        {
+            rPoints[k].resize(nsampling[1]+1);
+            s2 = (double)k / nsampling[2];
+
+            for (std::size_t j = 0; j < nsampling[1]+1; ++j)
+            {
+                rPoints[k][j].resize(nsampling[0]+1);
+                s1 = (double)j / nsampling[1];
+
+                for (std::size_t i = 0; i < nsampling[0]+1; ++i)
+                {
+                    s0 = (double)i / nsampling[0];
+                    noalias(rPoints[j][i]) = StartPoint + s0*Axis[0] + s1*Axis[1] + s2*Axis[2];
+                }
+            }
+        }
+    }
 };
 
 template<>
 struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -207,10 +299,22 @@ struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_H
         KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
+    {
+        std::stringstream ss;
+        ss << __FUNCTION__ << " is not yet implemented for dim = 3 and type = 2";
+        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+    }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
     {
         std::stringstream ss;
         ss << __FUNCTION__ << " is not yet implemented for dim = 3 and type = 2";
@@ -221,6 +325,7 @@ struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_H
 template<>
 struct GenerateStructuredPoints_Helper<3, 3> : public GenerateStructuredPoints_Helper<0, 0>
 {
+    /// Uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -251,6 +356,7 @@ struct GenerateStructuredPoints_Helper<3, 3> : public GenerateStructuredPoints_H
         }
     }
 
+    /// Non-uniform sampling along Cartesian coordinates
     static void Execute(std::vector<std::vector<std::vector<PointType> > >& rPoints,
         const PointType& StartPoint,
         const PointType& EndPoint,
@@ -285,6 +391,34 @@ struct GenerateStructuredPoints_Helper<3, 3> : public GenerateStructuredPoints_H
                     else
                         x = StartPoint[0] + 0.5*(sampling[0][i/2]+sampling[0][i/2+1])*dx;
                     rPoints[k][j][i] = PointType(x, y, z);
+                }
+            }
+        }
+    }
+
+    /// Uniform sampling along axis vectors
+    static void Execute(std::vector<std::vector<PointType> >& rPoints,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling)
+    {
+        double s0, s1, s2;
+
+        rPoints.resize(2*nsampling[2]+1);
+        for (std::size_t k = 0; k < 2*nsampling[2]+1; ++k)
+        {
+            rPoints[k].resize(2*nsampling[1]+1);
+            s2 = (double)k / (2*nsampling[2]);
+
+            for (std::size_t j = 0; j < 2*nsampling[1]+1; ++j)
+            {
+                rPoints[k][j].resize(2*nsampling[0]+1);
+                s1 = (double)j / (2*nsampling[1]);
+
+                for (std::size_t i = 0; i < 2*nsampling[0]+1; ++i)
+                {
+                    s0 = (double)i / (2*nsampling[0]);
+                    noalias(rPoints[j][i]) = StartPoint + s0*Axis[0] + s1*Axis[1] + s2*Axis[2];
                 }
             }
         }

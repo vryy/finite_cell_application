@@ -17,6 +17,7 @@
 #include "custom_utilities/finite_cell_mesh_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
+#include "finite_cell_application_variables.h"
 
 
 namespace Kratos
@@ -60,6 +61,13 @@ void FiniteCellMeshUtility::GenerateSamplingPoints(std::vector<PointType>& Sampl
 }
 
 
+void FiniteCellMeshUtility::GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
+        const PointType& StartPoint, const PointType& EndPoint, const std::size_t& nsampling)
+{
+    BRepMeshUtility::GenerateSamplingPoints(SamplingPoints, StartPoint, EndPoint, nsampling);
+}
+
+
 void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
     const int& type,
     const PointType& StartPoint,
@@ -81,7 +89,6 @@ void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<P
 }
 
 
-/// Generate the points for background structure mesh
 void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
     const int& type,
     const PointType& StartPoint,
@@ -99,6 +106,27 @@ void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<P
     else if (type == 3)
     {
         GenerateStructuredPoints_Helper<2, 3>::Execute(sampling_points, StartPoint, EndPoint, sampling);
+    }
+}
+
+
+void FiniteCellMeshUtility::GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
+    const int& type,
+    const PointType& StartPoint,
+    const std::vector<PointType>& Axis,
+    const std::vector<std::size_t>& nsampling)
+{
+    if (type == 1)
+    {
+        GenerateStructuredPoints_Helper<2, 1>::Execute(sampling_points, StartPoint, Axis, nsampling);
+    }
+    else if (type == 2)
+    {
+        GenerateStructuredPoints_Helper<2, 2>::Execute(sampling_points, StartPoint, Axis, nsampling);
+    }
+    else if (type == 3)
+    {
+        GenerateStructuredPoints_Helper<2, 3>::Execute(sampling_points, StartPoint, Axis, nsampling);
     }
 }
 
@@ -330,6 +358,23 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
     return NewElements;
 }
 
+ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart& rThisModelPart,
+    ModelPart::ElementsContainerType& rOtherElements,
+    const int& properties_id_offset, const int& echo_level)
+{
+    std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(rThisModelPart);
+
+    ModelPart::ElementsContainerType NewElements;
+    FiniteCellMeshUtility_Helper<Element, ModelPart::ElementsContainerType>::ImportEntities(rThisModelPart,
+        rThisModelPart.Elements(), NewElements, rOtherElements,
+        last_element_id, properties_id_offset, echo_level);
+
+    if (echo_level > 0)
+        std::cout << NewElements.size()
+                  << " elements are imported to the model_part " << rThisModelPart.Name() << std::endl;
+
+    return NewElements;
+}
 
 ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(ModelPart& rThisModelPart,
     ModelPart::ConditionsContainerType& rOtherConditions,
@@ -348,6 +393,24 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
     if (echo_level > 0)
         std::cout << NewConditions.size() << " " << sample_cond_name
                   << " conditions are created and added to the model_part " << rThisModelPart.Name() << std::endl;
+
+    return NewConditions;
+}
+
+ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(ModelPart& rThisModelPart,
+    ModelPart::ConditionsContainerType& rOtherConditions,
+    const int& properties_id_offset, const int& echo_level)
+{
+    std::size_t last_cond_id = FiniteCellAuxiliaryUtility::GetLastConditionId(rThisModelPart);
+
+    ModelPart::ConditionsContainerType NewConditions;
+    FiniteCellMeshUtility_Helper<Condition, ModelPart::ConditionsContainerType>::ImportEntities(rThisModelPart,
+        rThisModelPart.Conditions(), NewConditions, rOtherConditions,
+        last_cond_id, properties_id_offset, echo_level);
+
+    if (echo_level > 0)
+        std::cout << NewConditions.size()
+                  << " conditions are imported to the model_part " << rThisModelPart.Name() << std::endl;
 
     return NewConditions;
 }
@@ -381,6 +444,49 @@ void FiniteCellMeshUtility_Helper<TEntityType, TEntityContainerType>::ImportEnti
 
         typename TEntityType::Pointer pNewElement;
         pNewElement = r_clone_element.Create(++last_element_id, pNewGeometry, pProperties);
+        pNewElement->SetValue(OTHER_ID, (*it)->Id());
+        rNewElements.push_back(pNewElement);
+    }
+
+    for (typename TEntityContainerType::ptr_iterator it = rNewElements.ptr_begin(); it != rNewElements.ptr_end(); ++it)
+    {
+        rThisElements.push_back(*it);
+    }
+
+    rThisElements.Unique();
+}
+
+template<class TEntityType, class TEntityContainerType>
+void FiniteCellMeshUtility_Helper<TEntityType, TEntityContainerType>::ImportEntities(ModelPart& rThisModelPart,
+    TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
+    TEntityContainerType& rNewElements, // the added elements to rThisElements
+    TEntityContainerType& rOtherElements, // other elements to be imported from
+    std::size_t& last_element_id,
+    const int& properties_id_offset,
+    const int& echo_level)
+{
+    typedef typename TEntityType::GeometryType GeometryType;
+
+    typename TEntityType::NodesArrayType temp_element_nodes;
+    std::size_t old_prop_id, new_prop_id;
+    for (typename TEntityContainerType::ptr_iterator it = rOtherElements.ptr_begin(); it != rOtherElements.ptr_end(); ++it)
+    {
+        GeometryType& r_geom = (*it)->GetGeometry();
+
+        temp_element_nodes.clear();
+
+        for (std::size_t i = 0; i < r_geom.size(); ++i)
+        {
+            std::size_t other_node_id = static_cast<std::size_t>(r_geom[i].GetValue(OTHER_NODE_ID));
+            temp_element_nodes.push_back(*(BRepUtility::FindKey(rThisModelPart.Nodes(), other_node_id, "Node").base()));
+        }
+
+        old_prop_id = (*it)->GetProperties().Id();
+        new_prop_id = old_prop_id + properties_id_offset;
+
+        typename TEntityType::Pointer pNewElement;
+        Properties::Pointer pProperties = rThisModelPart.rProperties()(new_prop_id);
+        pNewElement = (*it)->Create(++last_element_id, temp_element_nodes, pProperties);
         pNewElement->SetValue(OTHER_ID, (*it)->Id());
         rNewElements.push_back(pNewElement);
     }

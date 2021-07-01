@@ -25,10 +25,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <boost/foreach.hpp>
-#include <boost/progress.hpp>
 
 
 // Project includes
@@ -37,7 +33,6 @@
 #include "includes/element.h"
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
-#include "finite_cell_application/finite_cell_application.h"
 #include "brep_application/custom_algebra/trans/transformation.h"
 #include "brep_application/custom_utilities/brep_utility.h"
 #include "brep_application/custom_utilities/brep_mesh_utility.h"
@@ -55,6 +50,10 @@ namespace Kratos
 ///@name Type Definitions
 ///@{
 
+/**
+ * TDim: dimension
+ * TType: type of mesh (1: linear; 2: serendipity; 3: quadratic)
+ */
 template<int TDim, int TType>
 struct GenerateStructuredPoints_Helper
 {
@@ -76,6 +75,15 @@ struct FiniteCellMeshUtility_Helper
         std::size_t& last_element_id,
         TEntityType const& r_clone_element,
         Properties::Pointer pProperties,
+        const int& echo_level);
+
+    /// Import the elements from list to the other list. The Properties is also carried.
+    static void ImportEntities(ModelPart& rThisModelPart,
+        TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
+        TEntityContainerType& rNewElements, // the added elements to rThisElements
+        TEntityContainerType& rOtherElements, // other elements to be imported from
+        std::size_t& last_element_id,
+        const int& properties_id_offset,
         const int& echo_level);
 };
 
@@ -162,6 +170,11 @@ public:
             GeometryType& r_geom, const std::size_t& nsampling);
 
 
+    /// Generate the sampling points along a line
+    static void GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
+            const PointType& StartPoint, const PointType& EndPoint, const std::size_t& nsampling);
+
+
     /// Generate the points for background structure mesh
     static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
         const int& type,
@@ -177,6 +190,14 @@ public:
         const PointType& StartPoint,
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling);
+
+
+    /// Generate the points for background structure mesh
+    static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
+        const int& type,
+        const PointType& StartPoint,
+        const std::vector<PointType>& Axis,
+        const std::vector<std::size_t>& nsampling);
 
 
     /// Generate the points for background structure mesh
@@ -262,11 +283,19 @@ public:
         ModelPart::ElementsContainerType& rOtherElements,
         const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level);
 
+    static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
+        ModelPart::ElementsContainerType& rOtherElements,
+        const int& properties_id_offset, const int& echo_level);
+
 
     /// Import the conditions from list to the this model_part
     static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
         ModelPart::ConditionsContainerType& rOtherConditions,
         const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level);
+
+    static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
+        ModelPart::ConditionsContainerType& rOtherConditions,
+        const int& properties_id_offset, const int& echo_level);
 
 
     template<typename TEntityContainerType, typename TVariableType>
