@@ -124,7 +124,17 @@ pybind11::list QuadTree_AddToModelPart(TTreeType& rDummy,
 }
 
 template<class TTreeType>
-pybind11::list QuadTree_ConstructQuadrature(TTreeType& rDummy,
+pybind11::list QuadTree_ConstructQuadrature1(TTreeType& rDummy,
+    const int& integration_method)
+{
+    std::size_t output = rDummy.ConstructQuadrature(integration_method);
+    pybind11::list list_output;
+    list_output.append(output);
+    return list_output;
+}
+
+template<class TTreeType>
+pybind11::list QuadTree_ConstructQuadrature2(TTreeType& rDummy,
     const BRep& r_brep, const int& integration_method, const double& small_weight)
 {
     std::vector<std::size_t> output = rDummy.ConstructQuadrature(r_brep, integration_method, small_weight);
@@ -435,8 +445,6 @@ void FiniteCellApplication_AddQuadTreeToPython(pybind11::module& m)
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
-    std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature1)(const int&) const = &QuadTreeType::ConstructQuadrature;
-
     class_<QuadTreeType, typename QuadTreeType::Pointer, RefinableTree, FunctionIntegrator>
     (m, QuadTreeName.str().c_str())
     .def(init<Element::Pointer>())
@@ -453,8 +461,8 @@ void FiniteCellApplication_AddQuadTreeToPython(pybind11::module& m)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
-    .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
-    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature<QuadTreeType>)
+    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature1<QuadTreeType>)
+    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature2<QuadTreeType>)
     .def("ConstructQuadratureNoSkip", &QuadTree_ConstructQuadratureNoSkip<QuadTreeType>)
     .def("__str__", &PrintObject<QuadTreeType>)
     ;

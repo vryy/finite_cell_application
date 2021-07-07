@@ -272,6 +272,12 @@ class FiniteCellSimulator:
         if 'quadtree_frame' not in self.params:
             self.params['quadtree_frame'] = 0
 
+        if 'export_physical_integration_point' not in self.params:
+            self.params['export_physical_integration_point'] = False
+
+        if 'export_fictitious_integration_point' not in self.params:
+            self.params['export_fictitious_integration_point'] = False
+
         self.forest = {}
 
         self.aux_util = FiniteCellAuxiliaryUtility()

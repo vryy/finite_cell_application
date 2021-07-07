@@ -123,7 +123,17 @@ boost::python::list QuadTree_AddToModelPart(TTreeType& rDummy,
 }
 
 template<class TTreeType>
-boost::python::list QuadTree_ConstructQuadrature(TTreeType& rDummy,
+boost::python::list QuadTree_ConstructQuadrature1(TTreeType& rDummy,
+    const int& integration_method)
+{
+    std::size_t output = rDummy.ConstructQuadrature(integration_method);
+    boost::python::list list_output;
+    list_output.append(output);
+    return list_output;
+}
+
+template<class TTreeType>
+boost::python::list QuadTree_ConstructQuadrature2(TTreeType& rDummy,
     const BRep& r_brep, const int& integration_method, const double& small_weight)
 {
     std::vector<std::size_t> output = rDummy.ConstructQuadrature(r_brep, integration_method, small_weight);
@@ -441,8 +451,6 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
-    std::size_t(QuadTreeType::*pointer_to_ConstructQuadrature1)(const int&) const = &QuadTreeType::ConstructQuadrature;
-
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
     .def(init<Condition::Pointer>())
@@ -458,8 +466,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)
-    .def("ConstructQuadrature", pointer_to_ConstructQuadrature1)
-    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature<QuadTreeType>)
+    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature1<QuadTreeType>)
+    .def("ConstructQuadrature", &QuadTree_ConstructQuadrature2<QuadTreeType>)
     .def("ConstructQuadratureNoSkip", &QuadTree_ConstructQuadratureNoSkip<QuadTreeType>)
     .def(self_ns::str(self))
     ;
