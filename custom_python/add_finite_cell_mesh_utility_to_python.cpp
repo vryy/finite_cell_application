@@ -97,6 +97,56 @@ boost::python::dict FiniteCellMeshUtility_ExtractBoundaryNodes(const FiniteCellM
     return layer_node_sets;
 }
 
+boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart1D(FiniteCellMeshUtility& rDummy,
+    ModelPart& r_model_part,
+    const Element::GeometryType::PointType::PointType& StartPoint,
+    const Element::GeometryType::PointType::PointType& EndPoint,
+    const int& nsampling,
+    const std::string& sample_element_name,
+    const int& type, // if 1: generate L2 elements; 2, 3: L3 elements
+    Properties::Pointer pProperties)
+{
+    typedef Element::GeometryType::PointType::PointType PointType;
+
+    std::vector<PointType> sampling_points;
+
+    int order;
+    if (type == 1)
+    {
+        order = 1;
+    }
+    else if (type == 2 || type == 3)
+    {
+        order = 2;
+    }
+    else if (13 <= type && type <= 19)
+    {
+        order = type % 10;
+    }
+    else
+        KRATOS_THROW_ERROR(std::logic_error, "Invalid mesh type", type)
+
+    rDummy.GenerateSamplingPoints(sampling_points, StartPoint, EndPoint, nsampling*order);
+
+    int close_dir = 0; // open loop
+    int activation_dir = 0;
+    FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateLineElements(r_model_part, sampling_points, sample_element_name, type, close_dir, pProperties);
+
+    typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
+    typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
+    const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
+
+    // generate layer information
+    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list output;
+    output.append(layer_node_sets);
+    output.append(layer_cond_sets);
+    return output;
+}
+
 boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMeshUtility& rDummy,
     ModelPart& r_model_part,
     const Element::GeometryType::PointType::PointType& StartPoint,
@@ -394,6 +444,7 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
     ("FiniteCellMeshUtility", init<>())
     .def("GenerateSampling", &FiniteCellMeshUtility_GenerateUniformSampling)
     .def("GenerateSampling", &FiniteCellMeshUtility_GenerateSampling)
+    .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart1D)
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2D)
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSampling)
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart2DInclined)
