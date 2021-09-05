@@ -750,9 +750,48 @@ class FiniteCellSimulator:
             configuration = 0 # reference configuration
             quadtree_frame = self.params['quadtree_frame']
             quadtree_configuration = self.params['quadtree_configuration']
+            ## parameters for small cut cell handling
+            if 'action_on_small_cut_cell' in self.params:
+                action_on_small_cut_cell = self.params['action_on_small_cut_cell']
+            else:
+                action_on_small_cut_cell = None
+            ##
+            if 'small_domain_size' in self.params:
+                small_domain_size = self.params["small_domain_size"]
+            else:
+                small_domain_size = 0.0
+            ##
+            if 'small_domain_size_ratio' in self.params:
+                small_domain_size_ratio = self.params["small_domain_size_ratio"]
+            else:
+                small_domain_size_ratio = 0.0
+            ##
+            if 'number_of_minimum_physical_points' in self.params:
+                number_of_minimum_physical_points = self.params["number_of_minimum_physical_points"]
+            else:
+                number_of_minimum_physical_points = 0
+            ##
+            if small_domain_size > 0.0:
+                criteria_check_small_domain_size = True
+            else:
+                criteria_check_small_domain_size = False
+            #
+            if small_domain_size_ratio > 0.0:
+                criteria_check_small_domain_size_ratio = True
+            else:
+                criteria_check_small_domain_size_ratio = False
+            #
+            if number_of_minimum_physical_points != 0:
+                criteria_check_number_of_physical_points = True
+            else:
+                criteria_check_number_of_physical_points = False
+            ##
             ###########################################
             ##QUADTREE
             ###########################################
+            print("criteria_check_small_domain_size: " + str(criteria_check_small_domain_size))
+            print("criteria_check_small_domain_size_ratio: " + str(criteria_check_small_domain_size_ratio))
+            print("criteria_check_number_of_physical_points: " + str(criteria_check_number_of_physical_points))
             self.CreateForest(bulk_elements, nsampling, quadtree_frame, quadtree_configuration)
             cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
             cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
@@ -762,6 +801,8 @@ class FiniteCellSimulator:
             exclude_elems = []
             for elem in bulk_elements:
                 qt = self.forest[elem.Id]
+                if criteria_check_small_domain_size_ratio:
+                    cell_size = qt.DomainSize()
                 stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 elem.SetValue(CUT_STATUS, stat)
                 if stat == BRep._CUT:
@@ -774,10 +815,41 @@ class FiniteCellSimulator:
                     print("cut element " + str(elem.Id) + " has " + str(np) + " quadrature points")
                     print("cut element " + str(elem.Id) + " has " + str(qt.NumberOfCells()) + " leaf cells")
                     total_add_quadrature_pnts = total_add_quadrature_pnts + np[0]
-                    elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
-                    elem.Initialize(model.model_part.ProcessInfo)
-                    self.aux_util.AddElement(self.proper_cut_elems, elem)
-                    cut_elems.append(elem)
+                    include_element = True
+                    if action_on_small_cut_cell != None:
+                        # here we check the small cutcell; the small subcell is determined by either domain_size less than a threshold, or number of physical points less than specific number
+
+                        if criteria_check_small_domain_size:
+                            domain_size = qt.DomainSize(self.brep, cut_cell_quadrature_method)
+                            if domain_size < small_domain_size:
+                                include_element = False
+
+                        if criteria_check_small_domain_size_ratio:
+                            domain_size = qt.DomainSize(self.brep, cut_cell_quadrature_method)
+                            print("element " + str(elem.Id) + " cut ratio: " + str(domain_size/cell_size))
+                            if domain_size/cell_size < small_domain_size_ratio:
+                                include_element = False
+
+                        if criteria_check_number_of_physical_points:
+                            num_physical_points = np[0]
+                            if num_physical_points < number_of_minimum_physical_points:
+                                include_element = False
+
+                    if include_element:
+                        elem.SetValue(INTEGRATION_ORDER, cut_cell_quadrature_order)
+                        elem.Initialize(model.model_part.ProcessInfo)
+                        self.aux_util.AddElement(self.proper_cut_elems, elem)
+                        cut_elems.append(elem)
+                    else:
+                        if action_on_small_cut_cell == 'eliminate':
+                            elem.SetValue(ACTIVATION_LEVEL, -1)
+                            elem.SetValue(IS_INACTIVE, True)
+                            elem.Set(ACTIVE, False)
+                            exclude_elems.append(elem)
+                            print("element " + str(elem.Id) + " is detected as small cut cell. It will be deactivated.")
+                        else:
+                            raise Exception("Invalid action_on_small_cut_cell " + str(action_on_small_cut_cell))
+
                 elif stat == BRep._OUT:
                     elem.SetValue(ACTIVATION_LEVEL, -1)
                     elem.SetValue(IS_INACTIVE, True)
