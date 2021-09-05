@@ -410,6 +410,12 @@ public:
         return num_points;
     }
 
+    /// Compute the domain size of the geometry
+    double DomainSize() const
+    {
+        return FiniteCellGeometryUtility::DomainSize<TFrameType>(*mpThisGeometry);
+    }
+
     /// Compute the domain size covered by this quadtree
     double DomainSize(const BRep& r_brep, const int& integration_method) const
     {

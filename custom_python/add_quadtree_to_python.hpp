@@ -451,6 +451,9 @@ void FiniteCellApplication_AddQuadTreeToPython()
     if(TNsampling > 1)
         QuadTreeName << TNsampling;
 
+    double(QuadTreeType::*pointer_to_DomainSize1)() const = &QuadTreeType::DomainSize;
+    double(QuadTreeType::*pointer_to_DomainSize2)(const BRep&, const int&) const = &QuadTreeType::DomainSize;
+
     class_<QuadTreeType, typename QuadTreeType::Pointer, boost::noncopyable, bases<RefinableTree, FunctionIntegrator> >
     (QuadTreeName.str().c_str(), init<Element::Pointer>())
     .def(init<Condition::Pointer>())
@@ -462,7 +465,8 @@ void FiniteCellApplication_AddQuadTreeToPython()
     .def("NumberOfCells", &QuadTreeType::NumberOfCells)
     .def("NumberOfPhysicalPoints", &QuadTreeType::NumberOfPhysicalPoints)
     .def("NumberOfFictitiousPoints", &QuadTreeType::NumberOfFictitiousPoints)
-    .def("DomainSize", &QuadTreeType::DomainSize)
+    .def("DomainSize", pointer_to_DomainSize1)
+    .def("DomainSize", pointer_to_DomainSize2)
     .def("CenterOfGravity", &QuadTreeType::CenterOfGravity)
     .def("AddToModelPartWithLevel", &QuadTree_AddToModelPart_WithLevel<QuadTreeType>)
     .def("AddToModelPart", &QuadTree_AddToModelPart<QuadTreeType>)

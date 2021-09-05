@@ -67,15 +67,6 @@
 namespace Kratos
 {
 
-enum FrameType
-{
-    LOCAL = 0,
-    GLOBAL_REFERENCE = 1,
-    GLOBAL_CURRENT = 2,
-    GLOBAL = 3
-};
-
-
 template<bool TRecursive, class TEntityType>
 struct QuadTreeNode_AddToModelPart_Helper
 {

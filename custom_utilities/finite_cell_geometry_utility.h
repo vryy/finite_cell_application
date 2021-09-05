@@ -47,6 +47,7 @@
 #include "geometries/line_2d_2.h"
 #include "geometries/line_3d_2.h"
 #include "geometries/line_3d_3.h"
+#include "utilities/math_utils.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
 #include "custom_geometries/finite_cell_geo_2d_bezier.h"
@@ -69,6 +70,14 @@ namespace Kratos
 ///@}
 ///@name  Enum's
 ///@{
+
+enum FrameType
+{
+    LOCAL = 0,
+    GLOBAL_REFERENCE = 1,
+    GLOBAL_CURRENT = 2,
+    GLOBAL = 3
+};
 
 ///@}
 ///@name  Functions
@@ -339,6 +348,41 @@ public:
             noalias( rResult ) += N[i] * rGeometry[i];
 
         return rResult;
+    }
+
+    /// Helper function to compute the domain size of the geometry
+    template<int TFrameType>
+    static double DomainSize( const GeometryType& rGeometry )
+    {
+        GeometryData::IntegrationMethod ThisIntegrationMethod = rGeometry.GetDefaultIntegrationMethod();
+
+        const GeometryType::IntegrationPointsArrayType& integration_points = rGeometry.IntegrationPoints( ThisIntegrationMethod );
+
+        // initializing the Jacobian in the reference configuration
+        GeometryType::JacobiansType J0;
+        Matrix DeltaPosition(rGeometry.size(), 3);
+
+        if (TFrameType == GLOBAL_CURRENT)
+        {
+            for ( unsigned int node = 0; node < rGeometry.size(); ++node )
+                noalias( row( DeltaPosition, node ) ) = rGeometry[node].Coordinates() - rGeometry[node].GetInitialPosition();
+
+            J0 = rGeometry.Jacobian( J0, ThisIntegrationMethod, DeltaPosition );
+        }
+        else if (TFrameType == GLOBAL_REFERENCE)
+        {
+            J0 = rGeometry.Jacobian( J0, ThisIntegrationMethod );
+        }
+
+        // calculating the domain size
+        double TotalDomainInitialSize = 0.00;
+        for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
+        {
+            double IntegrationWeight = integration_points[PointNumber].Weight();
+            TotalDomainInitialSize += MathUtils<double>::Det(J0[PointNumber]) * IntegrationWeight;
+        }
+
+        return TotalDomainInitialSize;
     }
 
     ///@}
