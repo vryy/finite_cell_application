@@ -191,7 +191,7 @@ public:
     /// Create a new entity (element/condition) from another entity but not add to the model_part
     template<class TEntityType>
     static typename TEntityType::Pointer CreateEntity(const std::string& sample_entity_name,
-        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType& rGeometry)
+        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType::Pointer pGeometry)
     {
         if(!KratosComponents<TEntityType>::Has(sample_entity_name))
             KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
@@ -199,7 +199,7 @@ public:
 //        KRATOS_WATCH(r_clone_entity)
 
         // create new entity
-        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, rGeometry, pProperties);
+        typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, pGeometry, pProperties);
         #ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewEntity->SetValue(IS_INACTIVE, false);
         #endif
@@ -221,7 +221,7 @@ public:
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
-        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pElement->GetGeometry());
+        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pElement->pGetGeometry());
         r_model_part.Elements().push_back(pNewElem);
         return pNewElem;
     }
@@ -230,7 +230,7 @@ public:
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
         const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
-        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pCond->GetGeometry());
+        Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pCond->pGetGeometry());
         r_model_part.Elements().push_back(pNewElem);
         return pNewElem;
     }
@@ -248,7 +248,7 @@ public:
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
-        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pCond->GetGeometry());
+        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pCond->pGetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
@@ -257,7 +257,7 @@ public:
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
         const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
-        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pElement->GetGeometry());
+        Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pElement->pGetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
         return pNewCond;
     }
@@ -281,11 +281,11 @@ public:
     static std::size_t GetLastElementId(ModelPart& r_model_part)
     {
         std::size_t lastElementId = 0;
-        for(typename ModelPart::ElementsContainerType::ptr_iterator it = r_model_part.Elements().ptr_begin();
-                it != r_model_part.Elements().ptr_end(); ++it)
+        for(typename ModelPart::ElementsContainerType::iterator it = r_model_part.Elements().begin();
+                it != r_model_part.Elements().end(); ++it)
         {
-            if((*it)->Id() > lastElementId)
-                lastElementId = (*it)->Id();
+            if(it->Id() > lastElementId)
+                lastElementId = it->Id();
         }
 
         return lastElementId;
@@ -296,11 +296,11 @@ public:
     static std::size_t GetLastConditionId(ModelPart& r_model_part)
     {
         std::size_t lastCondId = 0;
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = r_model_part.Conditions().ptr_begin();
-                it != r_model_part.Conditions().ptr_end(); ++it)
+        for(typename ModelPart::ConditionsContainerType::iterator it = r_model_part.Conditions().begin();
+                it != r_model_part.Conditions().end(); ++it)
         {
-            if((*it)->Id() > lastCondId)
-                lastCondId = (*it)->Id();
+            if(it->Id() > lastCondId)
+                lastCondId = it->Id();
         }
 
         return lastCondId;
@@ -311,11 +311,11 @@ public:
     static std::size_t GetLastPropertiesId(ModelPart& r_model_part)
     {
         std::size_t lastPropId = 0;
-        for(typename ModelPart::PropertiesContainerType::ptr_iterator it = r_model_part.rProperties().ptr_begin();
-                it != r_model_part.rProperties().ptr_end(); ++it)
+        for(typename ModelPart::PropertiesContainerType::iterator it = r_model_part.rProperties().begin();
+                it != r_model_part.rProperties().end(); ++it)
         {
-            if((*it)->Id() > lastPropId)
-                lastPropId = (*it)->Id();
+            if(it->Id() > lastPropId)
+                lastPropId = it->Id();
         }
 
         return lastPropId;
@@ -326,11 +326,11 @@ public:
     static std::size_t GetLastConstraintId(ModelPart& r_model_part)
     {
         std::size_t lastConstraintId = 0;
-        for(typename ModelPart::MasterSlaveConstraintContainerType::ptr_iterator it = r_model_part.MasterSlaveConstraints().ptr_begin();
-                it != r_model_part.MasterSlaveConstraints().ptr_end(); ++it)
+        for(typename ModelPart::MasterSlaveConstraintContainerType::iterator it = r_model_part.MasterSlaveConstraints().begin();
+                it != r_model_part.MasterSlaveConstraints().end(); ++it)
         {
-            if((*it)->Id() > lastConstraintId)
-                lastConstraintId = (*it)->Id();
+            if(it->Id() > lastConstraintId)
+                lastConstraintId = it->Id();
         }
 
         return lastConstraintId;
