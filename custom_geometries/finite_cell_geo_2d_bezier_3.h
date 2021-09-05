@@ -336,14 +336,14 @@ public:
      * Operations
      */
 
-    virtual typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const
+    typename GeometryType::Pointer Create( PointsArrayType const& ThisPoints ) const final
     {
         typename BaseType::Pointer pBezierGeometry = boost::dynamic_pointer_cast<BaseType>(BaseType::Create( ThisPoints ));
         FiniteCellGeo2dBezier3::Pointer pFiniteCellBezierGeometry = FiniteCellGeo2dBezier3::Pointer(new FiniteCellGeo2dBezier3(*pBezierGeometry));
         return pFiniteCellBezierGeometry;
     }
 
-    virtual boost::shared_ptr< Geometry< Point<3> > > Clone() const
+    boost::shared_ptr< Geometry< Point<3> > > Clone() const final
     {
 //        Geometry< Point<3> >::PointsArrayType NewPoints;
 //        //making a copy of the nodes TO POINTS (not Nodes!!!)
@@ -366,12 +366,12 @@ public:
      * Informations
      */
 
-    virtual GeometryData::KratosGeometryFamily GetGeometryFamily() const final
+    GeometryData::KratosGeometryFamily GetGeometryFamily() const final
     {
         return GeometryData::Kratos_NURBS;
     }
 
-    virtual GeometryData::KratosGeometryType GetGeometryType() const final
+    GeometryData::KratosGeometryType GetGeometryType() const final
     {
         return GeometryData::Kratos_Bezier2D3;
     }
@@ -387,7 +387,7 @@ public:
      * @see PrintData()
      * @see PrintInfo()
      */
-    virtual std::string Info() const
+    std::string Info() const final
     {
         return "2 dimensional Finite Cell Bezier decomposition surface in 3D space";
     }
@@ -399,7 +399,7 @@ public:
      * @see PrintData()
      * @see Info()
      */
-    virtual void PrintInfo( std::ostream& rOStream ) const
+    void PrintInfo( std::ostream& rOStream ) const final
     {
         rOStream << Info();
     }
@@ -413,7 +413,7 @@ public:
      * @see PrintInfo()
      * @see Info()
      */
-    virtual void PrintData( std::ostream& rOStream ) const
+    void PrintData( std::ostream& rOStream ) const final
     {
         BaseType::PrintData( rOStream );
         std::cout << std::endl;
@@ -435,8 +435,6 @@ public:
         GeometryType::mpGeometryData = &(*BaseType::mpBezierGeometryData);
     }
 
-protected:
-
 private:
 
     /**
@@ -449,12 +447,12 @@ private:
 
     friend class Serializer;
 
-    virtual void save( Serializer& rSerializer ) const
+    void save( Serializer& rSerializer ) const override
     {
         KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, PointsArrayType );
     }
 
-    virtual void load( Serializer& rSerializer )
+    void load( Serializer& rSerializer ) override
     {
         KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, PointsArrayType );
     }
