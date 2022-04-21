@@ -176,9 +176,11 @@ public:
         GeometryData::IntegrationMethod ThisIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(integration_order);
 
-        NodeType DummyNode1;
-        NodeType DummyNode2;
-        Line3D2<NodeType> SampleLine(DummyNode1, DummyNode2);
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        Line3D2<NodeType> SampleLine( GeometryType::PointsArrayType( 2 ) );
+        #else
+        Line3D2<NodeType> SampleLine( GeometryType::PointsArrayType( 2, NodeType() ) );
+        #endif
 
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = SampleLine.IntegrationPoints( ThisIntegrationMethod );
@@ -229,11 +231,11 @@ public:
         GeometryData::IntegrationMethod ThisIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(integration_order);
 
-        NodeType DummyNode1;
-        NodeType DummyNode2;
-        NodeType DummyNode3;
-        NodeType DummyNode4;
-        Quadrilateral3D4<NodeType> SampleQuad(DummyNode1, DummyNode2, DummyNode3, DummyNode4);
+        #ifdef SD_APP_FORWARD_COMPATIBILITY
+        Quadrilateral3D4<NodeType> SampleQuad( GeometryType::PointsArrayType( 4 ) );
+        #else
+        Quadrilateral3D4<NodeType> SampleQuad( GeometryType::PointsArrayType( 4, NodeType() ) );
+        #endif
 
         const GeometryType::IntegrationPointsArrayType& integration_points
                 = SampleQuad.IntegrationPoints( ThisIntegrationMethod );

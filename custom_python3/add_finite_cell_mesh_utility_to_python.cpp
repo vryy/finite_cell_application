@@ -107,7 +107,7 @@ pybind11::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCellMes
 
     std::vector<std::vector<PointType> > sampling_points;
 
-    std::vector<std::size_t> nsampling = {nsampling1, nsampling2};
+    std::vector<std::size_t> nsampling = {static_cast<std::size_t>(nsampling1), static_cast<std::size_t>(nsampling2)};
     rDummy.GenerateStructuredPoints2D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     int close_dir = 0; // open loop
@@ -185,7 +185,7 @@ pybind11::list FiniteCellMeshUtility_GenerateStructuredModelPart2DInclined(Finit
 
     std::vector<std::vector<PointType> > sampling_points;
 
-    std::vector<std::size_t> nsampling = {nsampling1, nsampling2};
+    std::vector<std::size_t> nsampling = {static_cast<std::size_t>(nsampling1), static_cast<std::size_t>(nsampling2)};
     std::vector<PointType> axis = {Axis1, Axis2};
     rDummy.GenerateStructuredPoints2D(sampling_points, type, StartPoint, axis, nsampling);
 
@@ -223,7 +223,7 @@ pybind11::list FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCellMes
 
     std::vector<std::vector<std::vector<PointType> > > sampling_points;
 
-    std::vector<std::size_t> nsampling = {nsampling1, nsampling2, nsampling3};
+    std::vector<std::size_t> nsampling = {static_cast<std::size_t>(nsampling1), static_cast<std::size_t>(nsampling2), static_cast<std::size_t>(nsampling3)};
     rDummy.GenerateStructuredPoints3D(sampling_points, type, StartPoint, EndPoint, nsampling);
 
     FiniteCellMeshUtility::ElementMeshInfoType Info = rDummy.CreateHexElements(r_model_part, sampling_points, sample_element_name, type, pProperties);

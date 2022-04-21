@@ -332,7 +332,11 @@ public:
                 r_geom.PointLocalCoordinates(lP2, P2);
 
                 // create a quadrature rule on the line
-                GeometryType::Pointer pLineGeom = GeometryType::Pointer( new Line2D2<NodeType>(Element::GeometryType::PointsArrayType( 2, Node<3>())) );
+                #ifdef SD_APP_FORWARD_COMPATIBILITY
+                GeometryType::Pointer pLineGeom = GeometryType::Pointer( new Line2D2<NodeType>( Element::GeometryType::PointsArrayType( 2 ) ) );
+                #else
+                GeometryType::Pointer pLineGeom = GeometryType::Pointer( new Line2D2<NodeType>( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) );
+                #endif
 
                 const GeometryType::IntegrationPointsArrayType& line_integration_points = pLineGeom->IntegrationPoints( GeometryData::GI_GAUSS_4 ); // TODO parameterize this
 
