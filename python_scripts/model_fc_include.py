@@ -157,7 +157,47 @@ class Model:
         ## INITIALISE RESTART UTILITY ####################################
         ##################################################################
         #restart_utility= RestartUtility( self.problem_name )
-        
+
+    def AddDofsForNodes(self, nodes):
+        import structural_solver_advanced
+        structural_solver_advanced.AddDofsForNodes( nodes )
+
+    def AddDofs(self, model_part):
+        import structural_solver_advanced
+        structural_solver_advanced.AddDofs( model_part )
+
+    def AddDofsForNode(self, node):
+        import structural_solver_advanced
+        structural_solver_advanced.AddDofsForNode( node )
+
+    def AddVariables(self, model_part):
+        import structural_solver_advanced
+        structural_solver_advanced.AddVariables( model_part )
+
+    def SetModelPart(self, model_part):
+        self.model_part = model_part
+        number_of_time_steps = 1
+
+        ## generating solver
+        import structural_solver_advanced
+        self.solver = structural_solver_advanced.SolverAdvanced( self.model_part, self.domain_size, number_of_time_steps, self.analysis_parameters, self.abs_tol, self.rel_tol )
+        (self.solver).CalculateReactionFlag = False
+        ##################################################################
+        ## ADD DOFS ######################################################
+        ##################################################################
+        self.AddDofs(self.model_part)
+
+        ##################################################################
+        ## INITIALISE SOLVER FOR PARTICULAR SOLUTION #####################
+        ##################################################################
+        #defining linear solver
+        plinear_solver = DiagonalFitSolver(MKLPardisoSolver())
+        self.solver.structure_linear_solver = plinear_solver
+        self.solver.Initialize()
+        (self.solver.solver).SetEchoLevel(2)
+        (self.solver.solver).max_iter = 10 #control the maximum iterations of Newton Raphson loop
+        (self.solver.solver).MoveMeshFlag = False
+
     def FixPressureNodes( self, free_node_list_water, free_node_list_air):
         for node in self.model_part.Nodes:
             if (node.IsFixed(WATER_PRESSURE)==0):
@@ -196,7 +236,7 @@ class Model:
         for item in free_node_list_air:
             #self.model_part.Nodes[item].Free(AIR_PRESSURE)
             item.Free(AIR_PRESSURE)
-            
+
     def WriteMaterialParameters( self, time, indices ):
         self.gid_io.OpenResultFile( self.path+self.problem_name, GiDPostMode.GiD_PostBinary)
         #self.gid_io.ChangeOutputName( self.path+self.problem_name +str(time), GiDPostMode.GiD_PostBinary )
@@ -208,7 +248,7 @@ class Model:
         outfile = open("step_"+str(time)+".dat",'w')
         outfile.write("ekate result file for step "+str(time)+"\n")
         outfile.close()
-        
+
     def WriteOutput( self, time ):
         self.gid_io.InitializeMesh( time )
         mesh = self.model_part.GetMesh()
@@ -231,7 +271,7 @@ class Model:
         #self.gid_io.PrintOnGaussPoints(CONTACT_PENETRATION, self.model_part, time)
         #self.gid_io.PrintOnGaussPoints(NORMAL, self.model_part, time, 0)
         self.gid_io.FinalizeResults()
-                
+
     def InitializeModel( self, with_layer = True ):
         if with_layer:
             ##################################################################
@@ -318,10 +358,15 @@ class Model:
     def FinalizeModel( self ):
         self.gid_io.CloseResultFile()
 
-        
+
     def Solve( self, time, from_deac, to_deac, from_reac, to_reac ):
         self.deac.Reactivate( self.model_part, from_reac, to_reac )
         self.deac.Deactivate( self.model_part, from_deac, to_deac )
+        self.model_part.CloneTimeStep(time)
+        self.solver.Solve()
+
+
+    def SolveModel( self, time ):
         self.model_part.CloneTimeStep(time)
         self.solver.Solve()
 ##################################################################
