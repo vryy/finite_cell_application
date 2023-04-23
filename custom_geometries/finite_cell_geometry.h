@@ -291,10 +291,10 @@ public:
     {
         // copy the integration points data
         IntegrationPointsContainerType all_integration_points;
-        all_integration_points[ThisIntegrationMethod] = BaseType::IntegrationPoints(ThisIntegrationMethod);
+        all_integration_points[static_cast<int>(ThisIntegrationMethod)] = BaseType::IntegrationPoints(ThisIntegrationMethod);
 
         // modify the weight
-        IntegrationPointsArrayType& integration_points = all_integration_points[ThisIntegrationMethod];
+        IntegrationPointsArrayType& integration_points = all_integration_points[static_cast<int>(ThisIntegrationMethod)];
         if(integration_points.size() != rWeights.size())
             KRATOS_THROW_ERROR(std::logic_error, "The number of integration points and the size of input array is not compatible", "")
         for(std::size_t i = 0; i < rWeights.size(); ++i)
@@ -302,12 +302,12 @@ public:
 
         // copy the shape function values data
         ShapeFunctionsValuesContainerType shape_functions_values;
-        shape_functions_values[ThisIntegrationMethod] = GeometryType::ShapeFunctionsValues(ThisIntegrationMethod);
+        shape_functions_values[static_cast<int>(ThisIntegrationMethod)] = GeometryType::ShapeFunctionsValues(ThisIntegrationMethod);
 
         // copy the shape function local gradients data
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
-//        shape_functions_local_gradients[ThisIntegrationMethod] = BaseType::ShapeFunctionsLocalGradients(ThisIntegrationMethod); // I do not know why this does not compile. I skip this for now.
-        shape_functions_local_gradients[ThisIntegrationMethod] = GeometryType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
+//        shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)] = BaseType::ShapeFunctionsLocalGradients(ThisIntegrationMethod); // I do not know why this does not compile. I skip this for now.
+        shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)] = GeometryType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
 
         #ifdef SD_APP_FORWARD_COMPATIBILITY
         GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
@@ -357,11 +357,11 @@ public:
     {
         // create the integration points data
         IntegrationPointsContainerType all_integration_points;
-        all_integration_points[ThisIntegrationMethod] = integration_points;
+        all_integration_points[static_cast<int>(ThisIntegrationMethod)] = integration_points;
 
         // compute the shape_functions_values
         ShapeFunctionsValuesContainerType shape_functions_values;
-        Matrix& rValues = shape_functions_values[ThisIntegrationMethod];
+        Matrix& rValues = shape_functions_values[static_cast<int>(ThisIntegrationMethod)];
 
         rValues.resize(integration_points.size(), this->size());
         Vector aux(this->size());
@@ -373,7 +373,7 @@ public:
 
         // compute the shape_functions_local_gradients
         ShapeFunctionsLocalGradientsContainerType shape_functions_local_gradients;
-        ShapeFunctionsGradientsType& rLocalGradients = shape_functions_local_gradients[ThisIntegrationMethod];
+        ShapeFunctionsGradientsType& rLocalGradients = shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)];
 
         rLocalGradients.resize(integration_points.size());
         for(std::size_t i = 0; i < integration_points.size(); ++i)

@@ -211,7 +211,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
 //                        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
 
                 // it is a hack here, since the integration method can be larger than Kratos can accommodate. We set to minimum value. In the element this information is not important anyway.
-                GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::GI_GAUSS_1;
+                GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
 
                 /* create new quadrature and assign to the geometry */
                 FiniteCellGeometryUtility::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, integration_points);

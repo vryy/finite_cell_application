@@ -24,7 +24,6 @@
 
 
 // External includes
-#include <boost/python.hpp>
 
 
 // Project includes
@@ -98,7 +97,7 @@ public:
     GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
     {
         // return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
-        return GeometryData::GI_GAUSS_1;
+        return GeometryData::IntegrationMethod::GI_GAUSS_1;
     }
 
 
@@ -241,38 +240,38 @@ public:
 
         GeometryData::KratosGeometryType geom_type = RefType::mpElement->GetGeometry().GetGeometryType();
 
-        if( geom_type == GeometryData::Kratos_Quadrilateral2D4
-         || geom_type == GeometryData::Kratos_Quadrilateral2D8
-         || geom_type == GeometryData::Kratos_Quadrilateral2D9
-         || geom_type == GeometryData::Kratos_Quadrilateral3D4
-         || geom_type == GeometryData::Kratos_Quadrilateral3D8
-         || geom_type == GeometryData::Kratos_Quadrilateral3D9 )
+        if( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForQuadBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(geom_type == GeometryData::Kratos_Bezier2D
-             || geom_type == GeometryData::Kratos_Bezier2D3 )
+        else if(geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
+             || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
             KRATOS_THROW_ERROR(std::logic_error, "ConstructSubCellsBasedOnGaussQuadrature is not (yet) implemented for Bezier geometry", "")
         }
         #endif
-        else if( geom_type == GeometryData::Kratos_Hexahedra3D8
-              || geom_type == GeometryData::Kratos_Hexahedra3D20
-              || geom_type == GeometryData::Kratos_Hexahedra3D27 )
+        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
+              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
+              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForHexBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(geom_type == GeometryData::Kratos_Bezier3D)
+        else if(geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D)
         {
             KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
         }
         #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", geom_type)
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
 
         // using the standard Gauss quadrature as moment fitting integration points
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
@@ -342,12 +341,12 @@ public:
 
         GeometryData::KratosGeometryType geom_type = RefType::mpElement->GetGeometry().GetGeometryType();
 
-        if( geom_type == GeometryData::Kratos_Quadrilateral2D4
-         || geom_type == GeometryData::Kratos_Quadrilateral2D8
-         || geom_type == GeometryData::Kratos_Quadrilateral2D9
-         || geom_type == GeometryData::Kratos_Quadrilateral3D4
-         || geom_type == GeometryData::Kratos_Quadrilateral3D8
-         || geom_type == GeometryData::Kratos_Quadrilateral3D9 )
+        if( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             std::size_t nsegments = quadrature_order;
 
@@ -355,8 +354,8 @@ public:
             BaseType::ConstructSubCellsForQuadBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( geom_type == GeometryData::Kratos_Bezier2D
-              || geom_type == GeometryData::Kratos_Bezier2D3 )
+        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
+              || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
             std::size_t nsegments = quadrature_order;
 
@@ -364,9 +363,9 @@ public:
             BaseType::ConstructSubCellsForBezier2DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
         #endif
-        else if( geom_type == GeometryData::Kratos_Hexahedra3D8
-              || geom_type == GeometryData::Kratos_Hexahedra3D20
-              || geom_type == GeometryData::Kratos_Hexahedra3D27 )
+        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
+              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
+              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
         {
             std::size_t nsegments = quadrature_order;
 
@@ -374,7 +373,7 @@ public:
             BaseType::ConstructSubCellsForHexBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( geom_type == GeometryData::Kratos_Bezier3D )
+        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D )
         {
             std::size_t nsegments = quadrature_order;
 
@@ -383,7 +382,7 @@ public:
         }
         #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", geom_type)
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
 
         // using the standard Gauss quadrature as moment fitting integration points
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod

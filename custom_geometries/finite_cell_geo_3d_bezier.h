@@ -368,12 +368,12 @@ public:
 
     GeometryData::KratosGeometryFamily GetGeometryFamily() const final
     {
-        return GeometryData::Kratos_NURBS;
+        return GeometryData::KratosGeometryFamily::Kratos_NURBS;
     }
 
     GeometryData::KratosGeometryType GetGeometryType() const final
     {
-        return GeometryData::Kratos_Bezier3D;
+        return GeometryData::KratosGeometryType::Kratos_Bezier3D;
     }
 
     /**

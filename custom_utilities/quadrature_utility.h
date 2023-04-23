@@ -99,7 +99,7 @@ public:
     template<class TEntityType>
     static int GetDefaultIntegrationMethod(typename TEntityType::Pointer p_elem)
     {
-        return p_elem->GetIntegrationMethod();
+        return static_cast<int>(p_elem->GetIntegrationMethod());
 //        return p_elem->GetGeometry().GetDefaultIntegrationMethod();
     }
 
@@ -156,7 +156,8 @@ public:
             std::size_t elem_id = p_elem->Id();
             std::size_t num_points = integration_points.size();
             rOStream.write((char*)&elem_id, sizeof(std::size_t));
-            rOStream.write((char*)&ElementalIntegrationMethod, sizeof(int));
+            int element_integration_method = static_cast<int>(ElementalIntegrationMethod);
+            rOStream.write((char*)&element_integration_method, sizeof(int));
             rOStream.write((char*)&num_points, sizeof(std::size_t));
 
             double aux;
@@ -190,7 +191,7 @@ public:
         }
         else if(TMode == 2 || TMode == 3) // ascii
         {
-            rOStream << p_elem->Id() << " " << ElementalIntegrationMethod
+            rOStream << p_elem->Id() << " " << static_cast<int>(ElementalIntegrationMethod)
                      << " " << integration_points.size() << std::endl;
 
             for(std::size_t i = 0; i < integration_points.size(); ++i)

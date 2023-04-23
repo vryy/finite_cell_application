@@ -700,7 +700,7 @@ struct ComputeShapeFunctionNormalGradient_Helper
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D3>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -732,7 +732,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D3>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D6>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -764,7 +764,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Triangle2D6>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -796,7 +796,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D4>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -828,7 +828,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D8>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -860,7 +860,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Quadrilateral2D9>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -892,7 +892,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D4>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -924,7 +924,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Tetrahedra3D10>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D8>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -956,7 +956,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D8>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D20>
 {
     typedef Element::GeometryType GeometryType;
 
@@ -988,7 +988,7 @@ struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D20>
 };
 
 template<>
-struct GhostPenalty_Geometry_Helper<GeometryData::Kratos_Hexahedra3D27>
+struct GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D27>
 {
     typedef Element::GeometryType GeometryType;
 

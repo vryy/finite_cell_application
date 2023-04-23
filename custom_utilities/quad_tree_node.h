@@ -1025,8 +1025,8 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(    pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
-            || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4 )
+        if(    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+            || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4 )
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
@@ -1066,19 +1066,19 @@ public:
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
 
             #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(pP1, pP2, pP3, pP4));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(pP1, pP2, pP3, pP4));
             #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D4)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(P1, P2, P3, P4));
             #endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-             || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8 )
+        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+             || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8 )
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
@@ -1150,19 +1150,19 @@ public:
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
 
             #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
             #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D8)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
             #endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9
-             || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9 )
+        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+             || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
@@ -1242,19 +1242,19 @@ public:
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
 
             #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
             #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Quadrilateral3D9)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
             #endif
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
 
         for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
@@ -1384,13 +1384,13 @@ public:
 
     typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
-        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D
-        || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier2D3)
+        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D
+        || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D3)
         {
-            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier2D or Bezier2D3 geometry is not supported:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier2D or Bezier2D3 geometry is not supported:", static_cast<int>(pParentGeometry->GetGeometryType()))
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
@@ -1619,7 +1619,7 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D8)
+        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8)
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
@@ -1696,7 +1696,7 @@ public:
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
             #endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D20)
+        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20)
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
@@ -1870,7 +1870,7 @@ public:
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D20<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20));
             #endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Hexahedra3D27)
+        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27)
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
@@ -2102,7 +2102,7 @@ public:
             #endif
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
 
         for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
@@ -2246,12 +2246,12 @@ public:
 
     typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
-        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Bezier3D)
+        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier3D)
         {
-            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier3D geometry is not supported:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The generation of Bezier3D geometry is not supported:", static_cast<int>(pParentGeometry->GetGeometryType()))
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
@@ -2406,8 +2406,8 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(    pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3
-            || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3 )
+        if(    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3
+            || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3 )
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
@@ -2439,19 +2439,19 @@ public:
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
 
             #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(pP1, pP2, pP3));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(pP1, pP2, pP3));
             #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D3)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D3)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(P1, P2, P3));
             #endif
         }
-        else if( pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6
-              || pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6 )
+        else if( pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
+              || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6 )
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
@@ -2507,19 +2507,19 @@ public:
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
 
             #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
             #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle2D6)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(P1, P2, P3, P4, P5, P6));
-            if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Triangle3D6)
+            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(P1, P2, P3, P4, P5, P6));
             #endif
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
 
         for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
@@ -2695,7 +2695,7 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D4)
+        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4)
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
@@ -2740,7 +2740,7 @@ public:
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(P1, P2, P3, P4));
             #endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::Kratos_Tetrahedra3D10)
+        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10)
         {
             #ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
@@ -2834,7 +2834,7 @@ public:
             #endif
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", pParentGeometry->GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "The parent geometry type is invalid:", static_cast<int>(pParentGeometry->GetGeometryType()))
 
         for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);

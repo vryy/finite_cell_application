@@ -606,25 +606,25 @@ public:
     {
         typename QuadTreeNodeType::Pointer pTreeNode;
 
-        if(    ThisGeometryType == GeometryData::Kratos_Quadrilateral2D4
-            || ThisGeometryType == GeometryData::Kratos_Quadrilateral2D8
-            || ThisGeometryType == GeometryData::Kratos_Quadrilateral2D9
-            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D4
-            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D8
-            || ThisGeometryType == GeometryData::Kratos_Quadrilateral3D9 )
+        if(    ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+            || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+            || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+            || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
+            || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+            || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeQ4<TFrameType>(-1.0, 1.0, -1.0, 1.0));
         }
-        else if(ThisGeometryType == GeometryData::Kratos_Triangle2D3
-             || ThisGeometryType == GeometryData::Kratos_Triangle2D6
-             || ThisGeometryType == GeometryData::Kratos_Triangle3D3
-             || ThisGeometryType == GeometryData::Kratos_Triangle3D6 )
+        else if(ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Triangle2D3
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Triangle2D6
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Triangle3D3
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Triangle3D6 )
         {
             pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeT3<TFrameType>(0.0, 0.0, 1.0, 0.0, 0.0, 1.0));
         }
-        else if(ThisGeometryType == GeometryData::Kratos_Hexahedra3D8
-             || ThisGeometryType == GeometryData::Kratos_Hexahedra3D20
-             || ThisGeometryType == GeometryData::Kratos_Hexahedra3D27 )
+        else if(ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
         {
             if (configuration == 0)
                 pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
@@ -635,25 +635,25 @@ public:
             else if (configuration == 3)
                 pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeH8<TFrameType, 3>(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
         }
-        else if(ThisGeometryType == GeometryData::Kratos_Tetrahedra3D4
-             || ThisGeometryType == GeometryData::Kratos_Tetrahedra3D10 )
+        else if(ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10 )
         {
             pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeT4<TFrameType>(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0));
         }
         #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(ThisGeometryType == GeometryData::Kratos_Bezier2D
-             || ThisGeometryType == GeometryData::Kratos_Bezier2D3 )
+        else if(ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Bezier2D
+             || ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
             pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(0.0, 1.0, 0.0, 1.0));
         }
-        else if(ThisGeometryType == GeometryData::Kratos_Bezier3D )
+        else if(ThisGeometryType == GeometryData::KratosGeometryType::Kratos_Bezier3D )
         {
             pTreeNode = typename QuadTreeNodeType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
         }
         #endif
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", ThisGeometryType)
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(ThisGeometryType))
         }
 
         return pTreeNode;

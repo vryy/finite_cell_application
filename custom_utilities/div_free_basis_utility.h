@@ -205,9 +205,9 @@ public:
         if(r_geom.WorkingSpaceDimension() == 3)
             KRATOS_THROW_ERROR(std::logic_error, "This subroutine does not support 3D operation yet", "")
 
-        if(    r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D6
-            || r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-            || r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9 )
+        if(    r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
+            || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+            || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9 )
         {
             KRATOS_THROW_ERROR(std::logic_error, "This subroutine does not support second order yet", "")
         }
@@ -215,22 +215,22 @@ public:
         /* check if the cell is cut by the level set */
 
         std::size_t num_corners, num_edges;
-        if(    r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D3
-            || r_geom.GetGeometryType() == GeometryData::Kratos_Triangle2D6 )
+        if(    r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3
+            || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6 )
         {
             num_corners = 3;
             num_edges = 3;
         }
-        else if(r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D4
-             || r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D8
-             || r_geom.GetGeometryType() == GeometryData::Kratos_Quadrilateral2D9 )
+        else if(r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+             || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+             || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9 )
         {
             num_corners = 4;
             num_edges = 4;
         }
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry is not supported", r_geom.GetGeometryType())
+            KRATOS_THROW_ERROR(std::logic_error, "This geometry is not supported", static_cast<int>(r_geom.GetGeometryType()))
         }
 
         // check the cut status with the level set
@@ -338,7 +338,7 @@ public:
                 GeometryType::Pointer pLineGeom = GeometryType::Pointer( new Line2D2<NodeType>( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) );
                 #endif
 
-                const GeometryType::IntegrationPointsArrayType& line_integration_points = pLineGeom->IntegrationPoints( GeometryData::GI_GAUSS_4 ); // TODO parameterize this
+                const GeometryType::IntegrationPointsArrayType& line_integration_points = pLineGeom->IntegrationPoints( GeometryData::IntegrationMethod::GI_GAUSS_4 ); // TODO parameterize this
 
                 // integrate along P1-P2
                 for(std::size_t i = 0; i < line_integration_points.size(); ++i)
@@ -488,7 +488,7 @@ private:
     {
         std::vector<std::size_t> result;
 
-        if(Type == GeometryData::Kratos_Triangle2D3 || Type == GeometryData::Kratos_Triangle3D3)
+        if(Type == GeometryData::KratosGeometryType::Kratos_Triangle2D3 || Type == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
         {
             result.resize(2);
             if(e == 0)
@@ -507,7 +507,7 @@ private:
                 result[1] = 0;
             }
         }
-        else if(Type == GeometryData::Kratos_Triangle2D6 || Type == GeometryData::Kratos_Triangle3D6)
+        else if(Type == GeometryData::KratosGeometryType::Kratos_Triangle2D6 || Type == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
         {
             result.resize(3);
             if(e == 0)
@@ -529,7 +529,7 @@ private:
                 result[2] = 5;
             }
         }
-        else if(Type == GeometryData::Kratos_Quadrilateral2D4 || Type == GeometryData::Kratos_Quadrilateral3D4)
+        else if(Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4 || Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
         {
             result.resize(2);
             if(e == 0)
@@ -553,8 +553,8 @@ private:
                 result[1] = 0;
             }
         }
-        else if(Type == GeometryData::Kratos_Quadrilateral2D8 || Type == GeometryData::Kratos_Quadrilateral3D8
-             || Type == GeometryData::Kratos_Quadrilateral2D9 || Type == GeometryData::Kratos_Quadrilateral3D9)
+        else if(Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8 || Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+             || Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9 || Type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
         {
             result.resize(3);
             if(e == 0)
