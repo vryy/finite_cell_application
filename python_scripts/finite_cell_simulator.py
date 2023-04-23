@@ -313,7 +313,7 @@ class FiniteCellSimulator:
                 sys.exit(0)
 
     ###FITTING DRIVER#############
-    def MomentFit(self, bulk_elements):
+    def MomentFit(self, bulk_elements, process_info = ProcessInfo()):
         print("fit parameters:")
         pprint.pprint(self.params)
         qt_depth = self.params["qt_depth"]
@@ -393,15 +393,29 @@ class FiniteCellSimulator:
             sys.exit(0)
 
         print("construct quadrature using moment fitting successfully")
-        quad_filename = self.params["quad_filename"]
-        quad_filetype = self.params["quad_filetype"]
-        accuracy = self.params["quad_accuracy"]
-        fit_util.SaveQuadrature(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
-        fid = open(quad_filename, "a")
-        fid.write("\ndef GetParameter():\n")
-        fid.write("    params = " + str(self.params) + "\n")
-        fid.write("    return params\n")
-        fid.close()
+        if self.params["write_quadrature_to_file"] == True:
+            quad_filename = self.params["quad_filename"]
+            quad_filetype = self.params["quad_filetype"]
+            accuracy = self.params["quad_accuracy"]
+            fit_util.SaveQuadrature(quad_filename, quad_filetype, cut_elems, exclude_elems, accuracy)
+            fid = open(quad_filename, "a")
+            fid.write("\ndef GetParameter():\n")
+            fid.write("    params = " + str(self.params) + "\n")
+            fid.write("    return params\n")
+            fid.close()
+        else:
+            quad_data = {}
+            for elem in cut_elems:
+                elem.Initialize(process_info)
+                ipoints = elem.CalculateOnIntegrationPoints(INTEGRATION_POINT_LOCAL, process_info)
+                iweights = elem.CalculateOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+                # print(ipoints)
+                # print(iweights)
+                data = []
+                for i in range(0, len(iweights)):
+                    data.append([ipoints[i][0], ipoints[i][1], ipoints[i][2], iweights[i][0]])
+                quad_data[elem.Id] = data
+            return quad_data
 
     def MomentFitSubCell(self, model_part, bulk_elements):
         print("fit parameters:")
