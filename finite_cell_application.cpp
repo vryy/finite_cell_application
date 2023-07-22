@@ -43,9 +43,9 @@
 
 #ifdef SD_APP_FORWARD_COMPATIBILITY
 #define FINITE_CELL_APP_CREATE_ELEMENT(element_type, geometry_type, number_of_nodes) \
-    element_type( 0, Element::GeometryType::Pointer( new geometry_type <Node<3> >( Element::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
+    element_type( 0, Element::GeometryType::Pointer( new geometry_type <Node>( Element::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
 #define FINITE_CELL_APP_CREATE_CONDITION(condition_type, geometry_type, number_of_nodes) \
-    condition_type( 0, Condition::GeometryType::Pointer( new geometry_type <Node<3> >( Condition::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
+    condition_type( 0, Condition::GeometryType::Pointer( new geometry_type <Node>( Condition::GeometryType::PointsArrayType( number_of_nodes ) ) ) )
 #else
 #define FINITE_CELL_APP_CREATE_ELEMENT(element_type, geometry_type, number_of_nodes) \
     element_type( 0, Element::GeometryType::Pointer( new geometry_type <Node<3> >( Element::GeometryType::PointsArrayType( number_of_nodes, Node<3>() ) ) ) )
