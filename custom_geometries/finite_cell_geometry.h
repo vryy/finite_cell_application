@@ -312,7 +312,6 @@ public:
         #ifdef SD_APP_FORWARD_COMPATIBILITY
         GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
             new GeometryDimension(
-                BaseType::Dimension(),
                 BaseType::WorkingSpaceDimension(),
                 BaseType::LocalSpaceDimension())
         );
@@ -386,7 +385,6 @@ public:
         #ifdef SD_APP_FORWARD_COMPATIBILITY
         GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
             new GeometryDimension(
-                BaseType::Dimension(),
                 BaseType::WorkingSpaceDimension(),
                 BaseType::LocalSpaceDimension())
         );
