@@ -1,8 +1,6 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
 
-message("**** configuring KratosFiniteCellApplication ****")
-
 ################### PYBIND11
 include(pybind11Tools)
 
