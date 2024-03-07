@@ -229,7 +229,7 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
     Properties::Pointer pProperties)
 {
     Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
-    GeometryType& r_geom = *(pElement->pGetGeometry());
+    const GeometryType& r_geom = *(pElement->pGetGeometry());
 
     GeometryData::IntegrationMethod RepresentativeIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);

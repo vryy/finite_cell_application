@@ -663,7 +663,7 @@ public:
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
         ModelPart::ElementsContainerType NewElements;
-        GeometryType& r_geom = *(pElement->pGetGeometry());
+        const GeometryType& r_geom = *(pElement->pGetGeometry());
 
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
                 = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
