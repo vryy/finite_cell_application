@@ -62,8 +62,8 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyCondit
 {
     ModelPart::ElementsContainerType pElements;
     typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
-    BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
-        std::make_pair(iterator_value_type(list_elements), iterator_value_type() ) ) pElements.push_back(p_elem);
+    BOOST_FOREACH(const iterator_value_type::value_type & p_elem,
+                  std::make_pair(iterator_value_type(list_elements), iterator_value_type() ) ) pElements.push_back(p_elem);
     return rDummy.SetUpSurfacePenaltyConditions(r_model_part, pElements, p_sample_condition, r_brep, lastCondId, pProperties, echo_level);
 }
 
@@ -85,8 +85,8 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility_SetUpSurfacePenaltyCondit
 {
     ModelPart::ElementsContainerType pElements;
     typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;
-    BOOST_FOREACH(const iterator_value_type::value_type& p_elem,
-        std::make_pair(iterator_value_type(list_elements), iterator_value_type() ) ) pElements.push_back(p_elem);
+    BOOST_FOREACH(const iterator_value_type::value_type & p_elem,
+                  std::make_pair(iterator_value_type(list_elements), iterator_value_type() ) ) pElements.push_back(p_elem);
     return rDummy.SetUpSurfacePenaltyConditions(r_model_part, pElements, p_sample_condition, r_brep, lastCondId, pProperties,
             nsampling, configuration, echo_level);
 }

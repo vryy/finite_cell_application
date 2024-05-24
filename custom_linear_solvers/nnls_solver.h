@@ -103,15 +103,17 @@ public:
         std::size_t M = rA.size1();
         std::size_t N = rA.size2();
 
-        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* dA = matraits::storage(rA);
-        #else
-        double* dA = new double[M*N];
-        for(int i = 0; i < M; ++i)
-            for(int j = 0; j < N; ++j)
-                dA[i*N+j] = rA(j, i); // TODO check
-        #endif
+#else
+        double* dA = new double[M * N];
+        for (int i = 0; i < M; ++i)
+            for (int j = 0; j < N; ++j)
+            {
+                dA[i * N + j] = rA(j, i);    // TODO check
+            }
+#endif
 
         nsNNLS::matrix* A;
         nsNNLS::vector* b;
@@ -123,16 +125,18 @@ public:
 
         b = new nsNNLS::vector(M);
         for (std::size_t i = 0; i < M; ++i)
+        {
             b->set(i, rB(i));
+        }
 
         solver = new nsNNLS::nnls(A, b, maxit);
 
         /* solve - optimize */
-        if (echo_level > 0) std::cout << "Optimizing...\n";
+        if (echo_level > 0) { std::cout << "Optimizing...\n"; }
         flag = solver->optimize();
-        if (echo_level > 0) std::cout << "Done!\n";
+        if (echo_level > 0) { std::cout << "Done!\n"; }
 
-        if (echo_level > 1) std::cout << "Optimization time: " << solver->getOptimizationTime() << " seconds\n";
+        if (echo_level > 1) { std::cout << "Optimization time: " << solver->getOptimizationTime() << " seconds\n"; }
 
         if (flag < 0)
         {
@@ -142,18 +146,22 @@ public:
 
         x = solver->getSolution();
 
-        if (echo_level > 2) solver->saveStats(std::cout);
+        if (echo_level > 2) { solver->saveStats(std::cout); }
 
-        if(rX.size() != N)
+        if (rX.size() != N)
+        {
             rX.resize(N, false);
+        }
         for (std::size_t i = 0; i < N; ++i)
+        {
             rX(i) = x->get(i);
+        }
 
         delete solver;
         delete A, b, x;
-        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete dA;
-        #endif
+#endif
 
         return 0;
     }
@@ -292,12 +300,12 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
-                NNLSSolver& rThis)
+                                  NNLSSolver& rThis)
 {}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
-                const NNLSSolver& rThis)
+                                  const NNLSSolver& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

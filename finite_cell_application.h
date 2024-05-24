@@ -31,195 +31,65 @@
 namespace Kratos
 {
 
-    ///@name Kratos Globals
-    ///@{
+///@name Kratos Globals
+///@{
 
-    ///@}
+///@}
+///@name Type Definitions
+///@{
+
+///@}
+///@name Enum's
+///@{
+
+///@}
+///@name Functions
+///@{
+
+///@}
+///@name Kratos Classes
+///@{
+
+/// Short class definition.
+/** Detail class definition.
+*/
+class KratosFiniteCellApplication : public KratosApplication
+{
+public:
     ///@name Type Definitions
     ///@{
 
+    /// Pointer definition of KratosMultiphaseApplication
+    KRATOS_CLASS_POINTER_DEFINITION(KratosFiniteCellApplication);
+
     ///@}
-    ///@name Enum's
+    ///@name Life Cycle
     ///@{
 
+    /// Default constructor.
+    KratosFiniteCellApplication();
+
+    /// Destructor.
+    virtual ~KratosFiniteCellApplication() {}
+
     ///@}
-    ///@name Functions
+    ///@name Operators
     ///@{
 
+
     ///@}
-    ///@name Kratos Classes
+    ///@name Operations
     ///@{
 
-    /// Short class definition.
-    /** Detail class definition.
-    */
-    class KratosFiniteCellApplication : public KratosApplication
-    {
-    public:
-        ///@name Type Definitions
-        ///@{
-
-        /// Pointer definition of KratosMultiphaseApplication
-        KRATOS_CLASS_POINTER_DEFINITION(KratosFiniteCellApplication);
-
-        ///@}
-        ///@name Life Cycle
-        ///@{
-
-        /// Default constructor.
-        KratosFiniteCellApplication();
-
-        /// Destructor.
-        virtual ~KratosFiniteCellApplication(){}
-
-        ///@}
-        ///@name Operators
-        ///@{
-
-
-        ///@}
-        ///@name Operations
-        ///@{
-
-        void Register() override;
-
-        ///@}
-        ///@name Access
-        ///@{
-
-
-        ///@}
-        ///@name Inquiry
-        ///@{
-
-
-        ///@}
-        ///@name Input and output
-        ///@{
-
-        /// Turn back information as a string.
-        std::string Info() const override
-        {
-            return "Base application for Finite-Cell-based analysis";
-        }
-
-        /// Print information about this object.
-        void PrintInfo(std::ostream& rOStream) const override
-        {
-            rOStream << Info();
-            PrintData(rOStream);
-        }
-
-        ///// Print object's data.
-        void PrintData(std::ostream& rOStream) const override
-        {
-            rOStream << "in KratosFiniteCellApplication:";
-            KRATOS_WATCH(KratosComponents<VariableData>::GetComponents().size());
-            rOStream << "Variables:" << std::endl;
-            KratosComponents<VariableData>().PrintData(rOStream);
-            rOStream << std::endl;
-            rOStream << "Elements:" << std::endl;
-            KratosComponents<Element>().PrintData(rOStream);
-            rOStream << std::endl;
-            rOStream << "Conditions:" << std::endl;
-            KratosComponents<Condition>().PrintData(rOStream);
-        }
-
-
-        ///@}
-        ///@name Friends
-        ///@{
-
-
-        ///@}
-
-    protected:
-        ///@name Protected static Member Variables
-        ///@{
-
-
-        ///@}
-        ///@name Protected member Variables
-        ///@{
-
-
-        ///@}
-        ///@name Protected Operators
-        ///@{
-
-
-        ///@}
-        ///@name Protected Operations
-        ///@{
-
-
-        ///@}
-        ///@name Protected  Access
-        ///@{
-
-
-        ///@}
-        ///@name Protected Inquiry
-        ///@{
-
-
-        ///@}
-        ///@name Protected LifeCycle
-        ///@{
-
-
-        ///@}
-
-    private:
-        ///@name Static Member Variables
-        ///@{
-
-
-        ///@}
-        ///@name Member Variables
-        ///@{
-
-
-        ///@}
-        ///@name Private Operators
-        ///@{
-
-
-        ///@}
-        ///@name Private Operations
-        ///@{
-
-
-        ///@}
-        ///@name Private  Access
-        ///@{
-
-
-        ///@}
-        ///@name Private Inquiry
-        ///@{
-
-
-        ///@}
-        ///@name Un accessible methods
-        ///@{
-
-
-        /// Assignment operator.
-        KratosFiniteCellApplication& operator=(KratosFiniteCellApplication const& rOther);
-
-        /// Copy constructor.
-        KratosFiniteCellApplication(KratosFiniteCellApplication const& rOther);
-
-
-        ///@}
-
-    }; // Class KratosFiniteCellApplication
+    void Register() override;
 
     ///@}
+    ///@name Access
+    ///@{
 
 
-    ///@name Type Definitions
+    ///@}
+    ///@name Inquiry
     ///@{
 
 
@@ -227,7 +97,137 @@ namespace Kratos
     ///@name Input and output
     ///@{
 
+    /// Turn back information as a string.
+    std::string Info() const override
+    {
+        return "Base application for Finite-Cell-based analysis";
+    }
+
+    /// Print information about this object.
+    void PrintInfo(std::ostream& rOStream) const override
+    {
+        rOStream << Info();
+        PrintData(rOStream);
+    }
+
+    ///// Print object's data.
+    void PrintData(std::ostream& rOStream) const override
+    {
+        rOStream << "in KratosFiniteCellApplication:";
+        KRATOS_WATCH(KratosComponents<VariableData>::GetComponents().size());
+        rOStream << "Variables:" << std::endl;
+        KratosComponents<VariableData>().PrintData(rOStream);
+        rOStream << std::endl;
+        rOStream << "Elements:" << std::endl;
+        KratosComponents<Element>().PrintData(rOStream);
+        rOStream << std::endl;
+        rOStream << "Conditions:" << std::endl;
+        KratosComponents<Condition>().PrintData(rOStream);
+    }
+
+
     ///@}
+    ///@name Friends
+    ///@{
+
+
+    ///@}
+
+protected:
+    ///@name Protected static Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Protected member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Protected Operators
+    ///@{
+
+
+    ///@}
+    ///@name Protected Operations
+    ///@{
+
+
+    ///@}
+    ///@name Protected  Access
+    ///@{
+
+
+    ///@}
+    ///@name Protected Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Protected LifeCycle
+    ///@{
+
+
+    ///@}
+
+private:
+    ///@name Static Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Member Variables
+    ///@{
+
+
+    ///@}
+    ///@name Private Operators
+    ///@{
+
+
+    ///@}
+    ///@name Private Operations
+    ///@{
+
+
+    ///@}
+    ///@name Private  Access
+    ///@{
+
+
+    ///@}
+    ///@name Private Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Un accessible methods
+    ///@{
+
+
+    /// Assignment operator.
+    KratosFiniteCellApplication& operator=(KratosFiniteCellApplication const& rOther);
+
+    /// Copy constructor.
+    KratosFiniteCellApplication(KratosFiniteCellApplication const& rOther);
+
+
+    ///@}
+
+}; // Class KratosFiniteCellApplication
+
+///@}
+
+
+///@name Type Definitions
+///@{
+
+
+///@}
+///@name Input and output
+///@{
+
+///@}
 
 
 } // namespace Kratos

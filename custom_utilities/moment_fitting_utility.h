@@ -119,79 +119,79 @@ public:
     /// IntegratorIntegrationMethod: the integration method of the integrator
     template<class TFunctionType, class TIntegratorType>
     static Vector FitQuadrature(GeometryType& r_geom,
-            const std::vector<typename TFunctionType::Pointer>& r_funcs,
-            const BRep& r_brep,
-            const TIntegratorType& r_integrator,
-            const GeometryType::IntegrationPointsArrayType& integration_points,
-            const int& integrator_integration_method,
-            const std::string& solver_type,
-            const int& echo_level,
-            const double& small_weight)
+                                const std::vector<typename TFunctionType::Pointer>& r_funcs,
+                                const BRep& r_brep,
+                                const TIntegratorType& r_integrator,
+                                const GeometryType::IntegrationPointsArrayType& integration_points,
+                                const int& integrator_integration_method,
+                                const std::string& solver_type,
+                                const int& echo_level,
+                                const double& small_weight)
     {
-        if(echo_level > -1)
+        if (echo_level > -1)
         {
             std::cout << std::scientific << std::setprecision(16);
             std::cout << "#######begin moment-fitting####solver_type: " << solver_type << "################" << std::endl;
         }
 
         std::size_t num_basis = r_funcs.size();
-        if(echo_level > -1) KRATOS_WATCH(num_basis)
+        if (echo_level > -1) KRATOS_WATCH(num_basis)
 
-        std::size_t num_fit_points = integration_points.size();
-        if(echo_level > -1) KRATOS_WATCH(num_fit_points)
+            std::size_t num_fit_points = integration_points.size();
+        if (echo_level > -1) KRATOS_WATCH(num_fit_points)
 
-        // form the matrix A
-        CoordinatesArrayType GlobalCoords;
+            // form the matrix A
+            CoordinatesArrayType GlobalCoords;
         Matrix MA(num_basis, num_fit_points);
-        for(std::size_t i = 0; i < num_basis; ++i)
+        for (std::size_t i = 0; i < num_basis; ++i)
         {
-            for(std::size_t j = 0; j < num_fit_points; ++j)
+            for (std::size_t j = 0; j < num_fit_points; ++j)
             {
                 MA(i, j) = r_funcs[i]->GetValue(integration_points[j]) * Function<double, double>::ComputeDetJ(r_geom, integration_points[j]);
             }
         }
-        if(echo_level > 4)
+        if (echo_level > 4)
             KRATOS_WATCH(MA)
 
-        #ifdef ENABLE_PROFILING
-        std::stringstream time_mark_name; time_mark_name << "Evaluate b at " << __LINE__;
+#ifdef ENABLE_PROFILING
+            std::stringstream time_mark_name; time_mark_name << "Evaluate b at " << __LINE__;
         Timer::Start(time_mark_name.str());
-        #endif
+#endif
 
         // form the vector b
         Vector Mb(num_basis);
-        for(std::size_t i = 0; i < num_basis; ++i)
+        for (std::size_t i = 0; i < num_basis; ++i)
         {
             // because the fitting functions is defined in the local frame, the integration in local scheme must be used
             Mb(i) = r_integrator.IntegrateLocal(*(r_funcs[i]), r_brep, integrator_integration_method, small_weight);
         }
-        if(echo_level > 3)
+        if (echo_level > 3)
             KRATOS_WATCH(Mb)
 
-        #ifdef ENABLE_PROFILING
-        Timer::Stop(time_mark_name.str());
-        #endif
+#ifdef ENABLE_PROFILING
+            Timer::Stop(time_mark_name.str());
+#endif
 
-        if(echo_level > 2)
+        if (echo_level > 2)
         {
             // estimate the condition number
-            if(MA.size1() == MA.size2())
+            if (MA.size1() == MA.size2())
             {
                 double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
                 KRATOS_WATCH(rcond)
             }
         }
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         std::stringstream time_mark_name2; time_mark_name2 << "Solve for w at " << __LINE__;
         Timer::Start(time_mark_name2.str());
-        #endif
+#endif
 
         // solve for weights
         Vector Mw;
-        if(solver_type == std::string("direct"))
+        if (solver_type == std::string("direct"))
         {
-            if(MA.size1() != MA.size2())
+            if (MA.size1() != MA.size2())
             {
                 std::stringstream ss;
                 ss << "The matrix size " << MA.size1() << "x" << MA.size2() << " is not square. Direct solver cannot be used";
@@ -205,7 +205,7 @@ public:
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
-        else if(solver_type == std::string("ata-direct"))
+        else if (solver_type == std::string("ata-direct"))
         {
             /* form the linear system for least square problem */
             boost::numeric::ublas::permutation_matrix<> pm(MA.size2());
@@ -215,43 +215,49 @@ public:
             boost::numeric::ublas::lu_factorize(MAcopy, pm);
             boost::numeric::ublas::lu_substitute(MAcopy, pm, Mw);
         }
-        else if(solver_type == std::string("dgelsy"))
+        else if (solver_type == std::string("dgelsy"))
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
-            if(echo_level > -1)
+            if (echo_level > -1)
+            {
                 std::cout << "Lapack DGELSY will be called" << std::endl;
+            }
             LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
         }
-        else if(solver_type == std::string("dgelss"))
+        else if (solver_type == std::string("dgelss"))
         {
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
-            if(echo_level > -1)
+            if (echo_level > -1)
+            {
                 std::cout << "Lapack DGELSS will be called" << std::endl;
+            }
             LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
         }
-        #ifdef FINITE_CELL_APPLICATION_USE_NNLS
-        else if(solver_type == std::string("nnls"))
+#ifdef FINITE_CELL_APPLICATION_USE_NNLS
+        else if (solver_type == std::string("nnls"))
         {
             /* solve the non-square linear system by non-negative least square optimizer. */
-            if(echo_level > -1)
+            if (echo_level > -1)
+            {
                 std::cout << "NNLS will be called" << std::endl;
+            }
             NNLSSolver::Solve(MA, Mw, Mb, echo_level);
         }
-        #endif
+#endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "Unknown solver type:", solver_type)
 
-        if(echo_level > 0)
-        {
-            KRATOS_WATCH(Mw)
-            KRATOS_WATCH(sum(Mw))
-        }
+            if (echo_level > 0)
+            {
+                KRATOS_WATCH(Mw)
+                KRATOS_WATCH(sum(Mw))
+            }
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name2.str());
-        #endif
+#endif
 
-        if(echo_level > 1)
+        if (echo_level > 1)
         {
             // check the error of the solution
             Vector Error = (Mb - prod(MA, Mw)) / norm_2(Mb);
@@ -261,8 +267,10 @@ public:
             std::cout << "Rel error norm: " << norm_2(Error) << std::endl;
         }
 
-        if(echo_level > -1)
+        if (echo_level > -1)
+        {
             std::cout << "####################end moment-fitting####################" << std::endl;
+        }
 
         return Mw;
     }
@@ -270,15 +278,15 @@ public:
 
     template<class TTreeType, class TFunctionType> // = MomentFittedQuadTreeSubCell
     void FitQuadratureSubCell(typename TTreeType::Pointer p_tree,
-            const std::vector<typename TFunctionType::Pointer>& r_funcs,
-            const BRep& r_brep,
-            const int& integrator_integration_method,
-            const std::string& solver_type,
-            const int& echo_level,
-            const double& small_weight,
-            const ProcessInfo& rCurrentProcessInfo) const
+                              const std::vector<typename TFunctionType::Pointer>& r_funcs,
+                              const BRep& r_brep,
+                              const int& integrator_integration_method,
+                              const std::string& solver_type,
+                              const int& echo_level,
+                              const double& small_weight,
+                              const ProcessInfo& rCurrentProcessInfo) const
     {
-        if(echo_level > 0)
+        if (echo_level > 0)
         {
             std::cout << "---------MomentFittingUtility::" << __FUNCTION__ << "--------------start sub-cell fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
             std::cout << "-----------element type: " << typeid(*(p_tree->pGetElement())).name() << std::endl;
@@ -290,14 +298,18 @@ public:
         const std::vector<std::size_t>& subcell_index = p_tree->SubCellIndices();
         const GeometryType::IntegrationPointsArrayType& physical_integration_points = p_tree->GetPhysicalIntegrationPoints();
 
-        if(echo_level > 0)
+        if (echo_level > 0)
+        {
             std::cout << "-----------number of sub-cells carrying the physical integtation points: " << physical_integration_points.size() << std::endl;
+        }
 
-        if(echo_level > 1)
+        if (echo_level > 1)
         {
             std::cout << "list of " << physical_integration_points.size() << " physical integration points for element " << p_tree->pGetElement()->Id() << std::endl;
-            for(std::size_t i = 0; i < physical_integration_points.size(); ++i)
-               std::cout << "  " << i << ": " << physical_integration_points[i] << std::endl;
+            for (std::size_t i = 0; i < physical_integration_points.size(); ++i)
+            {
+                std::cout << "  " << i << ": " << physical_integration_points[i] << std::endl;
+            }
         }
 
         /* secondly assign the physical integration points to the element */
@@ -314,24 +326,28 @@ public:
 
         /* compute the subcell domain size */
         Vector DomainSizes(subcell_index.size());
-        for(std::size_t i = 0; i < subcell_index.size(); ++i)
+        for (std::size_t i = 0; i < subcell_index.size(); ++i)
+        {
             DomainSizes(i) = p_tree->DomainSizeSubCell(subcell_index[i], r_brep, integrator_integration_method);
+        }
         p_tree->pGetElement()->SetValue(SUBCELL_DOMAIN_SIZES, DomainSizes);
 
-        if(echo_level > 0)
+        if (echo_level > 0)
+        {
             std::cout << "--------------------------------end sub-cell fitting for element " << p_tree->pGetElement()->Id() << "--------------------------------" << std::endl;
+        }
     }
 
 
     template<class TTreeType, class TFunctionType> // = MomentFittedQuadTreeSubCell
     void MultithreadedFitQuadratureSubCell(std::vector<typename TTreeType::Pointer>& r_trees,
-            const std::vector<typename TFunctionType::Pointer>& r_funcs,
-            const BRep& r_brep,
-            const int& integrator_integration_method,
-            const std::string& solver_type,
-            const int& echo_level,
-            const double& small_weight,
-            const ProcessInfo& rCurrentProcessInfo) const
+                                           const std::vector<typename TFunctionType::Pointer>& r_funcs,
+                                           const BRep& r_brep,
+                                           const int& integrator_integration_method,
+                                           const std::string& solver_type,
+                                           const int& echo_level,
+                                           const double& small_weight,
+                                           const ProcessInfo& rCurrentProcessInfo) const
     {
         /* multithreaded fit quadrature subcell */
         unsigned int number_of_threads = 1;
@@ -342,15 +358,17 @@ public:
         std::vector<unsigned int> tree_partition;
         FiniteCellAuxiliaryUtility::CreatePartition(number_of_threads, r_trees.size(), tree_partition);
         std::cout << "tree_partition:";
-        for(std::size_t i = 0; i < tree_partition.size(); ++i)
+        for (std::size_t i = 0; i < tree_partition.size(); ++i)
+        {
             std::cout << " " << tree_partition[i];
+        }
         std::cout << std::endl;
 
         boost::progress_display show_progress( r_trees.size() );
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         double start = OpenMPUtils::GetCurrentTime();
-        #endif
+#endif
 
 #ifdef _OPENMP
         if (number_of_threads > 1)
@@ -358,23 +376,25 @@ public:
             std::vector<BRep::Pointer> clone_breps;
             std::vector<std::vector<typename TFunctionType::Pointer> > clone_funcs;
 
-            for(int k = 0; k < number_of_threads; ++k)
+            for (int k = 0; k < number_of_threads; ++k)
             {
                 clone_breps.push_back(r_brep.CloneBRep());
 
                 std::vector<typename TFunctionType::Pointer> funcs;
-                for(std::size_t i = 0; i < r_funcs.size(); ++i)
+                for (std::size_t i = 0; i < r_funcs.size(); ++i)
+                {
                     funcs.push_back(r_funcs[i]->CloneFunction());
+                }
                 clone_funcs.push_back(funcs);
             }
 
             #pragma omp parallel for // default(none) shared(r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, number_of_threads, r_trees, show_progress, tree_partition)
-            for(int k = 0; k < number_of_threads; ++k)
+            for (int k = 0; k < number_of_threads; ++k)
             {
                 typename std::vector<typename TTreeType::Pointer>::iterator it_first_tree = r_trees.begin() + tree_partition[k];
-                typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k+1];
+                typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k + 1];
 
-                for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
+                for (typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
                 {
                     this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, clone_funcs[k], *(clone_breps[k]), integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
                     ++show_progress;
@@ -384,19 +404,19 @@ public:
         else
 #endif
         {
-            for(typename std::vector<typename TTreeType::Pointer>::iterator it = r_trees.begin(); it != r_trees.end(); ++it)
+            for (typename std::vector<typename TTreeType::Pointer>::iterator it = r_trees.begin(); it != r_trees.end(); ++it)
             {
                 this->template FitQuadratureSubCell<TTreeType, TFunctionType>(*it, r_funcs, r_brep, integrator_integration_method, solver_type, echo_level, small_weight, rCurrentProcessInfo);
                 ++show_progress;
             }
         }
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         double stop = OpenMPUtils::GetCurrentTime();
-        std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << r_trees.size() << " trees in " << (stop-start) << "s" << std::endl;
-        #else
+        std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << r_trees.size() << " trees in " << (stop - start) << "s" << std::endl;
+#else
         std::cout << "\nMultithreadedFitQuadratureSubCell completed for " << r_trees.size() << " trees" << std::endl;
-        #endif
+#endif
     }
 
 

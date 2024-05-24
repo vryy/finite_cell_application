@@ -136,12 +136,12 @@ public:
 
     /// Fit a list of subcell using the representative quadrature points from the parent element
     virtual Matrix FitQuadratureSubCell(const std::vector<size_t>& subcell_index,
-        const std::vector<FunctionR3R1::Pointer>& r_funcs,
-        const BRep& r_brep,
-        const int& integrator_integration_method,
-        const std::string& solver_type,
-        const int& echo_level,
-        const double& small_weight) const
+                                        const std::vector<FunctionR3R1::Pointer>& r_funcs,
+                                        const BRep& r_brep,
+                                        const int& integrator_integration_method,
+                                        const std::string& solver_type,
+                                        const int& echo_level,
+                                        const double& small_weight) const
     {
         KRATOS_THROW_ERROR(std::logic_error, "Error calling base class", __FUNCTION__)
     }
@@ -221,7 +221,7 @@ public:
 
     /// Default constructor
     MomentFittedQuadTreeSubCell(Element::Pointer p_elem)
-    : BaseType(p_elem), RefType(p_elem)
+        : BaseType(p_elem), RefType(p_elem)
     {
     }
 
@@ -240,46 +240,46 @@ public:
 
         GeometryData::KratosGeometryType geom_type = RefType::mpElement->GetGeometry().GetGeometryType();
 
-        if( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
+        if ( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForQuadBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
-             || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if (geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
+                 || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
             KRATOS_THROW_ERROR(std::logic_error, "ConstructSubCellsBasedOnGaussQuadrature is not (yet) implemented for Bezier geometry", "")
         }
-        #endif
-        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
-              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
-              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
+#endif
+        else if ( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
+                  || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
+                  || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
         {
             // create the sub-cells
             BaseType::ConstructSubCellsForHexBasedOnGaussQuadrature(BaseType::mpTreeNodes, gauss_quadrature_order);
         }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if(geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D)
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if (geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D)
         {
             KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
         }
-        #endif
+#endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
 
-        // using the standard Gauss quadrature as moment fitting integration points
-        GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(gauss_quadrature_order);
+            // using the standard Gauss quadrature as moment fitting integration points
+            GeometryData::IntegrationMethod RepresentativeIntegrationMethod
+                = Function<double, double>::GetIntegrationMethod(gauss_quadrature_order);
 
         RefType::mRepresentativeIntegrationOrder = gauss_quadrature_order;
 
-        if(gauss_quadrature_type == 0)
+        if (gauss_quadrature_type == 0)
         {
             const IntegrationPointsArrayType& integration_points
                 = RefType::mpElement->GetGeometry().IntegrationPoints( RepresentativeIntegrationMethod );
@@ -288,11 +288,11 @@ public:
             RefType::mRepresentativeIntegrationPoints = integration_points;
 
             // do a check, to make sure the integration point is inside the sub-cell
-            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
             {
-                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
+                if (!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
                     KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
-            }
+                }
         }
         else if (gauss_quadrature_type == 1)
         {
@@ -308,9 +308,9 @@ public:
             // do a check, to make sure the integration point is inside the sub-cell
             KRATOS_WATCH(BaseType::mpTreeNodes.size())
             KRATOS_WATCH(integration_points.size())
-            for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
             {
-                if(!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
+                if (!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
                 {
                     KRATOS_WATCH(typeid(*pTreeNode).name())
                     KRATOS_WATCH(typeid(*BaseType::mpTreeNodes[i]).name())
@@ -341,52 +341,52 @@ public:
 
         GeometryData::KratosGeometryType geom_type = RefType::mpElement->GetGeometry().GetGeometryType();
 
-        if( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
-         || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
+        if ( geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8
+                || geom_type == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
             std::size_t nsegments = quadrature_order;
 
             // create the sub-cells
             BaseType::ConstructSubCellsForQuadBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
-              || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if ( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
+                  || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
             std::size_t nsegments = quadrature_order;
 
             // create the sub-cells
             BaseType::ConstructSubCellsForBezier2DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments);
         }
-        #endif
-        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
-              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
-              || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
+#endif
+        else if ( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
+                  || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20
+                  || geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27 )
         {
             std::size_t nsegments = quadrature_order;
 
             // create the sub-cells
             BaseType::ConstructSubCellsForHexBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
         }
-        #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-        else if( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D )
+#ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
+        else if ( geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D )
         {
             std::size_t nsegments = quadrature_order;
 
             // create the sub-cells
             BaseType::ConstructSubCellsForBezier3DBasedOnEqualDistribution(BaseType::mpTreeNodes, nsegments, nsegments, nsegments);
         }
-        #endif
+#endif
         else
             KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
 
-        // using the standard Gauss quadrature as moment fitting integration points
-        GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            // using the standard Gauss quadrature as moment fitting integration points
+            GeometryData::IntegrationMethod RepresentativeIntegrationMethod
+                = Function<double, double>::GetIntegrationMethod(quadrature_order);
 
         RefType::mRepresentativeIntegrationOrder = quadrature_order;
 
@@ -412,9 +412,9 @@ public:
             KRATOS_THROW_ERROR(std::logic_error, "Invalid quadrature_type", quadrature_type)
         }
 
-        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+        for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             CoordinatesArrayType p = BaseType::mpTreeNodes[i]->ReferenceCenter();
             IntegrationPointType ip;
             ip.Weight() = 1.0;
@@ -422,9 +422,9 @@ public:
             ip.Y() = p[1];
             ip.Z() = p[2];
             RefType::mRepresentativeIntegrationPoints.push_back(ip);
-            #else
+#else
             RefType::mRepresentativeIntegrationPoints.push_back(BaseType::mpTreeNodes[i]->ReferenceCenter());
-            #endif
+#endif
         }
     }
 
@@ -440,13 +440,13 @@ public:
         RefType::mFictitiousIntegrationPoints.clear();
 
         PointType COG;
-        for(std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
+        for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
-            #ifdef DEBUG_SUBCELL
+#ifdef DEBUG_SUBCELL
             KRATOS_WATCH(typeid(*BaseType::mpTreeNodes[i]).name())
             KRATOS_WATCH(*BaseType::mpTreeNodes[i])
             KRATOS_WATCH(typeid(*BaseType::pGetGeometry()).name())
-            #endif
+#endif
 
             // GeometryType::Pointer pSubCellGeometry = BaseType::mpTreeNodes[i]->pCreateGeometry(BaseType::pGetGeometry()); // this can be expensive and does not work with Bezier element
             // int status = r_brep.CutStatus(*pSubCellGeometry);
@@ -459,70 +459,74 @@ public:
             std::vector<PointType> SamplingPoints;
             BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), SamplingLocalPoints);
 
-            #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
             std::stringstream time_mark_name; time_mark_name << "CutStatus at " << __LINE__;
             Timer::Start(time_mark_name.str());
-            #endif
+#endif
 
             int status = r_brep.CutStatus(SamplingPoints);
 
-            #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
             Timer::Stop(time_mark_name.str());
-            #endif
+#endif
 
-            if(status == BRep::_IN)
+            if (status == BRep::_IN)
             {
-                #ifdef DEBUG_SUBCELL
+#ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is completely inside the physical domain" << std::endl;
-                #endif
+#endif
                 // the cell is completely inside the physical domain
                 GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
                 RefType::mPhysicalIntegrationPoints.push_back(integration_point);
                 RefType::mSubCellIndices.push_back(i);
             }
-            else if(status == BRep::_CUT)
+            else if (status == BRep::_CUT)
             {
-                #ifdef DEBUG_SUBCELL
+#ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is cut" << std::endl;
-                #endif
-                #ifdef ENABLE_PROFILING
+#endif
+#ifdef ENABLE_PROFILING
                 std::stringstream time_mark_name2; time_mark_name2 << "CenterOfGravity at " << __LINE__;
                 Timer::Start(time_mark_name2.str());
-                #endif
+#endif
                 // the cell is cut
                 bool found = BaseType::mpTreeNodes[i]->CenterOfGravity(COG, BaseType::pGetGeometry(), r_brep, integrator_integration_method);
-                #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
                 Timer::Stop(time_mark_name2.str());
-                #endif
-                #ifdef DEBUG_SUBCELL
+#endif
+#ifdef DEBUG_SUBCELL
                 KRATOS_WATCH(found)
                 KRATOS_WATCH(COG)
-                #endif
-                if(found)
+#endif
+                if (found)
                 {
                     GeometryType::IntegrationPointType integration_point;
                     bool is_inside;
-                    if(TFrameType == GLOBAL_CURRENT)
+                    if (TFrameType == GLOBAL_CURRENT)
                     {
                         is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point);
                     }
-                    else if(TFrameType == GLOBAL_REFERENCE)
+                    else if (TFrameType == GLOBAL_REFERENCE)
                     {
                         GeometryType& rGeometry = *(BaseType::pGetGeometry());
                         Matrix DeltaPosition(rGeometry.size(), 3);
                         for ( unsigned int node = 0; node < rGeometry.size(); ++node )
+                        {
                             noalias( row( DeltaPosition, node ) ) = rGeometry[node].Coordinates() - rGeometry[node].GetInitialPosition();
+                        }
                         is_inside = BaseType::pGetGeometry()->IsInside(COG, integration_point, DeltaPosition);
                     }
-                    if(!is_inside)
+                    if (!is_inside)
                     {
                         std::cout << "!!WARNING!!The CenterOfGravity is found but not inside the domain of the subcell " << i << " of the element " << mpElement->Id() << std::endl;
                         std::cout << " The found COG: " << COG << std::endl;
                         std::cout << " The found integration point: " << integration_point << std::endl;
                         std::cout << " The element " << RefType::mpElement->Id() << ":" << std::endl;
                         for (std::size_t i = 0; i < RefType::mpElement->GetGeometry().size(); ++i)
+                        {
                             std::cout << " " << RefType::mpElement->GetGeometry()[i].Id();
+                        }
                         std::cout << std::endl;
                         for (std::size_t i = 0; i < RefType::mpElement->GetGeometry().size(); ++i)
                         {
@@ -544,18 +548,18 @@ public:
             }
             else
             {
-                #ifdef DEBUG_SUBCELL
+#ifdef DEBUG_SUBCELL
                 std::cout << "sub-cell " << i << " is completely outside the physical domain" << std::endl;
-                #endif
+#endif
                 // the cell is completely outside the physical domain
                 GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
                 RefType::mFictitiousIntegrationPoints.push_back(integration_point);
             }
 
-            #ifdef DEBUG_SUBCELL
+#ifdef DEBUG_SUBCELL
             std::cout << "---------------------><--------------------\n\n";
-            #endif
+#endif
         }
     }
 
@@ -571,41 +575,45 @@ public:
     void SetFictitiousWeight(const double& weight)
     {
         for (std::size_t i = 0; i < RefType::mFictitiousIntegrationPoints.size(); ++i)
+        {
             RefType::mFictitiousIntegrationPoints[i].SetWeight(weight);
+        }
     }
 
 
     /// Fit a list of subcell using the representative quadrature points from the parent element
     virtual Matrix FitQuadratureSubCell(const std::vector<size_t>& subcell_index,
-        const std::vector<FunctionR3R1::Pointer>& r_funcs,
-        const BRep& r_brep,
-        const int& integrator_integration_method,
-        const std::string& solver_type,
-        const int& echo_level,
-        const double& small_weight) const
+                                        const std::vector<FunctionR3R1::Pointer>& r_funcs,
+                                        const BRep& r_brep,
+                                        const int& integrator_integration_method,
+                                        const std::string& solver_type,
+                                        const int& echo_level,
+                                        const double& small_weight) const
     {
-        if(echo_level > -1)
+        if (echo_level > -1)
         {
             std::cout << "##############begin moment-fitting for sub-cells:";
-            for(std::size_t i = 0; i < subcell_index.size(); ++i)
+            for (std::size_t i = 0; i < subcell_index.size(); ++i)
+            {
                 std::cout << " " << subcell_index[i];
+            }
             std::cout << std::endl;
         }
 
         Matrix Weights(subcell_index.size(), RefType::mMomentFittingIntegrationPoints.size());
         Vector aux;
-        for(std::size_t i = 0; i < subcell_index.size(); ++i)
+        for (std::size_t i = 0; i < subcell_index.size(); ++i)
         {
             // perform the moment fit for the sub-cell
             const std::size_t& i_cell = subcell_index[i];
 
             typename QuadTree<TNsampling, TFrameType>::Pointer quad_tree = typename QuadTree<TNsampling, TFrameType>::Pointer(
-                    new QuadTree<TNsampling, TFrameType>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
+                        new QuadTree<TNsampling, TFrameType>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
 
-            #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
             std::stringstream time_mark_name; time_mark_name << "FitQuadrature at " << __LINE__;
             Timer::Start(time_mark_name.str());
-            #endif
+#endif
 
             aux = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree<TNsampling, TFrameType> >(*BaseType::pGetGeometry(),
                     r_funcs, r_brep, *quad_tree, RefType::mMomentFittingIntegrationPoints,
@@ -614,15 +622,17 @@ public:
             if (Weights.size2() != aux.size())
                 KRATOS_THROW_ERROR(std::logic_error, "Size conflict", "")
 
-            noalias(row(Weights, i)) = aux;
+                noalias(row(Weights, i)) = aux;
 
-            #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
             Timer::Stop(time_mark_name.str());
-            #endif
+#endif
         }
 
-        if(echo_level > -1)
+        if (echo_level > -1)
+        {
             std::cout << "##############end moment-fitting for sub-cells#############";
+        }
 
         return Weights;
     }
@@ -630,26 +640,26 @@ public:
 
     /// Create the element out from sub-cells. The element takes the same geometry of the original element, but the weights are given.
     ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
-        const std::string& sample_element_name,
-        const Matrix& rWeights,
-        std::size_t& lastElementId,
-        std::size_t& lastCondId) const
+            const std::string& sample_element_name,
+            const Matrix& rWeights,
+            std::size_t& lastElementId,
+            std::size_t& lastCondId) const
     {
         return CreateSubCellElements(r_model_part, RefType::mpElement, sample_element_name, RefType::mRepresentativeIntegrationOrder,
-                            RefType::mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId, RefType::mpElement->pGetProperties());
+                                     RefType::mMomentFittingIntegrationPoints, rWeights, lastElementId, lastCondId, RefType::mpElement->pGetProperties());
     }
 
 
     /// Create the elements out from sub-cells of an element. The new elements take the same geometry of the original element, but the integration points and weights are given.
     static ModelPart::ElementsContainerType CreateSubCellElements(ModelPart& r_model_part,
-        Element::Pointer pElement, // the parent element that contains sub-cells
-        const std::string& sample_element_name,
-        const int& RepresentativeIntegrationOrder,
-        const IntegrationPointsArrayType& integration_points,
-        const Matrix& rWeights,
-        std::size_t& lastElementId,
-        std::size_t& lastCondId,
-        Properties::Pointer pProperties)
+            Element::Pointer pElement, // the parent element that contains sub-cells
+            const std::string& sample_element_name,
+            const int& RepresentativeIntegrationOrder,
+            const IntegrationPointsArrayType& integration_points,
+            const Matrix& rWeights,
+            std::size_t& lastElementId,
+            std::size_t& lastCondId,
+            Properties::Pointer pProperties)
     {
         /* create the new elements from subcell */
         std::size_t num_physical_point = rWeights.size1();
@@ -666,16 +676,18 @@ public:
         const GeometryType& r_geom = *(pElement->pGetGeometry());
 
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
+            = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
         ProcessInfo& rCurrentProcessInfo = r_model_part.GetProcessInfo();
 
-        for(std::size_t i = 0; i < num_physical_point; ++i)
+        for (std::size_t i = 0; i < num_physical_point; ++i)
         {
             // create new list of integration points
             IntegrationPointsArrayType new_integration_points = integration_points;
-            for(std::size_t j = 0; j < new_integration_points.size(); ++j)
+            for (std::size_t j = 0; j < new_integration_points.size(); ++j)
+            {
                 new_integration_points[j].Weight() = rWeights(i, j);
+            }
 
             // create the new "extrapolated" elements from sub-cell
             // here we make a clone of the geometry because we want to assign different geometry data later on
@@ -691,7 +703,7 @@ public:
 
         /* create new wrapped conditions and add to the model_part */
         // the purpose is to delay the assembly until the parent element has done its update
-        for(typename ModelPart::ElementsContainerType::ptr_iterator it = NewElements.ptr_begin();
+        for (typename ModelPart::ElementsContainerType::ptr_iterator it = NewElements.ptr_begin();
                 it != NewElements.ptr_end(); ++it)
         {
             // create new element-wrapped condition
@@ -736,15 +748,15 @@ public:
 
 private:
 
-    #ifdef ENABLE_DEBUG_QUADRATURE
+#ifdef ENABLE_DEBUG_QUADRATURE
     bool mDebugFlag;
-    #endif
+#endif
 
     /// Assignment operator.
-     MomentFittedQuadTreeSubCell& operator=( MomentFittedQuadTreeSubCell const& rOther);
+    MomentFittedQuadTreeSubCell& operator=( MomentFittedQuadTreeSubCell const& rOther);
 
     /// Copy constructor.
-     MomentFittedQuadTreeSubCell( MomentFittedQuadTreeSubCell const& rOther);
+    MomentFittedQuadTreeSubCell( MomentFittedQuadTreeSubCell const& rOther);
 
 }; // Class  MomentFittedQuadTreeSubCell
 

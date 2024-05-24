@@ -113,17 +113,19 @@ public:
 
     /// Extract the element from the list of ids
     static void GetElements(ModelPart::ElementsContainerType& rpElements,
-        ModelPart& r_model_part, const std::set<std::size_t>& element_list)
+                            ModelPart& r_model_part, const std::set<std::size_t>& element_list)
     {
         rpElements.clear();
 
         boost::progress_display show_progress( element_list.size() );
 
-        for(std::set<std::size_t>::iterator it = element_list.begin(); it != element_list.end(); ++it)
+        for (std::set<std::size_t>::iterator it = element_list.begin(); it != element_list.end(); ++it)
         {
             ModelPart::ElementsContainerType::iterator it_elem = r_model_part.Elements().find(*it);
-            if(it_elem != r_model_part.Elements().end())
+            if (it_elem != r_model_part.Elements().end())
+            {
                 rpElements.push_back(r_model_part.Elements()(*it));
+            }
             ++show_progress;
         }
     }
@@ -146,11 +148,13 @@ public:
     {
         // r_model_part.Conditions().erase(rConditions.begin(), rConditions.end());
         unsigned int cnt = 0, first_id = 0, last_id = 0;
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = rConditions.ptr_begin();
+        for (typename ModelPart::ConditionsContainerType::ptr_iterator it = rConditions.ptr_begin();
                 it != rConditions.ptr_end(); ++it)
         {
-            if(cnt == 0)
+            if (cnt == 0)
+            {
                 first_id = (*it)->Id();
+            }
             last_id = (*it)->Id();
 
             r_model_part.RemoveCondition(*it);
@@ -158,31 +162,35 @@ public:
             ++cnt;
         }
 
-        if(echo_level > 0)
+        if (echo_level > 0)
+        {
             std::cout << cnt << " conditions: " << first_id << "->" << last_id << " is removed from model_part" << std::endl;
+        }
     }
 
     /// Create a new entity (element/condition) but not add to the model_part
     template<class TEntityType>
     static typename TEntityType::Pointer CreateEntity(ModelPart& r_model_part, const std::string& sample_entity_name,
-        const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
+            const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
-        if(!KratosComponents<TEntityType>::Has(sample_entity_name))
+        if (!KratosComponents<TEntityType>::Has(sample_entity_name))
             KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
-        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+            TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
 //        KRATOS_WATCH(r_clone_entity)
 
         // create the points array
         GeometryType::PointsArrayType Points;
-        for(std::size_t i = 0; i < node_ids.size(); ++i)
+        for (std::size_t i = 0; i < node_ids.size(); ++i)
+        {
             Points.push_back(r_model_part.pGetNode(node_ids[i]));
+        }
 //        GeometryType::Pointer pTempGeometry = r_clone_entity.GetGeometry().Create(Points);
 
         // create new entity
         typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, Points, pProperties);
-        #ifndef SD_APP_FORWARD_COMPATIBILITY
+#ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewEntity->SetValue(IS_INACTIVE, false);
-        #endif
+#endif
         pNewEntity->Set(ACTIVE, true);
 
         return pNewEntity;
@@ -191,18 +199,18 @@ public:
     /// Create a new entity (element/condition) from another entity but not add to the model_part
     template<class TEntityType>
     static typename TEntityType::Pointer CreateEntity(const std::string& sample_entity_name,
-        const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType::Pointer pGeometry)
+            const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType::Pointer pGeometry)
     {
-        if(!KratosComponents<TEntityType>::Has(sample_entity_name))
+        if (!KratosComponents<TEntityType>::Has(sample_entity_name))
             KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
-        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+            TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
 //        KRATOS_WATCH(r_clone_entity)
 
         // create new entity
         typename TEntityType::Pointer pNewEntity = r_clone_entity.Create(Id, pGeometry, pProperties);
-        #ifndef SD_APP_FORWARD_COMPATIBILITY
+#ifndef SD_APP_FORWARD_COMPATIBILITY
         pNewEntity->SetValue(IS_INACTIVE, false);
-        #endif
+#endif
         pNewEntity->Set(ACTIVE, true);
 
         return pNewEntity;
@@ -210,7 +218,7 @@ public:
 
     /// Create a new element out from list of nodes and add to the model_part
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
-        const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
+                                          const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
         Element::Pointer pNewElem = CreateEntity<Element>(r_model_part, sample_elem_name, Id, pProperties, node_ids);
         r_model_part.Elements().push_back(pNewElem);
@@ -219,7 +227,7 @@ public:
 
     /// Create a new element out from other element and add to the model_part
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
-        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+                                          const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
         Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pElement->pGetGeometry());
         r_model_part.Elements().push_back(pNewElem);
@@ -228,7 +236,7 @@ public:
 
     /// Create a new element out from other condition and add to the model_part
     static Element::Pointer CreateElement(ModelPart& r_model_part, const std::string& sample_elem_name,
-        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+                                          const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
         Element::Pointer pNewElem = CreateEntity<Element>(sample_elem_name, Id, pProperties, pCond->pGetGeometry());
         r_model_part.Elements().push_back(pNewElem);
@@ -237,7 +245,7 @@ public:
 
     /// Create a new condition out from list of nodes and add to the model_part
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
-        const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
+            const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
         Condition::Pointer pNewCond = CreateEntity<Condition>(r_model_part, sample_cond_name, Id, pProperties, node_ids);
         r_model_part.Conditions().push_back(pNewCond);
@@ -246,7 +254,7 @@ public:
 
     /// Create a new condition out from other condition and add to the model_part
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
-        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+            const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
     {
         Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pCond->pGetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
@@ -255,7 +263,7 @@ public:
 
     /// Create a new condition out from other element and add to the model_part
     static Condition::Pointer CreateCondition(ModelPart& r_model_part, const std::string& sample_cond_name,
-        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+            const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
     {
         Condition::Pointer pNewCond = CreateEntity<Condition>(sample_cond_name, Id, pProperties, pElement->pGetGeometry());
         r_model_part.Conditions().push_back(pNewCond);
@@ -266,11 +274,13 @@ public:
     static std::size_t GetLastNodeId(ModelPart& r_model_part)
     {
         std::size_t lastNodeId = 0;
-        for(typename ModelPart::NodesContainerType::iterator it = r_model_part.Nodes().begin();
+        for (typename ModelPart::NodesContainerType::iterator it = r_model_part.Nodes().begin();
                 it != r_model_part.Nodes().end(); ++it)
         {
-            if(it->Id() > lastNodeId)
+            if (it->Id() > lastNodeId)
+            {
                 lastNodeId = it->Id();
+            }
         }
 
         return lastNodeId;
@@ -281,11 +291,13 @@ public:
     static std::size_t GetLastElementId(ModelPart& r_model_part)
     {
         std::size_t lastElementId = 0;
-        for(typename ModelPart::ElementsContainerType::iterator it = r_model_part.Elements().begin();
+        for (typename ModelPart::ElementsContainerType::iterator it = r_model_part.Elements().begin();
                 it != r_model_part.Elements().end(); ++it)
         {
-            if(it->Id() > lastElementId)
+            if (it->Id() > lastElementId)
+            {
                 lastElementId = it->Id();
+            }
         }
 
         return lastElementId;
@@ -296,11 +308,13 @@ public:
     static std::size_t GetLastConditionId(ModelPart& r_model_part)
     {
         std::size_t lastCondId = 0;
-        for(typename ModelPart::ConditionsContainerType::iterator it = r_model_part.Conditions().begin();
+        for (typename ModelPart::ConditionsContainerType::iterator it = r_model_part.Conditions().begin();
                 it != r_model_part.Conditions().end(); ++it)
         {
-            if(it->Id() > lastCondId)
+            if (it->Id() > lastCondId)
+            {
                 lastCondId = it->Id();
+            }
         }
 
         return lastCondId;
@@ -311,11 +325,13 @@ public:
     static std::size_t GetLastPropertiesId(ModelPart& r_model_part)
     {
         std::size_t lastPropId = 0;
-        for(typename ModelPart::PropertiesContainerType::iterator it = r_model_part.rProperties().begin();
+        for (typename ModelPart::PropertiesContainerType::iterator it = r_model_part.rProperties().begin();
                 it != r_model_part.rProperties().end(); ++it)
         {
-            if(it->Id() > lastPropId)
+            if (it->Id() > lastPropId)
+            {
                 lastPropId = it->Id();
+            }
         }
 
         return lastPropId;
@@ -326,11 +342,13 @@ public:
     static std::size_t GetLastConstraintId(ModelPart& r_model_part)
     {
         std::size_t lastConstraintId = 0;
-        for(typename ModelPart::MasterSlaveConstraintContainerType::iterator it = r_model_part.MasterSlaveConstraints().begin();
+        for (typename ModelPart::MasterSlaveConstraintContainerType::iterator it = r_model_part.MasterSlaveConstraints().begin();
                 it != r_model_part.MasterSlaveConstraints().end(); ++it)
         {
-            if(it->Id() > lastConstraintId)
+            if (it->Id() > lastConstraintId)
+            {
                 lastConstraintId = it->Id();
+            }
         }
 
         return lastConstraintId;
@@ -340,24 +358,30 @@ public:
     /// Create a partitioning for multithreaded parallelization
     template<class TValueContainerType>
     static inline void CreatePartition(const unsigned int& number_of_threads,
-            const std::size_t& number_of_elements, TValueContainerType& partitions)
+                                       const std::size_t& number_of_elements, TValueContainerType& partitions)
     {
-        partitions.resize(number_of_threads+1);
-        if(number_of_elements > number_of_threads)
+        partitions.resize(number_of_threads + 1);
+        if (number_of_elements > number_of_threads)
         {
             int partition_size = number_of_elements / number_of_threads;
             partitions[0] = 0;
             partitions[number_of_threads] = number_of_elements;
-            for(unsigned int i = 1; i < number_of_threads; ++i)
-                partitions[i] = partitions[i-1] + partition_size;
+            for (unsigned int i = 1; i < number_of_threads; ++i)
+            {
+                partitions[i] = partitions[i - 1] + partition_size;
+            }
         }
         else
         {
             partitions[0] = 0;
-            for(unsigned int i = 1; i < number_of_elements+1; ++i)
-                partitions[i] = partitions[i-1] + 1;
-            for(unsigned int i = number_of_elements+1; i < number_of_threads+1; ++i)
-                partitions[i] = partitions[i-1];
+            for (unsigned int i = 1; i < number_of_elements + 1; ++i)
+            {
+                partitions[i] = partitions[i - 1] + 1;
+            }
+            for (unsigned int i = number_of_elements + 1; i < number_of_threads + 1; ++i)
+            {
+                partitions[i] = partitions[i - 1];
+            }
         }
     }
 
@@ -379,12 +403,12 @@ public:
 #ifdef _OPENMP
         #pragma omp parallel for
 #endif
-        for(int k = 0; k < number_of_threads; ++k)
+        for (int k = 0; k < number_of_threads; ++k)
         {
             typename std::vector<typename TTreeType::Pointer>::iterator it_first_tree = r_trees.begin() + tree_partition[k];
-            typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k+1];
+            typename std::vector<typename TTreeType::Pointer>::iterator it_last_tree = r_trees.begin() + tree_partition[k + 1];
 
-            for(typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
+            for (typename std::vector<typename TTreeType::Pointer>::iterator it = it_first_tree; it != it_last_tree; ++it)
             {
                 (*it)->RefineBy(r_brep);
                 ++show_progress;
@@ -406,26 +430,30 @@ public:
         std::vector<unsigned int> tree_partition;
         CreatePartition(number_of_threads, r_trees.size(), tree_partition);
         std::cout << "tree_partition:";
-        for(std::size_t i = 0; i < tree_partition.size(); ++i)
+        for (std::size_t i = 0; i < tree_partition.size(); ++i)
+        {
             std::cout << " " << tree_partition[i];
+        }
         std::cout << std::endl;
 
         boost::progress_display show_progress( r_trees.size() );
 
 #ifdef _OPENMP
-        if(number_of_threads > 1)
+        if (number_of_threads > 1)
         {
             std::vector<typename TBRepType::Pointer> clone_breps;
-            for(int k = 0; k < number_of_threads; ++k)
+            for (int k = 0; k < number_of_threads; ++k)
+            {
                 clone_breps.push_back(r_brep.CloneBRep());
+            }
 
             #pragma omp parallel for
-            for(int k = 0; k < number_of_threads; ++k)
+            for (int k = 0; k < number_of_threads; ++k)
             {
                 typename PointerVectorSet<TCellType>::ptr_iterator it_first_tree = r_trees.ptr_begin() + tree_partition[k];
-                typename PointerVectorSet<TCellType>::ptr_iterator it_last_tree = r_trees.ptr_begin() + tree_partition[k+1];
+                typename PointerVectorSet<TCellType>::ptr_iterator it_last_tree = r_trees.ptr_begin() + tree_partition[k + 1];
 
-                for(typename PointerVectorSet<TCellType>::ptr_iterator it = it_first_tree; it != it_last_tree; ++it)
+                for (typename PointerVectorSet<TCellType>::ptr_iterator it = it_first_tree; it != it_last_tree; ++it)
                 {
                     (*it)->GeneratePhysicalIntegrationPoints(*(clone_breps[k]), integrator_integration_method);
                     ++show_progress;
@@ -435,7 +463,7 @@ public:
         else
 #endif
         {
-            for(typename PointerVectorSet<TCellType>::ptr_iterator it = r_trees.ptr_begin(); it != r_trees.ptr_end(); ++it)
+            for (typename PointerVectorSet<TCellType>::ptr_iterator it = r_trees.ptr_begin(); it != r_trees.ptr_end(); ++it)
             {
                 (*it)->GeneratePhysicalIntegrationPoints(r_brep, integrator_integration_method);
                 ++show_progress;
@@ -462,10 +490,10 @@ public:
 
     void Print(GeometryType::Pointer pGeometry) const
     {
-        for(std::size_t i = 0; i < pGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pGeometry->size(); ++i)
             std::cout << " (" << (*pGeometry)[i].X()
-                     << ", " << (*pGeometry)[i].Y()
-                     << ", " << (*pGeometry)[i].Z() << "),";
+                      << ", " << (*pGeometry)[i].Y()
+                      << ", " << (*pGeometry)[i].Z() << "),";
         std::cout << std::endl;
     }
 

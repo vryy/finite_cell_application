@@ -72,13 +72,13 @@ struct QuadTreeNode_AddToModelPart_Helper
 {
     template<class TTreeType>
     static void Execute(const TTreeType& r_tree, typename TEntityType::GeometryType::Pointer pParentGeometry,
-        ModelPart& r_model_part,
-        TEntityType const& r_clone_element,
-        std::size_t& lastNodeId,
-        std::size_t& lastElementId,
-        std::vector<std::size_t>& new_node_ids,
-        std::vector<std::size_t>& new_entity_ids,
-        const int level)
+                        ModelPart& r_model_part,
+                        TEntityType const& r_clone_element,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastElementId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level)
     {
         KRATOS_ERROR << "Calling base class function";
     }
@@ -125,18 +125,20 @@ public:
     /// Get the last level of the tree node
     std::size_t LastLevel() const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             return this->Level();
         }
         else
         {
             std::size_t last_level = 0;
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 std::size_t tmp = mpChildren[i]->LastLevel();
                 if (tmp > last_level)
+                {
                     last_level = tmp;
+                }
             }
             return last_level;
         }
@@ -172,15 +174,17 @@ public:
     /// Get the number of cells associated with this node
     std::size_t NumberOfCells() const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             return 1;
         }
         else
         {
             std::size_t num_cells = 0;
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
                 num_cells += mpChildren[i]->NumberOfCells();
+            }
             return num_cells;
         }
     }
@@ -199,7 +203,9 @@ public:
     void RefineUpTo(const std::size_t& nLevels)
     {
         if (this->Level() < nLevels)
+        {
             this->Refine();
+        }
     }
 
     /// Refine this quadtree by checking cut status against a brep. The operated geometry is given by pParentGeometry.
@@ -208,7 +214,7 @@ public:
     template<bool TUseGeometryInformation>
     void RefineBySampling(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::vector<CoordinatesArrayType> SamplingLocalPoints;
             this->CreateSamplingLocalPoints(SamplingLocalPoints, nsampling);
@@ -230,7 +236,7 @@ public:
                 stat = r_brep.CutStatus(*pParentGeometry, SamplingLocalPoints, SamplingPoints);
             }
 
-            if(stat == BRep::_CUT)
+            if (stat == BRep::_CUT)
             {
                 // std::cout << "cell lv " << Level() << " is refined" << std::endl;
                 this->Refine();
@@ -238,7 +244,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->template RefineBySampling<TUseGeometryInformation>(pParentGeometry, r_brep, nsampling);
             }
@@ -252,7 +258,7 @@ public:
     template<bool TUseGeometryInformation>
     void RefineBySamplingUpTo(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling, const std::size_t& nLevels)
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::vector<CoordinatesArrayType> SamplingLocalPoints;
             this->CreateSamplingLocalPoints(SamplingLocalPoints, nsampling);
@@ -274,7 +280,7 @@ public:
                 stat = r_brep.CutStatus(*pParentGeometry, SamplingLocalPoints, SamplingPoints);
             }
 
-            if(stat == BRep::_CUT)
+            if (stat == BRep::_CUT)
             {
                 // std::cout << "cell lv " << Level() << " is refined" << std::endl;
                 this->RefineUpTo(nLevels);
@@ -282,7 +288,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->template RefineBySamplingUpTo<TUseGeometryInformation>(pParentGeometry, r_brep, nsampling, nLevels);
             }
@@ -297,44 +303,44 @@ public:
     /// TFuncFrameType defines if the function is defined on local coordinates or global coordinates
     template<typename TOutputType, typename TIntegrationPointsArrayType, int TFuncFrameType>
     void IntegrateImpl(GeometryType& rParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            TOutputType& rOutput,
-            const TIntegrationPointsArrayType& integration_points) const
+                       const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                       TOutputType& rOutput,
+                       const TIntegrationPointsArrayType& integration_points) const
     {
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         std::stringstream time_mark_name; time_mark_name << "ComputeDetJ at " << __LINE__;
         Timer::Start(time_mark_name.str());
-        #endif
+#endif
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, rParentGeometry, integration_points);
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name.str());
-        #endif
+#endif
 
         CoordinatesArrayType GlobalCoords;
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
 //        KRATOS_WATCH(integration_points.size())
         std::stringstream time_mark_name2; time_mark_name2 << "Evaluate f at " << __LINE__;
         Timer::Start(time_mark_name2.str());
-        #endif
+#endif
 
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            if(TFuncFrameType == LOCAL)
+            if (TFuncFrameType == LOCAL)
             {
                 rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
             }
             else
             {
-                if(TFrameType == GLOBAL_REFERENCE)
+                if (TFrameType == GLOBAL_REFERENCE)
                 {
                     FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
                 }
-                else if(TFrameType == GLOBAL_CURRENT)
+                else if (TFrameType == GLOBAL_CURRENT)
                 {
                     rParentGeometry.GlobalCoordinates(GlobalCoords, integration_points[point]);
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
@@ -342,67 +348,79 @@ public:
             }
         }
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name2.str());
-        #endif
+#endif
     }
 
     /// Primitive implementation using adaptive quadrature. The integration_points array contains the adaptive quadrature data. The small weight is used for stabilization.
     /// TFuncFrameType defines if the function is defined on local coordinates or global coordinates
     template<typename TOutputType, typename TIntegrationPointsArrayType, int TFuncFrameType>
     void IntegrateImpl(GeometryType& rParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const BRep& r_brep,
-            TOutputType& rOutput,
-            const TIntegrationPointsArrayType& integration_points,
-            const double& small_weight) const
+                       const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                       const BRep& r_brep,
+                       TOutputType& rOutput,
+                       const TIntegrationPointsArrayType& integration_points,
+                       const double& small_weight) const
     {
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         std::stringstream time_mark_name; time_mark_name << "ComputeDetJ at " << __LINE__;
         Timer::Start(time_mark_name.str());
-        #endif
+#endif
 
         std::vector<double> DetJ;
         Function<double, double>::ComputeDetJ(DetJ, rParentGeometry, integration_points);
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name.str());
-        #endif
+#endif
 
         CoordinatesArrayType GlobalCoords;
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
 //        KRATOS_WATCH(integration_points.size())
         std::stringstream time_mark_name2; time_mark_name2 << "Evaluate f at " << __LINE__;
         Timer::Start(time_mark_name2.str());
-        #endif
+#endif
 
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            if(TFrameType == GLOBAL_CURRENT)
-                rParentGeometry.GlobalCoordinates(GlobalCoords, integration_points[point]);
-            else if(TFrameType == GLOBAL_REFERENCE)
-                FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
-
-            if(r_brep.IsInside(static_cast<BRep::PointType>(GlobalCoords)))
+            if (TFrameType == GLOBAL_CURRENT)
             {
-                if(TFuncFrameType == LOCAL)
+                rParentGeometry.GlobalCoordinates(GlobalCoords, integration_points[point]);
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
+                FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
+            }
+
+            if (r_brep.IsInside(static_cast<BRep::PointType>(GlobalCoords)))
+            {
+                if (TFuncFrameType == LOCAL)
+                {
                     rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
+                }
                 else
+                {
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
+                }
             }
             else
             {
-                if(TFuncFrameType == LOCAL)
+                if (TFuncFrameType == LOCAL)
+                {
                     rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * small_weight;
+                }
                 else
+                {
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * small_weight;
+                }
             }
         }
 
-        #ifdef ENABLE_PROFILING
+#ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name2.str());
-        #endif
+#endif
     }
 
     /*****************************************************************/
@@ -413,13 +431,13 @@ public:
     /// if TFuncFrameType=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            TOutputType& rOutput,
-            const int& integration_method) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   TOutputType& rOutput,
+                   const int& integration_method) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
-        if(quadrature_type == 0) // Kratos built-in
+        if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
@@ -439,9 +457,9 @@ public:
     /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            TOutputType& rOutput,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   TOutputType& rOutput,
+                   const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -457,9 +475,9 @@ public:
     /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, typename TIntegrationPointsArrayType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            TOutputType& rOutput,
-            const TIntegrationPointsArrayType& sample_integration_points) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   TOutputType& rOutput,
+                   const TIntegrationPointsArrayType& sample_integration_points) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -474,15 +492,15 @@ public:
     /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const BRep& r_brep,
-            TOutputType& rOutput,
-            const int& integration_method,
-            const double& small_weight) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   const BRep& r_brep,
+                   TOutputType& rOutput,
+                   const int& integration_method,
+                   const double& small_weight) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
-        if(quadrature_type == 0) // Kratos built-in
+        if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
@@ -502,11 +520,11 @@ public:
     /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const BRep& r_brep,
-            TOutputType& rOutput,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod,
-            const double& small_weight) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   const BRep& r_brep,
+                   TOutputType& rOutput,
+                   const GeometryData::IntegrationMethod& ThisIntegrationMethod,
+                   const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -522,11 +540,11 @@ public:
     /// if Frame=1, the function is assumed to be defined in the global frame. If the function is defined in the local frame (i.e. shape function), the Integrate<0> method must be used.
     template<typename TOutputType, typename TIntegrationPointsArrayType, int TFuncFrameType>
     void Integrate(GeometryType::Pointer pParentGeometry,
-            const Function<array_1d<double, 3>, TOutputType>& rFunc,
-            const BRep& r_brep,
-            TOutputType& rOutput,
-            const TIntegrationPointsArrayType& sample_integration_points,
-            const double& small_weight) const
+                   const Function<array_1d<double, 3>, TOutputType>& rFunc,
+                   const BRep& r_brep,
+                   TOutputType& rOutput,
+                   const TIntegrationPointsArrayType& sample_integration_points,
+                   const double& small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -549,11 +567,11 @@ public:
     /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
-            const int& integration_method) const
+                             const int& integration_method) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
-        if(quadrature_type == 0) // Kratos built-in
+        if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
             GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
@@ -570,9 +588,9 @@ public:
     /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system.
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+                             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
@@ -580,14 +598,14 @@ public:
                 = pThisReferenceGeometry->IntegrationPoints( ThisIntegrationMethod );
 
             Vector ShapeFunctionValuesOnReference;
-            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            for (std::size_t point = 0; point < sample_integration_points.size(); ++point)
             {
                 GeometryType::IntegrationPointType integration_point;
 
                 ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
 
                 noalias(integration_point) = ZeroVector(3);
-                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
+                for (std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
                 {
                     noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
                 }
@@ -601,7 +619,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->ConstructQuadrature(integration_points, ThisIntegrationMethod);
             }
@@ -611,21 +629,21 @@ public:
     /// Construct the recursive integration point array using provided sample quadrature on a reference cell
     /// REMARKS: the integration_points is in local coordinates system
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
-            const GeometryType::IntegrationPointsArrayType& sample_integration_points) const
+                             const GeometryType::IntegrationPointsArrayType& sample_integration_points) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             GeometryType::Pointer pThisReferenceGeometry = this->pCreateReferenceGeometry();
 
             Vector ShapeFunctionValuesOnReference;
-            for(std::size_t point = 0; point < sample_integration_points.size(); ++point)
+            for (std::size_t point = 0; point < sample_integration_points.size(); ++point)
             {
                 GeometryType::IntegrationPointType integration_point;
 
                 ShapeFunctionValuesOnReference = pThisReferenceGeometry->ShapeFunctionsValues(ShapeFunctionValuesOnReference, sample_integration_points[point]);
 
                 noalias(integration_point) = ZeroVector(3);
-                for(std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
+                for (std::size_t i = 0; i < pThisReferenceGeometry->size(); ++i)
                 {
                     noalias(integration_point) += ShapeFunctionValuesOnReference[i] * (*pThisReferenceGeometry)[i];
                 }
@@ -639,7 +657,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->ConstructQuadrature(integration_points, sample_integration_points);
             }
@@ -652,16 +670,16 @@ public:
 
     template<bool TRecursive, class TEntityType>
     void AddToModelPart(GeometryType::Pointer pParentGeometry,
-            ModelPart& r_model_part,
-            TEntityType const& r_clone_entity,
-            std::size_t& lastNodeId,
-            std::size_t& lastEntityId,
-            std::vector<std::size_t>& new_node_ids,
-            std::vector<std::size_t>& new_entity_ids,
-            const int level) const
+                        ModelPart& r_model_part,
+                        TEntityType const& r_clone_entity,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastEntityId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level) const
     {
         QuadTreeNode_AddToModelPart_Helper<TRecursive, TEntityType>::Execute(*this, pParentGeometry,
-            r_model_part, r_clone_entity, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, level);
+                r_model_part, r_clone_entity, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, level);
     }
 
     /*****************************************************************/
@@ -713,23 +731,27 @@ public:
 
     /// Create a list of sampling points on the geometry. If overriding, the local coordinates of the sampling points must be taken from the quadtree parameter range.
     virtual void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-            const std::size_t& nsampling) const
+                                           const std::size_t& nsampling) const
     {
         KRATOS_ERROR << "Calling base class function";
     }
 
     void CreateSamplingPoints(std::vector<PointType>& SamplingPoints, const GeometryType& r_geom,
-            const std::vector<CoordinatesArrayType>& SamplingLocalPoints) const
+                              const std::vector<CoordinatesArrayType>& SamplingLocalPoints) const
     {
         SamplingPoints.resize(SamplingLocalPoints.size());
 
         PointType P;
-        for(std::size_t j = 0; j < SamplingLocalPoints.size(); ++j)
+        for (std::size_t j = 0; j < SamplingLocalPoints.size(); ++j)
         {
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates(r_geom, P, SamplingLocalPoints[j]);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, SamplingLocalPoints[j]);
+            }
             SamplingPoints[j] = P;
         }
     }
@@ -775,14 +797,14 @@ struct QuadTreeNode_AddToModelPart_Helper<false, Element>
 {
     template<class TTreeType>
     static void Execute(const TTreeType& r_tree,
-        Element::GeometryType::Pointer pParentGeometry,
-        ModelPart& r_model_part,
-        Element const& r_clone_element,
-        std::size_t& lastNodeId,
-        std::size_t& lastElementId,
-        std::vector<std::size_t>& new_node_ids,
-        std::vector<std::size_t>& new_entity_ids,
-        const int level)
+                        Element::GeometryType::Pointer pParentGeometry,
+                        ModelPart& r_model_part,
+                        Element const& r_clone_element,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastElementId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level)
     {
         // std::cout << __FUNCTION__ << " is called" << std::endl;
         Properties::Pointer p_properties = r_model_part.pGetProperties(level);
@@ -791,7 +813,7 @@ struct QuadTreeNode_AddToModelPart_Helper<false, Element>
         new_entity_ids.push_back(lastElementId);
         r_model_part.AddElement(pNewElement);
 
-        for(std::size_t i = 0; i < pThisGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pThisGeometry->size(); ++i)
         {
             (*pThisGeometry)[i].SetId(++lastNodeId);
             new_node_ids.push_back(lastNodeId);
@@ -808,14 +830,14 @@ struct QuadTreeNode_AddToModelPart_Helper<false, Condition>
 {
     template<class TTreeType>
     static void Execute(const TTreeType& r_tree,
-        Condition::GeometryType::Pointer pParentGeometry,
-        ModelPart& r_model_part,
-        Condition const& r_clone_condition,
-        std::size_t& lastNodeId,
-        std::size_t& lastCondId,
-        std::vector<std::size_t>& new_node_ids,
-        std::vector<std::size_t>& new_entity_ids,
-        const int level)
+                        Condition::GeometryType::Pointer pParentGeometry,
+                        ModelPart& r_model_part,
+                        Condition const& r_clone_condition,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastCondId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level)
     {
         // std::cout << __FUNCTION__ << " is called" << std::endl;
         Properties::Pointer p_properties = r_model_part.pGetProperties(level);
@@ -824,7 +846,7 @@ struct QuadTreeNode_AddToModelPart_Helper<false, Condition>
         new_entity_ids.push_back(lastCondId);
         r_model_part.AddCondition(pNewCondition);
 
-        for(std::size_t i = 0; i < pThisGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pThisGeometry->size(); ++i)
         {
             (*pThisGeometry)[i].SetId(++lastNodeId);
             new_node_ids.push_back(lastNodeId);
@@ -840,25 +862,29 @@ struct QuadTreeNode_AddToModelPart_Helper<true, Element>
 {
     template<class TTreeType>
     static void Execute(const TTreeType& r_tree,
-        Element::GeometryType::Pointer pParentGeometry,
-        ModelPart& r_model_part,
-        Element const& r_clone_element,
-        std::size_t& lastNodeId,
-        std::size_t& lastElementId,
-        std::vector<std::size_t>& new_node_ids,
-        std::vector<std::size_t>& new_entity_ids,
-        const int level)
+                        Element::GeometryType::Pointer pParentGeometry,
+                        ModelPart& r_model_part,
+                        Element const& r_clone_element,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastElementId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level)
     {
         // std::cout << __FUNCTION__ << " is called" << std::endl;
-        if(r_tree.IsLeaf())
+        if (r_tree.IsLeaf())
         {
             if (level > 1) // this is to avoid adding duplicated element with the original mesh
+            {
                 QuadTreeNode_AddToModelPart_Helper<false, Element>::Execute(r_tree, pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, new_node_ids, new_entity_ids, level);
+            }
         }
         else
         {
-            for(std::size_t i = 0; i < r_tree.Size(); ++i)
+            for (std::size_t i = 0; i < r_tree.Size(); ++i)
+            {
                 QuadTreeNode_AddToModelPart_Helper<true, Element>::Execute(*(r_tree.pChild(i)), pParentGeometry, r_model_part, r_clone_element, lastNodeId, lastElementId, new_node_ids, new_entity_ids, level + 1);
+            }
         }
     }
 };
@@ -868,25 +894,29 @@ struct QuadTreeNode_AddToModelPart_Helper<true, Condition>
 {
     template<class TTreeType>
     static void Execute(const TTreeType& r_tree,
-        Condition::GeometryType::Pointer pParentGeometry,
-        ModelPart& r_model_part,
-        Condition const& r_clone_condition,
-        std::size_t& lastNodeId,
-        std::size_t& lastCondId,
-        std::vector<std::size_t>& new_node_ids,
-        std::vector<std::size_t>& new_entity_ids,
-        const int level)
+                        Condition::GeometryType::Pointer pParentGeometry,
+                        ModelPart& r_model_part,
+                        Condition const& r_clone_condition,
+                        std::size_t& lastNodeId,
+                        std::size_t& lastCondId,
+                        std::vector<std::size_t>& new_node_ids,
+                        std::vector<std::size_t>& new_entity_ids,
+                        const int level)
     {
         // std::cout << __FUNCTION__ << " is called" << std::endl;
-        if(r_tree.IsLeaf())
+        if (r_tree.IsLeaf())
         {
             if (level > 1) // this is to avoid adding duplicated element with the original mesh
+            {
                 QuadTreeNode_AddToModelPart_Helper<false, Condition>::Execute(r_tree, pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, new_node_ids, new_entity_ids, level);
+            }
         }
         else
         {
-            for(std::size_t i = 0; i < r_tree.Size(); ++i)
+            for (std::size_t i = 0; i < r_tree.Size(); ++i)
+            {
                 QuadTreeNode_AddToModelPart_Helper<true, Condition>::Execute(*(r_tree.pChild(i)), pParentGeometry, r_model_part, r_clone_condition, lastNodeId, lastCondId, new_node_ids, new_entity_ids, level + 1);
+            }
         }
     }
 };
@@ -908,16 +938,18 @@ bool QuadTreeNode<TFrameType>::CenterOfGravity(PointType& COG, GeometryType::Poi
     this->IntegrateImpl<double, GeometryType::IntegrationPointsArrayType, GLOBAL>(*pParentGeometry, ProductFunction<FunctionR3R1>(FZ, FH), Z, integration_points);
     this->IntegrateImpl<double, GeometryType::IntegrationPointsArrayType, GLOBAL>(*pParentGeometry, *FH, A, integration_points);
 //        std::cout << "X: " << X << ", Y: " << Y << ", Z: " << Z << ", A: " << A << std::endl;
-    if(A != 0.0)
+    if (A != 0.0)
     {
         // the quad-tree is able to integrate the COG
-        COG[0] = X/A;
-        COG[1] = Y/A;
-        COG[2] = Z/A;
+        COG[0] = X / A;
+        COG[1] = Y / A;
+        COG[2] = Z / A;
         return true;
     }
     else
+    {
         return false;
+    }
 }
 
 /// Quadrilateral quad-tree node in reference coordinates
@@ -940,11 +972,11 @@ public:
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     QuadTreeNodeQ4(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
-    : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
+        : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
     {}
 
     QuadTreeNodeQ4(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
-    : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
+        : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
     {}
 
     virtual ~QuadTreeNodeQ4() {}
@@ -956,67 +988,93 @@ public:
 
     void Refine() override
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax)));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, mXmin, 0.5 * (mXmin + mXmax), 0.5 * (mYmin + mYmax), mYmax)));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeQ4<TFrameType>(next_level, 0.5 * (mXmin + mXmax), mXmax, 0.5 * (mYmin + mYmax), mYmax)));
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
     {
-        if(quadrature_type == 1) // Gauss-Legendre
+        if (quadrature_type == 1) // Gauss-Legendre
         {
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints1, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints2, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints3, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #ifndef SD_APP_FORWARD_COMPATIBILITY
-            else if(integration_order == 6)
+            }
+#ifndef SD_APP_FORWARD_COMPATIBILITY
+            else if (integration_order == 6)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints7, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints8, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 9)
+            }
+            else if (integration_order == 9)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 10)
+            }
+            else if (integration_order == 10)
+            {
                 return Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #endif
+            }
+#endif
             else
+            {
                 KRATOS_ERROR << "The Gauss-Legendre integration_order " << integration_order << " is not supported";
+            }
         }
         else
+        {
             KRATOS_ERROR << "The quadrature type " << quadrature_type << " is not supported";
+        }
     }
 
     typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
         typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
         typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
-        #else
+#else
         NodeType P1(0, mXmin, mYmin);
         NodeType P2(1, mXmax, mYmin);
         NodeType P3(2, mXmax, mYmax);
         NodeType P4(3, mXmin, mYmax);
-        #endif
+#endif
         return typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
     }
 
@@ -1025,10 +1083,10 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
-            || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4 )
+        if (    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4
+                || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4 )
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
@@ -1037,50 +1095,74 @@ public:
             NodeType& P2 = *pP2;
             NodeType& P3 = *pP3;
             NodeType& P4 = *pP4;
-            #else
+#else
             NodeType P1, P2, P3, P4;
-            #endif
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(pP1, pP2, pP3, pP4));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(pP1, pP2, pP3, pP4));
-            #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
+            }
+#else
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D4<NodeType>(P1, P2, P3, P4));
-            #endif
+            }
+#endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
-             || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8 )
+        else if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+                 || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8 )
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
@@ -1097,74 +1179,114 @@ public:
             NodeType& P6 = *pP6;
             NodeType& P7 = *pP7;
             NodeType& P8 = *pP8;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8;
-            #endif
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
-            #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
+            }
+#else
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
-            #endif
+            }
+#endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
-             || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
+        else if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9
+                 || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9 )
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
@@ -1183,81 +1305,129 @@ public:
             NodeType& P7 = *pP7;
             NodeType& P8 = *pP8;
             NodeType& P9 = *pP9;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8, P9;
-            #endif
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = 0.5*(mYmin+mYmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P9, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9));
-            #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
+            }
+#else
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral2D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Quadrilateral3D9<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9));
-            #endif
+            }
+#endif
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
 
-        for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        {
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
+        }
 
         return pNewGeometry;
     }
@@ -1266,11 +1436,11 @@ public:
     {
         bool is_onboundary = false;
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmax) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[1] - mYmin) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[1] - mYmax) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) );
         return is_onboundary;
     }
@@ -1283,28 +1453,28 @@ public:
     CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
-        C[0] = 0.5*(mXmin + mXmax);
-        C[1] = 0.5*(mYmin + mYmax);
+        C[0] = 0.5 * (mXmin + mXmax);
+        C[1] = 0.5 * (mYmin + mYmax);
         C[2] = 0.0;
         return C;
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-            const std::size_t& nsampling) const final
+                                   const std::size_t& nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
 
-        SamplingLocalPoints.reserve((nsampling+1) * (nsampling+1));
+        SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 1));
         CoordinatesArrayType X;
         PointType P;
         X[2] = 0.0;
-        for(std::size_t i = 0; i < nsampling + 1; ++i)
+        for (std::size_t i = 0; i < nsampling + 1; ++i)
         {
-            X[0] = mXmin + i*dX;
-            for(std::size_t j = 0; j < nsampling + 1; ++j)
+            X[0] = mXmin + i * dX;
+            for (std::size_t j = 0; j < nsampling + 1; ++j)
             {
-                X[1] = mYmin + j*dY;
+                X[1] = mYmin + j * dY;
                 SamplingLocalPoints.push_back(X);
             }
         }
@@ -1356,84 +1526,112 @@ public:
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     QuadTreeNodeBezier2D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
-    : BaseType(Xmin, Xmax, Ymin, Ymax)
+        : BaseType(Xmin, Xmax, Ymin, Ymax)
     {}
 
     QuadTreeNodeBezier2D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
-    : BaseType(Level, Xmin, Xmax, Ymin, Ymax)
+        : BaseType(Level, Xmin, Xmax, Ymin, Ymax)
     {}
 
     virtual ~QuadTreeNodeBezier2D() {}
 
     void Refine() final
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax())));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier2D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax())));
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
-        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D
-        || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D3)
+        if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D
+                || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier2D3)
         {
             KRATOS_ERROR << "The generation of Bezier2D or Bezier2D3 geometry of type" << static_cast<int>(pParentGeometry->GetGeometryType()) << " is not supported";
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
-        if(quadrature_type == 1) // Gauss-Legendre
+        if (quadrature_type == 1) // Gauss-Legendre
         {
             IntegrationPointsArrayType integration_points;
 
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints1, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints2, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints3, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints4, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints5, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 6)
+            }
+            else if (integration_order == 6)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints6, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints7, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints8, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 9)
+            }
+            else if (integration_order == 9)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints9, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 10)
+            }
+            else if (integration_order == 10)
+            {
                 integration_points = Quadrature<QuadrilateralGaussLegendreIntegrationPoints10, 2, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            }
             else
+            {
                 KRATOS_ERROR << "The Gauss-Legendre integration_order of " << integration_order << " is not supported";
+            }
 
             // map the integration points from [-1, 1] x [-1, 1] to [0, 1] x [0, 1]
             for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
                 integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
-                integration_points[i].Weight() = 0.25*integration_points[i].Weight();
+                integration_points[i].Weight() = 0.25 * integration_points[i].Weight();
             }
 
             return integration_points;
         }
         else
+        {
             KRATOS_ERROR << "The quadrature type " << quadrature_type << " is not supported";
+        }
     }
 
     /// Turn back information as a string.
@@ -1469,11 +1667,11 @@ public:
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     QuadTreeNodeH8(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
-    : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
+        : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
     {}
 
     QuadTreeNodeH8(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
-    : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
+        : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
     {}
 
     virtual ~QuadTreeNodeH8() {}
@@ -1492,107 +1690,151 @@ public:
 
     void Refine() override
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
 
             if (TConfiguration == 0)
             {
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), 0.5 * (mYmin + mYmax), mYmax, mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, 0.5 * (mYmin + mYmax), mYmax, mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax), 0.5 * (mZmin + mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax), 0.5 * (mZmin + mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
             else if (TConfiguration == 1)
             {
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5*(mYmin+mYmax), 0.5*(mZmin+mZmax), mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5*(mYmin+mYmax), mYmax, 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5 * (mYmin + mYmax), mYmax, mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5 * (mYmin + mYmax), 0.5 * (mZmin + mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
             else if (TConfiguration == 2)
             {
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, mYmax, mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, mYmax, mZmin, 0.5*(mZmin+mZmax))));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, mYmax, 0.5*(mZmin+mZmax), mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, mYmax, 0.5*(mZmin+mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, mYmax, mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, mYmax, mZmin, 0.5 * (mZmin + mZmax))));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, mYmax, 0.5 * (mZmin + mZmax), mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
             else if (TConfiguration == 3)
             {
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), mYmin, 0.5*(mYmin+mYmax), mZmin, mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, mYmin, 0.5*(mYmin+mYmax), mZmin, mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5*(mXmin+mXmax), 0.5*(mYmin+mYmax), mYmax, mZmin, mZmax)));
-                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5*(mXmin+mXmax), mXmax, 0.5*(mYmin+mYmax), mYmax, mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax), mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), 0.5 * (mYmin + mYmax), mYmax, mZmin, mZmax)));
+                BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, 0.5 * (mYmin + mYmax), mYmax, mZmin, mZmax)));
             }
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
     {
-        if(quadrature_type == 1) // Gauss-Legendre
+        if (quadrature_type == 1) // Gauss-Legendre
         {
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<1>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<2>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<3>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<4>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<5>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #ifndef SD_APP_FORWARD_COMPATIBILITY
-            else if(integration_order == 6)
+            }
+#ifndef SD_APP_FORWARD_COMPATIBILITY
+            else if (integration_order == 6)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<6>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<7>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 return Quadrature<HexahedronGaussLegendreIntegrationPoints<8>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #endif
+            }
+#endif
             else
+            {
                 KRATOS_ERROR << "The Gauss-Legendre integration_order " << integration_order << " is not supported";
+            }
         }
-        else if(quadrature_type == 2) // Gauss-Lobatto
+        else if (quadrature_type == 2) // Gauss-Lobatto
         {
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 6)
+            }
+            else if (integration_order == 6)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 9)
+            }
+            else if (integration_order == 9)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints9, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 10)
+            }
+            else if (integration_order == 10)
+            {
                 return Quadrature<HexahedronGaussLobattoIntegrationPoints10, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            }
             else
+            {
                 KRATOS_ERROR << "The Gauss-Lobatto integration_order " << integration_order << " is not supported";
+            }
         }
         else
+        {
             KRATOS_ERROR << "The quadrature type " << quadrature_type << " is not supported";
+        }
     }
 
     typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mXmin, mYmin, mZmin));
         typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mXmax, mYmin, mZmin));
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mXmax, mYmax, mZmin));
@@ -1601,7 +1843,7 @@ public:
         typename NodeType::Pointer P6 = typename NodeType::Pointer(new NodeType(5, mXmax, mYmin, mZmax));
         typename NodeType::Pointer P7 = typename NodeType::Pointer(new NodeType(6, mXmax, mYmax, mZmax));
         typename NodeType::Pointer P8 = typename NodeType::Pointer(new NodeType(7, mXmin, mYmax, mZmax));
-        #else
+#else
         NodeType P1(0, mXmin, mYmin, mZmin);
         NodeType P2(1, mXmax, mYmin, mZmin);
         NodeType P3(2, mXmax, mYmax, mZmin);
@@ -1610,7 +1852,7 @@ public:
         NodeType P6(5, mXmax, mYmin, mZmax);
         NodeType P7(6, mXmax, mYmax, mZmax);
         NodeType P8(7, mXmin, mYmax, mZmax);
-        #endif
+#endif
         return typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
     }
 
@@ -1619,9 +1861,9 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8)
+        if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
@@ -1638,67 +1880,99 @@ public:
             NodeType& P6 = *pP6;
             NodeType& P7 = *pP7;
             NodeType& P8 = *pP8;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8;
-            #endif
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8));
-            #else
+#else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
-            #endif
+#endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20)
+        else if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
@@ -1739,140 +2013,220 @@ public:
             NodeType& P18 = *pP18;
             NodeType& P19 = *pP19;
             NodeType& P20 = *pP20;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8,
-                    P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20;
-            #endif
+                     P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20;
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P9, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P10, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P11, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P11, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P12, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P12, X);
+            }
 
-            X[0] = mXmin; X[1] = mYmin; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P13, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P13, X);
+            }
 
-            X[0] = mXmax; X[1] = mYmin; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P14, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P14, X);
+            }
 
-            X[0] = mXmax; X[1] = mYmax; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P15, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P15, X);
+            }
 
-            X[0] = mXmin; X[1] = mYmax; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P16, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P16, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P17, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P17, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P18, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P18, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P19, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P19, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P20, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P20, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D20<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10, pP11, pP12, pP13, pP14, pP15, pP16, pP17, pP18, pP19, pP20));
-            #else
+#else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D20<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20));
-            #endif
+#endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27)
+        else if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
@@ -1927,185 +2281,297 @@ public:
             NodeType& P25 = *pP25;
             NodeType& P26 = *pP26;
             NodeType& P27 = *pP27;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8,
-                    P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20,
-                    P21, P22, P23, P24, P25, P26, P27;
-            #endif
+                     P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20,
+                     P21, P22, P23, P24, P25, P26, P27;
+#endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmin; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P9, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P10, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P11, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P11, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P12, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P12, X);
+            }
 
-            X[0] = mXmin; X[1] = mYmin; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P13, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P13, X);
+            }
 
-            X[0] = mXmax; X[1] = mYmin; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P14, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P14, X);
+            }
 
-            X[0] = mXmax; X[1] = mYmax; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P15, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P15, X);
+            }
 
-            X[0] = mXmin; X[1] = mYmax; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P16, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P16, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmin; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P17, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P17, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P18, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P18, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P19, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P19, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax); X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P20, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P20, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = 0.5*(mYmin+mYmax); X[2] = mZmin;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P21, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P21, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmin; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P22, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P22, X);
+            }
 
-            X[0] = mXmax; X[1] = 0.5*(mYmin+mYmax); X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P23, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P23, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = mYmax; X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P24, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P24, X);
+            }
 
-            X[0] = mXmin; X[1] = 0.5*(mYmin+mYmax); X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P25, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P25, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = 0.5*(mYmin+mYmax); X[2] = mZmax;
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P26, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P26, X);
+            }
 
-            X[0] = 0.5*(mXmin+mXmax); X[1] = 0.5*(mYmin+mYmax); X[2] = 0.5*(mZmin+mZmax);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P27, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P27, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D27<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10, pP11, pP12, pP13, pP14, pP15, pP16, pP17, pP18, pP19, pP20, pP21, pP22, pP23, pP24, pP25, pP26, pP27));
-            #else
+#else
             pNewGeometry = typename GeometryType::Pointer(new Hexahedra3D27<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22, P23, P24, P25, P26, P27));
-            #endif
+#endif
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
 
-        for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        {
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
+        }
 
         return pNewGeometry;
     }
@@ -2113,54 +2579,54 @@ public:
     bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const final
     {
         bool is_onboundary =             ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmax) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[1] - mYmin) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[1] - mYmax) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[2] - mZmin) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
-        if(is_onboundary) return true;
+        if (is_onboundary) { return true; }
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[2] - mZmax) < tol) && (mXmin - tol < rLocalPoint[0]) && (rLocalPoint[0] < mXmax + tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
-        if(is_onboundary) return is_onboundary;
+        if (is_onboundary) { return is_onboundary; }
         return false;
     }
 
     bool IsInside(const CoordinatesArrayType& rLocalPoint) const final
     {
         return (mXmin < rLocalPoint[0]) && (rLocalPoint[0] < mXmax)
-            && (mYmin < rLocalPoint[1]) && (rLocalPoint[1] < mYmax)
-            && (mZmin < rLocalPoint[2]) && (rLocalPoint[2] < mZmax);
+               && (mYmin < rLocalPoint[1]) && (rLocalPoint[1] < mYmax)
+               && (mZmin < rLocalPoint[2]) && (rLocalPoint[2] < mZmax);
     }
 
     CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
-        C[0] = 0.5*(mXmin + mXmax);
-        C[1] = 0.5*(mYmin + mYmax);
-        C[2] = 0.5*(mZmin + mZmax);
+        C[0] = 0.5 * (mXmin + mXmax);
+        C[1] = 0.5 * (mYmin + mYmax);
+        C[2] = 0.5 * (mZmin + mZmax);
         return C;
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-            const std::size_t& nsampling) const final
+                                   const std::size_t& nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
         double dZ = (mZmax - mZmin) / nsampling;
 
-        SamplingLocalPoints.reserve((nsampling+1) * (nsampling+1) * (nsampling+1));
+        SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 1) * (nsampling + 1));
         CoordinatesArrayType X;
-        for(std::size_t i = 0; i < nsampling + 1; ++i)
+        for (std::size_t i = 0; i < nsampling + 1; ++i)
         {
-            X[0] = mXmin + i*dX;
-            for(std::size_t j = 0; j < nsampling + 1; ++j)
+            X[0] = mXmin + i * dX;
+            for (std::size_t j = 0; j < nsampling + 1; ++j)
             {
-                X[1] = mYmin + j*dY;
-                for(std::size_t k = 0; k < nsampling + 1; ++k)
+                X[1] = mYmin + j * dY;
+                for (std::size_t k = 0; k < nsampling + 1; ++k)
                 {
-                    X[2] = mZmin + k*dZ;
+                    X[2] = mZmin + k * dZ;
                     SamplingLocalPoints.push_back(X);
                 }
             }
@@ -2214,72 +2680,94 @@ public:
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     QuadTreeNodeBezier3D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
-    : BaseType(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
+        : BaseType(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
     {}
 
     QuadTreeNodeBezier3D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
-    : BaseType(Level, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
+        : BaseType(Level, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
     {}
 
     virtual ~QuadTreeNodeBezier3D() {}
 
     void Refine() final
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5*(BaseType::Zmin()+BaseType::Zmax()))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5*(BaseType::Xmin()+BaseType::Xmax()), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5*(BaseType::Xmin()+BaseType::Xmax()), BaseType::Xmax(), 0.5*(BaseType::Ymin()+BaseType::Ymax()), BaseType::Ymax(), 0.5*(BaseType::Zmin()+BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Zmin(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Zmin(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax(), BaseType::Zmin(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), 0.5 * (BaseType::Zmin() + BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), BaseType::Ymin(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), 0.5 * (BaseType::Zmin() + BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, BaseType::Xmin(), 0.5 * (BaseType::Xmin() + BaseType::Xmax()), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()), BaseType::Zmax())));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeBezier3D<TFrameType>(next_level, 0.5 * (BaseType::Xmin() + BaseType::Xmax()), BaseType::Xmax(), 0.5 * (BaseType::Ymin() + BaseType::Ymax()), BaseType::Ymax(), 0.5 * (BaseType::Zmin() + BaseType::Zmax()), BaseType::Zmax())));
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     typename GeometryType::Pointer pCreateGeometry(typename GeometryType::Pointer pParentGeometry) const final
     {
-        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier3D)
+        if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Bezier3D)
         {
             KRATOS_ERROR << "The generation of Bezier3D geometry " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is not supported";
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
     }
 
     IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
     {
-        if(quadrature_type == 1) // Gauss-Legendre
+        if (quadrature_type == 1) // Gauss-Legendre
         {
             IntegrationPointsArrayType integration_points;
 
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<1>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<2>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<3>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<4>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<5>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #ifndef SD_APP_FORWARD_COMPATIBILITY
-            else if(integration_order == 6)
+            }
+#ifndef SD_APP_FORWARD_COMPATIBILITY
+            else if (integration_order == 6)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<6>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<7>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 integration_points = Quadrature<HexahedronGaussLegendreIntegrationPoints<8>, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            #endif
+            }
+#endif
             else
+            {
                 KRATOS_ERROR << "The Gauss-Legendre integration_order " << integration_order << " is not supported";
+            }
 
             // map the integration points from [-1, 1] x [-1, 1] x [-1, 1] to [0, 1] x [0, 1] x [0, 1]
             for (std::size_t i = 0; i < integration_points.size(); ++i)
@@ -2287,37 +2775,59 @@ public:
                 integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
                 integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
                 integration_points[i].Z() = 0.5 * (integration_points[i].Z() + 1);
-                integration_points[i].Weight() = 0.125*integration_points[i].Weight();
+                integration_points[i].Weight() = 0.125 * integration_points[i].Weight();
             }
 
             return integration_points;
         }
-        else if(quadrature_type == 2) // Gauss-Lobatto
+        else if (quadrature_type == 2) // Gauss-Lobatto
         {
             IntegrationPointsArrayType integration_points;
 
-            if(integration_order == 1)
+            if (integration_order == 1)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints1, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 2)
+            }
+            else if (integration_order == 2)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints2, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 3)
+            }
+            else if (integration_order == 3)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints3, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 4)
+            }
+            else if (integration_order == 4)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints4, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 5)
+            }
+            else if (integration_order == 5)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints5, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 6)
+            }
+            else if (integration_order == 6)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints6, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 7)
+            }
+            else if (integration_order == 7)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints7, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 8)
+            }
+            else if (integration_order == 8)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints8, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 9)
+            }
+            else if (integration_order == 9)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints9, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
-            else if(integration_order == 10)
+            }
+            else if (integration_order == 10)
+            {
                 integration_points = Quadrature<HexahedronGaussLobattoIntegrationPoints10, 3, IntegrationPoint<3> >::GenerateIntegrationPoints();
+            }
             else
+            {
                 KRATOS_ERROR << "The Gauss-Lobatto integration_order " << integration_order << " is not supported";
+            }
 
             // map the integration points from [-1, 1] x [-1, 1] x [-1, 1] to [0, 1] x [0, 1] x [0, 1]
             for (std::size_t i = 0; i < integration_points.size(); ++i)
@@ -2325,13 +2835,15 @@ public:
                 integration_points[i].X() = 0.5 * (integration_points[i].X() + 1);
                 integration_points[i].Y() = 0.5 * (integration_points[i].Y() + 1);
                 integration_points[i].Z() = 0.5 * (integration_points[i].Z() + 1);
-                integration_points[i].Weight() = 0.125*integration_points[i].Weight();
+                integration_points[i].Weight() = 0.125 * integration_points[i].Weight();
             }
 
             return integration_points;
         }
         else
+        {
             KRATOS_ERROR << "The quadrature type " << quadrature_type << " is not supported";
+        }
     }
 
     /// Turn back information as a string.
@@ -2363,43 +2875,45 @@ public:
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
     QuadTreeNodeT3(const double& X0, const double& Y0, const double& X1, const double& Y1, const double& X2, const double& Y2)
-    : BaseType(), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
+        : BaseType(), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
     {}
 
     QuadTreeNodeT3(const std::size_t& Level, const double& X0, const double& Y0, const double& X1, const double& Y1, const double& X2, const double& Y2)
-    : BaseType(Level), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
+        : BaseType(Level), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
     {}
 
     virtual ~QuadTreeNodeT3() {}
 
     void Refine() final
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t next_level = this->Level() + 1;
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, mX0, mY0, 0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX0+mX2), 0.5*(mY0+mY2))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX0+mX1), 0.5*(mY0+mY1), mX1, mY1, 0.5*(mX1+mX2), 0.5*(mY1+mY2))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX1+mX2), 0.5*(mY1+mY2), mX2, mY2, 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
-            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5*(mX0+mX1), 0.5*(mY0+mY1), 0.5*(mX1+mX2), 0.5*(mY1+mY2), 0.5*(mX2+mX0), 0.5*(mY2+mY0))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, mX0, mY0, 0.5 * (mX0 + mX1), 0.5 * (mY0 + mY1), 0.5 * (mX0 + mX2), 0.5 * (mY0 + mY2))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5 * (mX0 + mX1), 0.5 * (mY0 + mY1), mX1, mY1, 0.5 * (mX1 + mX2), 0.5 * (mY1 + mY2))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5 * (mX1 + mX2), 0.5 * (mY1 + mY2), mX2, mY2, 0.5 * (mX2 + mX0), 0.5 * (mY2 + mY0))));
+            BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeT3<TFrameType>(next_level, 0.5 * (mX0 + mX1), 0.5 * (mY0 + mY1), 0.5 * (mX1 + mX2), 0.5 * (mY1 + mY2), 0.5 * (mX2 + mX0), 0.5 * (mY2 + mY0))));
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mX0, mY0));
         typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mX1, mY1));
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mX2, mY2));
-        #else
+#else
         NodeType P1(0, mX0, mY0);
         NodeType P2(1, mX1, mY1);
         NodeType P3(2, mX2, mY2);
-        #endif
+#endif
         return typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
     }
 
@@ -2408,54 +2922,74 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3
-            || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3 )
+        if (    pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3
+                || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3 )
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
             NodeType& P1 = *pP1;
             NodeType& P2 = *pP2;
             NodeType& P3 = *pP3;
-            #else
+#else
             NodeType P1, P2, P3;
-            #endif
+#endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mX1; X[1] = mY1;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mX2; X[1] = mY2;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(pP1, pP2, pP3));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(pP1, pP2, pP3));
-            #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
+            }
+#else
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D3<NodeType>(P1, P2, P3));
-            #endif
+            }
+#endif
         }
-        else if( pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
-              || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6 )
+        else if ( pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
+                  || pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6 )
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
@@ -2468,63 +3002,99 @@ public:
             NodeType& P4 = *pP4;
             NodeType& P5 = *pP5;
             NodeType& P6 = *pP6;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6;
-            #endif
+#endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mX1; X[1] = mY1;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mX2; X[1] = mY2;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
-            X[0] = 0.5*(mX0+mX1); X[1] = 0.5*(mY0+mY1);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX0 + mX1); X[1] = 0.5 * (mY0 + mY1);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            X[0] = 0.5*(mX1+mX2); X[1] = 0.5*(mY1+mY2);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX1 + mX2); X[1] = 0.5 * (mY1 + mY2);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
-            X[0] = 0.5*(mX2+mX0); X[1] = 0.5*(mY2+mY0);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX2 + mX0); X[1] = 0.5 * (mY2 + mY0);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
+#ifdef SD_APP_FORWARD_COMPATIBILITY
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6));
-            #else
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
+            }
+#else
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle2D6<NodeType>(P1, P2, P3, P4, P5, P6));
-            if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
+            }
+            if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
+            {
                 pNewGeometry = typename GeometryType::Pointer(new Triangle3D6<NodeType>(P1, P2, P3, P4, P5, P6));
-            #endif
+            }
+#endif
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
 
-        for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        {
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
+        }
 
         return pNewGeometry;
     }
@@ -2542,32 +3112,32 @@ public:
     {
         // REF: https://stackoverflow.com/ques
         // tions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
-        double Area = 0.5*(-mY1*mX2 + mY0*(-mX1 + mX2) + mX0*(mY1 - mY2) + mX1*mY2);
-        double s = 1/(2*Area)*(mY0*mX2 - mX0*mY2 + (mY2 - mY0)*rLocalPoint[0] + (mX0 - mX2)*rLocalPoint[1]);
-        double t = 1/(2*Area)*(mX0*mY1 - mY0*mX1 + (mY0 - mY1)*rLocalPoint[0] + (mX1 - mX0)*rLocalPoint[1]);
+        double Area = 0.5 * (-mY1 * mX2 + mY0 * (-mX1 + mX2) + mX0 * (mY1 - mY2) + mX1 * mY2);
+        double s = 1 / (2 * Area) * (mY0 * mX2 - mX0 * mY2 + (mY2 - mY0) * rLocalPoint[0] + (mX0 - mX2) * rLocalPoint[1]);
+        double t = 1 / (2 * Area) * (mX0 * mY1 - mY0 * mX1 + (mY0 - mY1) * rLocalPoint[0] + (mX1 - mX0) * rLocalPoint[1]);
         return (s > 0.0) && (s < 1.0) && (t > 0.0) && (t < 1.0) && (s + t < 1.0);
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-            const std::size_t& nsampling) const final
+                                   const std::size_t& nsampling) const final
     {
-        SamplingLocalPoints.reserve((nsampling+1)*(nsampling+2) / 2);
+        SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 2) / 2);
         CoordinatesArrayType X;
 
         X[2] = 0.0;
-        for (std::size_t row = 0; row < nsampling+1; ++row)
+        for (std::size_t row = 0; row < nsampling + 1; ++row)
         {
             std::size_t n = row + 1;
 
-            double xstart = mX0 + (mX1 - mX0)*row / nsampling;
-            double ystart = mY0 + (mY1 - mY0)*row / nsampling;
-            double xend = mX0 + (mX2 - mX0)*row / nsampling;
-            double yend = mY0 + (mY2 - mY0)*row / nsampling;
+            double xstart = mX0 + (mX1 - mX0) * row / nsampling;
+            double ystart = mY0 + (mY1 - mY0) * row / nsampling;
+            double xend = mX0 + (mX2 - mX0) * row / nsampling;
+            double yend = mY0 + (mY2 - mY0) * row / nsampling;
 
             for (std::size_t i = 0; i < n; ++i)
             {
-                X[0] = xstart + i*xend/n;
-                X[1] = ystart + i*yend/n;
+                X[0] = xstart + i * xend / n;
+                X[1] = ystart + i * yend / n;
                 SamplingLocalPoints.push_back(X);
             }
         }
@@ -2621,10 +3191,10 @@ public:
                    const double& X1, const double& Y1, const double& Z1,
                    const double& X2, const double& Y2, const double& Z2,
                    const double& X3, const double& Y3, const double& Z3)
-    : BaseType(), mX0(X0), mY0(Y0), mZ0(Z0),
-        mX1(X1), mY1(Y1), mZ1(Z1),
-        mX2(X2), mY2(Y2), mZ2(Z2),
-        mX3(X3), mY3(Y3), mZ3(Z3)
+        : BaseType(), mX0(X0), mY0(Y0), mZ0(Z0),
+          mX1(X1), mY1(Y1), mZ1(Z1),
+          mX2(X2), mY2(Y2), mZ2(Z2),
+          mX3(X3), mY3(Y3), mZ3(Z3)
     {}
 
     QuadTreeNodeT4(const std::size_t& Level,
@@ -2632,10 +3202,10 @@ public:
                    const double& X1, const double& Y1, const double& Z1,
                    const double& X2, const double& Y2, const double& Z2,
                    const double& X3, const double& Y3, const double& Z3)
-    : BaseType(Level), mX0(X0), mY0(Y0), mZ0(Z0),
-        mX1(X1), mY1(Y1), mZ1(Z1),
-        mX2(X2), mY2(Y2), mZ2(Z2),
-        mX3(X3), mY3(Y3), mZ3(Z3)
+        : BaseType(Level), mX0(X0), mY0(Y0), mZ0(Z0),
+          mX1(X1), mY1(Y1), mZ1(Z1),
+          mX2(X2), mY2(Y2), mZ2(Z2),
+          mX3(X3), mY3(Y3), mZ3(Z3)
     {}
 
     virtual ~QuadTreeNodeT4() {}
@@ -2643,14 +3213,14 @@ public:
     /// REF: https://www.semanticscholar.org/paper/Octasection-based-Refinement-of-Finite-Element-Endres-Krysl/7fa050663d1b1627413059943b9143f92b98ef4e/figure/4
     void Refine() final
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
-            double X4 = 0.5*(mX0 + mX1), Y4 = 0.5*(mY0 + mY1), Z4 = 0.5*(mZ0 + mZ1);
-            double X5 = 0.5*(mX1 + mX2), Y5 = 0.5*(mY1 + mY2), Z5 = 0.5*(mZ1 + mZ2);
-            double X6 = 0.5*(mX0 + mX2), Y6 = 0.5*(mY0 + mY2), Z6 = 0.5*(mZ0 + mZ2);
-            double X7 = 0.5*(mX0 + mX3), Y7 = 0.5*(mY0 + mY3), Z7 = 0.5*(mZ0 + mZ3);
-            double X8 = 0.5*(mX1 + mX3), Y8 = 0.5*(mY1 + mY3), Z8 = 0.5*(mZ1 + mZ3);
-            double X9 = 0.5*(mX2 + mX3), Y9 = 0.5*(mY2 + mY3), Z9 = 0.5*(mZ2 + mZ3);
+            double X4 = 0.5 * (mX0 + mX1), Y4 = 0.5 * (mY0 + mY1), Z4 = 0.5 * (mZ0 + mZ1);
+            double X5 = 0.5 * (mX1 + mX2), Y5 = 0.5 * (mY1 + mY2), Z5 = 0.5 * (mZ1 + mZ2);
+            double X6 = 0.5 * (mX0 + mX2), Y6 = 0.5 * (mY0 + mY2), Z6 = 0.5 * (mZ0 + mZ2);
+            double X7 = 0.5 * (mX0 + mX3), Y7 = 0.5 * (mY0 + mY3), Z7 = 0.5 * (mZ0 + mZ3);
+            double X8 = 0.5 * (mX1 + mX3), Y8 = 0.5 * (mY1 + mY3), Z8 = 0.5 * (mZ1 + mZ3);
+            double X9 = 0.5 * (mX2 + mX3), Y9 = 0.5 * (mY2 + mY3), Z9 = 0.5 * (mZ2 + mZ3);
 
             std::size_t next_level = this->Level() + 1;
 
@@ -2671,24 +3241,26 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < BaseType::mpChildren.size(); ++i)
+            {
                 BaseType::mpChildren[i]->Refine();
+            }
         }
     }
 
     typename GeometryType::Pointer pCreateReferenceGeometry() const final
     {
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         typename NodeType::Pointer P1 = typename NodeType::Pointer(new NodeType(0, mX0, mY0, mZ0));
         typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mX1, mY1, mZ1));
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mX2, mY2, mZ2));
         typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, mX3, mY3, mZ3));
-        #else
+#else
         NodeType P1(0, mX0, mY0, mZ0);
         NodeType P2(1, mX1, mY1, mZ1);
         NodeType P3(2, mX2, mY2, mZ2);
         NodeType P4(3, mX3, mY3, mZ3);
-        #endif
+#endif
         return typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(P1, P2, P3, P4));
     }
 
@@ -2697,9 +3269,9 @@ public:
         CoordinatesArrayType X;
         typename GeometryType::Pointer pNewGeometry;
 
-        if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4)
+        if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
@@ -2708,43 +3280,59 @@ public:
             NodeType& P2 = *pP2;
             NodeType& P3 = *pP3;
             NodeType& P4 = *pP4;
-            #else
+#else
             NodeType P1, P2, P3, P4;
-            #endif
+#endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mX1; X[1] = mY1; X[2] = mZ1;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mX2; X[1] = mY2; X[2] = mZ2;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mX3; X[1] = mY3; X[2] = mZ3;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(pP1, pP2, pP3, pP4));
-            #else
+#else
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D4<NodeType>(P1, P2, P3, P4));
-            #endif
+#endif
         }
-        else if(pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10)
+        else if (pParentGeometry->GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10)
         {
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             typename NodeType::Pointer pP1 = typename NodeType::Pointer(new NodeType(0, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP2 = typename NodeType::Pointer(new NodeType(1, 0.0, 0.0, 0.0));
             typename NodeType::Pointer pP3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0, 0.0));
@@ -2765,81 +3353,125 @@ public:
             NodeType& P8 = *pP8;
             NodeType& P9 = *pP9;
             NodeType& P10 = *pP10;
-            #else
+#else
             NodeType P1, P2, P3, P4, P5, P6, P7, P8, P9, P10;
-            #endif
+#endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P1, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
+            }
 
             X[0] = mX1; X[1] = mY1; X[2] = mZ1;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P2, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
+            }
 
             X[0] = mX2; X[1] = mY2; X[2] = mZ2;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P3, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
+            }
 
             X[0] = mX3; X[1] = mY3; X[2] = mZ3;
-            if(TFrameType == GLOBAL_CURRENT)
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P4, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
+            }
 
-            X[0] = 0.5*(mX0+mX1); X[1] = 0.5*(mY0+mY1); X[2] = 0.5*(mZ0+mZ1);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX0 + mX1); X[1] = 0.5 * (mY0 + mY1); X[2] = 0.5 * (mZ0 + mZ1);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P5, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
+            }
 
-            X[0] = 0.5*(mX1+mX2); X[1] = 0.5*(mY1+mY2); X[2] = 0.5*(mZ1+mZ2);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX1 + mX2); X[1] = 0.5 * (mY1 + mY2); X[2] = 0.5 * (mZ1 + mZ2);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P6, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
+            }
 
-            X[0] = 0.5*(mX2+mX0); X[1] = 0.5*(mY2+mY0); X[2] = 0.5*(mZ2+mZ0);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX2 + mX0); X[1] = 0.5 * (mY2 + mY0); X[2] = 0.5 * (mZ2 + mZ0);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P7, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
+            }
 
-            X[0] = 0.5*(mX0+mX3); X[1] = 0.5*(mY0+mY3); X[2] = 0.5*(mZ0+mZ3);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX0 + mX3); X[1] = 0.5 * (mY0 + mY3); X[2] = 0.5 * (mZ0 + mZ3);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P8, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
+            }
 
-            X[0] = 0.5*(mX1+mX3); X[1] = 0.5*(mY1+mY3); X[2] = 0.5*(mZ1+mZ3);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX1 + mX3); X[1] = 0.5 * (mY1 + mY3); X[2] = 0.5 * (mZ1 + mZ3);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P9, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
+            }
 
-            X[0] = 0.5*(mX2+mX3); X[1] = 0.5*(mY2+mY3); X[2] = 0.5*(mZ2+mZ3);
-            if(TFrameType == GLOBAL_CURRENT)
+            X[0] = 0.5 * (mX2 + mX3); X[1] = 0.5 * (mY2 + mY3); X[2] = 0.5 * (mZ2 + mZ3);
+            if (TFrameType == GLOBAL_CURRENT)
+            {
                 pParentGeometry->GlobalCoordinates(P10, X);
-            else if(TFrameType == GLOBAL_REFERENCE)
+            }
+            else if (TFrameType == GLOBAL_REFERENCE)
+            {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
+            }
 
-            #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D10<NodeType>(pP1, pP2, pP3, pP4, pP5, pP6, pP7, pP8, pP9, pP10));
-            #else
+#else
             pNewGeometry = typename GeometryType::Pointer(new Tetrahedra3D10<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10));
-            #endif
+#endif
         }
         else
+        {
             KRATOS_ERROR << "The parent geometry type " << static_cast<int>(pParentGeometry->GetGeometryType()) << " is invalid";
+        }
 
-        for(std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        for (std::size_t i = 0; i < pNewGeometry->size(); ++i)
+        {
             (*pNewGeometry)[i].SetInitialPosition((*pNewGeometry)[i]);
+        }
 
         return pNewGeometry;
     }
@@ -2847,9 +3479,9 @@ public:
     CoordinatesArrayType ReferenceCenter() const final
     {
         CoordinatesArrayType C;
-        C[0] = 0.25*(mX0 + mX1 + mX2 + mX3);
-        C[1] = 0.25*(mY0 + mY1 + mY2 + mY3);
-        C[2] = 0.25*(mZ0 + mZ1 + mZ2 + mZ3);
+        C[0] = 0.25 * (mX0 + mX1 + mX2 + mX3);
+        C[1] = 0.25 * (mY0 + mY1 + mY2 + mY3);
+        C[2] = 0.25 * (mZ0 + mZ1 + mZ2 + mZ3);
         return C;
     }
 
@@ -2860,41 +3492,41 @@ public:
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-            const std::size_t& nsampling) const final
+                                   const std::size_t& nsampling) const final
     {
-        SamplingLocalPoints.reserve((nsampling+1)*(nsampling+2)*(nsampling+3) / 6);
+        SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 2) * (nsampling + 3) / 6);
         CoordinatesArrayType X;
 
-        for (std::size_t row = 0; row < nsampling+1; ++row)
+        for (std::size_t row = 0; row < nsampling + 1; ++row)
         {
-            double x0 = mX0 + (mX1 - mX0)*row / nsampling;
-            double y0 = mY0 + (mY1 - mY0)*row / nsampling;
-            double z0 = mZ0 + (mZ1 - mZ0)*row / nsampling;
+            double x0 = mX0 + (mX1 - mX0) * row / nsampling;
+            double y0 = mY0 + (mY1 - mY0) * row / nsampling;
+            double z0 = mZ0 + (mZ1 - mZ0) * row / nsampling;
 
-            double x1 = mX0 + (mX2 - mX0)*row / nsampling;
-            double y1 = mY0 + (mY2 - mY0)*row / nsampling;
-            double z1 = mZ0 + (mZ2 - mZ0)*row / nsampling;
+            double x1 = mX0 + (mX2 - mX0) * row / nsampling;
+            double y1 = mY0 + (mY2 - mY0) * row / nsampling;
+            double z1 = mZ0 + (mZ2 - mZ0) * row / nsampling;
 
-            double x2 = mX0 + (mX3 - mX0)*row / nsampling;
-            double y2 = mY0 + (mY3 - mY0)*row / nsampling;
-            double z2 = mZ0 + (mZ3 - mZ0)*row / nsampling;
+            double x2 = mX0 + (mX3 - mX0) * row / nsampling;
+            double y2 = mY0 + (mY3 - mY0) * row / nsampling;
+            double z2 = mZ0 + (mZ3 - mZ0) * row / nsampling;
 
-            for (std::size_t col = 0; col < row+1; ++col)
+            for (std::size_t col = 0; col < row + 1; ++col)
             {
                 std::size_t n = col + 1;
 
-                double xstart = x0 + (x1 - x0)*col / nsampling;
-                double ystart = y0 + (y1 - y0)*col / nsampling;
-                double zstart = z0 + (z1 - z0)*col / nsampling;
-                double xend = x0 + (x2 - x0)*col / nsampling;
-                double yend = y0 + (y2 - y0)*col / nsampling;
-                double zend = z0 + (z2 - z0)*col / nsampling;
+                double xstart = x0 + (x1 - x0) * col / nsampling;
+                double ystart = y0 + (y1 - y0) * col / nsampling;
+                double zstart = z0 + (z1 - z0) * col / nsampling;
+                double xend = x0 + (x2 - x0) * col / nsampling;
+                double yend = y0 + (y2 - y0) * col / nsampling;
+                double zend = z0 + (z2 - z0) * col / nsampling;
 
                 for (std::size_t i = 0; i < n; ++i)
                 {
-                    X[0] = xstart + i*xend/n;
-                    X[1] = ystart + i*yend/n;
-                    X[2] = zstart + i*zend/n;
+                    X[0] = xstart + i * xend / n;
+                    X[1] = ystart + i * yend / n;
+                    X[2] = zstart + i * zend / n;
                     SamplingLocalPoints.push_back(X);
                 }
             }
@@ -2917,9 +3549,9 @@ public:
     void PrintData(std::ostream& rOStream) const final
     {
         rOStream << "(" << mX0 << ", " << mY0 << ", " << mZ0
-             << ") - (" << mX1 << ", " << mY1 << ", " << mZ1
-             << ") - (" << mX2 << ", " << mY2 << ", " << mZ2
-             << ") - (" << mX3 << ", " << mY3 << ", " << mZ3 << ")";
+                 << ") - (" << mX1 << ", " << mY1 << ", " << mZ1
+                 << ") - (" << mX2 << ", " << mY2 << ", " << mZ2
+                 << ") - (" << mX3 << ", " << mY3 << ", " << mZ3 << ")";
     }
 
 private:

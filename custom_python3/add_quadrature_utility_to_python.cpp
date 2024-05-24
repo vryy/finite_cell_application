@@ -44,22 +44,22 @@ int QuadratureUtility_GetQuadratureOrder(QuadratureUtility& rDummy, const int& i
 }
 
 void QuadratureUtility_ScaleQuadrature(QuadratureUtility& rDummy,
-        Element::Pointer p_elem, const int& quadrature_order, const double& ScaleFactor)
+                                       Element::Pointer p_elem, const int& quadrature_order, const double& ScaleFactor)
 {
     GeometryData::IntegrationMethod ElementalIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        = Function<double, double>::GetIntegrationMethod(quadrature_order);
 
     rDummy.ScaleQuadrature(p_elem->GetGeometry(), ElementalIntegrationMethod, ScaleFactor);
 }
 
 void QuadratureUtility_SetQuadrature(QuadratureUtility& rDummy,
-        Element::Pointer p_elem,
-        const int& integration_order,
-        pybind11::list& quadrature_data)
+                                     Element::Pointer p_elem,
+                                     const int& integration_order,
+                                     pybind11::list& quadrature_data)
 {
     Element::GeometryType::IntegrationPointsArrayType integration_points;
 
-    for(std::size_t i = 0; i < pybind11::len(quadrature_data); ++i)
+    for (std::size_t i = 0; i < pybind11::len(quadrature_data); ++i)
     {
         pybind11::list point = quadrature_data[i].cast<pybind11::list>();
 
@@ -79,31 +79,31 @@ void QuadratureUtility_SetQuadrature(QuadratureUtility& rDummy,
 
 template<int TFrame = 0>
 void QuadratureUtility_SaveQuadrature(QuadratureUtility& rDummy,
-    pybind11::list& pyElemList, const std::string& fileName,
-    const std::string& writeMode)
+                                      pybind11::list& pyElemList, const std::string& fileName,
+                                      const std::string& writeMode)
 {
     std::ofstream myFile;
 
     int mode;
-    if(writeMode == "binary")
+    if (writeMode == "binary")
     {
         myFile.open(fileName.c_str(), std::ios::out | std::ios::binary);
         mode = 0;
         myFile.write((char*)&mode, sizeof(int));
     }
-    else if(writeMode == "binary-full")
+    else if (writeMode == "binary-full")
     {
         myFile.open(fileName.c_str(), std::ios::out | std::ios::binary);
         mode = 1;
         myFile.write((char*)&mode, sizeof(int));
     }
-    else if(writeMode == "ascii")
+    else if (writeMode == "ascii")
     {
         myFile.open(fileName.c_str(), std::ios::out);
         mode = 2;
         myFile << mode << std::endl;
     }
-    else if(writeMode == "ascii-full")
+    else if (writeMode == "ascii-full")
     {
         myFile.open(fileName.c_str(), std::ios::out);
         mode = 3;
@@ -112,26 +112,26 @@ void QuadratureUtility_SaveQuadrature(QuadratureUtility& rDummy,
     else
         KRATOS_THROW_ERROR(std::logic_error, "Unknown write mode", writeMode)
 
-    myFile.precision(16);
+        myFile.precision(16);
     myFile << std::scientific;
 
     for (auto it : pyElemList)
     {
         Element::Pointer p_elem = it.cast<Element::Pointer>();
-        switch(mode)
+        switch (mode)
         {
-            case 0:
-                rDummy.SaveQuadrature<0, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
-                break;
-            case 1:
-                rDummy.SaveQuadrature<1, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
-                break;
-            case 2:
-                rDummy.SaveQuadrature<2, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
-                break;
-            case 3:
-                rDummy.SaveQuadrature<3, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
-                break;
+        case 0:
+            rDummy.SaveQuadrature<0, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
+            break;
+        case 1:
+            rDummy.SaveQuadrature<1, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
+            break;
+        case 2:
+            rDummy.SaveQuadrature<2, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
+            break;
+        case 3:
+            rDummy.SaveQuadrature<3, TFrame>(myFile, p_elem, p_elem->GetGeometry().GetDefaultIntegrationMethod());
+            break;
         }
     }
 
@@ -151,7 +151,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
 
     QuadratureUtility::CoordinatesArrayType Coords;
 
-    if(fileType == std::string("python"))
+    if (fileType == std::string("python"))
     {
         myFile.open(fileName.c_str(), std::ios::out);
         myFile.precision(accuracy);
@@ -166,7 +166,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         for (auto it : pyCutElems)
         {
             Element::Pointer p_elem = it.cast<Element::Pointer>();
-            if(cnt < number_of_element_per_row)
+            if (cnt < number_of_element_per_row)
             {
                 ++cnt;
             }
@@ -190,7 +190,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         for (auto it : pyExcludeElems)
         {
             Element::Pointer p_elem = it.cast<Element::Pointer>();
-            if(cnt < number_of_element_per_row)
+            if (cnt < number_of_element_per_row)
             {
                 ++cnt;
             }
@@ -217,14 +217,20 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
                 = p_elem->GetGeometry().IntegrationPoints( p_elem->GetGeometry().GetDefaultIntegrationMethod() );
 
             myFile << "\tquad_data[" << p_elem->Id() << "] = [";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "\n\t\t[" << Coords[0] << ", " << Coords[1] << ", " << Coords[2]
                        << ", " << integration_points[i].Weight() << "],";
@@ -236,7 +242,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         myFile.close();
         std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
-    else if(fileType == std::string("matlab"))
+    else if (fileType == std::string("matlab"))
     {
         myFile.open(fileName.c_str(), std::ios::out);
         myFile.precision(accuracy);
@@ -268,14 +274,20 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
                 = p_elem->GetGeometry().IntegrationPoints( p_elem->GetGeometry().GetDefaultIntegrationMethod() );
 
             myFile << "cut_cell_quad_data{" << ++cnt << "} = [\n";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "" << Coords[0] << " " << Coords[1] << " " << Coords[2]
                        << " " << integration_points[i].Weight() << "\n";
@@ -288,7 +300,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
     }
     else
         KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
-}
+    }
 
 template<class TCellType, int TFrame = 0>
 void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
@@ -303,7 +315,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
 
     QuadratureUtility::CoordinatesArrayType Coords;
 
-    if(fileType == std::string("python"))
+    if (fileType == std::string("python"))
     {
         myFile.open(fileName.c_str(), std::ios::out);
         myFile.precision(accuracy);
@@ -319,7 +331,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         for (auto it : pyCutCells)
         {
             typename TCellType::Pointer p_cell = it.cast<typename TCellType::Pointer>();
-            if(cnt < number_of_element_per_row)
+            if (cnt < number_of_element_per_row)
             {
                 ++cnt;
             }
@@ -346,7 +358,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         for (auto it : pyExcludeCells)
         {
             typename TCellType::Pointer p_cell = it.cast<typename TCellType::Pointer>();
-            if(cnt < number_of_element_per_row)
+            if (cnt < number_of_element_per_row)
             {
                 ++cnt;
             }
@@ -373,7 +385,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         for (auto it : pyQuadTreeCells)
         {
             typename TCellType::Pointer p_cell = it.cast<typename TCellType::Pointer>();
-            if(cnt < number_of_element_per_row)
+            if (cnt < number_of_element_per_row)
             {
                 ++cnt;
             }
@@ -401,14 +413,20 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 = p_cell->pGetElement()->GetGeometry().IntegrationPoints( p_cell->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
 
             myFile << "\tcq[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_cell->pGetElement()->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "\n\t\t[" << Coords[0] << ", " << Coords[1] << ", " << Coords[2]
                        << ", " << integration_points[i].Weight() << "],";
@@ -429,14 +447,20 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 = p_cell->GetFictitiousIntegrationPoints();
 
             myFile << "\tfiq[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_cell->pGetElement()->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "\n\t\t[" << Coords[0] << ", " << Coords[1] << ", " << Coords[2]
                        << ", " << integration_points[i].Weight() << "],";
@@ -457,14 +481,20 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 = p_cell->GetRepresentativeIntegrationPoints();
 
             myFile << "\tfq[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_cell->pGetElement()->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "\n\t\t[" << Coords[0] << ", " << Coords[1] << ", " << Coords[2]
                        << ", " << integration_points[i].Weight() << "],";
@@ -484,11 +514,13 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
             const Matrix& Weights = p_cell->pGetElement()->GetValue(SUBCELL_WEIGHTS);
 
             myFile << "\tsw[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < Weights.size1(); ++i)
+            for (std::size_t i = 0; i < Weights.size1(); ++i)
             {
                 myFile << "\n\t\t[";
-                for(std::size_t j = 0; j < Weights.size2(); ++j)
+                for (std::size_t j = 0; j < Weights.size2(); ++j)
+                {
                     myFile << Weights(i, j) << ", ";
+                }
                 myFile << "],";
             }
             myFile << "]\n";
@@ -506,7 +538,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
             const Vector& DomainSizes = p_cell->pGetElement()->GetValue(SUBCELL_DOMAIN_SIZES);
 
             myFile << "\tds[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < DomainSizes.size(); ++i)
+            for (std::size_t i = 0; i < DomainSizes.size(); ++i)
             {
                 myFile << DomainSizes(i) << ", ";
             }
@@ -526,14 +558,20 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 = p_cell->pGetElement()->GetGeometry().IntegrationPoints( p_cell->pGetElement()->GetGeometry().GetDefaultIntegrationMethod() );
 
             myFile << "\tqq[" << p_cell->pGetElement()->Id() << "] = [";
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_cell->pGetElement()->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
                 myFile << "\n\t\t[" << Coords[0] << ", " << Coords[1] << ", " << Coords[2]
                        << ", " << integration_points[i].Weight() << "],";
@@ -550,7 +588,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
     }
     else
         KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
-}
+    }
 
 /// Create a new condition from point
 ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(QuadratureUtility& rDummy,
@@ -562,9 +600,9 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
         Properties::Pointer pProperties)
 {
     // get the sample condition
-    if(!KratosComponents<Condition>::Has(sample_cond_name))
+    if (!KratosComponents<Condition>::Has(sample_cond_name))
         KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
     std::size_t lastNodeId_ = lastNodeId;
@@ -577,9 +615,11 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
         NewConditions.push_back(pNewCond);
     }
 
-    for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+    for (typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
             it != NewConditions.ptr_end(); ++it)
+    {
         r_model_part.Conditions().push_back(*it);
+    }
 
     return NewConditions;
 }
@@ -618,9 +658,9 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
     std::size_t lastPropId = FiniteCellAuxiliaryUtility::GetLastPropertiesId(r_model_part);
 
     // get the sample condition
-    if(!KratosComponents<Condition>::Has(sample_cond_name))
+    if (!KratosComponents<Condition>::Has(sample_cond_name))
         KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     typedef Element::GeometryType::PointType::PointType PointType;
     ModelPart::ConditionsContainerType NewConditions;
@@ -632,9 +672,11 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
         NewConditions.push_back(pNewCond);
     }
 
-    for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+    for (typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
             it != NewConditions.ptr_end(); ++it)
+    {
         r_model_part.Conditions().push_back(*it);
+    }
 
     return NewConditions;
 }
@@ -676,9 +718,9 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
     r_model_part.AddProperties(pProperties);
 
     // get the sample condition
-    if(!KratosComponents<Condition>::Has(sample_cond_name))
+    if (!KratosComponents<Condition>::Has(sample_cond_name))
         KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     std::size_t num_conds = 0;
     for (auto it : pyElemList)
@@ -687,22 +729,22 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
 
         GeometryData::IntegrationMethod ThisIntegrationMethod = p_elem->GetGeometry().GetDefaultIntegrationMethod();
         num_conds += rDummy.CreateConditionFromQuadraturePoint(r_model_part, p_elem, ThisIntegrationMethod,
-                r_clone_condition, pProperties, lastNodeId, lastCondId, min_weight, max_weight);
+                     r_clone_condition, pProperties, lastNodeId, lastCondId, min_weight, max_weight);
     }
 
     std::cout << num_conds << " conditions of type " << sample_cond_name << " is added to the model_part" << std::endl;
 }
 
 QuadratureUtility::PointType QuadratureUtility_CreatePoint1(QuadratureUtility& rDummy,
-    const double& rX, const double& rY, const double& rZ)
+        const double& rX, const double& rY, const double& rZ)
 {
     return QuadratureUtility::CreatePoint(rX, rY, rZ);
 }
 
 template<class TEntityType>
 QuadratureUtility::PointType QuadratureUtility_CreatePoint2(QuadratureUtility& rDummy,
-    typename TEntityType::Pointer pElement,
-    const double& rx, const double& ry, const double& rz)
+        typename TEntityType::Pointer pElement,
+        const double& rx, const double& ry, const double& rz)
 {
     return QuadratureUtility::CreatePoint(pElement->GetGeometry(), rx, ry, rz);
 }

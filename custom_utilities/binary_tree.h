@@ -93,11 +93,11 @@ public:
     {
         mpChildren.resize(0);
 
-        if(    p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Quadrilateral2D4
-            && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Quadrilateral3D4
-            && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Hexahedra3D8
-            && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line2D2
-            && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line3D2 )
+        if (    p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Quadrilateral2D4
+                && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Quadrilateral3D4
+                && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Hexahedra3D8
+                && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line2D2
+                && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line3D2 )
         {
             KRATOS_THROW_ERROR(std::logic_error, "The input geometry is incompatible", "")
         }
@@ -120,7 +120,7 @@ public:
 
 
     BinaryTree(NodeType::Pointer& P1, NodeType::Pointer& P2, NodeType::Pointer& P3, NodeType::Pointer& P4,
-        NodeType::Pointer& P5, NodeType::Pointer& P6, NodeType::Pointer& P7, NodeType::Pointer& P8)
+               NodeType::Pointer& P5, NodeType::Pointer& P6, NodeType::Pointer& P7, NodeType::Pointer& P8)
     {
         mpChildren.resize(0);
         mpThisGeometry = GeometryType::Pointer(new Hexahedra3D8<NodeType>(P1, P2, P3, P4, P5, P6, P7, P8));
@@ -152,8 +152,10 @@ public:
     const std::size_t TreeDegree() const
     {
         std::size_t degree = 1;
-        for(std::size_t i = 0; i < TDegree; ++i)
+        for (std::size_t i = 0; i < TDegree; ++i)
+        {
             degree *= 2;
+        }
         return degree;
     }
 
@@ -190,32 +192,32 @@ public:
     /// Create the sub-cells
     void Refine()
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             std::size_t tdegree = this->TreeDegree();
             mpChildren.resize(tdegree);
 
-            if(TDegree == 1)
+            if (TDegree == 1)
             {
                 NodeType::Pointer P2 = this->CreateNode(0.5, (*mpThisGeometry)[0], 0.5, (*mpThisGeometry)[1]);
                 mpChildren[0] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>((*mpThisGeometry)(0), P2));
                 mpChildren[1] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>(P2, (*mpThisGeometry)(1)));
             }
-            else if(TDegree == 2)
+            else if (TDegree == 2)
             {
                 NodeType::Pointer P4 = this->CreateNode(0.5, (*mpThisGeometry)[0], 0.5, (*mpThisGeometry)[1]);
                 NodeType::Pointer P5 = this->CreateNode(0.5, (*mpThisGeometry)[1], 0.5, (*mpThisGeometry)[2]);
                 NodeType::Pointer P6 = this->CreateNode(0.5, (*mpThisGeometry)[2], 0.5, (*mpThisGeometry)[3]);
                 NodeType::Pointer P7 = this->CreateNode(0.5, (*mpThisGeometry)[3], 0.5, (*mpThisGeometry)[0]);
                 NodeType::Pointer P8 = this->CreateNode(0.25, (*mpThisGeometry)[0], 0.25, (*mpThisGeometry)[1],
-                                0.25, (*mpThisGeometry)[2], 0.25, (*mpThisGeometry)[3]);
+                                                        0.25, (*mpThisGeometry)[2], 0.25, (*mpThisGeometry)[3]);
 
                 mpChildren[0] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>((*mpThisGeometry)(0), P4, P8, P7));
                 mpChildren[1] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>((*mpThisGeometry)(1), P5, P8, P4));
                 mpChildren[2] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>((*mpThisGeometry)(2), P6, P8, P5));
                 mpChildren[3] = BinaryTree<TDegree>::Pointer(new BinaryTree<TDegree>((*mpThisGeometry)(3), P7, P8, P6));
             }
-            else if(TDegree == 3)
+            else if (TDegree == 3)
             {
                 NodeType::Pointer P8 = this->CreateNode(0.5, (*mpThisGeometry)[0], 0.5, (*mpThisGeometry)[1]);
                 NodeType::Pointer P9 = this->CreateNode(0.5, (*mpThisGeometry)[1], 0.5, (*mpThisGeometry)[2]);
@@ -254,8 +256,10 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
                 mpChildren[i]->Refine();
+            }
         }
     }
 
@@ -263,17 +267,17 @@ public:
     /// Refine the tree by the level set
     void RefineBy(const LevelSet& r_level_set)
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             int stat = r_level_set.CutStatus(this->GetGeometry());
-            if(stat == -1)
+            if (stat == -1)
             {
                 this->Refine();
             }
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->RefineBy(r_level_set);
             }
@@ -290,7 +294,7 @@ public:
     TOutputType Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, const int integration_order) const
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
-                = LevelSet::GetIntegrationMethod(integration_order);
+            = LevelSet::GetIntegrationMethod(integration_order);
 
         TOutputType Result = TOutputType(0.0);
         this->Integrate(rFunc, Result, ThisIntegrationMethod);
@@ -303,9 +307,9 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+                   const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             const GeometryType::IntegrationPointsArrayType& integration_points
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
@@ -315,7 +319,7 @@ public:
 
             CoordinatesArrayType GlobalCoords;
 
-            for(std::size_t point = 0; point < integration_points.size(); ++point)
+            for (std::size_t point = 0; point < integration_points.size(); ++point)
             {
                 this->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
                 rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
@@ -323,7 +327,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->Integrate(rFunc, rOutput, ThisIntegrationMethod);
             }
@@ -338,32 +342,38 @@ public:
 
     void ResetId()
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             mId = 0;
         }
         else
         {
             mId = 0;
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
                 mpChildren[i]->ResetId();
+            }
         }
     }
 
 
     void Renumber(std::size_t& LastNodeId, std::size_t& LastElementId)
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             mId = ++LastElementId;
-            for(std::size_t i = 0; i < GetGeometry().size(); ++i)
-                if(GetGeometry()[i].Id() == 0)
+            for (std::size_t i = 0; i < GetGeometry().size(); ++i)
+                if (GetGeometry()[i].Id() == 0)
+                {
                     GetGeometry()[i].SetId(++LastNodeId);
+                }
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
                 mpChildren[i]->Renumber(LastNodeId, LastElementId);
+            }
         }
     }
 
@@ -381,21 +391,25 @@ public:
 
 
     void AddToModelPart(ModelPart& r_model_part, Element const& r_sample_element,
-            const std::size_t level) const
+                        const std::size_t level) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             Properties::Pointer p_properties = r_model_part.pGetProperties(level);
             Element::Pointer pNewElement = r_sample_element.Create(Id(), mpThisGeometry, p_properties);
             r_model_part.AddElement(pNewElement);
 
-            for(std::size_t i = 0; i < mpThisGeometry->size(); ++i)
+            for (std::size_t i = 0; i < mpThisGeometry->size(); ++i)
+            {
                 r_model_part.AddNode((*mpThisGeometry)(i));
+            }
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
+            {
                 mpChildren[i]->AddToModelPart(r_model_part, r_sample_element, level + 1);
+            }
         }
     }
 
@@ -427,7 +441,7 @@ public:
         GeometryType::IntegrationPointsArrayType integration_points;
 
         GeometryData::IntegrationMethod ThisIntegrationMethod
-                = LevelSet::GetIntegrationMethod(integration_order);
+            = LevelSet::GetIntegrationMethod(integration_order);
 
         // firstly create an array of integration points of sub-trees
         this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
@@ -436,20 +450,22 @@ public:
         // scale the weight if needed
         CoordinatesArrayType LocalCoords;
         bool is_inside;
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
             is_inside = (r_level_set.GetValue(integration_points[point]) < 0.0);
 
             this->GetGeometry().PointLocalCoordinates(LocalCoords, integration_points[point]);
             noalias(integration_points[point]) = LocalCoords;
 
-            if(is_inside)
+            if (is_inside)
             {
                 double DetJ = Function<double, double>::ComputeDetJ(this->GetGeometry(), integration_points[point]);
                 integration_points[point].SetWeight(integration_points[point].Weight() / DetJ);
             }
             else
+            {
                 integration_points[point].SetWeight(0.0);
+            }
         }
 
         /* create new quadrature and assign to the geometry */
@@ -460,9 +476,9 @@ public:
     /// Construct the recursive integration point array
     /// REMARKS: the integration_points is in global coordinates system
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
-            const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
+                             const GeometryData::IntegrationMethod& ThisIntegrationMethod) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
             const GeometryType::IntegrationPointsArrayType& sub_integration_points
                 = this->GetGeometry().IntegrationPoints( ThisIntegrationMethod );
@@ -472,7 +488,7 @@ public:
 
             CoordinatesArrayType GlobalCoords;
 
-            for(std::size_t point = 0; point < sub_integration_points.size(); ++point)
+            for (std::size_t point = 0; point < sub_integration_points.size(); ++point)
             {
                 this->GetGeometry().GlobalCoordinates(GlobalCoords, sub_integration_points[point]);
 
@@ -484,7 +500,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 mpChildren[i]->ConstructQuadrature(integration_points, ThisIntegrationMethod);
             }
@@ -509,12 +525,18 @@ public:
     /// Turn back information as a string.
     virtual std::string Info() const
     {
-        if(TDegree == 1)
+        if (TDegree == 1)
+        {
             return "Binary Tree";
-        else if(TDegree == 2)
+        }
+        else if (TDegree == 2)
+        {
             return "Quad Tree";
-        else if(TDegree == 3)
+        }
+        else if (TDegree == 3)
+        {
             return "Oct Tree";
+        }
         else
         {
             std::stringstream ss;
@@ -532,11 +554,11 @@ public:
     /// Print object's data.
     virtual void PrintData(std::ostream& rOStream) const
     {
-        if(this->IsLeaf())
+        if (this->IsLeaf())
         {
 //            rOStream << this->GetGeometry();
             rOStream << Id() << " :";
-            for(std::size_t i = 0; i < this->GetGeometry().size(); ++i)
+            for (std::size_t i = 0; i < this->GetGeometry().size(); ++i)
             {
                 NodeType& node = this->GetGeometry()[i];
                 rOStream << " (" << node.Id() << ": " << node.X0() << ", " << node.Y0() << ", " << node.Z0() << ")";
@@ -544,7 +566,7 @@ public:
         }
         else
         {
-            for(std::size_t i = 0; i < mpChildren.size(); ++i)
+            for (std::size_t i = 0; i < mpChildren.size(); ++i)
             {
                 rOStream << "  ";
                 mpChildren[i]->PrintData(rOStream);
@@ -614,40 +636,40 @@ private:
     std::size_t mId;
 
     NodeType::Pointer CreateNode(const double& alpha1, const NodeType& N1,
-            const double& alpha2, const NodeType& N2)
+                                 const double& alpha2, const NodeType& N2)
     {
         NodeType::Pointer N = NodeType::Pointer( new NodeType(0,
-                    alpha1*N1.X0() + alpha2*N2.X0(),
-                    alpha1*N1.Y0() + alpha2*N2.Y0(),
-                    alpha1*N1.Z0() + alpha2*N2.Z0()) );
+                              alpha1 * N1.X0() + alpha2 * N2.X0(),
+                              alpha1 * N1.Y0() + alpha2 * N2.Y0(),
+                              alpha1 * N1.Z0() + alpha2 * N2.Z0()) );
         return N;
     }
 
     NodeType::Pointer CreateNode(const double& alpha1, const NodeType& N1,
-            const double& alpha2, const NodeType& N2,
-            const double& alpha3, const NodeType& N3,
-            const double& alpha4, const NodeType& N4)
+                                 const double& alpha2, const NodeType& N2,
+                                 const double& alpha3, const NodeType& N3,
+                                 const double& alpha4, const NodeType& N4)
     {
         NodeType::Pointer N = NodeType::Pointer( new NodeType(0,
-                    alpha1*N1.X0() + alpha2*N2.X0() + alpha3*N3.X0() + alpha4*N4.X0(),
-                    alpha1*N1.Y0() + alpha2*N2.Y0() + alpha3*N3.Y0() + alpha4*N4.Y0(),
-                    alpha1*N1.Z0() + alpha2*N2.Z0() + alpha3*N3.Z0() + alpha4*N4.Z0()) );
+                              alpha1 * N1.X0() + alpha2 * N2.X0() + alpha3 * N3.X0() + alpha4 * N4.X0(),
+                              alpha1 * N1.Y0() + alpha2 * N2.Y0() + alpha3 * N3.Y0() + alpha4 * N4.Y0(),
+                              alpha1 * N1.Z0() + alpha2 * N2.Z0() + alpha3 * N3.Z0() + alpha4 * N4.Z0()) );
         return N;
     }
 
     NodeType::Pointer CreateNode(const double& alpha1, const NodeType& N1,
-            const double& alpha2, const NodeType& N2,
-            const double& alpha3, const NodeType& N3,
-            const double& alpha4, const NodeType& N4,
-            const double& alpha5, const NodeType& N5,
-            const double& alpha6, const NodeType& N6,
-            const double& alpha7, const NodeType& N7,
-            const double& alpha8, const NodeType& N8)
+                                 const double& alpha2, const NodeType& N2,
+                                 const double& alpha3, const NodeType& N3,
+                                 const double& alpha4, const NodeType& N4,
+                                 const double& alpha5, const NodeType& N5,
+                                 const double& alpha6, const NodeType& N6,
+                                 const double& alpha7, const NodeType& N7,
+                                 const double& alpha8, const NodeType& N8)
     {
         NodeType::Pointer N = NodeType::Pointer( new NodeType(0,
-                    alpha1*N1.X0() + alpha2*N2.X0() + alpha3*N3.X0() + alpha4*N4.X0() + alpha5*N5.X0() + alpha6*N6.X0() + alpha7*N7.X0() + alpha8*N8.X0(),
-                    alpha1*N1.Y0() + alpha2*N2.Y0() + alpha3*N3.Y0() + alpha4*N4.Y0() + alpha5*N5.Y0() + alpha6*N6.Y0() + alpha7*N7.Y0() + alpha8*N8.Y0(),
-                    alpha1*N1.Z0() + alpha2*N2.Z0() + alpha3*N3.Z0() + alpha4*N4.Z0() + alpha5*N5.Z0() + alpha6*N6.Z0() + alpha7*N7.Z0() + alpha8*N8.Z0()) );
+                              alpha1 * N1.X0() + alpha2 * N2.X0() + alpha3 * N3.X0() + alpha4 * N4.X0() + alpha5 * N5.X0() + alpha6 * N6.X0() + alpha7 * N7.X0() + alpha8 * N8.X0(),
+                              alpha1 * N1.Y0() + alpha2 * N2.Y0() + alpha3 * N3.Y0() + alpha4 * N4.Y0() + alpha5 * N5.Y0() + alpha6 * N6.Y0() + alpha7 * N7.Y0() + alpha8 * N8.Y0(),
+                              alpha1 * N1.Z0() + alpha2 * N2.Z0() + alpha3 * N3.Z0() + alpha4 * N4.Z0() + alpha5 * N5.Z0() + alpha6 * N6.Z0() + alpha7 * N7.Z0() + alpha8 * N8.Z0()) );
         return N;
     }
 
@@ -701,7 +723,7 @@ private:
 /// input stream function
 template<std::size_t TDegree>
 inline std::istream& operator >> (std::istream& rIStream,
-                BinaryTree<TDegree>& rThis)
+                                  BinaryTree<TDegree>& rThis)
 {
     return rIStream;
 }
@@ -709,7 +731,7 @@ inline std::istream& operator >> (std::istream& rIStream,
 /// output stream function
 template<std::size_t TDegree>
 inline std::ostream& operator << (std::ostream& rOStream,
-                const BinaryTree<TDegree>& rThis)
+                                  const BinaryTree<TDegree>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

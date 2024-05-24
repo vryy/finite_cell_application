@@ -45,16 +45,16 @@ public:
     static const IntegrationPointsArrayType& IntegrationPoints()
     {
         static const IntegrationPointsArrayType s_integration_points{{
-            IntegrationPointType( -1.00 , -1.00, 1.00 / 9.00 ),
-            IntegrationPointType( -1.00 , 0.00, 4.00 / 9.00 ),
-            IntegrationPointType( -1.00 , 1.00, 1.00 / 9.00 ),
-            IntegrationPointType( 0.00 , -1.00, 4.00 / 9.00 ),
-            IntegrationPointType( 0.00 , 0.00, 16.00 / 9.00 ),
-            IntegrationPointType( 0.00 , 1.00, 4.00 / 9.00 ),
-            IntegrationPointType( 1.00 , -1.00, 1.00 / 9.00 ),
-            IntegrationPointType( 1.00 , 0.00, 4.00 / 9.00 ),
-            IntegrationPointType( 1.00 , 1.00, 1.00 / 9.00 )
-        }};
+                IntegrationPointType( -1.00, -1.00, 1.00 / 9.00 ),
+                IntegrationPointType( -1.00, 0.00, 4.00 / 9.00 ),
+                IntegrationPointType( -1.00, 1.00, 1.00 / 9.00 ),
+                IntegrationPointType( 0.00, -1.00, 4.00 / 9.00 ),
+                IntegrationPointType( 0.00, 0.00, 16.00 / 9.00 ),
+                IntegrationPointType( 0.00, 1.00, 4.00 / 9.00 ),
+                IntegrationPointType( 1.00, -1.00, 1.00 / 9.00 ),
+                IntegrationPointType( 1.00, 0.00, 4.00 / 9.00 ),
+                IntegrationPointType( 1.00, 1.00, 1.00 / 9.00 )
+            }};
         return s_integration_points;
     }
 
@@ -88,23 +88,23 @@ public:
     static const IntegrationPointsArrayType& IntegrationPoints()
     {
         static const IntegrationPointsArrayType s_integration_points{{
-            IntegrationPointType(-1.00, -1.00, 1.00 / 36.00),
-            IntegrationPointType(-std::sqrt(5.00) / 5.00, -1.00, 5.00 / 36.00),
-            IntegrationPointType( std::sqrt(5.00) / 5.00, -1.00, 5.00 / 36.00),
-            IntegrationPointType( 1.00, -1.00, 1.00 / 36.00),
-            IntegrationPointType(-1.00, -std::sqrt(5.00) / 5.00, 5.00 / 36.00),
-            IntegrationPointType(-std::sqrt(5.00) / 5.00, -std::sqrt(5.00) / 5.00, 25.00 / 36.00),
-            IntegrationPointType( std::sqrt(5.00) / 5.00, -std::sqrt(5.00) / 5.00, 25.00 / 36.00),
-            IntegrationPointType( 1.00, -std::sqrt(5.00) / 5.00, 5.00 / 36.00),
-            IntegrationPointType(-1.00, std::sqrt(5.00) / 5.00, 5.00 / 36.00),
-            IntegrationPointType(-std::sqrt(5.00) / 5.00, std::sqrt(5.00) / 5.00, 25.00 / 36.00),
-            IntegrationPointType( std::sqrt(5.00) / 5.00, std::sqrt(5.00) / 5.00, 25.00 / 36.00),
-            IntegrationPointType( 1.00, std::sqrt(5.00) / 5.00, 5.00 / 36.00),
-            IntegrationPointType(-1.00, 1.00, 1.00 / 36.00),
-            IntegrationPointType(-std::sqrt(5.00) / 5.00, 1.00, 5.00 / 36.00),
-            IntegrationPointType( std::sqrt(5.00) / 5.00, 1.00, 5.00 / 36.00),
-            IntegrationPointType( 1.00, 1.00, 1.00 / 36.00)
-        }};
+                IntegrationPointType(-1.00, -1.00, 1.00 / 36.00),
+                IntegrationPointType(-std::sqrt(5.00) / 5.00, -1.00, 5.00 / 36.00),
+                IntegrationPointType( std::sqrt(5.00) / 5.00, -1.00, 5.00 / 36.00),
+                IntegrationPointType( 1.00, -1.00, 1.00 / 36.00),
+                IntegrationPointType(-1.00, -std::sqrt(5.00) / 5.00, 5.00 / 36.00),
+                IntegrationPointType(-std::sqrt(5.00) / 5.00, -std::sqrt(5.00) / 5.00, 25.00 / 36.00),
+                IntegrationPointType( std::sqrt(5.00) / 5.00, -std::sqrt(5.00) / 5.00, 25.00 / 36.00),
+                IntegrationPointType( 1.00, -std::sqrt(5.00) / 5.00, 5.00 / 36.00),
+                IntegrationPointType(-1.00, std::sqrt(5.00) / 5.00, 5.00 / 36.00),
+                IntegrationPointType(-std::sqrt(5.00) / 5.00, std::sqrt(5.00) / 5.00, 25.00 / 36.00),
+                IntegrationPointType( std::sqrt(5.00) / 5.00, std::sqrt(5.00) / 5.00, 25.00 / 36.00),
+                IntegrationPointType( 1.00, std::sqrt(5.00) / 5.00, 5.00 / 36.00),
+                IntegrationPointType(-1.00, 1.00, 1.00 / 36.00),
+                IntegrationPointType(-std::sqrt(5.00) / 5.00, 1.00, 5.00 / 36.00),
+                IntegrationPointType( std::sqrt(5.00) / 5.00, 1.00, 5.00 / 36.00),
+                IntegrationPointType( 1.00, 1.00, 1.00 / 36.00)
+            }};
         return s_integration_points;
     }
 
@@ -138,36 +138,36 @@ public:
     static const IntegrationPointsArrayType& IntegrationPoints()
     {
         static const IntegrationPointsArrayType s_integration_points{{
-            IntegrationPointType(-1.00, -1.00, 1.00 / 10.00 * 1.00 / 10.00),
-            IntegrationPointType(-std::sqrt(21.00) / 7.00, -1.00, 49.00 / 90.00 * 1.00 / 10.00),
-            IntegrationPointType( 0.00, -1.00, 32.00 / 45.00 * 1.00 / 10.00),
-            IntegrationPointType( std::sqrt(21.00) / 7.00, -1.00, 49.00 / 90.00 * 1.00 / 10.00),
-            IntegrationPointType( 1.00, -1.00, 1.00 / 10.00 * 1.00 / 10.00),
+                IntegrationPointType(-1.00, -1.00, 1.00 / 10.00 * 1.00 / 10.00),
+                IntegrationPointType(-std::sqrt(21.00) / 7.00, -1.00, 49.00 / 90.00 * 1.00 / 10.00),
+                IntegrationPointType( 0.00, -1.00, 32.00 / 45.00 * 1.00 / 10.00),
+                IntegrationPointType( std::sqrt(21.00) / 7.00, -1.00, 49.00 / 90.00 * 1.00 / 10.00),
+                IntegrationPointType( 1.00, -1.00, 1.00 / 10.00 * 1.00 / 10.00),
 
-            IntegrationPointType(-1.00, -std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
-            IntegrationPointType(-std::sqrt(21.00) / 7.00, -std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
-            IntegrationPointType( 0.00, -std::sqrt(21.00) / 7.00, 32.00 / 45.00 * 49.00 / 90.00),
-            IntegrationPointType( std::sqrt(21.00) / 7.00, -std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
-            IntegrationPointType( 1.00, -std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
+                IntegrationPointType(-1.00, -std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
+                IntegrationPointType(-std::sqrt(21.00) / 7.00, -std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
+                IntegrationPointType( 0.00, -std::sqrt(21.00) / 7.00, 32.00 / 45.00 * 49.00 / 90.00),
+                IntegrationPointType( std::sqrt(21.00) / 7.00, -std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
+                IntegrationPointType( 1.00, -std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
 
-            IntegrationPointType(-1.00, 0.00, 1.00 / 10.00 * 32.00 / 45.00),
-            IntegrationPointType(-std::sqrt(21.00) / 7.00, 0.00, 49.00 / 90.00 * 32.00 / 45.00),
-            IntegrationPointType( 0.00, 0.00, 32.00 / 45.00 * 32.00 / 45.00),
-            IntegrationPointType( std::sqrt(21.00) / 7.00, 0.00, 49.00 / 90.00 * 32.00 / 45.00),
-            IntegrationPointType( 1.00, 0.00, 1.00 / 10.00 * 32.00 / 45.00),
+                IntegrationPointType(-1.00, 0.00, 1.00 / 10.00 * 32.00 / 45.00),
+                IntegrationPointType(-std::sqrt(21.00) / 7.00, 0.00, 49.00 / 90.00 * 32.00 / 45.00),
+                IntegrationPointType( 0.00, 0.00, 32.00 / 45.00 * 32.00 / 45.00),
+                IntegrationPointType( std::sqrt(21.00) / 7.00, 0.00, 49.00 / 90.00 * 32.00 / 45.00),
+                IntegrationPointType( 1.00, 0.00, 1.00 / 10.00 * 32.00 / 45.00),
 
-            IntegrationPointType(-1.00, std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
-            IntegrationPointType(-std::sqrt(21.00) / 7.00, std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
-            IntegrationPointType( 0.00, std::sqrt(21.00) / 7.00, 32.00 / 45.00 * 49.00 / 90.00),
-            IntegrationPointType( std::sqrt(21.00) / 7.00, std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
-            IntegrationPointType( 1.00, std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
+                IntegrationPointType(-1.00, std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
+                IntegrationPointType(-std::sqrt(21.00) / 7.00, std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
+                IntegrationPointType( 0.00, std::sqrt(21.00) / 7.00, 32.00 / 45.00 * 49.00 / 90.00),
+                IntegrationPointType( std::sqrt(21.00) / 7.00, std::sqrt(21.00) / 7.00, 49.00 / 90.00 * 49.00 / 90.00),
+                IntegrationPointType( 1.00, std::sqrt(21.00) / 7.00, 1.00 / 10.00 * 49.00 / 90.00),
 
-            IntegrationPointType(-1.00, 1.00, 1.00 / 10.00 * 1.00 / 10.00),
-            IntegrationPointType(-std::sqrt(21.00) / 7.00, 1.00, 49.00 / 90.00 * 1.00 / 10.00),
-            IntegrationPointType( 0.00, 1.00, 32.00 / 45.00 * 1.00 / 10.00),
-            IntegrationPointType( std::sqrt(21.00) / 7.00, 1.00, 49.00 / 90.00 * 1.00 / 10.00),
-            IntegrationPointType( 1.00, 1.00, 1.00 / 10.00 * 1.00 / 10.00)
-        }};
+                IntegrationPointType(-1.00, 1.00, 1.00 / 10.00 * 1.00 / 10.00),
+                IntegrationPointType(-std::sqrt(21.00) / 7.00, 1.00, 49.00 / 90.00 * 1.00 / 10.00),
+                IntegrationPointType( 0.00, 1.00, 32.00 / 45.00 * 1.00 / 10.00),
+                IntegrationPointType( std::sqrt(21.00) / 7.00, 1.00, 49.00 / 90.00 * 1.00 / 10.00),
+                IntegrationPointType( 1.00, 1.00, 1.00 / 10.00 * 1.00 / 10.00)
+            }};
         return s_integration_points;
     }
 

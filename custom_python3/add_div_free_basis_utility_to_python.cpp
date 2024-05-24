@@ -25,23 +25,33 @@ using namespace pybind11;
 
 Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, const std::size_t& Degree, const DivFreeBasisUtility::CoordinatesArrayType& rPoint)
 {
-    if(Dim == 2)
+    if (Dim == 2)
     {
-        if(Degree == 0)
+        if (Degree == 0)
+        {
             return dummy.GetValues<2, 0>(rPoint);
-        else if(Degree == 1)
+        }
+        else if (Degree == 1)
+        {
             return dummy.GetValues<2, 1>(rPoint);
-        else if(Degree == 2)
+        }
+        else if (Degree == 2)
+        {
             return dummy.GetValues<2, 2>(rPoint);
-        else if(Degree == 3)
+        }
+        else if (Degree == 3)
+        {
             return dummy.GetValues<2, 3>(rPoint);
-        else if(Degree == 4)
+        }
+        else if (Degree == 4)
+        {
             return dummy.GetValues<2, 4>(rPoint);
+        }
     }
 }
 
 void DivFreeBasisUtility_AssignQuadrature2D(DivFreeBasisUtility& rDummy, Element::Pointer p_elem,
-    LevelSet::Pointer p_level_set, const unsigned int& integration_order, const unsigned int& div_free_order)
+        LevelSet::Pointer p_level_set, const unsigned int& integration_order, const unsigned int& div_free_order)
 {
     rDummy.AssignQuadrature2D(p_elem->GetGeometry(), *p_level_set, integration_order, div_free_order);
 }

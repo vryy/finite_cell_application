@@ -188,12 +188,12 @@ public:
     typedef typename BaseType::const_iterator               const_iterator;
     typedef typename BaseType::ptr_iterator                 ptr_iterator;
     typedef typename BaseType::ptr_const_iterator           ptr_const_iterator;
-    #ifndef SD_APP_FORWARD_COMPATIBILITY
+#ifndef SD_APP_FORWARD_COMPATIBILITY
     typedef typename BaseType::reverse_iterator             reverse_iterator;
     typedef typename BaseType::const_reverse_iterator       const_reverse_iterator;
     typedef typename BaseType::ptr_reverse_iterator         ptr_reverse_iterator;
     typedef typename BaseType::ptr_const_reverse_iterator   ptr_const_reverse_iterator;
-    #endif
+#endif
 
     /**
      * Type of Matrix
@@ -229,7 +229,7 @@ public:
     TODO
     */
     FiniteCellGeometry( const PointsArrayType& ThisPoints )
-    : BaseType( ThisPoints )
+        : BaseType( ThisPoints )
     {
 //        std::cout << "constructor FiniteCellGeometry is called" << std::endl;
 //        KRATOS_WATCH(typeid(*this).name())
@@ -244,7 +244,7 @@ public:
     source geometry's points too.
     */
     FiniteCellGeometry( const FiniteCellGeometry& rOther )
-    : BaseType( rOther )
+        : BaseType( rOther )
     {
 //        std::cout << "copy constructor FiniteCellGeometry is called" << std::endl;
     }
@@ -295,10 +295,12 @@ public:
 
         // modify the weight
         IntegrationPointsArrayType& integration_points = all_integration_points[static_cast<int>(ThisIntegrationMethod)];
-        if(integration_points.size() != rWeights.size())
+        if (integration_points.size() != rWeights.size())
             KRATOS_THROW_ERROR(std::logic_error, "The number of integration points and the size of input array is not compatible", "")
-        for(std::size_t i = 0; i < rWeights.size(); ++i)
-            integration_points[i].SetWeight(rWeights[i]);
+            for (std::size_t i = 0; i < rWeights.size(); ++i)
+            {
+                integration_points[i].SetWeight(rWeights[i]);
+            }
 
         // copy the shape function values data
         ShapeFunctionsValuesContainerType shape_functions_values;
@@ -309,50 +311,50 @@ public:
 //        shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)] = BaseType::ShapeFunctionsLocalGradients(ThisIntegrationMethod); // I do not know why this does not compile. I skip this for now.
         shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)] = GeometryType::ShapeFunctionsLocalGradients(ThisIntegrationMethod);
 
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
-            new GeometryDimension(
-                BaseType::WorkingSpaceDimension(),
-                BaseType::LocalSpaceDimension())
-        );
+                    new GeometryDimension(
+                        BaseType::WorkingSpaceDimension(),
+                        BaseType::LocalSpaceDimension())
+                );
 
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                &(*pGeometryDimension),
-                ThisIntegrationMethod,              //ThisDefaultMethod
-                all_integration_points,             //ThisIntegrationPoints
-                shape_functions_values,             //ThisShapeFunctionsValues
-                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-            )
-        );
+                                       new GeometryData(
+                                           &(*pGeometryDimension),
+                                           ThisIntegrationMethod,              //ThisDefaultMethod
+                                           all_integration_points,             //ThisIntegrationPoints
+                                           shape_functions_values,             //ThisShapeFunctionsValues
+                                           shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+                                       )
+                                   );
 
         // assign the geometry data back to the original geometry
         BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
-        #else
+#else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                BaseType::Dimension(),
-                BaseType::WorkingSpaceDimension(),
-                BaseType::LocalSpaceDimension(),
-                ThisIntegrationMethod,              //ThisDefaultMethod
-                all_integration_points,             //ThisIntegrationPoints
-                shape_functions_values,             //ThisShapeFunctionsValues
-                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-            )
-        );
+                                       new GeometryData(
+                                           BaseType::Dimension(),
+                                           BaseType::WorkingSpaceDimension(),
+                                           BaseType::LocalSpaceDimension(),
+                                           ThisIntegrationMethod,              //ThisDefaultMethod
+                                           all_integration_points,             //ThisIntegrationPoints
+                                           shape_functions_values,             //ThisShapeFunctionsValues
+                                           shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+                                       )
+                                   );
 
         // assign the geometry data back to the original geometry
         BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
-        #endif
+#endif
     }
 
 
     /// Assign a list of integration points to the geometry. The ThisIntegrationMethod will
     /// ultimately becomes the default integration rule on the geometry.
     void AssignGeometryData(const GeometryData::IntegrationMethod& ThisIntegrationMethod,
-            const IntegrationPointsArrayType& integration_points)
+                            const IntegrationPointsArrayType& integration_points)
     {
         // create the integration points data
         IntegrationPointsContainerType all_integration_points;
@@ -364,7 +366,7 @@ public:
 
         rValues.resize(integration_points.size(), this->size());
         Vector aux(this->size());
-        for(std::size_t i = 0; i < integration_points.size(); ++i)
+        for (std::size_t i = 0; i < integration_points.size(); ++i)
         {
             noalias( aux ) = BaseType::ShapeFunctionsValues( aux, integration_points[i] );
             noalias( row(rValues, i) ) = aux;
@@ -375,50 +377,50 @@ public:
         ShapeFunctionsGradientsType& rLocalGradients = shape_functions_local_gradients[static_cast<int>(ThisIntegrationMethod)];
 
         rLocalGradients.resize(integration_points.size());
-        for(std::size_t i = 0; i < integration_points.size(); ++i)
+        for (std::size_t i = 0; i < integration_points.size(); ++i)
         {
             rLocalGradients[i].resize( this->size(), this->LocalSpaceDimension(), false );
 
             noalias( rLocalGradients[i] ) = BaseType::ShapeFunctionsLocalGradients( rLocalGradients[i], integration_points[i] );
         }
 
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         GeometryDimension::Pointer pGeometryDimension = GeometryDimension::Pointer(
-            new GeometryDimension(
-                BaseType::WorkingSpaceDimension(),
-                BaseType::LocalSpaceDimension())
-        );
+                    new GeometryDimension(
+                        BaseType::WorkingSpaceDimension(),
+                        BaseType::LocalSpaceDimension())
+                );
 
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                &(*pGeometryDimension),
-                ThisIntegrationMethod,              //ThisDefaultMethod
-                all_integration_points,             //ThisIntegrationPoints
-                shape_functions_values,             //ThisShapeFunctionsValues
-                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-            )
-        );
+                                       new GeometryData(
+                                           &(*pGeometryDimension),
+                                           ThisIntegrationMethod,              //ThisDefaultMethod
+                                           all_integration_points,             //ThisIntegrationPoints
+                                           shape_functions_values,             //ThisShapeFunctionsValues
+                                           shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+                                       )
+                                   );
 
         // assign the geometry data back to the original geometry
         BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
-        #else
+#else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
-            new GeometryData(
-                BaseType::Dimension(),
-                BaseType::WorkingSpaceDimension(),
-                BaseType::LocalSpaceDimension(),
-                ThisIntegrationMethod,              //ThisDefaultMethod
-                all_integration_points,             //ThisIntegrationPoints
-                shape_functions_values,             //ThisShapeFunctionsValues
-                shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
-            )
-        );
+                                       new GeometryData(
+                                           BaseType::Dimension(),
+                                           BaseType::WorkingSpaceDimension(),
+                                           BaseType::LocalSpaceDimension(),
+                                           ThisIntegrationMethod,              //ThisDefaultMethod
+                                           all_integration_points,             //ThisIntegrationPoints
+                                           shape_functions_values,             //ThisShapeFunctionsValues
+                                           shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
+                                       )
+                                   );
 
         // assign the geometry data back to the original geometry
         BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
-        #endif
+#endif
     }
 
 

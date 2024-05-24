@@ -22,15 +22,15 @@ ElementWrapperCondition::ElementWrapperCondition()
 }
 
 ElementWrapperCondition::ElementWrapperCondition( IndexType NewId,
-                              Element::Pointer pElement)
-: Condition( NewId, pElement->pGetGeometry() ), mpElement(pElement)
+        Element::Pointer pElement)
+    : Condition( NewId, pElement->pGetGeometry() ), mpElement(pElement)
 {
 }
 
 ElementWrapperCondition::ElementWrapperCondition( IndexType NewId,
-                              Element::Pointer pElement,
-                              PropertiesType::Pointer pProperties)
-: Condition( NewId, pElement->pGetGeometry(), pProperties ), mpElement(pElement)
+        Element::Pointer pElement,
+        PropertiesType::Pointer pProperties)
+    : Condition( NewId, pElement->pGetGeometry(), pProperties ), mpElement(pElement)
 {
 }
 
@@ -85,8 +85,8 @@ void ElementWrapperCondition::CalculateRightHandSide( VectorType& rRightHandSide
  * calculates this element's local contributions
  */
 void ElementWrapperCondition::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
-                                          VectorType& rRightHandSideVector,
-                                          const ProcessInfo& rCurrentProcessInfo)
+        VectorType& rRightHandSideVector,
+        const ProcessInfo& rCurrentProcessInfo)
 {
 //    std::cout << "---------------------start condition " << Id() << "---------------------------" << std::endl;
 //    std::cout << "Condition " << Id() << " wraps element " << mpElement->Id() << ":";
@@ -123,7 +123,7 @@ void ElementWrapperCondition::FinalizeSolutionStep(const ProcessInfo& rCurrentPr
 * All Equation IDs are given Master first, Slave second
 */
 void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult,
-                                        const ProcessInfo& rCurrentProcessInfo) const
+        const ProcessInfo& rCurrentProcessInfo) const
 {
     mpElement->EquationIdVector( rResult, rCurrentProcessInfo );
 }
@@ -138,7 +138,7 @@ void ElementWrapperCondition::EquationIdVector( EquationIdVectorType& rResult,
 //************************************************************************************
 //************************************************************************************
 void ElementWrapperCondition::GetDofList( DofsVectorType& rConditionalDofList,
-                                          const ProcessInfo& rCurrentProcessInfo) const
+        const ProcessInfo& rCurrentProcessInfo) const
 {
     mpElement->GetDofList( rConditionalDofList, rCurrentProcessInfo );
 }

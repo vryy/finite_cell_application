@@ -111,14 +111,14 @@ public:
 
 
     void InitializeBinning(ModelPart::ElementsContainerType& pElements,
-            const double& Dx, const double& Dy, const double& Dz)
+                           const double& Dx, const double& Dy, const double& Dz)
     {
         mDx = Dx;
         mDy = Dy;
         mDz = Dz;
         // IMPORTANT REMARK: one should not choose a spacing align with element edge, because it can create missing points.
 
-        for( typename ModelPart::ElementsContainerType::ptr_iterator it = pElements.ptr_begin();
+        for ( typename ModelPart::ElementsContainerType::ptr_iterator it = pElements.ptr_begin();
                 it != pElements.ptr_end(); ++it )
         {
             Element::GeometryType& r_geom = (*it)->GetGeometry();
@@ -131,7 +131,7 @@ public:
             int min_iz = std::numeric_limits<int>::max();
             int max_iz = std::numeric_limits<int>::min();
 
-            for(std::size_t i = 0; i < r_geom.size(); ++i)
+            for (std::size_t i = 0; i < r_geom.size(); ++i)
             {
                 // find the cell containing point
                 int ix = (mDx != 0.0) ? (int) floor(r_geom[i].X() / mDx) : 0;
@@ -139,20 +139,20 @@ public:
                 int iz = (mDz != 0.0) ? (int) floor(r_geom[i].Z() / mDz) : 0;
 
                 // adjust the maximum and minimum value in each direction
-                if(ix < min_ix) min_ix = ix;
-                if(ix > max_ix) max_ix = ix;
-                if(iy < min_iy) min_iy = iy;
-                if(iy > max_iy) max_iy = iy;
-                if(iz < min_iz) min_iz = iz;
-                if(iz > max_iz) max_iz = iz;
+                if (ix < min_ix) { min_ix = ix; }
+                if (ix > max_ix) { max_ix = ix; }
+                if (iy < min_iy) { min_iy = iy; }
+                if (iy > max_iy) { max_iy = iy; }
+                if (iz < min_iz) { min_iz = iz; }
+                if (iz > max_iz) { max_iz = iz; }
             }
 
             // add to the bin
-            for(int ix = min_ix; ix <= max_ix; ++ix)
+            for (int ix = min_ix; ix <= max_ix; ++ix)
             {
-                for(int iy = min_iy; iy <= max_iy; ++iy)
+                for (int iy = min_iy; iy <= max_iy; ++iy)
                 {
-                    for(int iz = min_iz; iz <= max_iz; ++iz)
+                    for (int iz = min_iz; iz <= max_iz; ++iz)
                     {
                         SpatialKey key(ix, iy, iz);
 
@@ -170,36 +170,44 @@ public:
     /// Sampling along the parametric curve to provide a list of points and corresponding variational length and weight
     template<class TCurveType>
     static void SamplingCurve(const TCurveType& rCurve, const double& tmin, const double& tmax, const int& integration_order,
-            std::vector<double>& rCoordinates, std::vector<PointType>& rPoints,
-            std::vector<double>& rDlength, std::vector<double>& rWeights)
+                              std::vector<double>& rCoordinates, std::vector<PointType>& rPoints,
+                              std::vector<double>& rDlength, std::vector<double>& rWeights)
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(integration_order);
 
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         Line3D2<NodeType> SampleLine( GeometryType::PointsArrayType( 2 ) );
-        #else
+#else
         Line3D2<NodeType> SampleLine( GeometryType::PointsArrayType( 2, NodeType() ) );
-        #endif
+#endif
 
         const GeometryType::IntegrationPointsArrayType& integration_points
-                = SampleLine.IntegrationPoints( ThisIntegrationMethod );
+            = SampleLine.IntegrationPoints( ThisIntegrationMethod );
 
-        if(rCoordinates.size() != integration_points.size())
-            rCoordinates.resize(integration_points.size());
-
-        if(rPoints.size() != integration_points.size())
-            rPoints.resize(integration_points.size());
-
-        if(rDlength.size() != integration_points.size())
-            rDlength.resize(integration_points.size());
-
-        if(rWeights.size() != integration_points.size())
-            rWeights.resize(integration_points.size());
-
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        if (rCoordinates.size() != integration_points.size())
         {
-            double t = 0.5*(tmax+tmin) + 0.5*(tmax-tmin)*integration_points[point].X();
+            rCoordinates.resize(integration_points.size());
+        }
+
+        if (rPoints.size() != integration_points.size())
+        {
+            rPoints.resize(integration_points.size());
+        }
+
+        if (rDlength.size() != integration_points.size())
+        {
+            rDlength.resize(integration_points.size());
+        }
+
+        if (rWeights.size() != integration_points.size())
+        {
+            rWeights.resize(integration_points.size());
+        }
+
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
+        {
+            double t = 0.5 * (tmax + tmin) + 0.5 * (tmax - tmin) * integration_points[point].X();
 
             rCoordinates[point] = t;
 
@@ -208,7 +216,7 @@ public:
             PointType tangent = static_cast<PointType>(rCurve.GetDerivative(0, t));
             rDlength[point] = norm_2(tangent);
 
-            rWeights[point] = integration_points[point].Weight() * 0.5 * (tmax-tmin);
+            rWeights[point] = integration_points[point].Weight() * 0.5 * (tmax - tmin);
 //KRATOS_WATCH(t)
 //KRATOS_WATCH(integration_points[point].X())
 //KRATOS_WATCH(tangent)
@@ -221,41 +229,49 @@ public:
     /// Sampling along the parametric surface to provide a list of points and corresponding variational area and weight
     template<class TSurfaceType>
     static void SamplingSurface(const TSurfaceType& rSurface,
-            const double& t1min, const double& t1max,
-            const double& t2min, const double& t2max,
-            const int& integration_order,
-            std::vector<typename TSurfaceType::InputType>& rCoordinates,
-            std::vector<PointType>& rPoints,
-            std::vector<double>& rDarea, std::vector<double>& rWeights)
+                                const double& t1min, const double& t1max,
+                                const double& t2min, const double& t2max,
+                                const int& integration_order,
+                                std::vector<typename TSurfaceType::InputType>& rCoordinates,
+                                std::vector<PointType>& rPoints,
+                                std::vector<double>& rDarea, std::vector<double>& rWeights)
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
             = Function<double, double>::GetIntegrationMethod(integration_order);
 
-        #ifdef SD_APP_FORWARD_COMPATIBILITY
+#ifdef SD_APP_FORWARD_COMPATIBILITY
         Quadrilateral3D4<NodeType> SampleQuad( GeometryType::PointsArrayType( 4 ) );
-        #else
+#else
         Quadrilateral3D4<NodeType> SampleQuad( GeometryType::PointsArrayType( 4, NodeType() ) );
-        #endif
+#endif
 
         const GeometryType::IntegrationPointsArrayType& integration_points
-                = SampleQuad.IntegrationPoints( ThisIntegrationMethod );
+            = SampleQuad.IntegrationPoints( ThisIntegrationMethod );
 
-        if(rCoordinates.size() != integration_points.size())
-            rCoordinates.resize(integration_points.size());
-
-        if(rPoints.size() != integration_points.size())
-            rPoints.resize(integration_points.size());
-
-        if(rDarea.size() != integration_points.size())
-            rDarea.resize(integration_points.size());
-
-        if(rWeights.size() != integration_points.size())
-            rWeights.resize(integration_points.size());
-
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        if (rCoordinates.size() != integration_points.size())
         {
-            double t1 = 0.5*(t1max+t1min) + 0.5*(t1max-t1min)*integration_points[point].X();
-            double t2 = 0.5*(t2max+t2min) + 0.5*(t2max-t2min)*integration_points[point].Y();
+            rCoordinates.resize(integration_points.size());
+        }
+
+        if (rPoints.size() != integration_points.size())
+        {
+            rPoints.resize(integration_points.size());
+        }
+
+        if (rDarea.size() != integration_points.size())
+        {
+            rDarea.resize(integration_points.size());
+        }
+
+        if (rWeights.size() != integration_points.size())
+        {
+            rWeights.resize(integration_points.size());
+        }
+
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
+        {
+            double t1 = 0.5 * (t1max + t1min) + 0.5 * (t1max - t1min) * integration_points[point].X();
+            double t2 = 0.5 * (t2max + t2min) + 0.5 * (t2max - t2min) * integration_points[point].Y();
 
             rCoordinates[point][0] = t1;
             rCoordinates[point][1] = t2;
@@ -266,7 +282,7 @@ public:
             PointType tangent2 = static_cast<PointType>(rSurface.GetDerivative(1, rCoordinates[point]));
             rDarea[point] = norm_2(MathUtils<double>::CrossProduct(tangent1, tangent2));
 
-            rWeights[point] = integration_points[point].Weight() * 0.25 * (t1max-t1min) * (t2max-t2min);
+            rWeights[point] = integration_points[point].Weight() * 0.25 * (t1max - t1min) * (t2max - t2min);
 //KRATOS_WATCH(t1)
 //KRATOS_WATCH(t2)
 //KRATOS_WATCH(integration_points[point].X())
@@ -282,55 +298,67 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     static bool SearchPartner( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level )
+                               Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level )
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
         // find the potential master elements
         pMasterElementsCandidates.clear();
-        for( typename ModelPart::ElementsContainerType::ptr_iterator it = pMasterElements.ptr_begin();
+        for ( typename ModelPart::ElementsContainerType::ptr_iterator it = pMasterElements.ptr_begin();
                 it != pMasterElements.ptr_end(); ++it )
         {
             // compute the center of the element
             PointType Center(0.0, 0.0, 0.0);
-            for( unsigned int node = 0; node < (*it)->GetGeometry().size(); ++node )
+            for ( unsigned int node = 0; node < (*it)->GetGeometry().size(); ++node )
+            {
                 noalias(Center) += (*it)->GetGeometry()[node];
+            }
             Center /= (*it)->GetGeometry().size();
 
             // compute the maximum distance from center to vertices
             double max_dist = 0.0;
-            for( unsigned int node = 0; node < (*it)->GetGeometry().size(); ++node )
+            for ( unsigned int node = 0; node < (*it)->GetGeometry().size(); ++node )
             {
                 double dist = norm_2((*it)->GetGeometry()[node] - Center);
-                if(dist > max_dist)
+                if (dist > max_dist)
+                {
                     max_dist = dist;
+                }
             }
 
             // compute the distance of the source point to the center of the element
             double sdist = norm_2(rSourcePoint - Center);
-            if(sdist < max_dist)
-                pMasterElementsCandidates.push_back(*it);
-        }
-
-        for( typename ModelPart::ElementsContainerType::ptr_iterator it = pMasterElementsCandidates.ptr_begin();
-                it != pMasterElementsCandidates.ptr_end(); ++it )
-        {
-            bool is_inside = (*it)->GetGeometry().IsInside( rSourcePoint, rLocalTargetPoint );
-            if( is_inside )
+            if (sdist < max_dist)
             {
-                pTargetElement = *it;
-                if(force_active)
-                {
-                    if(pTargetElement->Is(ACTIVE))
-                        return true;
-                }
-                else
-                    return true;
+                pMasterElementsCandidates.push_back(*it);
             }
         }
 
-        if((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
+        for ( typename ModelPart::ElementsContainerType::ptr_iterator it = pMasterElementsCandidates.ptr_begin();
+                it != pMasterElementsCandidates.ptr_end(); ++it )
+        {
+            bool is_inside = (*it)->GetGeometry().IsInside( rSourcePoint, rLocalTargetPoint );
+            if ( is_inside )
+            {
+                pTargetElement = *it;
+                if (force_active)
+                {
+                    if (pTargetElement->Is(ACTIVE))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
+        if ((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
+        {
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+        }
 
         return false;
     }
@@ -339,7 +367,7 @@ public:
     /// Find an element in pMasterElements contains rSourcePoint and assign it to pTargetElement. The rLocalTargetPoint is the local point in pTargetElement of rSourcePoint
     /// REMARK: we should disable the move mesh flag if we want to search in the reference configuration
     bool SearchPartnerWithBin( const PointType& rSourcePoint, ModelPart::ElementsContainerType& pMasterElements,
-            Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level ) const
+                               Element::Pointer& pTargetElement, PointType& rLocalTargetPoint, const bool& force_active, const int& echo_level ) const
     {
         ModelPart::ElementsContainerType pMasterElementsCandidates;
 
@@ -351,30 +379,36 @@ public:
         SpatialKey key(ix, iy, iz);
         std::map<SpatialKey, std::set<std::size_t> >::const_iterator it_bin_elements = mBinElements.find(key);
 
-        if(it_bin_elements != mBinElements.end())
+        if (it_bin_elements != mBinElements.end())
         {
-            for(std::set<std::size_t>::const_iterator it = it_bin_elements->second.begin(); it != it_bin_elements->second.end(); ++it )
+            for (std::set<std::size_t>::const_iterator it = it_bin_elements->second.begin(); it != it_bin_elements->second.end(); ++it )
             {
                 Element::GeometryType& r_geom = pMasterElements[*it].GetGeometry();
 
                 bool is_inside = r_geom.IsInside( rSourcePoint, rLocalTargetPoint );
-                if( is_inside )
+                if ( is_inside )
                 {
                     pTargetElement = pMasterElements(*it);
 
-                    if(force_active)
+                    if (force_active)
                     {
-                        if(pTargetElement->Is(ACTIVE))
+                        if (pTargetElement->Is(ACTIVE))
+                        {
                             return true;
+                        }
                     }
                     else
+                    {
                         return true;
+                    }
                 }
             }
         }
 
-        if((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
+        if ((echo_level & _WARNING_FOUND_NO_ELEMENT_) == _WARNING_FOUND_NO_ELEMENT_)
+        {
             std::cout << " !!!! WARNING: NO ELEMENT FOUND TO CONTAIN " << rSourcePoint << " !!!! " << std::endl;
+        }
 
         return false;
     }
@@ -402,7 +436,7 @@ public:
         {
             Vector Ncontainer;
             pTargetElement->GetGeometry().ShapeFunctionsValues( Ncontainer, rLocalTargetPoint );
-/*            std::cout << "At element " << pTargetElement->Id() << ", point " << rLocalTargetPoint << std::endl;*/
+            /*            std::cout << "At element " << pTargetElement->Id() << ", point " << rLocalTargetPoint << std::endl;*/
 
             typename TVariableType::Type val = pTargetElement->GetGeometry()[0].GetSolutionStepValue(rVariable) * Ncontainer(0);
 
@@ -496,27 +530,31 @@ private:
 
     struct SpatialKey
     {
-        public:
-            SpatialKey(const int& ix, const int& iy, const int& iz) : x(ix), y(iy), z(iz) {}
-            bool operator<(const SpatialKey& rOther) const
+    public:
+        SpatialKey(const int& ix, const int& iy, const int& iz) : x(ix), y(iy), z(iz) {}
+        bool operator<(const SpatialKey& rOther) const
+        {
+            if (x == rOther.x)
             {
-                if(x == rOther.x)
+                if (y == rOther.y)
                 {
-                    if(y == rOther.y)
-                    {
-                        return z < rOther.z;
-                    }
-                    else
-                        return y < rOther.y;
+                    return z < rOther.z;
                 }
                 else
-                    return x < rOther.x;
+                {
+                    return y < rOther.y;
+                }
             }
-            const int& kx() const {return x;}
-            const int& ky() const {return y;}
-            const int& kz() const {return z;}
-        private:
-            int x, y, z;
+            else
+            {
+                return x < rOther.x;
+            }
+        }
+        const int& kx() const {return x;}
+        const int& ky() const {return y;}
+        const int& kz() const {return z;}
+    private:
+        int x, y, z;
     };
 
     ///@name Static Member Variables

@@ -65,102 +65,114 @@ void FiniteCellAuxiliaryUtility_RemoveElement(FiniteCellAuxiliaryUtility& rDummy
 
 /// Create an element from sample element name and from list of nodes
 Element::Pointer FiniteCellAuxiliaryUtility_CreateElement(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_elem_name,
-    const std::size_t& Id, Properties::Pointer pProperties, const pybind11::list& node_ids)
+        ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, const pybind11::list& node_ids)
 {
     std::vector<std::size_t> node_list;
     for (auto id : node_ids)
+    {
         node_list.push_back(id.cast<std::size_t>());
+    }
 
     return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, node_list);
 }
 
 /// Create an element from sample element name and from other element (to provide the geometry)
 Element::Pointer FiniteCellAuxiliaryUtility_CreateElement2(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_elem_name,
-    const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+        ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
 {
     return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, pElement);
 }
 
 /// Create an element from sample element name and from other condition (to provide the geometry)
 Element::Pointer FiniteCellAuxiliaryUtility_CreateElement3(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_elem_name,
-    const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+        ModelPart& r_model_part, const std::string& sample_elem_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
 {
     return rDummy.CreateElement(r_model_part, sample_elem_name, Id, pProperties, pCond);
 }
 
 /// Create a condition from sample condition and from list of nodes
 Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_cond_name,
-    const std::size_t& Id, Properties::Pointer pProperties, const pybind11::list& node_ids)
+        ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, const pybind11::list& node_ids)
 {
     std::vector<std::size_t> node_list;
     for (auto id : node_ids)
+    {
         node_list.push_back(id.cast<std::size_t>());
+    }
 
     return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, node_list);
 }
 
 /// Create a condition from sample condition and from other condition (to provide the geometry)
 Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition2(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_cond_name,
-    const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
+        ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Condition::Pointer pCond)
 {
     return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, pCond);
 }
 
 /// Create a condition from sample condition and from other element (to provide the geometry)
 Condition::Pointer FiniteCellAuxiliaryUtility_CreateCondition3(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const std::string& sample_cond_name,
-    const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
+        ModelPart& r_model_part, const std::string& sample_cond_name,
+        const std::size_t& Id, Properties::Pointer pProperties, Element::Pointer pElement)
 {
     return rDummy.CreateCondition(r_model_part, sample_cond_name, Id, pProperties, pElement);
 }
 
 template<class TTreeType, class TBRepType>
 void FiniteCellAuxiliaryUtility_MultithreadedRefineBy(FiniteCellAuxiliaryUtility& rDummy,
-    const pybind11::list& r_trees, const TBRepType& r_brep)
+        const pybind11::list& r_trees, const TBRepType& r_brep)
 {
     typedef typename TTreeType::Pointer TTreePointerType;
     std::vector<TTreePointerType> trees;
     for (auto t : r_trees)
+    {
         trees.push_back(t.cast<TTreePointerType>());
+    }
 
     rDummy.MultithreadedRefineBy<TTreeType, TBRepType>(trees, r_brep);
 }
 
 template<class TCellType, class TBRepType>
 void FiniteCellAuxiliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints(FiniteCellAuxiliaryUtility& rDummy,
-    const pybind11::list& r_cells, typename TBRepType::Pointer p_brep, int integrator_integration_method)
+        const pybind11::list& r_cells, typename TBRepType::Pointer p_brep, int integrator_integration_method)
 {
     PointerVectorSet<TCellType> cells;
     for (auto c : r_cells)
+    {
         cells.push_back(c.cast<typename TCellType::Pointer>());
+    }
 
     rDummy.MultithreadedGeneratePhysicalIntegrationPoints<TCellType, TBRepType>(cells, *p_brep, integrator_integration_method);
 }
 
 /// Extract the element from the list of ids
 ModelPart::ElementsContainerType FiniteCellAuxiliaryUtility_GetElements(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart& r_model_part, const pybind11::list& element_list)
+        ModelPart& r_model_part, const pybind11::list& element_list)
 {
     std::set<std::size_t> element_ids;
     for (auto id : element_list)
+    {
         element_ids.insert(id.cast<std::size_t>());
+    }
 
     return rDummy.GetElements(r_model_part, element_ids);
 }
 
 /// Extract the element from the list of ids
 void FiniteCellAuxiliaryUtility_GetElements2(FiniteCellAuxiliaryUtility& rDummy,
-    ModelPart::ElementsContainerType& rpElements,
-    ModelPart& r_model_part, const pybind11::list& element_list)
+        ModelPart::ElementsContainerType& rpElements,
+        ModelPart& r_model_part, const pybind11::list& element_list)
 {
     std::set<std::size_t> element_ids;
     for (auto id : element_list)
+    {
         element_ids.insert(id.cast<std::size_t>());
+    }
 
     rDummy.GetElements(rpElements, r_model_part, element_ids);
 }

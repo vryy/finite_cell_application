@@ -62,7 +62,7 @@ boost::python::list SpectraEigenvaluesSolver_SolveLargestSym(SpectraEigenvaluesS
 }
 
 boost::python::list SpectraEigenvaluesSolver_SolveSmallestSPD(SpectraEigenvaluesSolver& rDummy, CompressedMatrix& rA,
-    SpectraEigenvaluesSolver::LinearSolverType::Pointer pLinearSolver, const int& ne)
+        SpectraEigenvaluesSolver::LinearSolverType::Pointer pLinearSolver, const int& ne)
 {
     boost::python::list values;
 
@@ -81,14 +81,14 @@ boost::python::list SpectraEigenvaluesSolver_SolveSmallestSPD(SpectraEigenvalues
 void FiniteCellApplication_AddSolversToPython()
 {
 
-    #ifdef FINITE_CELL_APPLICATION_USE_SPECTRA
+#ifdef FINITE_CELL_APPLICATION_USE_SPECTRA
     class_<SpectraEigenvaluesSolver, SpectraEigenvaluesSolver::Pointer, boost::noncopyable>
     ("SpectraEigenvaluesSolver", init<>())
     .def("SolveLargestUnsym", &SpectraEigenvaluesSolver_SolveLargestUnsym)
     .def("SolveLargestSym", &SpectraEigenvaluesSolver_SolveLargestSym)
     .def("SolveSmallestSPD", &SpectraEigenvaluesSolver_SolveSmallestSPD)
     ;
-    #endif
+#endif
 
 }
 

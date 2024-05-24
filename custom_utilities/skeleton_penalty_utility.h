@@ -113,42 +113,60 @@ public:
 
     /// Merely setup the ghost penalty conditions between two elements. This is useful to debug the ghost penalties.
     /*static*/ virtual Condition::Pointer SetUpSurfacePenaltyCondition(Element::Pointer p_element_1,
-        Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
-        const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties)
+            Element::Pointer p_element_2, GhostPenaltyCondition::Pointer p_sample_condition,
+            const BRep& r_brep, std::size_t& lastCondId, Properties::Pointer pProperties)
     {
         Condition::Pointer pNewCond = NULL;
 
         std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > edge = GhostPenaltyUtility::FindCommonFace(p_element_1->GetGeometry(), p_element_2->GetGeometry());
 
         if (edge.first == GeometryData::KratosGeometryType::Kratos_generic_type)
+        {
             return pNewCond;
+        }
 
         // create the edge geometry
         typename Element::NodesArrayType temp_nodes;
         for (std::size_t j = 0; j < edge.second.size(); ++j)
+        {
             temp_nodes.push_back(p_element_1->GetGeometry().pGetPoint(edge.second[j]));
+        }
 
         GeometryType::Pointer p_temp_geometry;
 
         if (edge.first == GeometryData::KratosGeometryType::Kratos_Line2D2)
+        {
             p_temp_geometry = GeometryType::Pointer(new Line2D2<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Line2D3)
+        {
             p_temp_geometry = GeometryType::Pointer(new Line2D3<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Triangle3D3)
+        {
             p_temp_geometry = GeometryType::Pointer(new Triangle3D3<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Triangle3D6)
+        {
             p_temp_geometry = GeometryType::Pointer(new Triangle3D6<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4)
+        {
             p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D4<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8)
+        {
             p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D8<NodeType>(temp_nodes));
+        }
         else if (edge.first == GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9)
+        {
             p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
+        }
         else
             KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", static_cast<int>(edge.first))
 
-        // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
-        bool is_ghost = false;
+            // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
+            bool is_ghost = false;
 
         int configuration = 0; // check the cut status in the initial configuration
         int stat1 = r_brep.CutStatus(p_element_1->GetGeometry(), configuration);
@@ -157,12 +175,16 @@ public:
         if (stat1 == BRep::_CUT)
         {
             if (stat2 == BRep::_CUT || stat2 == BRep::_IN)
+            {
                 is_ghost = true;
+            }
         }
         else if (stat1 == BRep::_IN)
         {
             if (stat2 == BRep::_IN || stat2 == BRep::_CUT)
+            {
                 is_ghost = true;
+            }
         }
 
         if (is_ghost)

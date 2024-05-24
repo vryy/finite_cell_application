@@ -187,11 +187,11 @@ public:
      */
 
     FiniteCellGeo2dBezier3()
-    : BaseType( PointsArrayType() )
+        : BaseType( PointsArrayType() )
     {}
 
     FiniteCellGeo2dBezier3( const PointsArrayType& ThisPoints )
-    : BaseType( ThisPoints )
+        : BaseType( ThisPoints )
     {}
 
 //    FiniteCellGeo2dBezier3( const PointsArrayType& ThisPoints, const GeometryData* pGeometryData )
@@ -208,7 +208,7 @@ public:
      * source geometry's points too.
      */
     FiniteCellGeo2dBezier3( FiniteCellGeo2dBezier3 const& rOther )
-    : BaseType( rOther )
+        : BaseType( rOther )
     {}
 
     /**
@@ -223,7 +223,7 @@ public:
      * source geometry's points too.
      */
     template<class TOtherPointType> FiniteCellGeo2dBezier3( FiniteCellGeo2dBezier3<TOtherPointType> const& rOther )
-    : Geo2dBezier3<TOtherPointType>( rOther )
+        : Geo2dBezier3<TOtherPointType>( rOther )
     {}
 
     /**
@@ -236,7 +236,7 @@ public:
      * source geometry's points too.
      */
     FiniteCellGeo2dBezier3( BaseType const& rOther )
-    : BaseType( rOther )
+        : BaseType( rOther )
     {}
 
     /**
@@ -251,7 +251,7 @@ public:
      * source geometry's points too.
      */
     template<class TOtherPointType> FiniteCellGeo2dBezier3( Geo2dBezier3<TOtherPointType> const& rOther )
-    : Geo2dBezier3<TOtherPointType>( rOther )
+        : Geo2dBezier3<TOtherPointType>( rOther )
     {}
 
     /**
@@ -428,7 +428,7 @@ public:
     /// Assign a list of integration points to the geometry. The ThisIntegrationMethod will
     /// ultimately becomes the default integration rule on the geometry.
     void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod,
-            const IntegrationPointsArrayType& integration_points)
+                            const IntegrationPointsArrayType& integration_points)
     {
         BaseType::mpBezierGeometryData = BezierUtils::CreateIntegrationRule<2, 2, 2>(ThisIntegrationMethod, BaseType::mOrder1, BaseType::mOrder2, integration_points);
 
@@ -481,13 +481,13 @@ private:
  * input stream function
  */
 template<class TPointType> inline std::istream& operator >>(
-        std::istream& rIStream, FiniteCellGeo2dBezier3<TPointType>& rThis);
+    std::istream& rIStream, FiniteCellGeo2dBezier3<TPointType>& rThis);
 
 /**
  * output stream function
  */
 template<class TPointType> inline std::ostream& operator <<(
-        std::ostream& rOStream, const FiniteCellGeo2dBezier3<TPointType>& rThis)
+    std::ostream& rOStream, const FiniteCellGeo2dBezier3<TPointType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

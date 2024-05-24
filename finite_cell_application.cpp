@@ -56,32 +56,32 @@
 namespace Kratos
 {
 
-    KratosFiniteCellApplication::KratosFiniteCellApplication()
-    #ifdef SD_APP_FORWARD_COMPATIBILITY
+KratosFiniteCellApplication::KratosFiniteCellApplication()
+#ifdef SD_APP_FORWARD_COMPATIBILITY
     : KratosApplication("KratosFiniteCellApplication")
-    #else
+#else
     : KratosApplication()
-    #endif
-    {}
+#endif
+{}
 
-    void KratosFiniteCellApplication::Register()
-    {
-        // calling base class register to register Kratos components
-        KratosApplication::Register();
-        std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
+void KratosFiniteCellApplication::Register()
+{
+    // calling base class register to register Kratos components
+    KratosApplication::Register();
+    std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
 
-        // register variables to Kratos kernel
-        KRATOS_REGISTER_VARIABLE( SUBCELL_WEIGHTS )
-        KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZE )
-        KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZES )
-        KRATOS_REGISTER_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
-        KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
-        KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
-        KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )
-        KRATOS_REGISTER_VARIABLE( OTHER_NODE_ID )
-        KRATOS_REGISTER_VARIABLE( OTHER_ID )
-        KRATOS_REGISTER_VARIABLE( NUMBER_OF_PHYSICAL_POINTS )
-    }
+    // register variables to Kratos kernel
+    KRATOS_REGISTER_VARIABLE( SUBCELL_WEIGHTS )
+    KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZE )
+    KRATOS_REGISTER_VARIABLE( SUBCELL_DOMAIN_SIZES )
+    KRATOS_REGISTER_VARIABLE( PHYSICAL_INTEGRATION_POINT_THREED_STRESSES )
+    KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_LOCAL )
+    KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_GLOBAL )
+    KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS( PHYSICAL_INTEGRATION_POINT_DISPLACEMENT )
+    KRATOS_REGISTER_VARIABLE( OTHER_NODE_ID )
+    KRATOS_REGISTER_VARIABLE( OTHER_ID )
+    KRATOS_REGISTER_VARIABLE( NUMBER_OF_PHYSICAL_POINTS )
+}
 
 } // namespace Kratos
 

@@ -125,14 +125,14 @@ public:
 
 
     static void ScaleQuadrature(GeometryType& r_geom,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
-            const double& ScaleFactor)
+                                const GeometryData::IntegrationMethod& ElementalIntegrationMethod,
+                                const double& ScaleFactor)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
-                = r_geom.IntegrationPoints( ElementalIntegrationMethod );
+            = r_geom.IntegrationPoints( ElementalIntegrationMethod );
 
         Vector Mw(integration_points.size());
-        for(std::size_t i = 0; i < integration_points.size(); ++i)
+        for (std::size_t i = 0; i < integration_points.size(); ++i)
         {
             Mw(i) = integration_points[i].Weight() * ScaleFactor;
         }
@@ -144,14 +144,14 @@ public:
 
     template<int TMode, int TFrame = 0>
     static void SaveQuadrature(std::ofstream& rOStream, const Element::Pointer& p_elem,
-            const GeometryData::IntegrationMethod& ElementalIntegrationMethod)
+                               const GeometryData::IntegrationMethod& ElementalIntegrationMethod)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
-                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+            = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
 
         CoordinatesArrayType Coords;
 
-        if(TMode == 0 || TMode == 1) // binary
+        if (TMode == 0 || TMode == 1) // binary
         {
             std::size_t elem_id = p_elem->Id();
             std::size_t num_points = integration_points.size();
@@ -161,16 +161,22 @@ public:
             rOStream.write((char*)&num_points, sizeof(std::size_t));
 
             double aux;
-            if(TMode == 1)
+            if (TMode == 1)
             {
-                for(std::size_t i = 0; i < integration_points.size(); ++i)
+                for (std::size_t i = 0; i < integration_points.size(); ++i)
                 {
                     if (TFrame == 0)
+                    {
                         noalias(Coords) = integration_points[i];
+                    }
                     else if (TFrame == 1)
+                    {
                         FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                    }
                     else if (TFrame == 2)
+                    {
                         p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                    }
 
                     aux = Coords[0];
                     rOStream.write((char*)&aux, sizeof(double));
@@ -183,27 +189,33 @@ public:
                 }
             }
 
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 aux = integration_points[i].Weight();
                 rOStream.write((char*)&aux, sizeof(double));
             }
         }
-        else if(TMode == 2 || TMode == 3) // ascii
+        else if (TMode == 2 || TMode == 3) // ascii
         {
             rOStream << p_elem->Id() << " " << static_cast<int>(ElementalIntegrationMethod)
                      << " " << integration_points.size() << std::endl;
 
-            for(std::size_t i = 0; i < integration_points.size(); ++i)
+            for (std::size_t i = 0; i < integration_points.size(); ++i)
             {
                 if (TFrame == 0)
+                {
                     noalias(Coords) = integration_points[i];
+                }
                 else if (TFrame == 1)
+                {
                     FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                }
                 else if (TFrame == 2)
+                {
                     p_elem->GetGeometry().GlobalCoordinates(Coords, integration_points[i]);
+                }
 
-                if(TMode == 3)
+                if (TMode == 3)
                 {
                     rOStream << "  " << Coords[0]
                              << " \t" << Coords[1]
@@ -235,14 +247,14 @@ public:
             const double& max_weight)
     {
         const GeometryType::IntegrationPointsArrayType& integration_points
-                = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
+            = p_elem->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
 
         ModelPart::ConditionsContainerType NewConditions;
 
         PointType GlobalCoords;
-        for(std::size_t point = 0; point < integration_points.size(); ++point)
+        for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            if(integration_points[point].Weight() > min_weight && integration_points[point].Weight() < max_weight)
+            if (integration_points[point].Weight() > min_weight && integration_points[point].Weight() < max_weight)
             {
                 p_elem->GetGeometry().GlobalCoordinates(GlobalCoords, integration_points[point]);
                 Condition::Pointer pNewCond = CreateConditionFromPoint(r_model_part, GlobalCoords, r_sample_cond, pProperties, lastNodeId, lastCondId);
@@ -250,9 +262,11 @@ public:
             }
         }
 
-        for(typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
+        for (typename ModelPart::ConditionsContainerType::ptr_iterator it = NewConditions.ptr_begin();
                 it != NewConditions.ptr_end(); ++it)
+        {
             r_model_part.Conditions().push_back(*it);
+        }
 
         return NewConditions.size();
     }

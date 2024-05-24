@@ -39,19 +39,19 @@
 
 // template for LAPACK functions
 extern "C" void dgelsy_(int* M, int* N, int* NRHS, double* A, int* LDA,
-        double* B, int* LDB, int* JPVT, double* RCOND, int* RANK,
-        double* WORK, int* LWORK, int* INFO);
+                        double* B, int* LDB, int* JPVT, double* RCOND, int* RANK,
+                        double* WORK, int* LWORK, int* INFO);
 
 extern "C" void dgelss_(int* M, int* N, int* NRHS, double* A, int* LDA,
-        double* B, int* LDB, double* S, double* RCOND, int* RANK,
-        double* WORK, int* LWORK, int* INFO);
+                        double* B, int* LDB, double* S, double* RCOND, int* RANK,
+                        double* WORK, int* LWORK, int* INFO);
 
 extern "C" double dlange_(char* NORM, int* M, int* N, double* A, int* LDA, double* WORK);
 
 extern "C" void dgetrf_(int* M, int* N, double* A, int* LDA, int* IPIV, int* INFO);
 
 extern "C" void dgecon_(char* NORM, int* N, double* A, int* LDA, double* ANORM,
-                    double* RCOND, double* WORK, int* IWORK, int* INFO);
+                        double* RCOND, double* WORK, int* IWORK, int* INFO);
 
 
 namespace Kratos
@@ -121,17 +121,19 @@ public:
         int LDA = M;
         int INFO;
 
-        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* A = matraits::storage(At);
-        #else
-        double* A = new double[M*N];
-        for(int i = 0; i < M; ++i)
-            for(int j = 0; j < N; ++j)
-                A[i*N+j] = rA(j, i); // TODO check
-        #endif
+#else
+        double* A = new double[M * N];
+        for (int i = 0; i < M; ++i)
+            for (int j = 0; j < N; ++j)
+            {
+                A[i * N + j] = rA(j, i);    // TODO check
+            }
+#endif
 
-        double* WORK = new double[4*N];
+        double* WORK = new double[4 * N];
         double anorm = dlange_(norm_type, &M, &N, A, &LDA, WORK);
 //        KRATOS_WATCH(anorm)
 
@@ -143,9 +145,9 @@ public:
         LDA = N;
         dgecon_(norm_type, &N, A, &LDA, &anorm, &rcond, WORK, IWORK, &INFO);
 
-        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete A;
-        #endif
+#endif
 
         delete IPIV, WORK, IWORK;
         return rcond;
@@ -159,21 +161,23 @@ public:
         int N = rA.size2();
         int NRHS = 1;
         Matrix At = trans(rA);
-        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* A = matraits::storage(At);
-        #else
-        double* A = new double[M*N];
-        for(int i = 0; i < M; ++i)
-            for(int j = 0; j < N; ++j)
-                A[i*N+j] = rA(j, i); // TODO check
-        #endif
+#else
+        double* A = new double[M * N];
+        for (int i = 0; i < M; ++i)
+            for (int j = 0; j < N; ++j)
+            {
+                A[i * N + j] = rA(j, i);    // TODO check
+            }
+#endif
         int LDA = M;
         int INFO;
         int LDB = std::max(M, N);
         double* b = new double[LDB];
-        for(int i = 0; i < M; ++i) b[i] = rB(i);
-        int* JPVT = new int[N]; for(int i = 0; i < N; ++i) JPVT[i] = 0;
+        for (int i = 0; i < M; ++i) { b[i] = rB(i); }
+        int* JPVT = new int[N]; for (int i = 0; i < N; ++i) JPVT[i] = 0;
         double RCOND = rcond_est;
         int RANK;
         int LWORK = -1;//std::max(std::min(M, N) + 3*N + 1, 2*std::min(M, N) + 1);
@@ -189,15 +193,19 @@ public:
         dgelsy_(&M, &N, &NRHS, A, &LDA, b, &LDB, JPVT, &RCOND, &RANK, WORK, &LWORK, &INFO);
 //        KRATOS_WATCH(RANK)
 
-        if(rX.size() != N)
+        if (rX.size() != N)
+        {
             rX.resize(N, false);
-        for(int i = 0; i < N; ++i)
+        }
+        for (int i = 0; i < N; ++i)
+        {
             rX(i) = b[i];
+        }
 
         delete JPVT, b, WORK;
-        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete A;
-        #endif
+#endif
 
         return 0;
     }
@@ -210,20 +218,22 @@ public:
         int N = rA.size2();
         int NRHS = 1;
         Matrix At = trans(rA);
-        #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
         typedef boost::numeric::bindings::traits::matrix_traits<Matrix> matraits;
         double* A = matraits::storage(At);
-        #else
-        double* A = new double[M*N];
-        for(int i = 0; i < M; ++i)
-            for(int j = 0; j < N; ++j)
-                A[i*N+j] = rA(j, i); // TODO check
-        #endif
+#else
+        double* A = new double[M * N];
+        for (int i = 0; i < M; ++i)
+            for (int j = 0; j < N; ++j)
+            {
+                A[i * N + j] = rA(j, i);    // TODO check
+            }
+#endif
         int LDA = M;
         int INFO;
         int LDB = std::max(M, N);
         double* b = new double[LDB];
-        for(int i = 0; i < M; ++i) b[i] = rB(i);
+        for (int i = 0; i < M; ++i) { b[i] = rB(i); }
         double* S = new double[std::min(M, N)];
         double RCOND = rcond_est;
         int RANK;
@@ -240,15 +250,19 @@ public:
         dgelss_(&M, &N, &NRHS, A, &LDA, b, &LDB, S, &RCOND, &RANK, WORK, &LWORK, &INFO);
 //        KRATOS_WATCH(RANK)
 
-        if(rX.size() != N)
+        if (rX.size() != N)
+        {
             rX.resize(N, false);
-        for(int i = 0; i < N; ++i)
+        }
+        for (int i = 0; i < N; ++i)
+        {
             rX(i) = b[i];
+        }
 
         delete S, b, WORK;
-        #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
+#ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete A;
-        #endif
+#endif
 
         return 0;
     }
@@ -388,12 +402,12 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
-                LeastSquareLAPACKSolver& rThis)
+                                  LeastSquareLAPACKSolver& rThis)
 {}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
-                const LeastSquareLAPACKSolver& rThis)
+                                  const LeastSquareLAPACKSolver& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
