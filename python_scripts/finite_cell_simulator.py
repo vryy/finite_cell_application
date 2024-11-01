@@ -658,6 +658,9 @@ class FiniteCellSimulator:
                 last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, sample_quad_element_prop_id)
                 lastNodeId = last_ids[0]
                 lastElementId = last_ids[1]
+                list_new_element_ids = last_ids[3]
+                for elem_id in list_new_element_ids:
+                    model_part.Elements[elem_id].Initialize(model_part.ProcessInfo)
 
         ## handle the small cells
         if action_on_small_cut_cell == 'eliminate':
@@ -933,6 +936,9 @@ class FiniteCellSimulator:
                         last_ids = qt.AddToModelPartWithLevel(model.model_part, sample_quad_element_name, lastNodeId, lastElementId, starting_level)
                     lastNodeId = last_ids[0]
                     lastElementId = last_ids[1]
+                    list_new_element_ids = last_ids[3]
+                    for elem_id in list_new_element_ids:
+                        model.model_part.Elements[elem_id].Initialize(model.model_part.ProcessInfo)
 
             ## export the quadrature if user needs
             if self.params["write_quadrature_to_file"] == True:
