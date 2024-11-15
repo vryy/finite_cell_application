@@ -394,7 +394,7 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
 
     /* secondly assign the quadrature for parent element based on physical integration_points of the previous step */
     GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(rDummy.GetRepresentativeIntegrationOrder());
+            = BRepMathUtility<>::GetIntegrationMethod(rDummy.GetRepresentativeIntegrationOrder());
 //        KRATOS_WATCH(RepresentativeIntegrationMethod)
     FiniteCellGeometryUtility::AssignGeometryData(*(rDummy.pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
     Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));

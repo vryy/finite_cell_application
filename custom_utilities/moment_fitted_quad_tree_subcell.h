@@ -34,6 +34,7 @@
 #include "utilities/timer.h"
 #include "brep_application/custom_algebra/brep.h"
 #include "brep_application/custom_algebra/function/function.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_conditions/element_wrapper_condition.h"
 #include "custom_utilities/quad_tree.h"
@@ -76,7 +77,7 @@ public:
 
     virtual void GeneratePhysicalIntegrationPoints(const BRep& r_brep, const int& integrator_integration_method)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", __FUNCTION__)
+        KRATOS_ERROR << "Calling base class function";
     }
 
     /// Get the underlying element
@@ -96,7 +97,7 @@ public:
     /// Get the integration method of fitting integration points
     GeometryData::IntegrationMethod GetRepresentativeIntegrationMethod() const
     {
-        // return Function<double, double>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
+        // return BRepMathUtility<>::GetIntegrationMethod(GetRepresentativeIntegrationOrder());
         return GeometryData::IntegrationMethod::GI_GAUSS_1;
     }
 
@@ -131,7 +132,7 @@ public:
     /// Compute the domain size of the subcell i
     virtual double DomainSizeSubCell(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     /// Fit a list of subcell using the representative quadrature points from the parent element
@@ -143,7 +144,7 @@ public:
                                         const int& echo_level,
                                         const double& small_weight) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Error calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
 protected:
@@ -254,7 +255,7 @@ public:
         else if (geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D
                  || geom_type == GeometryData::KratosGeometryType::Kratos_Bezier2D3 )
         {
-            KRATOS_THROW_ERROR(std::logic_error, "ConstructSubCellsBasedOnGaussQuadrature is not (yet) implemented for Bezier geometry", "")
+            KRATOS_ERROR << "ConstructSubCellsBasedOnGaussQuadrature is not (yet) implemented for Bezier geometry";
         }
 #endif
         else if ( geom_type == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8
@@ -267,15 +268,15 @@ public:
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
         else if (geom_type == GeometryData::KratosGeometryType::Kratos_Bezier3D)
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+            KRATOS_ERROR << "Not implemented";
         }
 #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
+            KRATOS_ERROR << "This geometry type " << geom_type << " is not supported";
 
             // using the standard Gauss quadrature as moment fitting integration points
             GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(gauss_quadrature_order);
+                = BRepMathUtility<>::GetIntegrationMethod(gauss_quadrature_order);
 
         RefType::mRepresentativeIntegrationOrder = gauss_quadrature_order;
 
@@ -291,8 +292,10 @@ public:
             for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
             {
                 if (!BaseType::mpTreeNodes[i]->IsInside(integration_points[i]))
-                    KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
+                {
+                    KRATOS_ERROR << "The integration_point is not inside the tree, error at " << i;
                 }
+            }
         }
         else if (gauss_quadrature_type == 1)
         {
@@ -316,13 +319,13 @@ public:
                     KRATOS_WATCH(typeid(*BaseType::mpTreeNodes[i]).name())
                     KRATOS_WATCH(*BaseType::mpTreeNodes[i])
                     KRATOS_WATCH(integration_points[i])
-                    KRATOS_THROW_ERROR(std::logic_error, "The integration_point is not inside the tree, error at", i)
+                    KRATOS_ERROR << "The integration_point is not inside the tree, error at " << i;
                 }
             }
         }
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Invalid gauss_quadrature_type", gauss_quadrature_type)
+            KRATOS_ERROR << "Invalid gauss_quadrature_type " << gauss_quadrature_type;
         }
     }
 
@@ -382,11 +385,11 @@ public:
         }
 #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(geom_type))
+            KRATOS_ERROR << "This geometry type " << geom_type << " is not supported";
 
             // using the standard Gauss quadrature as moment fitting integration points
             GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-                = Function<double, double>::GetIntegrationMethod(quadrature_order);
+                = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
 
         RefType::mRepresentativeIntegrationOrder = quadrature_order;
 
@@ -409,7 +412,7 @@ public:
         }
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Invalid quadrature_type", quadrature_type)
+            KRATOS_ERROR << "Invalid quadrature_type " << quadrature_type;
         }
 
         for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
@@ -620,7 +623,7 @@ public:
                     integrator_integration_method, solver_type, echo_level, small_weight);
 
             if (Weights.size2() != aux.size())
-                KRATOS_THROW_ERROR(std::logic_error, "Size conflict", "")
+                KRATOS_ERROR << "Size conflict";
 
                 noalias(row(Weights, i)) = aux;
 
@@ -666,9 +669,7 @@ public:
 
         if (!KratosComponents<Element>::Has(sample_element_name))
         {
-            std::stringstream ss;
-            ss << sample_element_name << " is not registerred to the Kratos database";
-            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+            KRATOS_ERROR << sample_element_name << " is not registerred to the Kratos database";
         }
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
@@ -676,7 +677,7 @@ public:
         const GeometryType& r_geom = *(pElement->pGetGeometry());
 
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
+            = BRepMathUtility<>::GetIntegrationMethod(RepresentativeIntegrationOrder);
         Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
         ProcessInfo& rCurrentProcessInfo = r_model_part.GetProcessInfo();
 

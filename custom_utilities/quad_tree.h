@@ -53,6 +53,7 @@
 #include "brep_application/custom_algebra/function/monomial_function.h"
 #include "brep_application/custom_algebra/function/heaviside_function.h"
 #include "brep_application/custom_algebra/function/product_function.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_utilities/quad_tree_node.h"
 #include "custom_utilities/quadrature_utility.h"
@@ -501,7 +502,7 @@ public:
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return integration_points.size();
@@ -582,7 +583,7 @@ public:
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return std::vector<std::size_t> {integration_points.size(), number_of_physical_points};
@@ -630,7 +631,7 @@ public:
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return std::vector<std::size_t> {integration_points.size(), number_of_physical_points};
@@ -970,7 +971,7 @@ public:
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return integration_points.size();
@@ -1035,7 +1036,7 @@ public:
 
         /* create new quadrature and assign to the geometry */
         int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-        GeometryData::IntegrationMethod ElementalIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        GeometryData::IntegrationMethod ElementalIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
         FiniteCellGeometryUtility::AssignGeometryData(*mpThisGeometry, ElementalIntegrationMethod, integration_points);
 
         return integration_points.size();

@@ -29,14 +29,15 @@
 #include "includes/define.h"
 #include "includes/variables.h"
 #include "includes/ublas_interface.h"
-#include "custom_utilities/quadrature_utility.h"
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
 #include "geometries/line_2d_2.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_linear_solvers/least_square_lapack_solver.h"
-#include "brep_application/custom_algebra/level_set/level_set.h"
+#include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
+#include "brep_application/custom_algebra/level_set/level_set.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 
 
 #define ESTIMATE_RCOND
@@ -244,7 +245,7 @@ public:
         {
             // obtain the quadrature rule, necessary to construct a cut-cell quadrature
             GeometryData::IntegrationMethod ThisIntegrationMethod
-                = LevelSet::GetIntegrationMethod(integration_order);
+                = BRepMathUtility<>::GetIntegrationMethod(integration_order);
 
             const GeometryType::IntegrationPointsArrayType& integration_points = r_geom.IntegrationPoints( ThisIntegrationMethod );
 

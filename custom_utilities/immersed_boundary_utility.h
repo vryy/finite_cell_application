@@ -37,7 +37,7 @@
 #include "geometries/line_3d_2.h"
 #include "geometries/quadrilateral_3d_4.h"
 #include "utilities/math_utils.h"
-#include "brep_application/custom_algebra/function/function.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 
 
 namespace Kratos
@@ -174,7 +174,7 @@ public:
                               std::vector<double>& rDlength, std::vector<double>& rWeights)
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(integration_order);
+            = BRepMathUtility<>::GetIntegrationMethod(integration_order);
 
 #ifdef SD_APP_FORWARD_COMPATIBILITY
         Line3D2<NodeType> SampleLine( GeometryType::PointsArrayType( 2 ) );
@@ -237,7 +237,7 @@ public:
                                 std::vector<double>& rDarea, std::vector<double>& rWeights)
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod
-            = Function<double, double>::GetIntegrationMethod(integration_order);
+            = BRepMathUtility<>::GetIntegrationMethod(integration_order);
 
 #ifdef SD_APP_FORWARD_COMPATIBILITY
         Quadrilateral3D4<NodeType> SampleQuad( GeometryType::PointsArrayType( 4 ) );

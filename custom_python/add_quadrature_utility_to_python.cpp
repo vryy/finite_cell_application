@@ -49,7 +49,7 @@ void QuadratureUtility_ScaleQuadrature(QuadratureUtility& rDummy,
                                        Element::Pointer p_elem, const int& quadrature_order, const double& ScaleFactor)
 {
     GeometryData::IntegrationMethod ElementalIntegrationMethod
-        = Function<double, double>::GetIntegrationMethod(quadrature_order);
+        = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
 
     rDummy.ScaleQuadrature(p_elem->GetGeometry(), ElementalIntegrationMethod, ScaleFactor);
 }
@@ -74,7 +74,7 @@ void QuadratureUtility_SetQuadrature(QuadratureUtility& rDummy,
         integration_points.push_back(integration_point);
     }
 
-    Element::GeometryType::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(integration_order);
+    Element::GeometryType::IntegrationMethod ThisIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(integration_order);
     FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
 //        std::cout << "set quadrature for element " << p_elem->Id() << " completed" << std::endl;
 }
@@ -112,7 +112,7 @@ void QuadratureUtility_SaveQuadrature(QuadratureUtility& rDummy,
         myFile << mode << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown write mode", writeMode)
+        KRATOS_ERROR << "Unknown write mode " << writeMode;
 
         myFile.precision(16);
     myFile << std::scientific;
@@ -308,7 +308,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
+        KRATOS_ERROR << "Unknown file type " << fileType;
     }
 
 template<class TCellType, int TFrame = 0>
@@ -609,7 +609,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
+        KRATOS_ERROR << "Unknown file type " << fileType;
     }
 
 /// Create a new condition from point
@@ -623,8 +623,8 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
 {
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
     std::size_t lastNodeId_ = lastNodeId;
@@ -684,8 +684,8 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
 
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     typedef Element::GeometryType::PointType::PointType PointType;
     ModelPart::ConditionsContainerType NewConditions;
@@ -744,8 +744,8 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
 
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     std::size_t num_conds = 0;
     typedef boost::python::stl_input_iterator<Element::Pointer> iterator_value_type;

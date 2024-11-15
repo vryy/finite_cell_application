@@ -58,6 +58,7 @@
 #include "brep_application/custom_algebra/function/monomial_function.h"
 #include "brep_application/custom_algebra/function/heaviside_function.h"
 #include "brep_application/custom_algebra/function/product_function.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 #include "custom_geometries/finite_cell_geometry.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
@@ -440,7 +441,7 @@ public:
         if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-            GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            GeometryData::IntegrationMethod ThisIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
             this->Integrate<TOutputType, TFuncFrameType>(pParentGeometry, rFunc, rOutput, ThisIntegrationMethod);
         }
         else // use custom quadrature
@@ -503,7 +504,7 @@ public:
         if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-            GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            GeometryData::IntegrationMethod ThisIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
             this->Integrate<TOutputType, TFuncFrameType>(pParentGeometry, rFunc, r_brep, rOutput, ThisIntegrationMethod, small_weight);
         }
         else // use custom quadrature
@@ -574,7 +575,7 @@ public:
         if (quadrature_type == 0) // Kratos built-in
         {
             int quadrature_order = QuadratureUtility::GetQuadratureOrder(integration_method);
-            GeometryData::IntegrationMethod ThisIntegrationMethod = Function<double, double>::GetIntegrationMethod(quadrature_order);
+            GeometryData::IntegrationMethod ThisIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(quadrature_order);
             this->ConstructQuadrature(integration_points, ThisIntegrationMethod);
         }
         else // use custom quadrature
@@ -806,7 +807,6 @@ struct QuadTreeNode_AddToModelPart_Helper<false, Element>
                         std::vector<std::size_t>& new_entity_ids,
                         const int level)
     {
-        // std::cout << __FUNCTION__ << " is called" << std::endl;
         Properties::Pointer p_properties = r_model_part.pGetProperties(level);
         Element::GeometryType::Pointer pThisGeometry = r_tree.pCreateGeometry(pParentGeometry);
         Element::Pointer pNewElement = r_clone_element.Create(++lastElementId, pThisGeometry, p_properties);

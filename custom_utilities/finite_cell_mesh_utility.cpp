@@ -17,6 +17,7 @@
 #include "custom_utilities/finite_cell_mesh_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
+#include "brep_application/custom_utilities/brep_math_utility.h"
 #include "finite_cell_application_variables.h"
 
 
@@ -238,7 +239,7 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
     const GeometryType& r_geom = *(pElement->pGetGeometry());
 
     GeometryData::IntegrationMethod RepresentativeIntegrationMethod
-        = Function<double, double>::GetIntegrationMethod(RepresentativeIntegrationOrder);
+        = BRepMathUtility<>::GetIntegrationMethod(RepresentativeIntegrationOrder);
     Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
 
     // create the new elements from sub-cell

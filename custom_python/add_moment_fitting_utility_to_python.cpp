@@ -68,7 +68,7 @@ void MomentFittingUtility_FitQuadrature(MomentFittingUtility& rDummy,
     }
 
     GeometryData::IntegrationMethod ElementalIntegrationMethod
-        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+        = BRepMathUtility<>::GetIntegrationMethod(fit_quadrature_order);
 
     if (fit_quadrature_type == 0)
     {
@@ -188,7 +188,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
             if (fit_quadrature_type == 0)
             {
                 GeometryData::IntegrationMethod ElementalIntegrationMethod
-                    = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+                    = BRepMathUtility<>::GetIntegrationMethod(fit_quadrature_order);
 
                 const Element::GeometryType::IntegrationPointsArrayType& integration_points
                     = (*it)->GetGeometry().IntegrationPoints( ElementalIntegrationMethod );
@@ -217,7 +217,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
                 }
 
 //                    GeometryData::IntegrationMethod ElementalIntegrationMethod
-//                        = Function<double, double>::GetIntegrationMethod(fit_quadrature_order);
+//                        = BRepMathUtility<>::GetIntegrationMethod(fit_quadrature_order);
 
                 // it is a hack here, since the integration method can be larger than Kratos can accommodate. We set to minimum value. In the element this information is not important anyway.
                 GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
