@@ -271,10 +271,10 @@ public:
     }
 
     /// Get the last node id of the model part
-    static std::size_t GetLastNodeId(ModelPart& r_model_part)
+    static std::size_t GetLastNodeId(const ModelPart& r_model_part)
     {
         std::size_t lastNodeId = 0;
-        for (typename ModelPart::NodesContainerType::iterator it = r_model_part.Nodes().begin();
+        for (typename ModelPart::NodesContainerType::const_iterator it = r_model_part.Nodes().begin();
                 it != r_model_part.Nodes().end(); ++it)
         {
             if (it->Id() > lastNodeId)
@@ -288,10 +288,10 @@ public:
 
 
     /// Get the last element id of the model part
-    static std::size_t GetLastElementId(ModelPart& r_model_part)
+    static std::size_t GetLastElementId(const ModelPart& r_model_part)
     {
         std::size_t lastElementId = 0;
-        for (typename ModelPart::ElementsContainerType::iterator it = r_model_part.Elements().begin();
+        for (typename ModelPart::ElementsContainerType::const_iterator it = r_model_part.Elements().begin();
                 it != r_model_part.Elements().end(); ++it)
         {
             if (it->Id() > lastElementId)
@@ -305,10 +305,10 @@ public:
 
 
     /// Get the last condition id of the model part
-    static std::size_t GetLastConditionId(ModelPart& r_model_part)
+    static std::size_t GetLastConditionId(const ModelPart& r_model_part)
     {
         std::size_t lastCondId = 0;
-        for (typename ModelPart::ConditionsContainerType::iterator it = r_model_part.Conditions().begin();
+        for (typename ModelPart::ConditionsContainerType::const_iterator it = r_model_part.Conditions().begin();
                 it != r_model_part.Conditions().end(); ++it)
         {
             if (it->Id() > lastCondId)
@@ -322,11 +322,11 @@ public:
 
 
     /// Get the last properties id of the model_part
-    static std::size_t GetLastPropertiesId(ModelPart& r_model_part)
+    static std::size_t GetLastPropertiesId(const ModelPart& r_model_part)
     {
         std::size_t lastPropId = 0;
-        for (typename ModelPart::PropertiesContainerType::iterator it = r_model_part.rProperties().begin();
-                it != r_model_part.rProperties().end(); ++it)
+        for (typename ModelPart::PropertiesConstantIterator it = r_model_part.PropertiesBegin();
+                it != r_model_part.PropertiesEnd(); ++it)
         {
             if (it->Id() > lastPropId)
             {
@@ -339,10 +339,10 @@ public:
 
 
     /// Get the last constraint id of the model_part
-    static std::size_t GetLastConstraintId(ModelPart& r_model_part)
+    static std::size_t GetLastConstraintId(const ModelPart& r_model_part)
     {
         std::size_t lastConstraintId = 0;
-        for (typename ModelPart::MasterSlaveConstraintContainerType::iterator it = r_model_part.MasterSlaveConstraints().begin();
+        for (typename ModelPart::MasterSlaveConstraintContainerType::const_iterator it = r_model_part.MasterSlaveConstraints().begin();
                 it != r_model_part.MasterSlaveConstraints().end(); ++it)
         {
             if (it->Id() > lastConstraintId)
