@@ -24,7 +24,6 @@
 
 
 // External includes
-#include <boost/progress.hpp>
 
 
 // Project includes
@@ -34,6 +33,7 @@
 #include "includes/model_part.h"
 #include "includes/deprecated_variables.h"
 #include "containers/pointer_vector_set.h"
+#include "utilities/progress.h"
 #include "brep_application/custom_algebra/function/function.h"
 
 
@@ -117,7 +117,7 @@ public:
     {
         rpElements.clear();
 
-        boost::progress_display show_progress( element_list.size() );
+        Kratos::progress_display show_progress( element_list.size() );
 
         for (std::set<std::size_t>::iterator it = element_list.begin(); it != element_list.end(); ++it)
         {
@@ -398,7 +398,7 @@ public:
         std::vector<unsigned int> tree_partition;
         CreatePartition(number_of_threads, r_trees.size(), tree_partition);
 
-        boost::progress_display show_progress( r_trees.size() );
+        Kratos::progress_display show_progress( r_trees.size() );
 
 #ifdef _OPENMP
         #pragma omp parallel for
@@ -436,7 +436,7 @@ public:
         }
         std::cout << std::endl;
 
-        boost::progress_display show_progress( r_trees.size() );
+        Kratos::progress_display show_progress( r_trees.size() );
 
 #ifdef _OPENMP
         if (number_of_threads > 1)

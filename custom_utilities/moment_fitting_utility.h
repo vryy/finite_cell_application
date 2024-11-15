@@ -364,7 +364,7 @@ public:
         }
         std::cout << std::endl;
 
-        boost::progress_display show_progress( r_trees.size() );
+        Kratos::progress_display show_progress( r_trees.size() );
 
 #ifdef ENABLE_PROFILING
         double start = OpenMPUtils::GetCurrentTime();

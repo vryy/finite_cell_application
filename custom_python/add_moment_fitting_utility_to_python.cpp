@@ -13,6 +13,7 @@
 
 // Project includes
 #include "includes/element.h"
+#include "utilities/progress.h"
 #include "custom_python/add_moment_fitting_utility_to_python.h"
 #include "brep_application/custom_algebra/brep.h"
 #include "custom_utilities/quad_tree.h"
@@ -165,11 +166,11 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
     }
     std::cout << std::endl;
 
-    boost::progress_display* show_progress = NULL;
+    Kratos::progress_display* show_progress = NULL;
 
     if (echo_level == -2)
     {
-        show_progress = new boost::progress_display( elements.size() );
+        show_progress = new Kratos::progress_display( elements.size() );
     }
 
 #ifdef _OPENMP
