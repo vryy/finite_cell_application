@@ -350,8 +350,8 @@ ModelPart::ElementsContainerType FiniteCellMeshUtility::ImportElements(ModelPart
 {
     std::size_t last_element_id = FiniteCellAuxiliaryUtility::GetLastElementId(rThisModelPart);
     if (!KratosComponents<Element>::Has(sample_element_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_element_name, "is not registerred in Kratos database")
-        Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
+        KRATOS_ERROR << sample_element_name << " is not registerred in Kratos database";
+    Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);
 
     ModelPart::ElementsContainerType NewElements;
     FiniteCellMeshUtility_Helper<Element, ModelPart::ElementsContainerType>::ImportEntities(rThisModelPart,
@@ -389,8 +389,8 @@ ModelPart::ConditionsContainerType FiniteCellMeshUtility::ImportConditions(Model
 {
     std::size_t last_cond_id = FiniteCellAuxiliaryUtility::GetLastConditionId(rThisModelPart);
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registerred in Kratos database")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registerred in Kratos database";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
     FiniteCellMeshUtility_Helper<Condition, ModelPart::ConditionsContainerType>::ImportEntities(rThisModelPart,

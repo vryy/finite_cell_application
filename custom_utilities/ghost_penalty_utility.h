@@ -134,59 +134,59 @@ struct GhostPenalty_Geometry_Helper
     /// Get the number of sides associated with a geometry
     static int NumberOfSides()
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Find the side of the edge geometry on the element geometry. If not found, return -1.
     static int FindSide(GeometryType& r_element_geometry, GeometryType& r_edge_geometry)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Find the common edge/face between two geometries
     static std::vector<std::size_t> FindCommonFace(GeometryType& r_geom_1, GeometryType& r_geom_2)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Get the local index of nodes on the side of the geometry
     static const int* Faces(const std::size_t& side)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Compute the integration point in the element given the integration point on the edge and the side
     static IntegrationPointType ComputeIntegrationPoint(const int& side, const IntegrationPointType& edge_integration_point)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Compute the shape function value along the edge of the elemental geometry, in the reference frame
     static void ComputeShapeFunction(Matrix& N, GeometryType& r_element_geometry,
                                      GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Compute the shape function local gradient along the edge of the elemental geometry, in the reference frame
     static void ComputeShapeFunctionGradient(std::vector<Matrix>& DN_DX, GeometryType& r_element_geometry,
             GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Compute the shape function local gradient in the normal direction along the edge of the elemental geometry, in the reference frame
     static void ComputeShapeFunctionNormalGradient(Matrix& dNdn, GeometryType& r_element_geometry,
             GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 
     /// Compute the shape function second derivatives in the normal direction along the edge of the elemental geometry, in the reference frame
     static void ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, GeometryType& r_element_geometry,
             GeometryType& r_edge_geometry, const GeometryType::IntegrationPointsArrayType& edge_integration_points)
     {
-        KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "is not defined")
+        KRATOS_ERROR << "Not defined";
     }
 };
 
@@ -644,8 +644,8 @@ struct ComputeShapeFunctionNormalGradient_Helper
         }
 
         if (side == -1)
-            KRATOS_THROW_ERROR(std::logic_error, "The edge geometry is not found on the element geometry. Check the input", "")
-        }
+            KRATOS_ERROR << "The edge geometry is not found on the element geometry. Check the input";
+    }
 
     static void Execute3D(Matrix& dNdn, GeometryType& r_element_geometry, GeometryType& r_face_geometry,
                           const IntegrationPointsArrayType& face_integration_points)
@@ -715,8 +715,8 @@ struct ComputeShapeFunctionNormalGradient_Helper
         }
 
         if (side == -1)
-            KRATOS_THROW_ERROR(std::logic_error, "The face geometry is not found on the element geometry. Check the input", "")
-        }
+            KRATOS_ERROR << "The face geometry is not found on the element geometry. Check the input";
+    }
 };
 
 template<>

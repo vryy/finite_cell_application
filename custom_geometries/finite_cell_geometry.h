@@ -296,11 +296,11 @@ public:
         // modify the weight
         IntegrationPointsArrayType& integration_points = all_integration_points[static_cast<int>(ThisIntegrationMethod)];
         if (integration_points.size() != rWeights.size())
-            KRATOS_THROW_ERROR(std::logic_error, "The number of integration points and the size of input array is not compatible", "")
-            for (std::size_t i = 0; i < rWeights.size(); ++i)
-            {
-                integration_points[i].SetWeight(rWeights[i]);
-            }
+            KRATOS_ERROR << "The number of integration points and the size of input array is not compatible";
+        for (std::size_t i = 0; i < rWeights.size(); ++i)
+        {
+            integration_points[i].SetWeight(rWeights[i]);
+        }
 
         // copy the shape function values data
         ShapeFunctionsValuesContainerType shape_functions_values;

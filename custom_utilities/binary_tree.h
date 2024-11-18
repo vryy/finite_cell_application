@@ -99,7 +99,7 @@ public:
                 && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line2D2
                 && p_elem->GetGeometry().GetGeometryType() != GeometryData::Kratos_Line3D2 )
         {
-            KRATOS_THROW_ERROR(std::logic_error, "The input geometry is incompatible", "")
+            KRATOS_ERROR << "The input geometry is incompatible";
         }
 
         mpThisGeometry = p_elem->pGetGeometry();
@@ -418,9 +418,7 @@ public:
     {
         if (!KratosComponents<Element>::Has(sample_element_name))
         {
-            std::stringstream ss;
-            ss << sample_element_name << " is not registerred to the Kratos database";
-            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+            KRATOS_ERROR << sample_element_name << " is not registerred to the Kratos database";
         }
 
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_element_name);

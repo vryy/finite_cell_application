@@ -140,7 +140,7 @@ public:
 
         if (flag < 0)
         {
-            KRATOS_THROW_ERROR(std::logic_error, "NNLS: Solver terminated with error flag:", flag);
+            KRATOS_ERROR << "NNLS: Solver terminated with error flag " << flag;
             return flag;
         }
 

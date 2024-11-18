@@ -89,9 +89,7 @@ boost::python::list QuadTree_AddToModelPart_WithLevel(TTreeType& rDummy,
     }
     else
     {
-        std::stringstream ss;
-        ss << sample_entity_name << " is not registerred to the database";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << sample_entity_name << " is not registerred to the database";
     }
 
     boost::python::list list;
@@ -186,9 +184,7 @@ boost::python::list QuadTreeSubCell_AddToModelPart(TTreeType& rDummy,
     }
     else
     {
-        std::stringstream ss;
-        ss << sample_entity_name << " is not registerred to the Kratos database";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << sample_entity_name << " is not registerred to the Kratos database";
     }
 
     boost::python::list list;

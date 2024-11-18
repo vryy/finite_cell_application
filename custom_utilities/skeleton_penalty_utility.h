@@ -163,10 +163,10 @@ public:
             p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", static_cast<int>(edge.first))
+            KRATOS_ERROR << "Unknown geometry type " << edge.first;
 
-            // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
-            bool is_ghost = false;
+        // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
+        bool is_ghost = false;
 
         int configuration = 0; // check the cut status in the initial configuration
         int stat1 = r_brep.CutStatus(p_element_1->GetGeometry(), configuration);

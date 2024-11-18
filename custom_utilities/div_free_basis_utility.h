@@ -137,7 +137,7 @@ public:
     {
         Matrix Results;
 
-        if (TDimension == 2)
+        if constexpr (TDimension == 2)
         {
             std::size_t num_basis = BasisNumber<TDimension, TDegree>();
             if (num_basis == 0)
@@ -147,7 +147,7 @@ public:
 
             Results.resize(num_basis, TDimension, false);
 
-            if (TDegree >= 0)
+            if constexpr (TDegree >= 0)
             {
                 Results(0, 0) = 1.0;
                 Results(0, 1) = 0.0;
@@ -155,7 +155,7 @@ public:
                 Results(1, 1) = 1.0;
             }
 
-            if (TDegree >= 1)
+            if constexpr (TDegree >= 1)
             {
                 Results(2, 0) = rPoint[1];
                 Results(2, 1) = 0.0;
@@ -165,7 +165,7 @@ public:
                 Results(4, 1) = rPoint[0];
             }
 
-            if (TDegree >= 2)
+            if constexpr (TDegree >= 2)
             {
                 Results(5, 0) = pow(rPoint[1], 2);
                 Results(5, 1) = 0.0;
@@ -177,7 +177,7 @@ public:
                 Results(8, 1) = pow(rPoint[0], 2);
             }
 
-            if (TDegree >= 3)
+            if constexpr (TDegree >= 3)
             {
                 Results(9, 0) = pow(rPoint[1], 3);
                 Results(9, 1) = 0.0;
@@ -191,9 +191,9 @@ public:
                 Results(13, 1) = pow(rPoint[0], 3);
             }
         }
-        else if (TDimension == 3)
+        else if constexpr (TDimension == 3)
         {
-            KRATOS_THROW_ERROR(std::logic_error, "Not implemented", "")
+            KRATOS_ERROR << "Not yet implemented";
         }
 
         return Results;
@@ -206,14 +206,14 @@ public:
     {
         // pre-check
         if (r_geom.WorkingSpaceDimension() == 3)
-            KRATOS_THROW_ERROR(std::logic_error, "This subroutine does not support 3D operation yet", "")
+            KRATOS_ERROR << "This subroutine does not support 3D operation yet";
 
-            if (    r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
-                    || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
-                    || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9 )
-            {
-                KRATOS_THROW_ERROR(std::logic_error, "This subroutine does not support second order yet", "")
-            }
+        if (    r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6
+                || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8
+                || r_geom.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9 )
+        {
+            KRATOS_ERROR << "This subroutine does not support second order yet";
+        }
 
         /* check if the cell is cut by the level set */
 
@@ -233,7 +233,7 @@ public:
         }
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry is not supported", static_cast<int>(r_geom.GetGeometryType()))
+            KRATOS_ERROR << "The geometry type " << r_geom.GetGeometryType() << " is not supported";
         }
 
         // check the cut status with the level set

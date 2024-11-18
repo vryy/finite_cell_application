@@ -65,9 +65,7 @@ struct GenerateStructuredPoints_Helper<2, 1> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 1";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Uniform sampling along axis vectors
@@ -102,9 +100,7 @@ struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::size_t>& nsampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Non-uniform sampling along Cartesian coordinates
@@ -113,9 +109,7 @@ struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Uniform sampling along axis vectors
@@ -124,9 +118,7 @@ struct GenerateStructuredPoints_Helper<2, 2> : public GenerateStructuredPoints_H
         const std::vector<PointType>& Axis,
         const std::vector<std::size_t>& nsampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 };
 
@@ -163,9 +155,7 @@ struct GenerateStructuredPoints_Helper<2, 3> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 2 and type = 3";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Uniform sampling along axis vectors
@@ -294,9 +284,7 @@ struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::size_t>& nsampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 3 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Non-uniform sampling along Cartesian coordinates
@@ -305,9 +293,7 @@ struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_H
         const PointType& EndPoint,
         const std::vector<std::vector<double> >& sampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 3 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 
     /// Uniform sampling along axis vectors
@@ -316,9 +302,7 @@ struct GenerateStructuredPoints_Helper<3, 2> : public GenerateStructuredPoints_H
         const std::vector<PointType>& Axis,
         const std::vector<std::size_t>& nsampling)
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << " is not yet implemented for dim = 3 and type = 2";
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << "Not yet implemented";
     }
 };
 

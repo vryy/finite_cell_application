@@ -409,7 +409,7 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     //     for (std::size_t i = 0; i < p_element_2->GetGeometry().size(); ++i)
     //         std::cout << " " << p_element_2->GetGeometry()[i].Id();
     //     std::cout << std::endl;
-    //     KRATOS_THROW_ERROR(std::logic_error, "The two elements do not have common face", "")
+    //     KRATOS_ERROR << "The two elements do not have common face";
     // }
 
     GeometryType::Pointer p_temp_geometry;
@@ -443,10 +443,10 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
         p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", static_cast<int>(edge.first))
+        KRATOS_ERROR << "Unknown geometry type " << edge.first;
 
-        // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
-        bool is_ghost = false;
+    // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
+    bool is_ghost = false;
 
     int configuration = 0; // check the cut status in the initial configuration
     int stat1 = r_brep.CutStatus(p_element_1->GetGeometry(), configuration);
@@ -565,7 +565,7 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     //     for (std::size_t i = 0; i < p_element_2->GetGeometry().size(); ++i)
     //         std::cout << " " << p_element_2->GetGeometry()[i].Id();
     //     std::cout << std::endl;
-    //     KRATOS_THROW_ERROR(std::logic_error, "The two elements do not have common face", "")
+    //     KRATOS_ERROR << "The two elements do not have common face";
     // }
 
     GeometryType::Pointer p_temp_geometry;
@@ -599,10 +599,10 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
         p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", static_cast<int>(edge.first))
+        KRATOS_ERROR << "Unknown geometry type " << edge.first;
 
-        // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
-        bool is_ghost = false;
+    // check if this edge is cut by the brep or totally inside. If yes, then the new ghost condition is created.
+    bool is_ghost = false;
 
     int stat1 = r_brep.CutStatusBySampling(p_element_1->GetGeometry(), nsampling, configuration);
     int stat2 = r_brep.CutStatusBySampling(p_element_2->GetGeometry(), nsampling, configuration);
@@ -687,10 +687,10 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
         p_temp_geometry = GeometryType::Pointer(new Quadrilateral3D9<NodeType>(temp_nodes));
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown geometry type", static_cast<int>(edge.first))
+        KRATOS_ERROR << "Unknown geometry type " << edge.first;
 
-        // create the ghost penalty condition
-        pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element_1, p_element_2, pProperties);
+    // create the ghost penalty condition
+    pNewCond = p_sample_condition->Create(++lastCondId, p_temp_geometry, p_element_1, p_element_2, pProperties);
 #ifndef SD_APP_FORWARD_COMPATIBILITY
     pNewCond->SetValue(IS_INACTIVE, false);
 #endif
@@ -748,9 +748,7 @@ void GhostPenaltyUtility::ComputeShapeFunction(Matrix& N, GeometryType& r_elemen
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 }
 
@@ -800,9 +798,7 @@ void GhostPenaltyUtility::ComputeShapeFunctionGradient(std::vector<Matrix>& DN_D
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 }
 
@@ -851,9 +847,7 @@ void GhostPenaltyUtility::ComputeShapeFunctionNormalGradient(Matrix& dNdn, Geome
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 }
 
@@ -902,9 +896,7 @@ void GhostPenaltyUtility::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 }
 
@@ -952,9 +944,7 @@ int GhostPenaltyUtility::FindSide(GeometryType& r_element_geometry, GeometryType
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 
     return -1;
@@ -1004,9 +994,7 @@ const int* GhostPenaltyUtility::Faces(GeometryType& r_element_geometry, const st
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 
     return NULL;
@@ -1056,9 +1044,7 @@ GhostPenaltyUtility::IntegrationPointType GhostPenaltyUtility::ComputeIntegratio
     }
     else
     {
-        std::stringstream ss;
-        ss << __FUNCTION__ << "does not work on geometry " << static_cast<int>(r_element_geometry.GetGeometryType());
-        KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+        KRATOS_ERROR << r_element_geometry.GetGeometryType() << " is not supported";
     }
 }
 
@@ -1097,52 +1083,52 @@ void GhostPenaltyUtility::ProbeShapeFunctionSecondDerivatives(GeometryType& r_el
 std::pair<GeometryData::KratosGeometryType, std::vector<std::size_t> > GhostPenaltyUtility::FindCommonFace(Element::GeometryType& r_geom_1, Element::GeometryType& r_geom_2)
 {
     if (r_geom_1.GetGeometryType() != r_geom_2.GetGeometryType())
-        KRATOS_THROW_ERROR(std::logic_error, "The geometry type is not the same", "")
+        KRATOS_ERROR << "The geometry type is not the same";
 
-        if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D2, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D3>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D6>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D2, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Triangle3D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Triangle3D6, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D8>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D20>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27)
-        {
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D27>::FindCommonFace(r_geom_1, r_geom_2));
-        }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "Not yet implemented", "")
+    if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D3)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D2, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D3>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Triangle2D6)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D6>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D2, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Line2D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Triangle3D3, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Triangle3D6, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D8)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D4, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D8>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D20)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D20>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else if (r_geom_1.GetGeometryType() == GeometryData::KratosGeometryType::Kratos_Hexahedra3D27)
+    {
+        return std::make_pair(GeometryData::KratosGeometryType::Kratos_Quadrilateral3D9, GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D27>::FindCommonFace(r_geom_1, r_geom_2));
+    }
+    else
+        KRATOS_ERROR << "Not yet implemented";
 
-            return std::make_pair(GeometryData::KratosGeometryType::Kratos_generic_type, std::vector<std::size_t> {});
+    return std::make_pair(GeometryData::KratosGeometryType::Kratos_generic_type, std::vector<std::size_t> {});
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1234,8 +1220,8 @@ void GhostPenalty_Helper::ComputeLocalFrame(Vector& t, Vector& n, GeometryType& 
         n(1) = t(0);
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "The geometry type is invalid:", static_cast<int>(r_edge_geometry.GetGeometryType()))
-    }
+        KRATOS_ERROR << "The geometry type " << r_edge_geometry.GetGeometryType() << " is invalid";
+}
 
 void GhostPenalty_Helper::ComputeLocalFrame(Vector& t1, Vector& t2, Vector& n, GeometryType& r_face_geometry, const IntegrationPointType& integration_point)
 {
@@ -1262,13 +1248,13 @@ void GhostPenalty_Helper::ComputeLocalFrame(Vector& t1, Vector& t2, Vector& n, G
         n *= (1.0 / norm_2(n));
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "The geometry type is invalid:", static_cast<int>(r_face_geometry.GetGeometryType()))
-    }
+        KRATOS_ERROR << "The geometry type " << r_face_geometry.GetGeometryType() << " is invalid";
+}
 
 Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrationPointOnTriSide(const int& side, const Element::GeometryType::IntegrationPointType& edge_integration_point)
 {
     // TODO
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not yet implemented")
+    KRATOS_ERROR << "Not yet implemented";
 }
 
 Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrationPointOnQuadSide(const int& side, const Element::GeometryType::IntegrationPointType& edge_integration_point)
@@ -1302,7 +1288,7 @@ Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrat
 Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrationPointOnTetSide(const int& side, const Element::GeometryType::IntegrationPointType& face_integration_point)
 {
     // TODO
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "not yet implemented")
+    KRATOS_ERROR << "Not yet implemented";
 }
 
 Element::GeometryType::IntegrationPointType GhostPenalty_Helper::ComputeIntegrationPointOnHexSide(const int& side, const Element::GeometryType::IntegrationPointType& face_integration_point)
@@ -1597,7 +1583,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Trian
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D3>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for T3 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for T3";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1654,7 +1640,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Trian
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Triangle2D6>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for T6 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for T6";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1709,7 +1695,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadr
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D4>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for Q4 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for Q4";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1767,7 +1753,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadr
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for Q8 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for Q8";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1825,7 +1811,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadr
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Quadrilateral2D9>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_edge_geometry, const Element::GeometryType::IntegrationPointsArrayType& edge_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for Q9 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for Q9";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1883,7 +1869,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetra
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D4>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for T4 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for T4";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1950,7 +1936,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetra
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for T10 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for T10";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2013,7 +1999,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexah
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D8>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for H8 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for H8";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2088,7 +2074,7 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexah
 void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexahedra3D20>::ComputeShapeFunctionNormalSecondDerivatives(Matrix& d2Ndn2, Element::GeometryType& r_element_geometry,
         Element::GeometryType& r_face_geometry, const Element::GeometryType::IntegrationPointsArrayType& face_integration_points)
 {
-    KRATOS_THROW_ERROR(std::logic_error, __FUNCTION__, "for H20 not yet implemented")
+    KRATOS_ERROR << "Not yet implemented for H20";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2233,8 +2219,8 @@ void GhostPenalty_Geometry_Helper<GeometryData::KratosGeometryType::Kratos_Hexah
     }
 
     if (side == -1)
-        KRATOS_THROW_ERROR(std::logic_error, "The face geometry is not found on the element geometry. Check the input", "")
-    }
+        KRATOS_ERROR << "The face geometry is not found on the element geometry. Check the input";
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

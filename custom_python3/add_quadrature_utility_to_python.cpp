@@ -110,9 +110,9 @@ void QuadratureUtility_SaveQuadrature(QuadratureUtility& rDummy,
         myFile << mode << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown write mode", writeMode)
+        KRATOS_ERROR << "Unknown write mode " << writeMode;
 
-        myFile.precision(16);
+    myFile.precision(16);
     myFile << std::scientific;
 
     for (auto it : pyElemList)
@@ -299,8 +299,8 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
         std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
-    }
+        KRATOS_ERROR << "Unknown file type " << fileType;
+}
 
 template<class TCellType, int TFrame = 0>
 void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
@@ -587,8 +587,8 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
         std::cout << "Write quadrature to " << fileName << " successfully" << std::endl;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Unknown file type", fileType)
-    }
+        KRATOS_ERROR << "Unknown file type " << fileType;
+}
 
 /// Create a new condition from point
 ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(QuadratureUtility& rDummy,
@@ -601,8 +601,8 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint(Qu
 {
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     ModelPart::ConditionsContainerType NewConditions;
     std::size_t lastNodeId_ = lastNodeId;
@@ -659,8 +659,8 @@ ModelPart::ConditionsContainerType QuadratureUtility_CreateConditionFromPoint2(Q
 
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     typedef Element::GeometryType::PointType::PointType PointType;
     ModelPart::ConditionsContainerType NewConditions;
@@ -719,8 +719,8 @@ void QuadratureUtility_CreateConditionFromQuadraturePoint(QuadratureUtility& rDu
 
     // get the sample condition
     if (!KratosComponents<Condition>::Has(sample_cond_name))
-        KRATOS_THROW_ERROR(std::logic_error, sample_cond_name, "is not registered to the KRATOS kernel")
-        Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
+        KRATOS_ERROR << sample_cond_name << " is not registered to the KRATOS kernel";
+    Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_cond_name);
 
     std::size_t num_conds = 0;
     for (auto it : pyElemList)

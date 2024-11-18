@@ -359,7 +359,7 @@ public:
 
 //        return p_clone;
 
-        KRATOS_THROW_ERROR(std::logic_error, "FiniteCellGeo2dBezier geometry does not support for Clone", *this)
+        KRATOS_ERROR << "Does not yet support for Clone";
     }
 
     /**

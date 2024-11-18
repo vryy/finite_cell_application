@@ -206,9 +206,7 @@ public:
 #endif
             else
             {
-                std::stringstream ss;
-                ss << "The geometry " << typeid(r_geom).name() << " of type " << static_cast<int>(r_geom.GetGeometryType()) << " is not supported";
-                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+                KRATOS_ERROR << "The geometry " << typeid(r_geom).name() << " of type " << r_geom.GetGeometryType() << " is not supported";
             }
         }
         catch (const std::bad_cast& e)
@@ -307,9 +305,7 @@ public:
 #endif
             else
             {
-                std::stringstream ss;
-                ss << "The geometry " << typeid(r_geom).name() << " of type " << static_cast<int>(r_geom.GetGeometryType()) << " is not supported";
-                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+                KRATOS_ERROR << "The geometry " << typeid(r_geom).name() << " of type " << r_geom.GetGeometryType() << " is not supported";
             }
         }
         catch (const std::bad_cast& e)

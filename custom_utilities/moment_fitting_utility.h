@@ -193,9 +193,7 @@ public:
         {
             if (MA.size1() != MA.size2())
             {
-                std::stringstream ss;
-                ss << "The matrix size " << MA.size1() << "x" << MA.size2() << " is not square. Direct solver cannot be used";
-                KRATOS_THROW_ERROR(std::logic_error, ss.str(), "")
+                KRATOS_ERROR << "The matrix size " << MA.size1() << "x" << MA.size2() << " is not square. Direct solver cannot be used";
             }
 
             /* the linear system is square, we can use a direct solver */
@@ -245,13 +243,13 @@ public:
         }
 #endif
         else
-            KRATOS_THROW_ERROR(std::logic_error, "Unknown solver type:", solver_type)
+            KRATOS_ERROR << "Unknown solver type " << solver_type;
 
-            if (echo_level > 0)
-            {
-                KRATOS_WATCH(Mw)
-                KRATOS_WATCH(sum(Mw))
-            }
+        if (echo_level > 0)
+        {
+            KRATOS_WATCH(Mw)
+            KRATOS_WATCH(sum(Mw))
+        }
 
 #ifdef ENABLE_PROFILING
         Timer::Stop(time_mark_name2.str());

@@ -174,8 +174,8 @@ public:
             const std::size_t& Id, Properties::Pointer pProperties, const std::vector<std::size_t>& node_ids)
     {
         if (!KratosComponents<TEntityType>::Has(sample_entity_name))
-            KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
-            TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+            KRATOS_ERROR << sample_entity_name << " is not registered to the KRATOS kernel";
+        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
 //        KRATOS_WATCH(r_clone_entity)
 
         // create the points array
@@ -202,8 +202,8 @@ public:
             const std::size_t& Id, Properties::Pointer pProperties, typename TEntityType::GeometryType::Pointer pGeometry)
     {
         if (!KratosComponents<TEntityType>::Has(sample_entity_name))
-            KRATOS_THROW_ERROR(std::logic_error, sample_entity_name, "is not registered to the KRATOS kernel")
-            TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
+            KRATOS_ERROR << sample_entity_name << " is not registered to the KRATOS kernel";
+        TEntityType const& r_clone_entity = KratosComponents<TEntityType>::Get(sample_entity_name);
 //        KRATOS_WATCH(r_clone_entity)
 
         // create new entity

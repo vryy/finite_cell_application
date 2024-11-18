@@ -130,9 +130,9 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart1D(FiniteCe
         order = type % 10;
     }
     else
-        KRATOS_THROW_ERROR(std::logic_error, "Invalid mesh type", type)
+        KRATOS_ERROR << "Invalid mesh type " << type;
 
-        rDummy.GenerateSamplingPoints(sampling_points, StartPoint, EndPoint, nsampling * order);
+    rDummy.GenerateSamplingPoints(sampling_points, StartPoint, EndPoint, nsampling * order);
 
     int close_dir = 0; // open loop
     int activation_dir = 0;

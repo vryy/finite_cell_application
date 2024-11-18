@@ -76,32 +76,32 @@ public:
 
     virtual void Refine()
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     virtual void RefineBy(const BRep& r_brep)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     virtual void RefineWithGeometryBy(const BRep& r_brep)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     virtual void RefineUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     virtual void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     virtual void Clear()
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class", __FUNCTION__)
+        KRATOS_ERROR << "Error calling base class function";
     }
 };
 
@@ -127,14 +127,14 @@ public:
     virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
                                   const BRep& r_brep, const int& integration_method, const double& small_weight) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     /// Integrate a function defined in local coordinates
     virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
                                   const int& integration_method) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -143,14 +143,14 @@ public:
     virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
                                    const BRep& r_brep, const int& integration_method, const double& small_weight) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     /// Integrate a function defined in global coordinates
     virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
                                    const int& integration_method) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+        KRATOS_ERROR << "Error calling base class function";
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ public:
     /// Construct a custom quadrature on the support domain
     virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "Calling base class function", "")
+        KRATOS_ERROR << "Error calling base class function";
     }
 };
 
@@ -696,7 +696,7 @@ public:
 #endif
         else
         {
-            KRATOS_THROW_ERROR(std::logic_error, "This geometry type is not supported:", static_cast<int>(ThisGeometryType))
+            KRATOS_ERROR << "The geometry type " << ThisGeometryType << " is not supported";
         }
 
         return pTreeNode;
@@ -1205,15 +1205,15 @@ protected:
                 }
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
-        }
+            KRATOS_ERROR << "The integration order " << integration_order << " is not implemented";
+    }
 
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
     /// Construct the sub-cells for Gauss Quadrature on the Bezier 2D geometry.
     void ConstructSubCellsForBezier2DBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
             const int& integration_order) const
     {
-        KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
+        KRATOS_ERROR << "The integration order " << integration_order << " is not implemented";
     }
 #endif
 
@@ -1362,7 +1362,7 @@ protected:
             }
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "This integration order is not implemented:", integration_order)
+            KRATOS_ERROR << "The integration order " << integration_order << " is not supported";
         }
 
     void ConstructSubCellsForHexBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,

@@ -146,8 +146,8 @@ public:
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_5;
             }
             else
-                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration rule", this->GetValue(INTEGRATION_ORDER_var))
-            }
+                KRATOS_ERROR << "KinematicLinear element does not support for integration rule " << this->GetValue(INTEGRATION_ORDER_var);
+        }
         else if (GetProperties().Has( INTEGRATION_ORDER_var ))
         {
             if (GetProperties()[INTEGRATION_ORDER_var] == 1)
@@ -171,8 +171,8 @@ public:
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_5;
             }
             else
-                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration points", GetProperties()[INTEGRATION_ORDER_var])
-            }
+                KRATOS_ERROR << "KinematicLinear element does not support for integration rule " << GetProperties()[INTEGRATION_ORDER_var];
+        }
         else
         {
             mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod();    // default method
