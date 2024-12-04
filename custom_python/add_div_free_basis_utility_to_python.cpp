@@ -50,6 +50,8 @@ Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, c
             return dummy.GetValues<2, 4>(rPoint);
         }
     }
+    else
+        KRATOS_ERROR << "Invalid dimension " << Dim;
 }
 
 void DivFreeBasisUtility_AssignQuadrature2D(DivFreeBasisUtility& rDummy, Element::Pointer p_elem,

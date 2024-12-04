@@ -71,7 +71,7 @@ namespace Kratos
 /**
  * Basic search utilities
  */
-struct GhostPenalty_Helper
+struct KRATOS_API(FINITE_CELL_APPLICATION) GhostPenalty_Helper
 {
     typedef Element::GeometryType GeometryType;
     typedef GeometryType::IntegrationPointType IntegrationPointType;
@@ -193,7 +193,7 @@ struct GhostPenalty_Geometry_Helper
 /// Short class definition.
 /** Search and create the ghost penalty conditions
 */
-class GhostPenaltyUtility
+class KRATOS_API(FINITE_CELL_APPLICATION) GhostPenaltyUtility
 {
 public:
     ///@name Type Definitions

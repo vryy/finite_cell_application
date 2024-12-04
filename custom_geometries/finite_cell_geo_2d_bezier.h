@@ -41,9 +41,8 @@ namespace Kratos
 /**
  * Implementation of finite cell integration scheme for Bezier surface in 2D
  */
-
 template<class TPointType>
-class FiniteCellGeo2dBezier : public Geo2dBezier<TPointType>//, public FiniteCellGeometry<Geometry<TPointType> >
+class FiniteCellGeo2dBezier : public Geo2dBezier<TPointType> //, public FiniteCellGeometry<Geometry<TPointType> >
 {
 public:
 

@@ -50,10 +50,9 @@ namespace Kratos
 ///@name Kratos Classes
 ///@{
 
-/// Short class definition.
-/** Detail class definition.
+/** Application for finite cell and CutFEM discretization method
 */
-class KratosFiniteCellApplication : public KratosApplication
+class KRATOS_API(FINITE_CELL_APPLICATION) KratosFiniteCellApplication : public KratosApplication
 {
 public:
     ///@name Type Definitions

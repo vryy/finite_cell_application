@@ -8,27 +8,38 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_c
 ######### add include directory here
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications )
-include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes )
-include_directories( ${CMAKE_SOURCE_DIR}/applications/brep_application )
+
+if(${BREP_APPLICATION} MATCHES ON)
+    include_directories( ${CMAKE_SOURCE_DIR}/applications/brep_application )
+else()
+    message(FATAL_ERROR "FiniteCellApplication requires BRepApplication to turn on.")
+endif()
 
 if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
     include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
-    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
+    add_definitions(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
 endif()
 
 if(EXISTS ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes)
-    ADD_DEFINITIONS(-DENABLE_FINITE_CELL_BOOST_BINDINGS)
+    include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes )
+    add_definitions(-DENABLE_FINITE_CELL_BOOST_BINDINGS)
 endif()
 
 #######################################################################
 
-FIND_PACKAGE(NNLS REQUIRED)
-IF(${NNLS_FOUND} MATCHES TRUE)
-    MESSAGE("nnls is found at " ${NNLS_DIR})
-    ADD_DEFINITIONS(-DFINITE_CELL_APPLICATION_USE_NNLS)
-ELSE()
-    MESSAGE("nnls is not found")
-ENDIF()
+find_package(NNLS REQUIRED)
+if(${NNLS_FOUND} MATCHES TRUE)
+    message("nnls is found at " ${NNLS_DIR})
+    add_definitions(-DFINITE_CELL_APPLICATION_USE_NNLS)
+else()
+    message("nnls is not found")
+endif()
+
+#######################################################################
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
 
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
@@ -52,13 +63,20 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
 
 ## define library Kratos which defines the basic python interface
 add_library(KratosFiniteCellApplication SHARED ${KRATOS_FINITE_CELL_APPLICATION_SOURCES})
+if(MSVC)
+    target_compile_options(KratosFiniteCellApplication PRIVATE $<$<CONFIG:Debug>:/bigobj>)
+endif()
 target_link_libraries(KratosFiniteCellApplication KratosCore)
 target_link_libraries(KratosFiniteCellApplication KratosBRepApplication)
+if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
+    target_link_libraries(KratosFiniteCellApplication KratosIsogeometricApplication)
+endif()
 target_link_libraries(KratosFiniteCellApplication ${LAPACK_LIBRARIES})
 IF(${NNLS_FOUND} MATCHES TRUE)
     target_link_libraries(KratosFiniteCellApplication ${NNLS_LIBRARIES})
 ENDIF()
 # cotire(KratosFiniteCellApplication)
+set_target_properties(KratosFiniteCellApplication PROPERTIES COMPILE_DEFINITIONS "FINITE_CELL_APPLICATION=EXPORT,API")
 set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFiniteCellApplication DESTINATION libs )
 #######################################################################

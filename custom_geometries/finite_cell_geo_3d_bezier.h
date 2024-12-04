@@ -41,9 +41,8 @@ namespace Kratos
 /**
  * Implementation of finite cell integration scheme for Bezier volume in 3D
  */
-
 template<class TPointType>
-class FiniteCellGeo3dBezier : public Geo3dBezier<TPointType>//, public FiniteCellGeometry<Geometry<TPointType> >
+class FiniteCellGeo3dBezier : public Geo3dBezier<TPointType> //, public FiniteCellGeometry<Geometry<TPointType> >
 {
 public:
 
