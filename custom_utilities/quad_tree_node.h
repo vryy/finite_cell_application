@@ -112,7 +112,7 @@ public:
     QuadTreeNode() : mLevel(1) {}
 
     /// Constructor with level
-    QuadTreeNode(const std::size_t& Level) : mLevel(Level) {}
+    QuadTreeNode(const std::size_t Level) : mLevel(Level) {}
 
     /// Destructor
     virtual ~QuadTreeNode() {}
@@ -158,7 +158,7 @@ public:
     }
 
     /// Get the children node
-    typename QuadTreeNode::Pointer pChild(const std::size_t& i) const {return mpChildren[i];}
+    typename QuadTreeNode::Pointer pChild(const std::size_t i) const {return mpChildren[i];}
 
     /// Check if the quadtree node is a leaf node or not.
     bool IsLeaf() const
@@ -201,7 +201,7 @@ public:
     }
 
     /// Refine up to a certain level
-    void RefineUpTo(const std::size_t& nLevels)
+    void RefineUpTo(const std::size_t nLevels)
     {
         if (this->Level() < nLevels)
         {
@@ -213,7 +213,7 @@ public:
     /// This routine tests the inside/outside against a set of sampling points. It's more computationally expensive but is more robust and applicable to a large types of geometries.
     /// if TUseGeometryInformation is true, the local coordinates and geometry is also pass to BRep for cut checking
     template<bool TUseGeometryInformation>
-    void RefineBySampling(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling)
+    void RefineBySampling(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t nsampling)
     {
         if (this->IsLeaf())
         {
@@ -257,8 +257,10 @@ public:
     /// if TUseGeometryInformation is true, the local coordinates and geometry is also pass to BRep for cut checking
     /// The refinement is bounded by certain level
     template<bool TUseGeometryInformation>
-    void RefineBySamplingUpTo(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t& nsampling, const std::size_t& nLevels)
+    void RefineBySamplingUpTo(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const std::size_t nsampling, const std::size_t nLevels)
     {
+        KRATOS_TRY
+
         if (this->IsLeaf())
         {
             std::vector<CoordinatesArrayType> SamplingLocalPoints;
@@ -268,7 +270,7 @@ public:
             this->CreateSamplingPoints(SamplingPoints, *pParentGeometry, SamplingLocalPoints);
 
             int stat;
-            if (!TUseGeometryInformation)
+            if constexpr (!TUseGeometryInformation)
             {
                 // for (int i = 0; i < SamplingPoints.size(); ++i)
                 //     std::cout << "sampling point " << i << ": " << SamplingPoints[i]
@@ -294,6 +296,8 @@ public:
                 mpChildren[i]->template RefineBySamplingUpTo<TUseGeometryInformation>(pParentGeometry, r_brep, nsampling, nLevels);
             }
         }
+
+        KRATOS_CATCH("")
     }
 
     /*****************************************************************/
@@ -330,18 +334,18 @@ public:
 
         for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            if (TFuncFrameType == LOCAL)
+            if constexpr (TFuncFrameType == LOCAL)
             {
                 rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
             }
             else
             {
-                if (TFrameType == GLOBAL_REFERENCE)
+                if constexpr (TFrameType == GLOBAL_REFERENCE)
                 {
                     FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
                 }
-                else if (TFrameType == GLOBAL_CURRENT)
+                else if constexpr (TFrameType == GLOBAL_CURRENT)
                 {
                     rParentGeometry.GlobalCoordinates(GlobalCoords, integration_points[point]);
                     rOutput += rFunc.GetValue(GlobalCoords) * DetJ[point] * integration_points[point].Weight();
@@ -362,7 +366,7 @@ public:
                        const BRep& r_brep,
                        TOutputType& rOutput,
                        const TIntegrationPointsArrayType& integration_points,
-                       const double& small_weight) const
+                       const double small_weight) const
     {
 #ifdef ENABLE_PROFILING
         std::stringstream time_mark_name; time_mark_name << "ComputeDetJ at " << __LINE__;
@@ -386,18 +390,18 @@ public:
 
         for (std::size_t point = 0; point < integration_points.size(); ++point)
         {
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 rParentGeometry.GlobalCoordinates(GlobalCoords, integration_points[point]);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(rParentGeometry, GlobalCoords, integration_points[point]);
             }
 
             if (r_brep.IsInside(static_cast<BRep::PointType>(GlobalCoords)))
             {
-                if (TFuncFrameType == LOCAL)
+                if constexpr (TFuncFrameType == LOCAL)
                 {
                     rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * integration_points[point].Weight();
                 }
@@ -408,7 +412,7 @@ public:
             }
             else
             {
-                if (TFuncFrameType == LOCAL)
+                if constexpr (TFuncFrameType == LOCAL)
                 {
                     rOutput += rFunc.GetValue(integration_points[point]) * DetJ[point] * small_weight;
                 }
@@ -497,7 +501,7 @@ public:
                    const BRep& r_brep,
                    TOutputType& rOutput,
                    const int& integration_method,
-                   const double& small_weight) const
+                   const double small_weight) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
@@ -525,7 +529,7 @@ public:
                    const BRep& r_brep,
                    TOutputType& rOutput,
                    const GeometryData::IntegrationMethod& ThisIntegrationMethod,
-                   const double& small_weight) const
+                   const double small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -545,7 +549,7 @@ public:
                    const BRep& r_brep,
                    TOutputType& rOutput,
                    const TIntegrationPointsArrayType& sample_integration_points,
-                   const double& small_weight) const
+                   const double small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -745,11 +749,11 @@ public:
         PointType P;
         for (std::size_t j = 0; j < SamplingLocalPoints.size(); ++j)
         {
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates(r_geom, P, SamplingLocalPoints[j]);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(r_geom, P, SamplingLocalPoints[j]);
             }
@@ -971,20 +975,20 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeQ4(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    QuadTreeNodeQ4(const double Xmin, const double Xmax, const double Ymin, const double Ymax)
         : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
     {}
 
-    QuadTreeNodeQ4(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    QuadTreeNodeQ4(const std::size_t Level, const double Xmin, const double Xmax, const double Ymin, const double Ymax)
         : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax)
     {}
 
-    virtual ~QuadTreeNodeQ4() {}
+    ~QuadTreeNodeQ4() override {}
 
-    const double& Xmin() const {return mXmin;}
-    const double& Xmax() const {return mXmax;}
-    const double& Ymin() const {return mYmin;}
-    const double& Ymax() const {return mYmax;}
+    const double Xmin() const {return mXmin;}
+    const double Xmax() const {return mXmax;}
+    const double Ymin() const {return mYmin;}
+    const double Ymax() const {return mYmax;}
 
     void Refine() override
     {
@@ -1100,41 +1104,41 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
@@ -1184,81 +1188,81 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
@@ -1310,91 +1314,91 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P9, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
             }
@@ -1525,15 +1529,15 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeBezier2D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    QuadTreeNodeBezier2D(const double Xmin, const double Xmax, const double Ymin, const double Ymax)
         : BaseType(Xmin, Xmax, Ymin, Ymax)
     {}
 
-    QuadTreeNodeBezier2D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax)
+    QuadTreeNodeBezier2D(const std::size_t Level, const double Xmin, const double Xmax, const double Ymin, const double Ymax)
         : BaseType(Level, Xmin, Xmax, Ymin, Ymax)
     {}
 
-    virtual ~QuadTreeNodeBezier2D() {}
+    ~QuadTreeNodeBezier2D() override {}
 
     void Refine() final
     {
@@ -1666,22 +1670,22 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeH8(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    QuadTreeNodeH8(const double Xmin, const double Xmax, const double Ymin, const double Ymax, const double Zmin, const double Zmax)
         : BaseType(), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
     {}
 
-    QuadTreeNodeH8(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    QuadTreeNodeH8(const std::size_t Level, const double Xmin, const double Xmax, const double Ymin, const double Ymax, const double Zmin, const double Zmax)
         : BaseType(Level), mXmin(Xmin), mXmax(Xmax), mYmin(Ymin), mYmax(Ymax), mZmin(Zmin), mZmax(Zmax)
     {}
 
-    virtual ~QuadTreeNodeH8() {}
+    ~QuadTreeNodeH8() override {}
 
-    const double& Xmin() const {return mXmin;}
-    const double& Xmax() const {return mXmax;}
-    const double& Ymin() const {return mYmin;}
-    const double& Ymax() const {return mYmax;}
-    const double& Zmin() const {return mZmin;}
-    const double& Zmax() const {return mZmax;}
+    const double Xmin() const {return mXmin;}
+    const double Xmax() const {return mXmax;}
+    const double Ymin() const {return mYmin;}
+    const double Ymax() const {return mYmax;}
+    const double Zmin() const {return mZmin;}
+    const double Zmax() const {return mZmax;}
 
     int Configuration() const final
     {
@@ -1694,7 +1698,7 @@ public:
         {
             std::size_t next_level = this->Level() + 1;
 
-            if (TConfiguration == 0)
+            if constexpr (TConfiguration == 0)
             {
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
@@ -1705,21 +1709,21 @@ public:
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
-            else if (TConfiguration == 1)
+            else if constexpr (TConfiguration == 1)
             {
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, 0.5 * (mZmin + mZmax))));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5 * (mYmin + mYmax), mYmax, mZmin, 0.5 * (mZmin + mZmax))));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, mYmin, 0.5 * (mYmin + mYmax), 0.5 * (mZmin + mZmax), mZmax)));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, mXmax, 0.5 * (mYmin + mYmax), mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
-            else if (TConfiguration == 2)
+            else if constexpr (TConfiguration == 2)
             {
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, mYmax, mZmin, 0.5 * (mZmin + mZmax))));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, mYmax, mZmin, 0.5 * (mZmin + mZmax))));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, mYmax, 0.5 * (mZmin + mZmax), mZmax)));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, mYmax, 0.5 * (mZmin + mZmax), mZmax)));
             }
-            else if (TConfiguration == 3)
+            else if constexpr (TConfiguration == 3)
             {
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, mXmin, 0.5 * (mXmin + mXmax), mYmin, 0.5 * (mYmin + mYmax), mZmin, mZmax)));
                 BaseType::mpChildren.push_back(typename BaseType::Pointer(new QuadTreeNodeH8<TFrameType, TConfiguration>(next_level, 0.5 * (mXmin + mXmax), mXmax, mYmin, 0.5 * (mYmin + mYmax), mZmin, mZmax)));
@@ -1885,81 +1889,81 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
@@ -2019,201 +2023,201 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P9, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P10, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P11, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P11, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P12, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P12, X);
             }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P13, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P13, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P14, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P14, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P15, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P15, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P16, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P16, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P17, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P17, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P18, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P18, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P19, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P19, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P20, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P20, X);
             }
@@ -2288,271 +2292,271 @@ public:
 #endif
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P9, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P10, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P11, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P11, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P12, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P12, X);
             }
 
             X[0] = mXmin; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P13, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P13, X);
             }
 
             X[0] = mXmax; X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P14, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P14, X);
             }
 
             X[0] = mXmax; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P15, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P15, X);
             }
 
             X[0] = mXmin; X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P16, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P16, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P17, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P17, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P18, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P18, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P19, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P19, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P20, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P20, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmin;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P21, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P21, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmin; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P22, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P22, X);
             }
 
             X[0] = mXmax; X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P23, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P23, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = mYmax; X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P24, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P24, X);
             }
 
             X[0] = mXmin; X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P25, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P25, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = mZmax;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P26, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P26, X);
             }
 
             X[0] = 0.5 * (mXmin + mXmax); X[1] = 0.5 * (mYmin + mYmax); X[2] = 0.5 * (mZmin + mZmax);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P27, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P27, X);
             }
@@ -2679,15 +2683,15 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeBezier3D(const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    QuadTreeNodeBezier3D(const double Xmin, const double Xmax, const double Ymin, const double Ymax, const double Zmin, const double Zmax)
         : BaseType(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
     {}
 
-    QuadTreeNodeBezier3D(const std::size_t& Level, const double& Xmin, const double& Xmax, const double& Ymin, const double& Ymax, const double& Zmin, const double& Zmax)
+    QuadTreeNodeBezier3D(const std::size_t Level, const double Xmin, const double Xmax, const double Ymin, const double Ymax, const double Zmin, const double Zmax)
         : BaseType(Level, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
     {}
 
-    virtual ~QuadTreeNodeBezier3D() {}
+    ~QuadTreeNodeBezier3D() override {}
 
     void Refine() final
     {
@@ -2874,15 +2878,15 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeT3(const double& X0, const double& Y0, const double& X1, const double& Y1, const double& X2, const double& Y2)
+    QuadTreeNodeT3(const double X0, const double Y0, const double X1, const double Y1, const double X2, const double Y2)
         : BaseType(), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
     {}
 
-    QuadTreeNodeT3(const std::size_t& Level, const double& X0, const double& Y0, const double& X1, const double& Y1, const double& X2, const double& Y2)
+    QuadTreeNodeT3(const std::size_t Level, const double X0, const double Y0, const double X1, const double Y1, const double X2, const double Y2)
         : BaseType(Level), mX0(X0), mY0(Y0), mX1(X1), mY1(Y1), mX2(X2), mY2(Y2)
     {}
 
-    virtual ~QuadTreeNodeT3() {}
+    ~QuadTreeNodeT3() override {}
 
     void Refine() final
     {
@@ -2937,31 +2941,31 @@ public:
 #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mX1; X[1] = mY1;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mX2; X[1] = mY2;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
@@ -3007,61 +3011,61 @@ public:
 #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = 0.0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mX1; X[1] = mY1;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mX2; X[1] = mY2;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = 0.5 * (mX0 + mX1); X[1] = 0.5 * (mY0 + mY1);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = 0.5 * (mX1 + mX2); X[1] = 0.5 * (mY1 + mY2);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = 0.5 * (mX2 + mX0); X[1] = 0.5 * (mY2 + mY0);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
@@ -3187,28 +3191,28 @@ public:
 
     typedef typename BaseType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
-    QuadTreeNodeT4(const double& X0, const double& Y0, const double& Z0,
-                   const double& X1, const double& Y1, const double& Z1,
-                   const double& X2, const double& Y2, const double& Z2,
-                   const double& X3, const double& Y3, const double& Z3)
+    QuadTreeNodeT4(const double X0, const double Y0, const double Z0,
+                   const double X1, const double Y1, const double Z1,
+                   const double X2, const double Y2, const double Z2,
+                   const double X3, const double Y3, const double Z3)
         : BaseType(), mX0(X0), mY0(Y0), mZ0(Z0),
           mX1(X1), mY1(Y1), mZ1(Z1),
           mX2(X2), mY2(Y2), mZ2(Z2),
           mX3(X3), mY3(Y3), mZ3(Z3)
     {}
 
-    QuadTreeNodeT4(const std::size_t& Level,
-                   const double& X0, const double& Y0, const double& Z0,
-                   const double& X1, const double& Y1, const double& Z1,
-                   const double& X2, const double& Y2, const double& Z2,
-                   const double& X3, const double& Y3, const double& Z3)
+    QuadTreeNodeT4(const std::size_t Level,
+                   const double X0, const double Y0, const double Z0,
+                   const double X1, const double Y1, const double Z1,
+                   const double X2, const double Y2, const double Z2,
+                   const double X3, const double Y3, const double Z3)
         : BaseType(Level), mX0(X0), mY0(Y0), mZ0(Z0),
           mX1(X1), mY1(Y1), mZ1(Z1),
           mX2(X2), mY2(Y2), mZ2(Z2),
           mX3(X3), mY3(Y3), mZ3(Z3)
     {}
 
-    virtual ~QuadTreeNodeT4() {}
+    ~QuadTreeNodeT4() override {}
 
     /// REF: https://www.semanticscholar.org/paper/Octasection-based-Refinement-of-Finite-Element-Endres-Krysl/7fa050663d1b1627413059943b9143f92b98ef4e/figure/4
     void Refine() final
@@ -3285,41 +3289,41 @@ public:
 #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mX1; X[1] = mY1; X[2] = mZ1;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mX2; X[1] = mY2; X[2] = mZ2;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mX3; X[1] = mY3; X[2] = mZ3;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
@@ -3358,101 +3362,101 @@ public:
 #endif
 
             X[0] = mX0; X[1] = mY0; X[2] = mZ0;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P1, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P1, X);
             }
 
             X[0] = mX1; X[1] = mY1; X[2] = mZ1;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P2, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P2, X);
             }
 
             X[0] = mX2; X[1] = mY2; X[2] = mZ2;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P3, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P3, X);
             }
 
             X[0] = mX3; X[1] = mY3; X[2] = mZ3;
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P4, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P4, X);
             }
 
             X[0] = 0.5 * (mX0 + mX1); X[1] = 0.5 * (mY0 + mY1); X[2] = 0.5 * (mZ0 + mZ1);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P5, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P5, X);
             }
 
             X[0] = 0.5 * (mX1 + mX2); X[1] = 0.5 * (mY1 + mY2); X[2] = 0.5 * (mZ1 + mZ2);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P6, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P6, X);
             }
 
             X[0] = 0.5 * (mX2 + mX0); X[1] = 0.5 * (mY2 + mY0); X[2] = 0.5 * (mZ2 + mZ0);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P7, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P7, X);
             }
 
             X[0] = 0.5 * (mX0 + mX3); X[1] = 0.5 * (mY0 + mY3); X[2] = 0.5 * (mZ0 + mZ3);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P8, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P8, X);
             }
 
             X[0] = 0.5 * (mX1 + mX3); X[1] = 0.5 * (mY1 + mY3); X[2] = 0.5 * (mZ1 + mZ3);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P9, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P9, X);
             }
 
             X[0] = 0.5 * (mX2 + mX3); X[1] = 0.5 * (mY2 + mY3); X[2] = 0.5 * (mZ2 + mZ3);
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 pParentGeometry->GlobalCoordinates(P10, X);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 FiniteCellGeometryUtility::GlobalCoordinates0(*pParentGeometry, P10, X);
             }

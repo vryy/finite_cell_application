@@ -412,4 +412,3 @@ struct GenerateStructuredPoints_Helper<3, 3> : public GenerateStructuredPoints_H
 }  // namespace Kratos.
 
 #endif // KRATOS_FINITE_CELL_MESH_UTILITY_HPP_INCLUDED  defined
-

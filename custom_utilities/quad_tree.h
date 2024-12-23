@@ -372,11 +372,11 @@ public:
         bool is_inside;
         for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
             }
@@ -405,11 +405,11 @@ public:
         bool is_inside;
         for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
             }
@@ -534,11 +534,11 @@ public:
         {
             for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
-                if (TFrameType == GLOBAL_CURRENT)
+                if constexpr (TFrameType == GLOBAL_CURRENT)
                 {
                     is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                 }
-                else if (TFrameType == GLOBAL_REFERENCE)
+                else if constexpr (TFrameType == GLOBAL_REFERENCE)
                 {
                     is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
                 }
@@ -559,11 +559,11 @@ public:
         {
             for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
             {
-                if (TFrameType == GLOBAL_CURRENT)
+                if constexpr (TFrameType == GLOBAL_CURRENT)
                 {
                     is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                 }
-                else if (TFrameType == GLOBAL_REFERENCE)
+                else if constexpr (TFrameType == GLOBAL_REFERENCE)
                 {
                     is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
                 }
@@ -608,11 +608,11 @@ public:
         bool is_inside;
         for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
         {
-            if (TFrameType == GLOBAL_CURRENT)
+            if constexpr (TFrameType == GLOBAL_CURRENT)
             {
                 is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
             }
-            else if (TFrameType == GLOBAL_REFERENCE)
+            else if constexpr (TFrameType == GLOBAL_REFERENCE)
             {
                 is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
             }
@@ -803,7 +803,7 @@ public:
     }
 
     /// Get the template parameter
-    const std::size_t GetNsampling() const
+    constexpr std::size_t GetNsampling() const
     {
         return TNsampling;
     }
@@ -996,11 +996,11 @@ public:
             {
                 for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
-                    if (TFrameType == GLOBAL_CURRENT)
+                    if constexpr (TFrameType == GLOBAL_CURRENT)
                     {
                         is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                     }
-                    else if (TFrameType == GLOBAL_REFERENCE)
+                    else if constexpr (TFrameType == GLOBAL_REFERENCE)
                     {
                         is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
                     }
@@ -1017,11 +1017,11 @@ public:
             {
                 for (std::size_t point = 0; point < tmp_integration_points.size(); ++point)
                 {
-                    if (TFrameType == GLOBAL_CURRENT)
+                    if constexpr (TFrameType == GLOBAL_CURRENT)
                     {
                         is_inside = r_brep.IsInside1(*mpThisGeometry, tmp_integration_points[point]);
                     }
-                    else if (TFrameType == GLOBAL_REFERENCE)
+                    else if constexpr (TFrameType == GLOBAL_REFERENCE)
                     {
                         is_inside = r_brep.IsInside0(*mpThisGeometry, tmp_integration_points[point]);
                     }
@@ -1078,7 +1078,7 @@ protected:
 
     /// Construct the sub-cells for Gauss Quadrature on the quadrilateral. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
     void ConstructSubCellsForQuadBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const int& integration_order) const
+            const int integration_order) const
     {
         if (integration_order == 1)
         {
@@ -1249,7 +1249,7 @@ protected:
 
     /// Construct the sub-cells for Gauss Quadrature on the hexahedra. Refer to Gid12 Customization manual, sec 6.1.1 for the identification of the Gauss points
     void ConstructSubCellsForHexBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const int& integration_order) const
+            const int integration_order) const
     {
         if (integration_order == 1)
         {
