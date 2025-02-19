@@ -287,7 +287,7 @@ public:
     /// + the finite cell geometry uses the same quadrature location as the base geometry, however the weight are passed to the finite cell geometry
     /// + the finite cell geometry only supports single integration rule, which is passed in the arguments
     /// + the shape function and local gradients are the same as the base geometry
-    void AssignGeometryData(const GeometryData::IntegrationMethod& ThisIntegrationMethod, const Vector& rWeights)
+    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod, const Vector& rWeights)
     {
         // copy the integration points data
         IntegrationPointsContainerType all_integration_points;
@@ -353,7 +353,7 @@ public:
 
     /// Assign a list of integration points to the geometry. The ThisIntegrationMethod will
     /// ultimately becomes the default integration rule on the geometry.
-    void AssignGeometryData(const GeometryData::IntegrationMethod& ThisIntegrationMethod,
+    void AssignGeometryData(const GeometryData::IntegrationMethod ThisIntegrationMethod,
                             const IntegrationPointsArrayType& integration_points)
     {
         // create the integration points data
@@ -598,7 +598,6 @@ private:
 ///@name Input and output
 ///@{
 
-
 /// input stream function
 template<class TBaseGeometryType>
 inline std::istream& operator >> ( std::istream& rIStream,
@@ -621,5 +620,3 @@ inline std::ostream& operator << ( std::ostream& rOStream,
 }  // namespace Kratos.
 
 #endif // KRATOS_FINITE_CELL_GEOMETRY_H_INCLUDED  defined
-
-

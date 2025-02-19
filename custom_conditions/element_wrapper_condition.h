@@ -38,7 +38,7 @@ public:
     /**
      * Destructor.
      */
-    virtual ~ElementWrapperCondition();
+    ~ElementWrapperCondition() override;
 
     /**
      * Operations.
@@ -50,40 +50,30 @@ public:
 
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               const ProcessInfo& rCurrentProcessInfo) final;
+                               const ProcessInfo& rCurrentProcessInfo ) final;
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 const ProcessInfo& rCurrentProcessInfo) final;
+                                 const ProcessInfo& rCurrentProcessInfo ) final;
 
     void FinalizeNonLinearIteration(const ProcessInfo& rCurrentProcessInfo) final;
 
     void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) final;
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           const ProcessInfo& rCurrentProcessInfo) const final;
+                           const ProcessInfo& rCurrentProcessInfo ) const final;
 
     void GetDofList( DofsVectorType& ConditionalDofList,
-                     const ProcessInfo& CurrentProcessInfo) const final;
+                     const ProcessInfo& CurrentProcessInfo ) const final;
 
-    void Initialize(const ProcessInfo& rCurrentProcessInfo) final;
+    void Initialize(const ProcessInfo& rCurrentProcessInfo ) final;
 
     /**
      * Turn back information as a string.
-     * (DEACTIVATED)
      */
-    //std::string Info();
-
-    /**
-     * Print information about this object.
-     * (DEACTIVATED)
-     */
-    //virtual void PrintInfo(std::ostream& rOStream) const;
-
-    /**
-     * Print object's data.
-     * (DEACTIVATED)
-     */
-    //virtual void PrintData(std::ostream& rOStream) const;
+    std::string Info() const override
+    {
+        return "ElementWrapperCondition of " + Info();
+    }
 
 private:
 
@@ -105,6 +95,4 @@ private:
 
 }  // namespace Kratos.
 
-
 #endif // KRATOS_ELEMENT_WRAPPER_CONDITION_H_INCLUDED defined
-

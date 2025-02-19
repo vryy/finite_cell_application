@@ -480,7 +480,10 @@ private:
  * input stream function
  */
 template<class TPointType> inline std::istream& operator >>(
-    std::istream& rIStream, FiniteCellGeo3dBezier<TPointType>& rThis);
+    std::istream& rIStream, FiniteCellGeo3dBezier<TPointType>& rThis)
+{
+    return rIStream;
+}
 
 /**
  * output stream function
@@ -498,4 +501,3 @@ template<class TPointType> inline std::ostream& operator <<(
 }    // namespace Kratos.
 
 #endif
-

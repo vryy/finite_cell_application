@@ -29,7 +29,7 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
-#include "utilities/timer.h"
+#include "includes/legacy_structural_app_vars.h"
 #include "brep_application/custom_algebra/brep.h"
 #include "brep_application/custom_algebra/function/function.h"
 #include "brep_application/custom_algebra/function/product_function.h"
@@ -313,8 +313,7 @@ public:
         /* secondly assign the physical integration points to the element */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod = p_tree->GetRepresentativeIntegrationMethod();
         FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetElement()->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
-        Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
-        p_tree->pGetElement()->SetValue(INTEGRATION_ORDER_var, p_tree->GetRepresentativeIntegrationOrder());
+        p_tree->pGetElement()->SetValue(INTEGRATION_ORDER, p_tree->GetRepresentativeIntegrationOrder());
         p_tree->pGetElement()->Initialize(rCurrentProcessInfo);
 
         /* thirdly fit the subcell */

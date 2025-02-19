@@ -89,12 +89,12 @@ public:
         KRATOS_ERROR << "Error calling base class function";
     }
 
-    virtual void RefineUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
+    virtual void RefineUpToLevelBy(const BRep& r_brep, const std::size_t nLevels)
     {
         KRATOS_ERROR << "Error calling base class function";
     }
 
-    virtual void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels)
+    virtual void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t nLevels)
     {
         KRATOS_ERROR << "Error calling base class function";
     }
@@ -125,14 +125,14 @@ public:
 
     /// Integrate a function defined in local coordinates
     virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-                                  const BRep& r_brep, const int& integration_method, const double& small_weight) const
+                                  const BRep& r_brep, const int integration_method, const double small_weight) const
     {
         KRATOS_ERROR << "Error calling base class function";
     }
 
     /// Integrate a function defined in local coordinates
     virtual double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-                                  const int& integration_method) const
+                                  const int integration_method) const
     {
         KRATOS_ERROR << "Error calling base class function";
     }
@@ -141,14 +141,14 @@ public:
 
     /// Integrate a function defined in global coordinates
     virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-                                   const BRep& r_brep, const int& integration_method, const double& small_weight) const
+                                   const BRep& r_brep, const int integration_method, const double small_weight) const
     {
         KRATOS_ERROR << "Error calling base class function";
     }
 
     /// Integrate a function defined in global coordinates
     virtual double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-                                   const int& integration_method) const
+                                   const int integration_method) const
     {
         KRATOS_ERROR << "Error calling base class function";
     }
@@ -156,7 +156,7 @@ public:
     /////////////////////////////////////////////////////////////////////////////
 
     /// Construct a custom quadrature on the support domain
-    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    virtual IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const
     {
         KRATOS_ERROR << "Error calling base class function";
     }
@@ -199,7 +199,7 @@ public:
     }
 
     /// Constructor taking the element geometry and initialize the quad tree as reference coordinates of the element
-    QuadTree(Element::Pointer p_elem, const int& Configuration)
+    QuadTree(Element::Pointer p_elem, const int Configuration)
         : mConfiguration(Configuration)
     {
         this->Initialize(p_elem->pGetGeometry(), Configuration);
@@ -213,7 +213,7 @@ public:
     }
 
     /// Constructor taking the condition geometry and initialize the quad tree as reference coordinates of the condition
-    QuadTree(Condition::Pointer p_cond, const int& Configuration)
+    QuadTree(Condition::Pointer p_cond, const int Configuration)
         : mConfiguration(Configuration)
     {
         this->Initialize(p_cond->pGetGeometry(), Configuration);
@@ -249,10 +249,10 @@ public:
 
     /// Access the underlying quad-tree node
     /// These functions are provided so that quadtree-subcell can work interchangeably with quadtree
-    const QuadTreeNodeType& Get(const std::size_t& i) const {return *mpTreeNode;}
-    QuadTreeNodeType& Get(const std::size_t& i) {return *mpTreeNode;}
-    const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNode;}
-    typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNode;}
+    const QuadTreeNodeType& Get(const std::size_t i) const {return *mpTreeNode;}
+    QuadTreeNodeType& Get(const std::size_t i) {return *mpTreeNode;}
+    const typename QuadTreeNodeType::Pointer pGet(const std::size_t i) const {return mpTreeNode;}
+    typename QuadTreeNodeType::Pointer pGet(const std::size_t i) {return mpTreeNode;}
 
     /// Access the underlying (operating) geometry
     GeometryType& GetGeometry() const {return *mpThisGeometry;}
@@ -281,14 +281,14 @@ public:
 
     /// Refine the tree by the BRep up to certain level
     /// Implement function from abstract class RefinableTree
-    void RefineUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels) final
+    void RefineUpToLevelBy(const BRep& r_brep, const std::size_t nLevels) final
     {
         mpTreeNode->template RefineBySamplingUpTo<false>(mpThisGeometry, r_brep, TNsampling, nLevels);
     }
 
     /// Refine the tree by the BRep up to certain level
     /// Implement function from abstract class RefinableTree
-    void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t& nLevels) final
+    void RefineWithGeometryUpToLevelBy(const BRep& r_brep, const std::size_t nLevels) final
     {
         mpTreeNode->template RefineBySamplingUpTo<true>(mpThisGeometry, r_brep, TNsampling, nLevels);
     }
@@ -303,7 +303,7 @@ public:
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
     double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-                          const BRep& r_brep, const int& integration_method, const double& small_weight) const final
+                          const BRep& r_brep, const int integration_method, const double small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -312,7 +312,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
@@ -322,7 +322,7 @@ public:
     /// Integrate a global function
     /// Implement function from abstrat class FunctionIntegrator
     double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-                           const BRep& r_brep, const int& integration_method, const double& small_weight) const final
+                           const BRep& r_brep, const int integration_method, const double small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -331,7 +331,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
@@ -340,7 +340,7 @@ public:
 
     /// Construct a custom quadrature on the support domain
     /// Implement function from abstrat class FunctionIntegrator
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const final
     {
         return this->Get().ConstructCustomQuadrature(quadrature_type, integration_order);
     }
@@ -358,7 +358,7 @@ public:
     }
 
     /// Compute the number of points in the physical domain
-    std::size_t NumberOfPhysicalPoints(const BRep& r_brep, const int& integration_method) const
+    std::size_t NumberOfPhysicalPoints(const BRep& r_brep, const int integration_method) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -391,7 +391,7 @@ public:
     }
 
     /// Compute the number of points in the fictitious domain
-    std::size_t NumberOfFictitiousPoints(const BRep& r_brep, const int& integration_method) const
+    std::size_t NumberOfFictitiousPoints(const BRep& r_brep, const int integration_method) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -430,13 +430,13 @@ public:
     }
 
     /// Compute the domain size covered by this quadtree
-    double DomainSize(const BRep& r_brep, const int& integration_method) const
+    double DomainSize(const BRep& r_brep, const int integration_method) const
     {
         return mpTreeNode->DomainSize(mpThisGeometry, r_brep, integration_method);
     }
 
     /// Compute the center of gravity of this quadtree
-    PointType CenterOfGravity(const BRep& r_brep, const int& integration_method) const
+    PointType CenterOfGravity(const BRep& r_brep, const int integration_method) const
     {
         PointType COG;
         bool found = mpTreeNode->CenterOfGravity(COG, mpThisGeometry, r_brep, integration_method);
@@ -452,7 +452,7 @@ public:
     template<typename TOutputType, int TFuncFrameType>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
                    TOutputType& rOutput,
-                   const int& integration_method) const
+                   const int integration_method) const
     {
         mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, rOutput, integration_method);
     }
@@ -473,8 +473,8 @@ public:
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
                    const BRep& r_brep,
                    TOutputType& rOutput,
-                   const int& integration_method,
-                   const double& small_weight) const
+                   const int integration_method,
+                   const double small_weight) const
     {
         mpTreeNode->template Integrate<TOutputType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_method, small_weight);
     }
@@ -486,14 +486,14 @@ public:
                    const BRep& r_brep,
                    TOutputType& rOutput,
                    const GeometryType::IntegrationPointsArrayType& integration_points,
-                   const double& small_weight) const
+                   const double small_weight) const
     {
         mpTreeNode->template Integrate<TOutputType, GeometryType::IntegrationPointsArrayType, TFuncFrameType>(mpThisGeometry, rFunc, r_brep, rOutput, integration_points, small_weight);
     }
 
     /// Construct the finite cell quadrature
     /// Returns the number of quadrature points created
-    std::size_t ConstructQuadrature(const int& integration_method) const
+    std::size_t ConstructQuadrature(const int integration_method) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -512,8 +512,8 @@ public:
     /// The quadrature point outside the physical domain will be penalized
     /// If the small_weight is zero, the quadrature point outside the physical domain will be skipped
     /// Returns the number of quadrature points created and number of physical points
-    std::vector<std::size_t> ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-            const double& small_weight) const
+    std::vector<std::size_t> ConstructQuadrature(const BRep& r_brep, const int integration_method,
+            const double small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -593,8 +593,8 @@ public:
     /// The quadrature point outside the physical domain will be penalized
     /// Even if the small_weight is zero, the quadrature point outside the physical domain will NOT be skipped
     /// Returns the number of quadrature points created and number of physical points
-    std::vector<std::size_t> ConstructQuadratureNoSkip(const BRep& r_brep, const int& integration_method,
-            const double& small_weight) const
+    std::vector<std::size_t> ConstructQuadratureNoSkip(const BRep& r_brep, const int integration_method,
+            const double small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -637,7 +637,7 @@ public:
         return std::vector<std::size_t> {integration_points.size(), number_of_physical_points};
     }
 
-    static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType, const int& configuration = 0)
+    static typename QuadTreeNodeType::Pointer pCreateQuadTreeNode(const GeometryData::KratosGeometryType& ThisGeometryType, const int configuration = 0)
     {
         typename QuadTreeNodeType::Pointer pTreeNode;
 
@@ -734,7 +734,7 @@ private:
     typename QuadTreeNodeType::Pointer mpTreeNode;
     int mConfiguration; // this variable stores a specific configuration of the quadtree
 
-    void Initialize(GeometryType::Pointer pGeometry, const int& Configuration)
+    void Initialize(GeometryType::Pointer pGeometry, const int Configuration)
     {
         mpThisGeometry = pGeometry;
         mpTreeNode = pCreateQuadTreeNode(mpThisGeometry->GetGeometryType(), Configuration);
@@ -809,10 +809,10 @@ public:
     }
 
     /// Access the underlying quad-tree nodes
-    const QuadTreeNodeType& Get(const std::size_t& i) const {return *mpTreeNodes[i];}
-    QuadTreeNodeType& Get(const std::size_t& i) {return *mpTreeNodes[i];}
-    const typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) const {return mpTreeNodes[i];}
-    typename QuadTreeNodeType::Pointer pGet(const std::size_t& i) {return mpTreeNodes[i];}
+    const QuadTreeNodeType& Get(const std::size_t i) const {return *mpTreeNodes[i];}
+    QuadTreeNodeType& Get(const std::size_t i) {return *mpTreeNodes[i];}
+    const typename QuadTreeNodeType::Pointer pGet(const std::size_t i) const {return mpTreeNodes[i];}
+    typename QuadTreeNodeType::Pointer pGet(const std::size_t i) {return mpTreeNodes[i];}
 
     /// Refine the sub-cells
     /// Implement function from abstract class RefinableTree
@@ -857,7 +857,7 @@ public:
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
     double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc,
-                          const BRep& r_brep, const int& integration_method, const double& small_weight) const final
+                          const BRep& r_brep, const int integration_method, const double small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -866,7 +866,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
+    double IntegrateLocal(const Function<array_1d<double, 3>, double>& rFunc, const int integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, LOCAL>(rFunc, Result, integration_method);
@@ -876,7 +876,7 @@ public:
     /// Integrate a global function
     /// Implement function from abstrat class FunctionIntegrator
     double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc,
-                           const BRep& r_brep, const int& integration_method, const double& small_weight) const final
+                           const BRep& r_brep, const int integration_method, const double small_weight) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, r_brep, Result, integration_method, small_weight);
@@ -885,7 +885,7 @@ public:
 
     /// Integrate a local function
     /// Implement function from abstrat class FunctionIntegrator
-    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int& integration_method) const final
+    double IntegrateGlobal(const Function<array_1d<double, 3>, double>& rFunc, const int integration_method) const final
     {
         double Result = 0.0;
         this->template Integrate<double, GLOBAL>(rFunc, Result, integration_method);
@@ -894,19 +894,19 @@ public:
 
     /// Construct a custom quadrature on the support domain
     /// Implement function from abstrat class FunctionIntegrator
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const final
     {
         return this->Get(0).ConstructCustomQuadrature(quadrature_type, integration_order);
     }
 
     /// Compute the domain size of the subcell i
-    double DomainSize(const std::size_t& i, const BRep& r_brep, const int& integration_method) const
+    double DomainSize(const std::size_t i, const BRep& r_brep, const int integration_method) const
     {
         return mpTreeNodes[i]->DomainSize(mpThisGeometry, r_brep, integration_method);
     }
 
     /// Compute the domain size covered by this quadtree (including all subcells)
-    double DomainSize(const BRep& r_brep, const int& integration_method) const
+    double DomainSize(const BRep& r_brep, const int integration_method) const
     {
         double domain_size = 0.0;
         for (std::size_t i = 0; i < mpTreeNodes.size(); ++i)
@@ -918,7 +918,7 @@ public:
 
     /// Create a quadtree out from a subcell
     /// Fundamentally we can use this function to extract out a subcell and refine it since it's a quadtree node
-    typename QuadTree<TNsampling, TFrameType>::Pointer CreateQuadTree(const std::size_t& i) const
+    typename QuadTree<TNsampling, TFrameType>::Pointer CreateQuadTree(const std::size_t i) const
     {
         return typename QuadTree<TNsampling, TFrameType>::Pointer(new QuadTree<TNsampling, TFrameType>(mpThisGeometry, mpTreeNodes[i]));
     }
@@ -927,7 +927,7 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType, int Frame>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc, TOutputType& rOutput,
-                   const int& integration_method) const
+                   const int integration_method) const
     {
         for (std::size_t i = 0; i < mpTreeNodes.size(); ++i)
         {
@@ -941,7 +941,7 @@ public:
     /// The caller has to manually set rOutput to zero before calling this function
     template<typename TOutputType, int Frame>
     void Integrate(const Function<array_1d<double, 3>, TOutputType>& rFunc,
-                   const BRep& r_brep, TOutputType& rOutput, const int& integration_method, const double& small_weight) const
+                   const BRep& r_brep, TOutputType& rOutput, const int integration_method, const double small_weight) const
     {
         for (std::size_t i = 0; i < mpTreeNodes.size(); ++i)
         {
@@ -952,7 +952,7 @@ public:
     //////////////////////
 
     /// Construct the finite cell quadrature
-    std::size_t ConstructQuadrature(const int& integration_method) const
+    std::size_t ConstructQuadrature(const int integration_method) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -979,8 +979,8 @@ public:
 
     /// Construct the finite cell quadrature
     /// The quadrature point not in the physical domain will be penalized
-    std::size_t ConstructQuadrature(const BRep& r_brep, const int& integration_method,
-                                    const double& small_weight) const
+    std::size_t ConstructQuadrature(const BRep& r_brep, const int integration_method,
+                                    const double small_weight) const
     {
         GeometryType::IntegrationPointsArrayType integration_points;
 
@@ -1211,14 +1211,14 @@ protected:
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
     /// Construct the sub-cells for Gauss Quadrature on the Bezier 2D geometry.
     void ConstructSubCellsForBezier2DBasedOnGaussQuadrature(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const int& integration_order) const
+            const int integration_order) const
     {
         KRATOS_ERROR << "The integration order " << integration_order << " is not implemented";
     }
 #endif
 
     void ConstructSubCellsForQuadBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const std::size_t& m, const std::size_t& n) const
+            const std::size_t m, const std::size_t n) const
     {
         const double dx = 2.0 / m;
         const double dy = 2.0 / n;
@@ -1233,7 +1233,7 @@ protected:
 
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
     void ConstructSubCellsForBezier2DBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const std::size_t& m, const std::size_t& n) const
+            const std::size_t m, const std::size_t n) const
     {
         const double dx = 1.0 / m;
         const double dy = 1.0 / n;
@@ -1366,7 +1366,7 @@ protected:
         }
 
     void ConstructSubCellsForHexBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const std::size_t& m, const std::size_t& n, const std::size_t& p) const
+            const std::size_t m, const std::size_t n, const std::size_t p) const
     {
         const double dx = 2.0 / m;
         const double dy = 2.0 / n;
@@ -1385,7 +1385,7 @@ protected:
 
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
     void ConstructSubCellsForBezier3DBasedOnEqualDistribution(std::vector<typename QuadTreeNodeType::Pointer>& pTreeNodes,
-            const std::size_t& m, const std::size_t& n, const std::size_t& p) const
+            const std::size_t m, const std::size_t n, const std::size_t p) const
     {
         const double dx = 1.0 / m;
         const double dy = 1.0 / n;
@@ -1413,6 +1413,8 @@ private:
 
 }; // Class  QuadTreeSubCell
 
+// Input/Output
+///@{
 /// input stream function
 template<std::size_t TNsampling, int TFrameType>
 inline std::istream& operator >> (std::istream& rIStream, QuadTree<TNsampling, TFrameType>& rThis)

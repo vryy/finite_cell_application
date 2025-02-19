@@ -71,20 +71,20 @@ struct FiniteCellMeshUtility_Helper
     static void ImportEntities(ModelPart& rThisModelPart,
                                TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
                                TEntityContainerType& rNewElements, // the added elements to rThisElements
-                               TEntityContainerType& rOtherElements, // other elements to be imported from
+                               const TEntityContainerType& rOtherElements, // other elements to be imported from
                                std::size_t& last_element_id,
                                TEntityType const& r_clone_element,
                                Properties::Pointer pProperties,
-                               const int& echo_level);
+                               const int echo_level);
 
     /// Import the elements from list to the other list. The Properties is also carried.
     static void ImportEntities(ModelPart& rThisModelPart,
                                TEntityContainerType& rThisElements, // rThisModelPart.Elements() or rThisModelPart.Conditions()
                                TEntityContainerType& rNewElements, // the added elements to rThisElements
-                               TEntityContainerType& rOtherElements, // other elements to be imported from
+                               const TEntityContainerType& rOtherElements, // other elements to be imported from
                                std::size_t& last_element_id,
-                               const int& properties_id_offset,
-                               const int& echo_level);
+                               const int properties_id_offset,
+                               const int echo_level);
 };
 
 ///@}
@@ -148,7 +148,7 @@ public:
 
     /// Generate a uniform sampling points on 1D axis
     static void GenerateSampling(std::vector<double>& sampling,
-                                 const double& s_min, const double& s_max, const std::size_t& nsampling);
+                                 const double s_min, const double s_max, const std::size_t nsampling);
 
 
     /// Generate a concentrated sampling points on 1D axis
@@ -160,24 +160,24 @@ public:
     ///   N1 = 1-t
     ///   N2 = t
     static void GenerateSampling(std::vector<double>& sampling,
-                                 const double& s_min, const double& s_max,
-                                 const double& w1, const double& w2,
-                                 const std::size_t& nsampling);
+                                 const double s_min, const double s_max,
+                                 const double w1, const double w2,
+                                 const std::size_t nsampling);
 
 
     /// Generate the sampling points on a geometry
     static void GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
-                                       GeometryType& r_geom, const std::size_t& nsampling);
+                                       GeometryType& r_geom, const std::size_t nsampling);
 
 
     /// Generate the sampling points along a line
     static void GenerateSamplingPoints(std::vector<PointType>& SamplingPoints,
-                                       const PointType& StartPoint, const PointType& EndPoint, const std::size_t& nsampling);
+                                       const PointType& StartPoint, const PointType& EndPoint, const std::size_t nsampling);
 
 
     /// Generate the points for background structure mesh
     static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
-                                           const int& type,
+                                           const int type,
                                            const PointType& StartPoint,
                                            const PointType& EndPoint,
                                            const std::vector<std::size_t>& nsampling);
@@ -186,7 +186,7 @@ public:
     /// Generate the points for background structure mesh
     /// sampling vector contains the local coordinate s (0 <= s <= 1) of sampling points in each axis
     static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
-                                           const int& type,
+                                           const int type,
                                            const PointType& StartPoint,
                                            const PointType& EndPoint,
                                            const std::vector<std::vector<double> >& sampling);
@@ -194,7 +194,7 @@ public:
 
     /// Generate the points for background structure mesh
     static void GenerateStructuredPoints2D(std::vector<std::vector<PointType> >& sampling_points,
-                                           const int& type,
+                                           const int type,
                                            const PointType& StartPoint,
                                            const std::vector<PointType>& Axis,
                                            const std::vector<std::size_t>& nsampling);
@@ -202,7 +202,7 @@ public:
 
     /// Generate the points for background structure mesh
     static void GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
-                                           const int& type,
+                                           const int type,
                                            const PointType& StartPoint,
                                            const PointType& EndPoint,
                                            const std::vector<std::size_t>& nsampling);
@@ -211,7 +211,7 @@ public:
     /// Generate the points for background structure mesh
     /// sampling vector contains the local coordinate s (0 <= s <= 1) of sampling points in each axis
     static void GenerateStructuredPoints3D(std::vector<std::vector<std::vector<PointType> > >& sampling_points,
-                                           const int& type,
+                                           const int type,
                                            const PointType& StartPoint,
                                            const PointType& EndPoint,
                                            const std::vector<std::vector<double> >& sampling);
@@ -221,8 +221,8 @@ public:
     static ElementMeshInfoType CreateLineElements(ModelPart& r_model_part,
             const std::vector<PointType>& sampling_points,
             const std::string& sample_element_name,
-            const int& type, // if 1: generate L2 elements; 2: L3 elements;
-            const bool& close, // if false: open loop; true: close loop
+            const int type, // if 1: generate L2 elements; 2: L3 elements;
+            const bool close, // if false: open loop; true: close loop
             Properties::Pointer pProperties);
 
 
@@ -230,9 +230,9 @@ public:
     static ElementMeshInfoType CreateQuadElements(ModelPart& r_model_part,
             const std::vector<std::vector<PointType> >& sampling_points,
             const std::string& sample_element_name,
-            const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
-            const int& close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir
-            const int& activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir
+            const int type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
+            const int close_dir, // if 0: open loop; 1: close on 1st dir; 2: close on 2nd dir
+            const int activation_dir, // if 0: no activation; 1: activation on 1st dir; 2: activation on 2nd dir
             Properties::Pointer pProperties);
 
 
@@ -240,7 +240,7 @@ public:
     static ElementMeshInfoType CreateHexElements(ModelPart& r_model_part,
             const std::vector<std::vector<std::vector<PointType> > >& sampling_points,
             const std::string& sample_element_name,
-            const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
+            const int type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
             Properties::Pointer pProperties);
 
 
@@ -253,49 +253,49 @@ public:
     /// Create the parasite element taking the same geometry of the original element, but the integration points are given.
     static Element::Pointer CreateParasiteElement(Element::Pointer pElement, // the parent element keep the geometry
             const std::string& sample_element_name,
-            const int& RepresentativeIntegrationOrder,
+            const int RepresentativeIntegrationOrder,
             const GeometryType::IntegrationPointsArrayType& integration_points,
             std::size_t& lastElementId,
             Properties::Pointer pProperties);
 
 
     /// Import the nodes from other model_part to this model_part
-    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int& echo_level);
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const int echo_level);
 
 
     /// Import the nodes from other model_part to this model_part
     /// The nodes are offsetted and rotated around the Z-axis.
     /// This function is useful to import the building model_part
     /// The rotation angle shall be in radian
-    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-            const double& offset_x, const double& offset_y, const double& offset_z,
-            const double& cx, const double& cy, const double& theta, const int& echo_level);
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
+            const double offset_x, const double offset_y, const double offset_z,
+            const double cx, const double cy, const double theta, const int echo_level);
 
 
     /// Import the nodes from other model_part to this model_part
     /// The nodes will be applied first with the transformation matrix before importing
-    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-            const Transformation<double>& rTrans, const int& echo_level);
+    static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
+            const Transformation<double>& rTrans, const int echo_level);
 
 
     /// Import the elements from list to the this model_part
     static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
-            ModelPart::ElementsContainerType& rOtherElements,
-            const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level);
+            const ModelPart::ElementsContainerType& rOtherElements,
+            const std::string& sample_element_name, Properties::Pointer pProperties, const int echo_level);
 
     static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
-            ModelPart::ElementsContainerType& rOtherElements,
-            const int& properties_id_offset, const int& echo_level);
+            const ModelPart::ElementsContainerType& rOtherElements,
+            const int properties_id_offset, const int echo_level);
 
 
     /// Import the conditions from list to the this model_part
     static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
-            ModelPart::ConditionsContainerType& rOtherConditions,
-            const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level);
+            const ModelPart::ConditionsContainerType& rOtherConditions,
+            const std::string& sample_cond_name, Properties::Pointer pProperties, const int echo_level);
 
     static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
-            ModelPart::ConditionsContainerType& rOtherConditions,
-            const int& properties_id_offset, const int& echo_level);
+            const ModelPart::ConditionsContainerType& rOtherConditions,
+            const int properties_id_offset, const int echo_level);
 
 
     template<typename TEntityContainerType, typename TVariableType>

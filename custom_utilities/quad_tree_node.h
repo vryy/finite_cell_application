@@ -438,7 +438,7 @@ public:
     void Integrate(GeometryType::Pointer pParentGeometry,
                    const Function<array_1d<double, 3>, TOutputType>& rFunc,
                    TOutputType& rOutput,
-                   const int& integration_method) const
+                   const int integration_method) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
@@ -500,7 +500,7 @@ public:
                    const Function<array_1d<double, 3>, TOutputType>& rFunc,
                    const BRep& r_brep,
                    TOutputType& rOutput,
-                   const int& integration_method,
+                   const int integration_method,
                    const double small_weight) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
@@ -564,7 +564,7 @@ public:
 
     /// Construct a custom quadrature, i.e higher order Gauss Legendre or Gauss-Lobatto quadrature.
     /// @param quadrature_type  type of the quadrature, i.e 1: Gauss-Legendre, 2: Gauss-Lobatto, 3: Gauss-Radau
-    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const
+    virtual GeometryType::IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const
     {
         KRATOS_ERROR << "Calling base class function";
     }
@@ -572,7 +572,7 @@ public:
     /// Construct the recursive integration point array using Kratos built-in quadrature.
     /// REMARKS: the integration_points is in local coordinates system
     void ConstructQuadrature(GeometryType::IntegrationPointsArrayType& integration_points,
-                             const int& integration_method) const
+                             const int integration_method) const
     {
         int quadrature_type = QuadratureUtility::GetQuadratureType(integration_method);
 
@@ -692,7 +692,7 @@ public:
     /*****************************************************************/
 
     /// Check if a point in local coordinates is on the boundary of the quad-tree node up to some tolerances
-    virtual bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const
+    virtual bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double tol) const
     {
         KRATOS_ERROR << "Calling base class function";
     }
@@ -711,10 +711,10 @@ public:
 
     /// Compute the center of gravity in the domain defined by a parent geometry of this quad-tree node w.r.t a BRep
     /// Remarks: COG will be in global coordinates w.r.t pParentGeometry
-    bool CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int& integration_method) const;
+    bool CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int integration_method) const;
 
     /// Compute the domain size covered by the quad tree node
-    double DomainSize(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int& integration_method) const
+    double DomainSize(GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int integration_method) const
     {
         double A = 0.0;
         FunctionR3R1::Pointer FH = FunctionR3R1::Pointer(new HeavisideFunction<FunctionR3R1>(r_brep));
@@ -736,7 +736,7 @@ public:
 
     /// Create a list of sampling points on the geometry. If overriding, the local coordinates of the sampling points must be taken from the quadtree parameter range.
     virtual void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-                                           const std::size_t& nsampling) const
+                                           const std::size_t nsampling) const
     {
         KRATOS_ERROR << "Calling base class function";
     }
@@ -926,7 +926,7 @@ struct QuadTreeNode_AddToModelPart_Helper<true, Condition>
 };
 
 template<int TFrameType>
-bool QuadTreeNode<TFrameType>::CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int& integration_method) const
+bool QuadTreeNode<TFrameType>::CenterOfGravity(PointType& COG, GeometryType::Pointer pParentGeometry, const BRep& r_brep, const int integration_method) const
 {
     FunctionR3R1::Pointer FX = FunctionR3R1::Pointer(new MonomialFunctionR3R1<1, 0, 0>());
     FunctionR3R1::Pointer FY = FunctionR3R1::Pointer(new MonomialFunctionR3R1<0, 1, 0>());
@@ -1009,7 +1009,7 @@ public:
         }
     }
 
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const override
     {
         if (quadrature_type == 1) // Gauss-Legendre
         {
@@ -1436,7 +1436,7 @@ public:
         return pNewGeometry;
     }
 
-    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const final
+    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double tol) const final
     {
         bool is_onboundary = false;
         is_onboundary = is_onboundary || ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) );
@@ -1464,7 +1464,7 @@ public:
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-                                   const std::size_t& nsampling) const final
+                                   const std::size_t nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
@@ -1571,7 +1571,7 @@ public:
         }
     }
 
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const final
     {
         if (quadrature_type == 1) // Gauss-Legendre
         {
@@ -1740,7 +1740,7 @@ public:
         }
     }
 
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const override
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const override
     {
         if (quadrature_type == 1) // Gauss-Legendre
         {
@@ -2580,7 +2580,7 @@ public:
         return pNewGeometry;
     }
 
-    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double& tol) const final
+    bool IsOnBoundary(const CoordinatesArrayType& rLocalPoint, const double tol) const final
     {
         bool is_onboundary =             ( (fabs(rLocalPoint[0] - mXmin) < tol) && (mYmin - tol < rLocalPoint[1]) && (rLocalPoint[1] < mYmax + tol) && (mZmin - tol < rLocalPoint[2]) && (rLocalPoint[2] < mZmax + tol) );
         if (is_onboundary) { return true; }
@@ -2614,7 +2614,7 @@ public:
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-                                   const std::size_t& nsampling) const final
+                                   const std::size_t nsampling) const final
     {
         double dX = (mXmax - mXmin) / nsampling;
         double dY = (mYmax - mYmin) / nsampling;
@@ -2728,7 +2728,7 @@ public:
         }
     }
 
-    IntegrationPointsArrayType ConstructCustomQuadrature(const int& quadrature_type, const int& integration_order) const final
+    IntegrationPointsArrayType ConstructCustomQuadrature(const int quadrature_type, const int integration_order) const final
     {
         if (quadrature_type == 1) // Gauss-Legendre
         {
@@ -3123,7 +3123,7 @@ public:
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-                                   const std::size_t& nsampling) const final
+                                   const std::size_t nsampling) const final
     {
         SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 2) / 2);
         CoordinatesArrayType X;
@@ -3496,7 +3496,7 @@ public:
     }
 
     void CreateSamplingLocalPoints(std::vector<CoordinatesArrayType>& SamplingLocalPoints,
-                                   const std::size_t& nsampling) const final
+                                   const std::size_t nsampling) const final
     {
         SamplingLocalPoints.reserve((nsampling + 1) * (nsampling + 2) * (nsampling + 3) / 6);
         CoordinatesArrayType X;

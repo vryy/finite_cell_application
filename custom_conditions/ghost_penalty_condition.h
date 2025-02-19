@@ -17,6 +17,7 @@
 #include "includes/serializer.h"
 #include "includes/ublas_interface.h"
 #include "includes/variables.h"
+#include "includes/legacy_structural_app_vars.h"
 
 namespace Kratos
 {
@@ -55,7 +56,7 @@ public:
     /**
      * Destructor.
      */
-    virtual ~GhostPenaltyCondition()
+    ~GhostPenaltyCondition() override
     {}
 
     virtual Condition::Pointer Create(IndexType NewId,
@@ -77,7 +78,7 @@ public:
      */
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               const ProcessInfo& rCurrentProcessInfo) override
+                               const ProcessInfo& rCurrentProcessInfo ) override
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = true;
@@ -87,7 +88,7 @@ public:
     }
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 const ProcessInfo& rCurrentProcessInfo) override
+                                 const ProcessInfo& rCurrentProcessInfo ) override
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = false;
@@ -96,7 +97,7 @@ public:
         CalculateAll( matrix, rRightHandSideVector,
                       rCurrentProcessInfo,
                       CalculateStiffnessMatrixFlag,
-                      CalculateResidualVectorFlag);
+                      CalculateResidualVectorFlag );
     }
 
     void CalculateDampingMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo ) override
@@ -105,73 +106,71 @@ public:
     }
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           const ProcessInfo& rCurrentProcessInfo) const override
+                           const ProcessInfo& rCurrentProcessInfo ) const override
     {
         rResult.resize(0);
     }
 
     void GetDofList( DofsVectorType& ConditionalDofList,
-                     const ProcessInfo& CurrentProcessInfo) const override
+                     const ProcessInfo& CurrentProcessInfo ) const override
     {
         ConditionalDofList.resize(0);
     }
 
-    void Initialize(const ProcessInfo& rCurrentProcessInfo) override
+    void Initialize( const ProcessInfo& rCurrentProcessInfo ) override
     {
         KRATOS_TRY
 
-        Variable<int>& INTEGRATION_ORDER_var = static_cast<Variable<int>&>(KratosComponents<VariableData>::Get("INTEGRATION_ORDER"));
-
         // integration rule
-        if (this->Has( INTEGRATION_ORDER_var ))
+        if (this->Has( INTEGRATION_ORDER ))
         {
-            if (this->GetValue(INTEGRATION_ORDER_var) == 1)
+            if (this->GetValue(INTEGRATION_ORDER) == 1)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
             }
-            else if (this->GetValue(INTEGRATION_ORDER_var) == 2)
+            else if (this->GetValue(INTEGRATION_ORDER) == 2)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_2;
             }
-            else if (this->GetValue(INTEGRATION_ORDER_var) == 3)
+            else if (this->GetValue(INTEGRATION_ORDER) == 3)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_3;
             }
-            else if (this->GetValue(INTEGRATION_ORDER_var) == 4)
+            else if (this->GetValue(INTEGRATION_ORDER) == 4)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_4;
             }
-            else if (this->GetValue(INTEGRATION_ORDER_var) == 5)
+            else if (this->GetValue(INTEGRATION_ORDER) == 5)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_5;
             }
             else
-                KRATOS_ERROR << "KinematicLinear element does not support for integration rule " << this->GetValue(INTEGRATION_ORDER_var);
+                KRATOS_ERROR << "KinematicLinear element does not support for integration order " << this->GetValue(INTEGRATION_ORDER);
         }
-        else if (GetProperties().Has( INTEGRATION_ORDER_var ))
+        else if (GetProperties().Has( INTEGRATION_ORDER ))
         {
-            if (GetProperties()[INTEGRATION_ORDER_var] == 1)
+            if (GetProperties()[INTEGRATION_ORDER] == 1)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
             }
-            else if (GetProperties()[INTEGRATION_ORDER_var] == 2)
+            else if (GetProperties()[INTEGRATION_ORDER] == 2)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_2;
             }
-            else if (GetProperties()[INTEGRATION_ORDER_var] == 3)
+            else if (GetProperties()[INTEGRATION_ORDER] == 3)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_3;
             }
-            else if (GetProperties()[INTEGRATION_ORDER_var] == 4)
+            else if (GetProperties()[INTEGRATION_ORDER] == 4)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_4;
             }
-            else if (GetProperties()[INTEGRATION_ORDER_var] == 5)
+            else if (GetProperties()[INTEGRATION_ORDER] == 5)
             {
                 mThisIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_5;
             }
             else
-                KRATOS_ERROR << "KinematicLinear element does not support for integration rule " << GetProperties()[INTEGRATION_ORDER_var];
+                KRATOS_ERROR << "KinematicLinear element does not support for integration order " << GetProperties()[INTEGRATION_ORDER];
         }
         else
         {
@@ -242,7 +241,7 @@ private:
                        VectorType& rRightHandSideVector,
                        const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag,
-                       bool CalculateResidualVectorFlag)
+                       bool CalculateResidualVectorFlag )
     {
         KRATOS_TRY
 
@@ -256,6 +255,4 @@ private:
 
 }  // namespace Kratos.
 
-
 #endif // KRATOS_GHOST_PENALTY_CONDITION_H_INCLUDED defined
-
