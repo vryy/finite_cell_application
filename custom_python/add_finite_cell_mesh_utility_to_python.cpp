@@ -178,16 +178,28 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCe
 
     typedef FiniteCellMeshUtility::BoundaryNodesInfoType BoundaryNodesInfoType;
     typedef FiniteCellMeshUtility::BoundaryLayerInfoType BoundaryLayerInfoType;
+    const auto& nodes = std::get<0>(Info);
+    const auto& elements = std::get<1>(Info);
     const BoundaryNodesInfoType& boundary_nodes = std::get<2>(Info);
     const BoundaryLayerInfoType& boundary_layers = std::get<3>(Info);
 
     // generate layer information
-    boost::python::dict layer_cond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
-    boost::python::dict layer_node_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+    boost::python::dict layer_bcond_sets = FiniteCellMeshUtility_ExtractBoundaryLayer(boundary_layers);
+    boost::python::dict layer_bnode_sets = FiniteCellMeshUtility_ExtractBoundaryNodes(boundary_nodes);
+
+    boost::python::list layer_node_sets;
+    for (auto it = nodes.begin(); it != nodes.end(); ++it)
+        layer_node_sets.append(it->Id());
+
+    boost::python::list layer_elem_sets;
+    for (auto it = elements.begin(); it != elements.end(); ++it)
+        layer_elem_sets.append(it->Id());
 
     boost::python::list output;
+    output.append(layer_bnode_sets);
+    output.append(layer_bcond_sets);
     output.append(layer_node_sets);
-    output.append(layer_cond_sets);
+    output.append(layer_elem_sets);
     return output;
 }
 
