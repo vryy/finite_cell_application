@@ -11,7 +11,6 @@
 ##################################################################
 import sys
 import os
-kratos_root_path=os.environ['KRATOS_ROOT_PATH']
 ##################################################################
 ##################################################################
 #importing Kratos modules
@@ -127,7 +126,7 @@ class Model:
                     self.model_part.Conditions[int(val_set[1])].SetValue( ACTIVATION_LEVEL, self.model_part.Elements[int(val_set[2])].GetValue(ACTIVATION_LEVEL) )
                     #print( "assigning ACTIVATION_LEVEL of element: " +str(int(val_set[2])) + " to Condition: " + str(int(val_set[1])) + " as " + str(self.model_part.Elements[int(val_set[2])].GetValue(ACTIVATION_LEVEL)) )
                     self.element_assignments[int(val_set[1])] = int(val_set[2])
-            print "input data read OK"
+            print("input data read OK")
             #print "+++++++++++++++++++++++++++++++++++++++"
             #for node in self.model_part.Nodes:
             #    print node
@@ -287,22 +286,22 @@ class Model:
             ## CONTACT SLAVE NODES ###########################################
             #self.contact_slave_nodes = model_layers.ReadContactSlaveNodes()
             ##################################################################
-            print "layer sets stored"
+            print("layer sets stored")
             ##################################################################
             ## STORE NODES ON GROUND SURFACE #################################
             ##################################################################
             self.top_surface_nodes = model_layers.ReadTopSurfaceNodes()
-            print "nodes on ground surface stored"
+            print("nodes on ground surface stored")
             ##################################################################
             ## STORE NODES ON SIDE ###########################################
             ##################################################################
             self.boundary_nodes = model_layers.ReadBoundaryNodes()
-            print "nodes on side surface stored"
+            print("nodes on side surface stored")
             ##################################################################
             ## STORE NODES CORRECTLY FOR CONDITIONS ##########################
             ##################################################################
             self.node_groups = model_layers.ReadNodeGroups()
-            print "node groups stored"
+            print("node groups stored")
             ##################################################################
             ## EXTRACT CONDITIONS FROM NODE GROUPS ###########################
             ##################################################################
@@ -318,7 +317,7 @@ class Model:
                             break
                     if in_group:
                         self.layer_cond_sets[layer].append(cond.Id)
-            print "conditions in node groups stored"
+            print("conditions in node groups stored")
         ##################################################################
         ## INITIALISE CONSTITUTIVE LAWS ##################################
         ##################################################################
@@ -329,15 +328,15 @@ class Model:
         self.model_part.Properties[1].SetValue(POISSON_RATIO,          0.3 )
         self.model_part.Properties[1].SetValue(THICKNESS, 1.0 )
         self.model_part.Properties[1].SetValue(CONSTITUTIVE_LAW, PlaneStrain() )
-        print "Linear elastic model selected, description: PlaneStrain"
+        print("Linear elastic model selected, description: PlaneStrain")
         ##################################################################
         ## ACTIVATION ####################################################
         ##################################################################
         self.deac = DeactivationUtility()
         self.deac.Initialize( self.model_part )
         self.model_part.Check( self.model_part.ProcessInfo )
-        print "activation utility initialized"
-        print "model successfully initialized"
+        print("activation utility initialized")
+        print("model successfully initialized")
 
     def WriteRestartFile( self, time ):
         fn = self.problem_name + "_" + str(time)
