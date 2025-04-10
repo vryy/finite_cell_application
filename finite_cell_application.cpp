@@ -66,8 +66,6 @@ KratosFiniteCellApplication::KratosFiniteCellApplication()
 
 void KratosFiniteCellApplication::Register()
 {
-    // calling base class register to register Kratos components
-    KratosApplication::Register();
     std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
 
     // register variables to Kratos kernel
@@ -84,4 +82,3 @@ void KratosFiniteCellApplication::Register()
 }
 
 } // namespace Kratos
-
