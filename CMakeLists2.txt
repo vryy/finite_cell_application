@@ -1,28 +1,22 @@
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
 
 # #include cotire (CMake module to hep generating precompiled header to speed-up the build process)
 # include(cotire)
 
-######### add include directory here
-include_directories( ${CMAKE_SOURCE_DIR}/kratos )
-include_directories( ${CMAKE_SOURCE_DIR}/applications )
+set(FINITE_CELL_APPLICATION_COMPILE_DEFS "")
+set(FINITE_CELL_APPLICATION_INCLUDE_DIRS "")
 
-if(${BREP_APPLICATION} MATCHES ON)
-    include_directories( ${CMAKE_SOURCE_DIR}/applications/brep_application )
-else()
-    message(FATAL_ERROR "FiniteCellApplication requires BRepApplication to turn on.")
+if(NOT ${BREP_APPLICATION} MATCHES ON)
+    message(FATAL_ERROR "FiniteCellApplication requires BRepApplication.")
 endif()
 
 if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
-    include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
-    add_definitions(-DENABLE_FINITE_CELL_ISOGEOMETRIC)
+    set(FINITE_CELL_APPLICATION_COMPILE_DEFS "${FINITE_CELL_APPLICATION_COMPILE_DEFS};ENABLE_FINITE_CELL_ISOGEOMETRIC")
 endif()
 
 if(${MKL_SOLVERS_APPLICATION} MATCHES ON)
-    include_directories( ${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes )
-    add_definitions(-DENABLE_FINITE_CELL_BOOST_BINDINGS)
+    set(FINITE_CELL_APPLICATION_INCLUDE_DIRS "${FINITE_CELL_APPLICATION_INCLUDE_DIRS};${CMAKE_SOURCE_DIR}/applications/mkl_solvers_application/external_includes")
+    set(FINITE_CELL_APPLICATION_COMPILE_DEFS "${FINITE_CELL_APPLICATION_COMPILE_DEFS};ENABLE_FINITE_CELL_BOOST_BINDINGS")
 endif()
 
 #######################################################################
@@ -30,16 +24,12 @@ endif()
 find_package(NNLS REQUIRED)
 if(${NNLS_FOUND} MATCHES TRUE)
     message("nnls is found at " ${NNLS_DIR})
-    add_definitions(-DFINITE_CELL_APPLICATION_USE_NNLS)
+    set(FINITE_CELL_APPLICATION_COMPILE_DEFS "${FINITE_CELL_APPLICATION_COMPILE_DEFS};FINITE_CELL_APPLICATION_USE_NNLS")
 else()
     message("nnls is not found")
 endif()
 
 #######################################################################
-
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-endif()
 
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
@@ -64,23 +54,33 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
 ## define library Kratos which defines the basic python interface
 add_library(KratosFiniteCellApplication SHARED ${KRATOS_FINITE_CELL_APPLICATION_SOURCES})
 if(MSVC)
-    target_compile_options(KratosFiniteCellApplication PRIVATE $<$<CONFIG:Debug>:/bigobj>)
+    target_compile_options(KratosFiniteCellApplication PRIVATE /bigobj)
 endif()
-target_link_libraries(KratosFiniteCellApplication KratosCore)
-target_link_libraries(KratosFiniteCellApplication KratosBRepApplication)
-if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
-    target_link_libraries(KratosFiniteCellApplication KratosIsogeometricApplication)
-endif()
-target_link_libraries(KratosFiniteCellApplication ${LAPACK_LIBRARIES})
+
+add_library(KratosFiniteCellApplicationDependencies INTERFACE)
+target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${LAPACK_LIBRARIES})
 IF(${NNLS_FOUND} MATCHES TRUE)
-    target_link_libraries(KratosFiniteCellApplication ${NNLS_LIBRARIES})
+    target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${NNLS_LIBRARIES})
 ENDIF()
-# cotire(KratosFiniteCellApplication)
+
+target_link_libraries(KratosFiniteCellApplication PUBLIC KratosCore)
+target_link_libraries(KratosFiniteCellApplication PUBLIC KratosBRepApplication)
 if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
-    set_target_properties(KratosFiniteCellApplication PROPERTIES COMPILE_DEFINITIONS "KRATOS_CORE=IMPORT;FINITE_CELL_APPLICATION=EXPORT;BREP_APPLICATION=IMPORT;ISOGEOMETRIC_APPLICATION=IMPORT")
-else()
-    set_target_properties(KratosFiniteCellApplication PROPERTIES COMPILE_DEFINITIONS "KRATOS_CORE=IMPORT;FINITE_CELL_APPLICATION=EXPORT;BREP_APPLICATION=IMPORT")
+    target_link_libraries(KratosFiniteCellApplication PUBLIC KratosIsogeometricApplication)
 endif()
+target_link_libraries(KratosFiniteCellApplication PUBLIC KratosFiniteCellApplicationDependencies)
+
+# expose the include directories used by this application to any external target that links with it
+target_include_directories(KratosFiniteCellApplication PUBLIC ${FINITE_CELL_APPLICATION_INCLUDE_DIRS})
+target_include_directories(KratosFiniteCellApplication PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_compile_definitions(KratosFiniteCellApplication PRIVATE KRATOS_CORE=IMPORT)
+target_compile_definitions(KratosFiniteCellApplication PRIVATE FINITE_CELL_APPLICATION=EXPORT)
+target_compile_definitions(KratosFiniteCellApplication PRIVATE BREP_APPLICATION=IMPORT)
+if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
+    target_compile_definitions(KratosFiniteCellApplication PUBLIC ISOGEOMETRIC_APPLICATION=IMPORT)
+endif()
+target_compile_definitions(KratosFiniteCellApplication PUBLIC ${FINITE_CELL_APPLICATION_COMPILE_DEFS})
 set_target_properties(KratosFiniteCellApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFiniteCellApplication DESTINATION libs )
 #######################################################################
