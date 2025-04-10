@@ -11,11 +11,11 @@
 ##################################################################
 import sys
 import os
-kratos_root_path=os.environ['KRATOS_ROOT_PATH']
 ##################################################################
 ##################################################################
 #importing Kratos modules
 from KratosMultiphysics import *
+from KratosMultiphysics.LayerApplication import *
 from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.ExternalSolversApplication import *
 from KratosMultiphysics.MKLSolversApplication import *
@@ -27,13 +27,13 @@ kernel = Kernel()   #defining kernel
 ##################################################################
 ##################################################################
 class Model:
-    def __init__( self, problem_name, path, read_model_part = True ):
+    def __init__( self, problem_name, path, read_model_part = True, logging=True ):
         #setting the domain size for the problem to be solved
         self.domain_size = 3
         ##################################################################
         ## DEFINE MODELPART ##############################################
         ##################################################################
-        self.model_part = ModelPart("ekate_simulation")
+        self.model_part = ModelPart("fc_simulation")
         self.path = path
         self.problem_name = problem_name
         ##################################################################
@@ -89,6 +89,7 @@ class Model:
         self.analysis_parameters['decouple_build_and_solve'] = False
         self.analysis_parameters['solving_scheme'] = 'monolithic'
         self.analysis_parameters['stop_Newton_Raphson_if_not_converge'] = True
+        self.analysis_parameters['log_residuum'] = logging
 
         self.abs_tol =        1e-6
         self.rel_tol =        1e-10
@@ -104,14 +105,8 @@ class Model:
         ##################################################################
         ## READ MODELPART ################################################
         ##################################################################
-        #reading a model
-        write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
-        write_elements = WriteConditionsFlag.WriteConditions
-        #write_elements = WriteConditionsFlag.WriteElementsOnly
-        post_mode = GiDPostMode.GiD_PostBinary
-        multi_file_flag = MultiFileFlag.MultipleFiles
-        self.gid_io = StructuralGidIO( self.path+self.problem_name, post_mode, multi_file_flag, write_deformed_flag, write_elements )
         if read_model_part:
+            #reading the model
             self.model_part_io = ModelPartIO(self.path+self.problem_name)
             self.model_part_io.ReadModelPart(self.model_part)
         self.meshWritten = False
@@ -127,7 +122,7 @@ class Model:
                     self.model_part.Conditions[int(val_set[1])].SetValue( ACTIVATION_LEVEL, self.model_part.Elements[int(val_set[2])].GetValue(ACTIVATION_LEVEL) )
                     #print( "assigning ACTIVATION_LEVEL of element: " +str(int(val_set[2])) + " to Condition: " + str(int(val_set[1])) + " as " + str(self.model_part.Elements[int(val_set[2])].GetValue(ACTIVATION_LEVEL)) )
                     self.element_assignments[int(val_set[1])] = int(val_set[2])
-            print "input data read OK"
+            print("input data read OK")
             #print "+++++++++++++++++++++++++++++++++++++++"
             #for node in self.model_part.Nodes:
             #    print node
@@ -157,6 +152,11 @@ class Model:
         ## INITIALISE RESTART UTILITY ####################################
         ##################################################################
         #restart_utility= RestartUtility( self.problem_name )
+
+        ##################################################################
+        ## INITIALISE OUTPUT #############################################
+        ##################################################################
+        self.InitializeOutput()
 
     def AddDofsForNodes(self, nodes):
         import structural_solver_advanced
@@ -249,6 +249,14 @@ class Model:
         outfile.write("ekate result file for step "+str(time)+"\n")
         outfile.close()
 
+    def InitializeOutput(self):
+        write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
+        write_elements = WriteConditionsFlag.WriteConditions
+        #write_elements = WriteConditionsFlag.WriteElementsOnly
+        post_mode = GiDPostMode.GiD_PostBinary
+        multi_file_flag = MultiFileFlag.MultipleFiles
+        self.gid_io = SDGidPostIO( self.path+self.problem_name, post_mode, multi_file_flag, write_deformed_flag, write_elements )
+
     def WriteOutput( self, time ):
         self.gid_io.InitializeMesh( time )
         mesh = self.model_part.GetMesh()
@@ -287,22 +295,22 @@ class Model:
             ## CONTACT SLAVE NODES ###########################################
             #self.contact_slave_nodes = model_layers.ReadContactSlaveNodes()
             ##################################################################
-            print "layer sets stored"
+            print("layer sets stored")
             ##################################################################
             ## STORE NODES ON GROUND SURFACE #################################
             ##################################################################
             self.top_surface_nodes = model_layers.ReadTopSurfaceNodes()
-            print "nodes on ground surface stored"
+            print("nodes on ground surface stored")
             ##################################################################
             ## STORE NODES ON SIDE ###########################################
             ##################################################################
             self.boundary_nodes = model_layers.ReadBoundaryNodes()
-            print "nodes on side surface stored"
+            print("nodes on side surface stored")
             ##################################################################
             ## STORE NODES CORRECTLY FOR CONDITIONS ##########################
             ##################################################################
             self.node_groups = model_layers.ReadNodeGroups()
-            print "node groups stored"
+            print("node groups stored")
             ##################################################################
             ## EXTRACT CONDITIONS FROM NODE GROUPS ###########################
             ##################################################################
@@ -318,7 +326,7 @@ class Model:
                             break
                     if in_group:
                         self.layer_cond_sets[layer].append(cond.Id)
-            print "conditions in node groups stored"
+            print("conditions in node groups stored")
         ##################################################################
         ## INITIALISE CONSTITUTIVE LAWS ##################################
         ##################################################################
@@ -329,15 +337,15 @@ class Model:
         self.model_part.Properties[1].SetValue(POISSON_RATIO,          0.3 )
         self.model_part.Properties[1].SetValue(THICKNESS, 1.0 )
         self.model_part.Properties[1].SetValue(CONSTITUTIVE_LAW, PlaneStrain() )
-        print "Linear elastic model selected, description: PlaneStrain"
+        print("Linear elastic model selected, description: PlaneStrain")
         ##################################################################
         ## ACTIVATION ####################################################
         ##################################################################
         self.deac = DeactivationUtility()
         self.deac.Initialize( self.model_part )
         self.model_part.Check( self.model_part.ProcessInfo )
-        print "activation utility initialized"
-        print "model successfully initialized"
+        print("activation utility initialized")
+        print("model successfully initialized")
 
     def WriteRestartFile( self, time ):
         fn = self.problem_name + "_" + str(time)
