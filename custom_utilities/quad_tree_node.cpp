@@ -16,22 +16,21 @@
 namespace Kratos
 {
 
-template class QuadTreeNode<GLOBAL_REFERENCE>;
-template class QuadTreeNode<GLOBAL_CURRENT>;
-template class QuadTreeNodeQ4<GLOBAL_REFERENCE>;
-template class QuadTreeNodeQ4<GLOBAL_CURRENT>;
+template class QuadTreeNode<GLOBAL_REFERENCE, Node<3> >;
+template class QuadTreeNode<GLOBAL_CURRENT, Node<3>>;
+template class QuadTreeNodeQ4<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeQ4<GLOBAL_CURRENT, Node<3>>;
 #ifdef ENABLE_FINITE_CELL_ISOGEOMETRIC
-template class QuadTreeNodeBezier2D<GLOBAL_REFERENCE>;
-template class QuadTreeNodeBezier2D<GLOBAL_CURRENT>;
-template class QuadTreeNodeBezier3D<GLOBAL_REFERENCE>;
-template class QuadTreeNodeBezier3D<GLOBAL_CURRENT>;
+template class QuadTreeNodeBezier2D<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeBezier2D<GLOBAL_CURRENT, Node<3>>;
+template class QuadTreeNodeBezier3D<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeBezier3D<GLOBAL_CURRENT, Node<3>>;
 #endif
-template class QuadTreeNodeH8<GLOBAL_REFERENCE>;
-template class QuadTreeNodeH8<GLOBAL_CURRENT>;
-template class QuadTreeNodeT3<GLOBAL_REFERENCE>;
-template class QuadTreeNodeT3<GLOBAL_CURRENT>;
-template class QuadTreeNodeT4<GLOBAL_REFERENCE>;
-template class QuadTreeNodeT4<GLOBAL_CURRENT>;
+template class QuadTreeNodeH8<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeH8<GLOBAL_CURRENT, Node<3>>;
+template class QuadTreeNodeT3<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeT3<GLOBAL_CURRENT, Node<3>>;
+template class QuadTreeNodeT4<GLOBAL_REFERENCE, Node<3>>;
+template class QuadTreeNodeT4<GLOBAL_CURRENT, Node<3>>;
 
 }
-

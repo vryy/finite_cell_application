@@ -226,7 +226,7 @@ void FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython()
     .def("AddElement", &FiniteCellAuxiliaryUtility_AddElement)
     .def("RemoveElement", &FiniteCellAuxiliaryUtility_RemoveElement)
     .def("MultithreadedRefineBy", &FiniteCellAuxiliaryUtility_MultithreadedRefineBy<RefinableTree, BRep>)
-    .def("MultithreadedGeneratePhysicalIntegrationPoints", &FiniteCellAuxiliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints<BaseMomentFittedQuadTreeSubCell, BRep>)
+    .def("MultithreadedGeneratePhysicalIntegrationPoints", &FiniteCellAuxiliaryUtility_MultithreadedGeneratePhysicalIntegrationPoints<BaseMomentFittedQuadTreeSubCell<Node<3> >, BRep>)
     .def("Print", pointer_to_PrintGeometry)
     ;
 

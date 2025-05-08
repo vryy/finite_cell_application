@@ -80,7 +80,7 @@ void MomentFittingUtility_FitQuadrature(MomentFittingUtility& rDummy,
                         integrator_integration_method, solver_type, echo_level, small_weight);
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
+        FiniteCellGeometryUtility<Element::GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, Weight);
     }
     else
     {
@@ -97,7 +97,7 @@ void MomentFittingUtility_FitQuadrature(MomentFittingUtility& rDummy,
         }
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, integration_points);
+        FiniteCellGeometryUtility<Element::GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ElementalIntegrationMethod, integration_points);
     }
 }
 
@@ -198,7 +198,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
                                 integrator_integration_method, solver_type, echo_level, small_weight);
 
                 /* create new quadrature and assign to the geometry */
-                FiniteCellGeometryUtility::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
+                FiniteCellGeometryUtility<Element::GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, Weight);
             }
             else
             {
@@ -223,7 +223,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
                 GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
 
                 /* create new quadrature and assign to the geometry */
-                FiniteCellGeometryUtility::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, integration_points);
+                FiniteCellGeometryUtility<Element::GeometryType>::AssignGeometryData((*it)->GetGeometry(), ElementalIntegrationMethod, integration_points);
             }
 
             if (echo_level == -2)
@@ -302,12 +302,14 @@ void MomentFittingutility_MultithreadedFitQuadratureSubCell(MomentFittingUtility
 void FiniteCellApplication_AddMomentFittingUtilityToPython()
 {
 
+    typedef BaseMomentFittedQuadTreeSubCell<Node<3> > BaseMomentFittedQuadTreeSubCellType;
+
     class_<MomentFittingUtility, MomentFittingUtility::Pointer, boost::noncopyable, bases<QuadratureUtility> >
     ("MomentFittingUtility", init<>())
     .def("FitQuadrature", &MomentFittingUtility_FitQuadrature<FunctionIntegrator>)
     .def("MultithreadedFitQuadrature", &MomentFittingUtility_MultithreadedFitQuadrature<FunctionIntegrator>)
-    .def("FitQuadratureSubCell", &MomentFittingutility_FitQuadratureSubCell<BaseMomentFittedQuadTreeSubCell, FunctionR3R1>)
-    .def("MultithreadedFitQuadratureSubCell", &MomentFittingutility_MultithreadedFitQuadratureSubCell<BaseMomentFittedQuadTreeSubCell, FunctionR3R1>)
+    .def("FitQuadratureSubCell", &MomentFittingutility_FitQuadratureSubCell<BaseMomentFittedQuadTreeSubCellType, FunctionR3R1>)
+    .def("MultithreadedFitQuadratureSubCell", &MomentFittingutility_MultithreadedFitQuadratureSubCell<BaseMomentFittedQuadTreeSubCellType, FunctionR3R1>)
     .def("FitQuadratureSubCellUnique", &MomentFittingUtility_FitQuadrature<FunctionIntegrator>)
     .def("MultithreadedFitQuadratureSubCellUnique", &MomentFittingUtility_MultithreadedFitQuadrature<FunctionIntegrator>)
     ;

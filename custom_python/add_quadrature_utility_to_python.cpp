@@ -75,7 +75,7 @@ void QuadratureUtility_SetQuadrature(QuadratureUtility& rDummy,
     }
 
     Element::GeometryType::IntegrationMethod ThisIntegrationMethod = BRepMathUtility<>::GetIntegrationMethod(integration_order);
-    FiniteCellGeometryUtility::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
+    FiniteCellGeometryUtility<Element::GeometryType>::AssignGeometryData(p_elem->GetGeometry(), ThisIntegrationMethod, integration_points);
 //        std::cout << "set quadrature for element " << p_elem->Id() << " completed" << std::endl;
 }
 
@@ -232,7 +232,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -291,7 +291,7 @@ void QuadratureUtility_SaveQuadratureAdvanced(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -435,7 +435,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -470,7 +470,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -505,7 +505,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -588,7 +588,7 @@ void QuadratureUtility_SaveQuadratureAdvancedSubCell(QuadratureUtility& rDummy,
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<Element::GeometryType>::GlobalCoordinates0(p_cell->pGetElement()->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {
@@ -778,6 +778,8 @@ QuadratureUtility::PointType QuadratureUtility_CreatePoint2(QuadratureUtility& r
 void FiniteCellApplication_AddQuadratureUtilityToPython()
 {
 
+    typedef BaseMomentFittedQuadTreeSubCell<Node<3> > BaseMomentFittedQuadTreeSubCellType;
+
     class_<QuadratureUtility, QuadratureUtility::Pointer, boost::noncopyable>
     ("QuadratureUtility", init<>())
     .def("GetDefaultIntegrationMethod", &QuadratureUtility_GetDefaultIntegrationMethod<Element>)
@@ -787,13 +789,13 @@ void FiniteCellApplication_AddQuadratureUtilityToPython()
     .def("ScaleQuadrature", &QuadratureUtility_ScaleQuadrature)
     .def("SaveQuadrature", &QuadratureUtility_SaveQuadrature<0>)
     .def("SaveQuadrature", &QuadratureUtility_SaveQuadratureAdvanced<0>)
-    .def("SaveQuadratureSubCell", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCell, 0>)
+    .def("SaveQuadratureSubCell", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCellType, 0>)
     .def("ExportQuadratureInReferenceFrame", &QuadratureUtility_SaveQuadrature<1>)
     .def("ExportQuadratureInReferenceFrame", &QuadratureUtility_SaveQuadratureAdvanced<1>)
-    .def("ExportQuadratureSubCellInReferenceFrame", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCell, 1>)
+    .def("ExportQuadratureSubCellInReferenceFrame", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCellType, 1>)
     .def("ExportQuadratureInCurrentFrame", &QuadratureUtility_SaveQuadrature<2>)
     .def("ExportQuadratureInCurrentFrame", &QuadratureUtility_SaveQuadratureAdvanced<2>)
-    .def("ExportQuadratureSubCellInCurrentFrame", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCell, 2>)
+    .def("ExportQuadratureSubCellInCurrentFrame", &QuadratureUtility_SaveQuadratureAdvancedSubCell<BaseMomentFittedQuadTreeSubCellType, 2>)
     .def("SetQuadrature", &QuadratureUtility_SetQuadrature)
     .def("CreateConditionFromQuadraturePoint", &QuadratureUtility_CreateConditionFromQuadraturePoint)
     .def("CreateConditionFromPoint", &QuadratureUtility_CreateConditionFromPoint)

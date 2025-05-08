@@ -248,7 +248,7 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
     Element::Pointer pNewElement;
     pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), pProperties);
 
-    FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, integration_points);
+    FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, integration_points);
     pNewElement->SetValue(INTEGRATION_ORDER, RepresentativeIntegrationOrder);
 
     return pNewElement;

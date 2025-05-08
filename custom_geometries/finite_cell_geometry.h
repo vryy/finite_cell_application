@@ -328,9 +328,6 @@ public:
                                            shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
                                        )
                                    );
-
-        // assign the geometry data back to the original geometry
-        BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
 #else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
@@ -345,9 +342,10 @@ public:
                                        )
                                    );
 
-        // assign the geometry data back to the original geometry
-        BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
 #endif
+
+        // assign the geometry data back to the original geometry
+        BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
     }
 
 
@@ -401,9 +399,6 @@ public:
                                            shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
                                        )
                                    );
-
-        // assign the geometry data back to the original geometry
-        BaseType::SetGeometryData(&(*mpFiniteCellGeometryData));
 #else
         // create new geometry data
         mpFiniteCellGeometryData = GeometryData::Pointer(
@@ -417,10 +412,10 @@ public:
                                            shape_functions_local_gradients     //ThisShapeFunctionsLocalGradients
                                        )
                                    );
+#endif
 
         // assign the geometry data back to the original geometry
-        BaseType::mpGeometryData = &(*mpFiniteCellGeometryData);
-#endif
+        BaseType::SetGeometryData(mpFiniteCellGeometryData.get());
     }
 
 

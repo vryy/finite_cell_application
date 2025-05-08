@@ -90,6 +90,7 @@ enum FrameType
 /// Short class definition.
 /** class for auxilliary routines
 */
+template<class TGeometryType>
 class FiniteCellGeometryUtility
 {
 public:
@@ -99,13 +100,15 @@ public:
     /// Pointer definition of FiniteCellGeometryUtility
     KRATOS_CLASS_POINTER_DEFINITION(FiniteCellGeometryUtility);
 
-    typedef typename Element::GeometryType GeometryType;
+    typedef TGeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;
 
     typedef typename NodeType::PointType PointType;
 
     typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+
+    typedef typename GeometryType::LocalCoordinatesArrayType LocalCoordinatesArrayType;
 
     typedef typename GeometryType::IntegrationPointType IntegrationPointType;
 
@@ -315,7 +318,7 @@ public:
     }
 
     /// Helper function to compute the global coordinates in the reference frame
-    static CoordinatesArrayType& GlobalCoordinates0( const GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
+    static CoordinatesArrayType& GlobalCoordinates0( const GeometryType& rGeometry, CoordinatesArrayType& rResult, LocalCoordinatesArrayType const& LocalCoordinates )
     {
         if (rResult.size() != 3)
         {
@@ -335,7 +338,7 @@ public:
     }
 
     /// Helper function to compute the global coordinates in the current frame
-    static CoordinatesArrayType& GlobalCoordinates( const GeometryType& rGeometry, CoordinatesArrayType& rResult, CoordinatesArrayType const& LocalCoordinates )
+    static CoordinatesArrayType& GlobalCoordinates( const GeometryType& rGeometry, CoordinatesArrayType& rResult, LocalCoordinatesArrayType const& LocalCoordinates )
     {
         if (rResult.size() != 3)
         {
@@ -360,10 +363,10 @@ public:
     {
         GeometryData::IntegrationMethod ThisIntegrationMethod = rGeometry.GetDefaultIntegrationMethod();
 
-        const GeometryType::IntegrationPointsArrayType& integration_points = rGeometry.IntegrationPoints( ThisIntegrationMethod );
+        const IntegrationPointsArrayType& integration_points = rGeometry.IntegrationPoints( ThisIntegrationMethod );
 
         // initializing the Jacobian in the reference configuration
-        GeometryType::JacobiansType J0;
+        typename GeometryType::JacobiansType J0;
         Matrix DeltaPosition(rGeometry.size(), 3);
 
         if (TFrameType == GLOBAL_CURRENT)
@@ -524,15 +527,16 @@ private:
 ///@name Input and output
 ///@{
 
-
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, FiniteCellGeometryUtility& rThis)
+template<class TGeometryType>
+inline std::istream& operator >> (std::istream& rIStream, FiniteCellGeometryUtility<TGeometryType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellGeometryUtility& rThis)
+template<class TGeometryType>
+inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellGeometryUtility<TGeometryType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -540,11 +544,11 @@ inline std::ostream& operator << (std::ostream& rOStream, const FiniteCellGeomet
 
     return rOStream;
 }
+
 ///@}
 
 ///@} addtogroup block
 
 }  // namespace Kratos.
-
 
 #endif // KRATOS_FINITE_CELL_GEOMETRY_UTILITY_H_INCLUDED  defined

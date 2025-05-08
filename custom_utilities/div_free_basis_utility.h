@@ -388,9 +388,8 @@ public:
             KRATOS_WATCH(Mw)
             KRATOS_WATCH(sum(Mw))
 
-
             /* create new quadrature and assign to the geometry */
-            FiniteCellGeometryUtility::AssignGeometryData(r_geom, ThisIntegrationMethod, Mw);
+            FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(r_geom, ThisIntegrationMethod, Mw);
         }
     }
 

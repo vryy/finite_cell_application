@@ -53,24 +53,27 @@ namespace Kratos
 /**
 Abstract class for moment fitted quadtree w/ subcell
  */
+template<class TNodeType>
 class BaseMomentFittedQuadTreeSubCell
 {
 public:
     KRATOS_CLASS_POINTER_DEFINITION(BaseMomentFittedQuadTreeSubCell);
 
-    typedef typename GeometricalObject::GeometryType GeometryType;
+    typedef typename GeometricalObject<TNodeType>::GeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;
 
     typedef typename NodeType::PointType PointType;
 
-    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+    typedef typename GeometryType::LocalCoordinatesArrayType LocalCoordinatesArrayType;
 
     typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
 
+    typedef BaseElement<NodeType> ElementType;
+
     BaseMomentFittedQuadTreeSubCell() {} // Empty constructor for serializer
 
-    BaseMomentFittedQuadTreeSubCell(Element::Pointer p_elem) : mpElement(p_elem) {}
+    BaseMomentFittedQuadTreeSubCell(typename ElementType::Pointer p_elem) : mpElement(p_elem) {}
 
     virtual ~BaseMomentFittedQuadTreeSubCell() {}
 
@@ -80,7 +83,7 @@ public:
     }
 
     /// Get the underlying element
-    Element::Pointer pGetElement() const
+    typename ElementType::Pointer pGetElement() const
     {
         return mpElement;
     }
@@ -148,7 +151,7 @@ public:
 
 protected:
 
-    Element::Pointer mpElement;
+    typename ElementType::Pointer mpElement;
     int mRepresentativeIntegrationOrder; // this is the integration order associated with mMomentFittingIntegrationPoints
     IntegrationPointsArrayType mMomentFittingIntegrationPoints; // this contains the quadrature points to fit the integration on sub-cell. It is typically the Gauß quadrature point on big cell.
     IntegrationPointsArrayType mRepresentativeIntegrationPoints; // this contains the quadrature points representing a sub-cell. In most of the case, it is not useful. However, when the sub-cell is completely inside the physical domain, it can be used as physical integration point.
@@ -171,13 +174,15 @@ private:
 };
 
 /// input stream function
-inline std::istream& operator >> (std::istream& rIStream, BaseMomentFittedQuadTreeSubCell& rThis)
+template<class TNodeType>
+inline std::istream& operator >> (std::istream& rIStream, BaseMomentFittedQuadTreeSubCell<TNodeType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const BaseMomentFittedQuadTreeSubCell& rThis)
+template<class TNodeType>
+inline std::ostream& operator << (std::ostream& rOStream, const BaseMomentFittedQuadTreeSubCell<TNodeType>& rThis)
 {
     return rOStream;
 }
@@ -189,8 +194,9 @@ inline std::ostream& operator << (std::ostream& rOStream, const BaseMomentFitted
 /** A special type of quad tree w/ sub-cell. It uses quad-tree to compute the moment fitted quadrature of the element. For details see:
 Hoang-Giang Bui, D. Schillinger, G. Meschke, Finite Cell Method for Plasticity using Moment-Fitted Quadrature Technique, in preparation.
 */
-template<std::size_t TNsampling, int TFrameType>
-class MomentFittedQuadTreeSubCell : public QuadTreeSubCell<TNsampling, TFrameType>, public BaseMomentFittedQuadTreeSubCell
+template<std::size_t TNsampling, int TFrameType, class TNodeType>
+class MomentFittedQuadTreeSubCell : public QuadTreeSubCell<TNsampling, TFrameType, TNodeType>
+                                  , public BaseMomentFittedQuadTreeSubCell<TNodeType>
 {
 public:
     ///@name Type Definitions
@@ -199,28 +205,36 @@ public:
     /// Pointer definition of  MomentFittedQuadTreeSubCell
     KRATOS_CLASS_POINTER_DEFINITION(MomentFittedQuadTreeSubCell);
 
-    typedef QuadTreeSubCell<TNsampling, TFrameType> BaseType;
+    typedef QuadTreeSubCell<TNsampling, TFrameType, TNodeType> BaseType;
 
-    typedef BaseMomentFittedQuadTreeSubCell RefType;
+    typedef BaseMomentFittedQuadTreeSubCell<TNodeType> RefType;
 
-    typedef typename GeometricalObject::GeometryType GeometryType;
+    typedef QuadTreeNode<TFrameType, TNodeType> QuadTreeNodeType;
+
+    typedef QuadTree<TNsampling, TFrameType, TNodeType> QuadTreeType;
+
+    typedef typename GeometricalObject<TNodeType>::GeometryType GeometryType;
 
     typedef typename GeometryType::PointType NodeType;
 
     typedef typename NodeType::PointType PointType;
 
-    typedef typename NodeType::CoordinatesArrayType CoordinatesArrayType;
+    typedef typename GeometryType::LocalCoordinatesArrayType LocalCoordinatesArrayType;
 
     typedef typename GeometryType::IntegrationPointType IntegrationPointType;
 
     typedef typename GeometryType::IntegrationPointsArrayType IntegrationPointsArrayType;
+
+    typedef typename BaseType::ElementType ElementType;
+
+    typedef typename BaseType::ConditionType ConditionType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor
-    MomentFittedQuadTreeSubCell(Element::Pointer p_elem)
+    MomentFittedQuadTreeSubCell(typename ElementType::Pointer p_elem)
         : BaseType(p_elem), RefType(p_elem)
     {
     }
@@ -301,7 +315,7 @@ public:
         else if (gauss_quadrature_type == 1)
         {
             // create a big quadtree node for quadrature points generation
-            typename QuadTreeNode<TFrameType>::Pointer pTreeNode = QuadTree<TNsampling, TFrameType>::pCreateQuadTreeNode(geom_type);
+            typename QuadTreeNodeType::Pointer pTreeNode = QuadTreeType::pCreateQuadTreeNode(geom_type);
 
             const IntegrationPointsArrayType integration_points
                 = pTreeNode->ConstructCustomQuadrature(gauss_quadrature_type, gauss_quadrature_order);
@@ -406,7 +420,7 @@ public:
         else if (quadrature_type == 1)
         {
             // create a big quadtree node for quadrature points generation
-            typename QuadTreeNode<TFrameType>::Pointer pTreeNode = QuadTree<TNsampling, TFrameType>::pCreateQuadTreeNode(geom_type);
+            typename QuadTreeNodeType::Pointer pTreeNode = QuadTreeType::pCreateQuadTreeNode(geom_type);
 
             const IntegrationPointsArrayType integration_points
                 = pTreeNode->ConstructCustomQuadrature(quadrature_type, quadrature_order);
@@ -421,7 +435,7 @@ public:
         for (std::size_t i = 0; i < BaseType::mpTreeNodes.size(); ++i)
         {
 #ifdef SD_APP_FORWARD_COMPATIBILITY
-            CoordinatesArrayType p = BaseType::mpTreeNodes[i]->ReferenceCenter();
+            LocalCoordinatesArrayType p = BaseType::mpTreeNodes[i]->ReferenceCenter();
             IntegrationPointType ip;
             ip.Weight() = 1.0;
             ip.X() = p[0];
@@ -460,7 +474,7 @@ public:
             // KRATOS_WATCH(*pSubCellGeometry)
             // #endif
 
-            std::vector<CoordinatesArrayType> SamplingLocalPoints;
+            std::vector<LocalCoordinatesArrayType> SamplingLocalPoints;
             BaseType::mpTreeNodes[i]->CreateSamplingLocalPoints(SamplingLocalPoints, TNsampling);
             std::vector<PointType> SamplingPoints;
             BaseType::mpTreeNodes[i]->CreateSamplingPoints(SamplingPoints, *BaseType::pGetGeometry(), SamplingLocalPoints);
@@ -482,7 +496,7 @@ public:
                 std::cout << "sub-cell " << i << " is completely inside the physical domain" << std::endl;
 #endif
                 // the cell is completely inside the physical domain
-                GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
+                IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // cancel out the contribution of this integration point to parent element
                 RefType::mPhysicalIntegrationPoints.push_back(integration_point);
                 RefType::mSubCellIndices.push_back(i);
@@ -507,7 +521,7 @@ public:
 #endif
                 if (found)
                 {
-                    GeometryType::IntegrationPointType integration_point;
+                    IntegrationPointType integration_point;
                     bool is_inside;
                     if constexpr (TFrameType == GLOBAL_CURRENT)
                     {
@@ -525,7 +539,7 @@ public:
                     }
                     if (!is_inside)
                     {
-                        std::cout << "!!WARNING!!The CenterOfGravity is found but not inside the domain of the subcell " << i << " of the element " << mpElement->Id() << std::endl;
+                        std::cout << "!!WARNING!!The CenterOfGravity is found but not inside the domain of the subcell " << i << " of the element " << RefType::mpElement->Id() << std::endl;
                         std::cout << " The found COG: " << COG << std::endl;
                         std::cout << " The found integration point: " << integration_point << std::endl;
                         std::cout << " The element " << RefType::mpElement->Id() << ":" << std::endl;
@@ -547,7 +561,7 @@ public:
                 else
                 {
                     // if the adaptive quadrature can't find the center of gravity, this sub-cell will be considered fictitious
-                    GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
+                    IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                     integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
                     RefType::mFictitiousIntegrationPoints.push_back(integration_point);
                 }
@@ -558,7 +572,7 @@ public:
                 std::cout << "sub-cell " << i << " is completely outside the physical domain" << std::endl;
 #endif
                 // the cell is completely outside the physical domain
-                GeometryType::IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
+                IntegrationPointType integration_point = RefType::mRepresentativeIntegrationPoints[i];
                 integration_point.Weight() = 0.0; // the weight of fictitious integration point is initially always 0.0
                 RefType::mFictitiousIntegrationPoints.push_back(integration_point);
             }
@@ -613,15 +627,15 @@ public:
             // perform the moment fit for the sub-cell
             const std::size_t i_cell = subcell_index[i];
 
-            typename QuadTree<TNsampling, TFrameType>::Pointer quad_tree = typename QuadTree<TNsampling, TFrameType>::Pointer(
-                        new QuadTree<TNsampling, TFrameType>(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
+            typename QuadTreeType::Pointer quad_tree = typename QuadTreeType::Pointer(
+                        new QuadTreeType(BaseType::pGetGeometry(), BaseType::mpTreeNodes[i_cell]));
 
 #ifdef ENABLE_PROFILING
             std::stringstream time_mark_name; time_mark_name << "FitQuadrature at " << __LINE__;
             Timer::Start(time_mark_name.str());
 #endif
 
-            aux = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTree<TNsampling, TFrameType> >(*BaseType::pGetGeometry(),
+            aux = MomentFittingUtility::FitQuadrature<FunctionR3R1, QuadTreeType>(*BaseType::pGetGeometry(),
                     r_funcs, r_brep, *quad_tree, RefType::mMomentFittingIntegrationPoints,
                     integrator_integration_method, solver_type, echo_level, small_weight);
 
@@ -698,7 +712,7 @@ public:
             Element::Pointer pNewElement;
             pNewElement = r_clone_element.Create(++lastElementId, r_geom.Create(r_geom.Points()), pProperties);
 
-            FiniteCellGeometryUtility::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
+            FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(pNewElement->GetGeometry(), RepresentativeIntegrationMethod, new_integration_points);
             pNewElement->SetValue(INTEGRATION_ORDER, RepresentativeIntegrationOrder);
             pNewElement->Initialize(rCurrentProcessInfo);
             NewElements.push_back(pNewElement);
@@ -767,15 +781,15 @@ private:
 ///@{
 
 /// input stream function
-template<std::size_t TNsampling, int TFrameType>
-inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell<TNsampling, TFrameType>& rThis)
+template<std::size_t TNsampling, int TFrameType, class TNodeType>
+inline std::istream& operator >> (std::istream& rIStream, MomentFittedQuadTreeSubCell<TNsampling, TFrameType, TNodeType>& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
-template<std::size_t TNsampling, int TFrameType>
-inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell<TNsampling, TFrameType>& rThis)
+template<std::size_t TNsampling, int TFrameType, class TNodeType>
+inline std::ostream& operator << (std::ostream& rOStream, const  MomentFittedQuadTreeSubCell<TNsampling, TFrameType, TNodeType>& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

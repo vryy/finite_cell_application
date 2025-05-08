@@ -430,8 +430,7 @@ public:
                             const IntegrationPointsArrayType& integration_points)
     {
         BaseType::mpBezierGeometryData = BezierUtils::CreateIntegrationRule<2, 2, 2>(ThisIntegrationMethod, BaseType::mOrder1, BaseType::mOrder2, integration_points);
-
-        GeometryType::mpGeometryData = &(*BaseType::mpBezierGeometryData);
+        GeometryType::SetGeometryData(BaseType::mpBezierGeometryData.get());
     }
 
 private:

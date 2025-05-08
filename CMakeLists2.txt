@@ -58,7 +58,7 @@ if(MSVC)
 endif()
 
 add_library(KratosFiniteCellApplicationDependencies INTERFACE)
-target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${LAPACK_LIBRARIES})
+target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 IF(${NNLS_FOUND} MATCHES TRUE)
     target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${NNLS_LIBRARIES})
 ENDIF()

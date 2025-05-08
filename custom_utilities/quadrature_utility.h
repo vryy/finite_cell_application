@@ -138,7 +138,7 @@ public:
         }
 
         /* create new quadrature and assign to the geometry */
-        FiniteCellGeometryUtility::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
+        FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(r_geom, ElementalIntegrationMethod, Mw);
     }
 
 
@@ -171,7 +171,7 @@ public:
                     }
                     else if (TFrame == 1)
                     {
-                        FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                        FiniteCellGeometryUtility<GeometryType>::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
                     }
                     else if (TFrame == 2)
                     {
@@ -208,7 +208,7 @@ public:
                 }
                 else if (TFrame == 1)
                 {
-                    FiniteCellGeometryUtility::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
+                    FiniteCellGeometryUtility<GeometryType>::GlobalCoordinates0(p_elem->GetGeometry(), Coords, integration_points[i]);
                 }
                 else if (TFrame == 2)
                 {

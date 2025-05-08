@@ -59,11 +59,13 @@ void FiniteCellApplication_AddFunctionIntegratorToPython()
     ;
 }
 
+template<class TNodeType>
 void FiniteCellApplication_AddBaseMomentFittedQuadTreeSubCellToPython()
 {
-    class_<BaseMomentFittedQuadTreeSubCell, BaseMomentFittedQuadTreeSubCell::Pointer, boost::noncopyable>
-    ("BaseMomentFittedQuadTreeSubCell", init<Element::Pointer>())
-    .def("GeneratePhysicalIntegrationPoints", &BaseMomentFittedQuadTreeSubCell::GeneratePhysicalIntegrationPoints)
+    typedef BaseMomentFittedQuadTreeSubCell<TNodeType> BaseMomentFittedQuadTreeSubCellType;
+    class_<BaseMomentFittedQuadTreeSubCellType, typename BaseMomentFittedQuadTreeSubCellType::Pointer, boost::noncopyable>
+    ("BaseMomentFittedQuadTreeSubCell", init<typename BaseMomentFittedQuadTreeSubCellType::ElementType::Pointer>())
+    .def("GeneratePhysicalIntegrationPoints", &BaseMomentFittedQuadTreeSubCellType::GeneratePhysicalIntegrationPoints)
     ;
 }
 
@@ -80,12 +82,12 @@ boost::python::list QuadTree_AddToModelPart_WithLevel(TTreeType& rDummy,
     if( KratosComponents<Element>::Has(sample_entity_name) )
     {
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
-        rDummy.Get().template AddToModelPart<true, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
+        rDummy.Get().template AddToModelPart<true, ModelPart, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
     }
     else if( KratosComponents<Condition>::Has(sample_entity_name) )
     {
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
-        rDummy.Get().template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
+        rDummy.Get().template AddToModelPart<true, ModelPart, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, start_level);
     }
     else
     {
@@ -167,9 +169,9 @@ boost::python::list QuadTreeSubCell_AddToModelPart(TTreeType& rDummy,
         Element const& r_clone_element = KratosComponents<Element>::Get(sample_entity_name);
         for(std::size_t i = 0; i < rDummy.NumberOfSubCells(); ++i)
         {
-            rDummy.Get(i).template AddToModelPart<false, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id);
+            rDummy.Get(i).template AddToModelPart<false, ModelPart, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id);
             if constexpr (!TShallow)
-                rDummy.Get(i).template AddToModelPart<true, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id+1);
+                rDummy.Get(i).template AddToModelPart<true, ModelPart, Element>(rDummy.pGetGeometry(), r_model_part, r_clone_element, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id+1);
         }
     }
     else if( KratosComponents<Condition>::Has(sample_entity_name) )
@@ -177,9 +179,9 @@ boost::python::list QuadTreeSubCell_AddToModelPart(TTreeType& rDummy,
         Condition const& r_clone_condition = KratosComponents<Condition>::Get(sample_entity_name);
         for(std::size_t i = 0; i < rDummy.NumberOfSubCells(); ++i)
         {
-            rDummy.Get(i).template AddToModelPart<false, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id);
+            rDummy.Get(i).template AddToModelPart<false, ModelPart, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id);
             if constexpr (!TShallow)
-                rDummy.Get(i).template AddToModelPart<true, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id+1);
+                rDummy.Get(i).template AddToModelPart<true, ModelPart, Condition>(rDummy.pGetGeometry(), r_model_part, r_clone_condition, lastNodeId, lastEntityId, new_node_ids, new_entity_ids, starting_prop_id+1);
         }
     }
     else
@@ -392,8 +394,8 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
     GeometryData::IntegrationMethod RepresentativeIntegrationMethod
             = BRepMathUtility<>::GetIntegrationMethod(rDummy.GetRepresentativeIntegrationOrder());
 //        KRATOS_WATCH(RepresentativeIntegrationMethod)
-    FiniteCellGeometryUtility::AssignGeometryData(*(rDummy.pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
-    ProcessInfo& CurrentProcessInfo =  r_model_part.GetProcessInfo();
+    FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(*(rDummy.pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
+    const ProcessInfo& CurrentProcessInfo =  r_model_part.GetProcessInfo();
     rDummy.pGetElement()->SetValue(INTEGRATION_ORDER, rDummy.GetRepresentativeIntegrationOrder());
     rDummy.pGetElement()->Initialize(CurrentProcessInfo);
 
@@ -432,10 +434,10 @@ ModelPart::ElementsContainerType MomentFittedQuadTreeSubCell_FitAndCreateSubCell
     return NewSubCellElements;
 }
 
-template<std::size_t TNsampling, int TFrameType>
+template<std::size_t TNsampling, int TFrameType, class TNodeType>
 void FiniteCellApplication_AddQuadTreeToPython()
 {
-    typedef QuadTree<TNsampling, TFrameType> QuadTreeType;
+    typedef QuadTree<TNsampling, TFrameType, TNodeType> QuadTreeType;
 
     std::stringstream QuadTreeName;
     QuadTreeName << "QuadTreeLocal";
@@ -472,11 +474,11 @@ void FiniteCellApplication_AddQuadTreeToPython()
     ;
 }
 
-template<std::size_t TNsampling, int TFrameType>
+template<std::size_t TNsampling, int TFrameType, class TNodeType>
 void FiniteCellApplication_AddQuadTreeSubCellToPython()
 {
-    typedef QuadTreeSubCell<TNsampling, TFrameType> QuadTreeSubCellType;
-    typedef MomentFittedQuadTreeSubCell<TNsampling, TFrameType> MomentFittedQuadTreeSubCellType;
+    typedef QuadTreeSubCell<TNsampling, TFrameType, TNodeType> QuadTreeSubCellType;
+    typedef MomentFittedQuadTreeSubCell<TNsampling, TFrameType, TNodeType> MomentFittedQuadTreeSubCellType;
 
     double(QuadTreeSubCellType::*pointer_to_DomainSize1)(const std::size_t, const BRep&, const int) const = &QuadTreeSubCellType::DomainSize;
     double(QuadTreeSubCellType::*pointer_to_DomainSize2)(const BRep&, const int) const = &QuadTreeSubCellType::DomainSize;
@@ -519,7 +521,7 @@ void FiniteCellApplication_AddQuadTreeSubCellToPython()
     void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution1)(const int) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
     void(MomentFittedQuadTreeSubCellType::*pointer_to_ConstructSubCellsBasedOnEqualDistribution2)(const int) = &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnEqualDistribution;
 
-    class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType, BaseMomentFittedQuadTreeSubCell>, boost::noncopyable>
+    class_<MomentFittedQuadTreeSubCellType, typename MomentFittedQuadTreeSubCellType::Pointer, bases<QuadTreeSubCellType, BaseMomentFittedQuadTreeSubCell<TNodeType> >, boost::noncopyable>
     (MomentFittedQuadTreeSubCellName.str().c_str(), init<Element::Pointer>())
     .def("ConstructSubCellsBasedOnGaussQuadrature", &MomentFittedQuadTreeSubCellType::ConstructSubCellsBasedOnGaussQuadrature)
     .def("ConstructSubCellsBasedOnEqualDistribution", pointer_to_ConstructSubCellsBasedOnEqualDistribution1)

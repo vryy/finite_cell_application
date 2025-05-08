@@ -312,7 +312,7 @@ public:
 
         /* secondly assign the physical integration points to the element */
         GeometryData::IntegrationMethod RepresentativeIntegrationMethod = p_tree->GetRepresentativeIntegrationMethod();
-        FiniteCellGeometryUtility::AssignGeometryData(*(p_tree->pGetElement()->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
+        FiniteCellGeometryUtility<GeometryType>::AssignGeometryData(*(p_tree->pGetElement()->pGetGeometry()), RepresentativeIntegrationMethod, physical_integration_points);
         p_tree->pGetElement()->SetValue(INTEGRATION_ORDER, p_tree->GetRepresentativeIntegrationOrder());
         p_tree->pGetElement()->Initialize(rCurrentProcessInfo);
 

@@ -27,8 +27,8 @@ namespace Python
 using namespace boost::python;
 
 boost::python::list FiniteCellMeshUtility_GenerateUniformSampling(FiniteCellMeshUtility& rDummy,
-        const double& s_min, const double& s_max,
-        const std::size_t& nsampling)
+        const double s_min, const double s_max,
+        const std::size_t nsampling)
 {
     std::vector<double> sampling;
     rDummy.GenerateSampling(sampling, s_min, s_max, nsampling);
@@ -42,9 +42,9 @@ boost::python::list FiniteCellMeshUtility_GenerateUniformSampling(FiniteCellMesh
 }
 
 boost::python::list FiniteCellMeshUtility_GenerateSampling(FiniteCellMeshUtility& rDummy,
-        const double& s_min, const double& s_max,
-        const double& w1, const double& w2,
-        const std::size_t& nsampling)
+        const double s_min, const double s_max,
+        const double w1, const double w2,
+        const std::size_t nsampling)
 {
     std::vector<double> sampling;
     rDummy.GenerateSampling(sampling, s_min, s_max, w1, w2, nsampling);
@@ -107,9 +107,9 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart1D(FiniteCe
         ModelPart& r_model_part,
         const Element::GeometryType::PointType::PointType& StartPoint,
         const Element::GeometryType::PointType::PointType& EndPoint,
-        const int& nsampling,
+        const int nsampling,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate L2 elements; 2, 3: L3 elements
+        const int type, // if 1: generate L2 elements; 2, 3: L3 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -157,10 +157,10 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2D(FiniteCe
         ModelPart& r_model_part,
         const Element::GeometryType::PointType::PointType& StartPoint,
         const Element::GeometryType::PointType::PointType& EndPoint,
-        const int& nsampling1,
-        const int& nsampling2,
+        const int nsampling1,
+        const int nsampling2,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
+        const int type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -210,7 +210,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2DManualSam
         const boost::python::list& vsampling1,
         const boost::python::list& vsampling2,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
+        const int type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -250,10 +250,10 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart2DInclined(
         const Element::GeometryType::PointType::PointType& StartPoint,
         const Element::GeometryType::PointType::PointType& Axis1,
         const Element::GeometryType::PointType::PointType& Axis2,
-        const int& nsampling1,
-        const int& nsampling2,
+        const int nsampling1,
+        const int nsampling2,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
+        const int type, // if 1: generate Q4 elements; 2: Q8 elements; 3: Q9 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -289,11 +289,11 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3D(FiniteCe
         ModelPart& r_model_part,
         const Element::GeometryType::PointType::PointType& StartPoint,
         const Element::GeometryType::PointType::PointType& EndPoint,
-        const int& nsampling1,
-        const int& nsampling2,
-        const int& nsampling3,
+        const int nsampling1,
+        const int nsampling2,
+        const int nsampling3,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
+        const int type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -331,7 +331,7 @@ boost::python::list FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSam
         const boost::python::list& vsampling2,
         const boost::python::list& vsampling3,
         const std::string& sample_element_name,
-        const int& type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
+        const int type, // if 1: generate H8 elements; 2: H20 elements; 3: H27 elements
         Properties::Pointer pProperties)
 {
     typedef Element::GeometryType::PointType::PointType PointType;
@@ -379,7 +379,7 @@ Element::Pointer FiniteCellMeshUtility_CreateParasiteElement(FiniteCellMeshUtili
 
 Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtility& rDummy,
         const std::string& sample_element_name,
-        std::size_t lastElementId, Element::Pointer pElement, const int& integration_order,
+        std::size_t lastElementId, Element::Pointer pElement, const int integration_order,
         boost::python::list& assigned_quadrature, Properties::Pointer pProperties)
 {
     Element::GeometryType::IntegrationPointsArrayType integration_points;
@@ -400,50 +400,50 @@ Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtil
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes(FiniteCellMeshUtility& rDummy,
-        ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int& echo_level)
+        ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int echo_level)
 {
     return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-        const double& offset_x, const double& offset_y, const double& offset_z,
-        const double& cx, const double& cy, const double& theta, const int& echo_level)
+        const double offset_x, const double offset_y, const double offset_z,
+        const double cx, const double cy, const double theta, const int echo_level)
 {
     return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-        const Transformation<double>& rTrans, const int& echo_level)
+        const Transformation<double>& rTrans, const int echo_level)
 {
     return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, rTrans, echo_level);
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart::ElementsContainerType& rOtherElements,
-        const std::string& sample_element_name, Properties::Pointer pProperties, const int& echo_level)
+        const std::string& sample_element_name, Properties::Pointer pProperties, const int echo_level)
 {
     return rDummy.ImportElements(rThisModelPart, rOtherElements, sample_element_name, pProperties, echo_level);
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements2(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart::ElementsContainerType& rOtherElements,
-        const int& properties_offset_id, const int& echo_level)
+        const int properties_offset_id, const int echo_level)
 {
     return rDummy.ImportElements(rThisModelPart, rOtherElements, properties_offset_id, echo_level);
 }
 
 ModelPart::ConditionsContainerType FiniteCellMeshUtility_ImportConditions(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart::ConditionsContainerType& rOtherConditions,
-        const std::string& sample_cond_name, Properties::Pointer pProperties, const int& echo_level)
+        const std::string& sample_cond_name, Properties::Pointer pProperties, const int echo_level)
 {
     return rDummy.ImportConditions(rThisModelPart, rOtherConditions, sample_cond_name, pProperties, echo_level);
 }
 
 ModelPart::ConditionsContainerType FiniteCellMeshUtility_ImportConditions2(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart::ConditionsContainerType& rOtherConditions,
-        const int& properties_offset_id, const int& echo_level)
+        const int properties_offset_id, const int echo_level)
 {
     return rDummy.ImportConditions(rThisModelPart, rOtherConditions, properties_offset_id, echo_level);
 }

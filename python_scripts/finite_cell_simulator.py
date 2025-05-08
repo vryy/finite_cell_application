@@ -1,5 +1,6 @@
 import math
 import pprint
+import six
 import time as time_module
 from KratosMultiphysics import *
 from KratosMultiphysics.StructuralApplication import *
@@ -352,7 +353,7 @@ class FiniteCellSimulator:
                 cnt = 0
                 cnt2 = 0
                 print("moment-fitting begins")
-            for qi, qt in self.forest.iteritems():
+            for qi, qt in six.iteritems(self.forest):
                 elem = self.elements[qi]
                 stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 if stat == BRep._CUT:
@@ -374,7 +375,7 @@ class FiniteCellSimulator:
                 sys.stdout.write("\n")
         elif fit_mode == "multithread":
             integrators = []
-            for qi, qt in self.forest.iteritems():
+            for qi, qt in six.iteritems(self.forest):
                 elem = self.elements[qi]
                 stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 if stat == BRep._CUT:
@@ -466,7 +467,7 @@ class FiniteCellSimulator:
         generate_physical_integration_points_callback = getattr(self.aux_util, "MultithreadedGeneratePhysicalIntegrationPoints")
         save_quadrature_subcell_callback = getattr(fit_util, "SaveQuadratureSubCell")
 
-        for qi, qs in self.forest.iteritems():
+        for qi, qs in six.iteritems(self.forest):
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
@@ -658,6 +659,7 @@ class FiniteCellSimulator:
                 last_ids = qs.DeepAddToModelPart(model_part, sample_quad_element_name, lastNodeId, lastElementId, sample_quad_element_prop_id)
                 lastNodeId = last_ids[0]
                 lastElementId = last_ids[1]
+                # list_new_node_ids = last_ids[2]
                 list_new_element_ids = last_ids[3]
                 for elem_id in list_new_element_ids:
                     model_part.Elements[elem_id].Initialize(model_part.ProcessInfo)
@@ -936,6 +938,7 @@ class FiniteCellSimulator:
                         last_ids = qt.AddToModelPartWithLevel(model.model_part, sample_quad_element_name, lastNodeId, lastElementId, starting_level)
                     lastNodeId = last_ids[0]
                     lastElementId = last_ids[1]
+                    # list_new_node_ids = last_ids[2]
                     list_new_element_ids = last_ids[3]
                     for elem_id in list_new_element_ids:
                         model.model_part.Elements[elem_id].Initialize(model.model_part.ProcessInfo)
@@ -1005,7 +1008,8 @@ class FiniteCellSimulator:
                 quad_util.CreateConditionFromPoint(model.model_part, cog_points, "DummyConditionPoint3D", model.model_part.Properties[prop_id])
             #end elif self.quadrature_method == "quadtree":
         elif self.quadrature_method == "moment-fit quadtree":
-            cut_cell_quadrature_order = self.params["cut_cell_quadrature_order"]
+            cut_cell_quadrature_method = self.params["cut_cell_quadrature_method"]
+            cut_cell_quadrature_order = quad_util.GetQuadratureOrder(cut_cell_quadrature_method)
             quadrature_data = self.params["quadrature_data"]
             ###########################################
             ##OBTAIN THE PRE-CALCULATED QUADRATURE FROM MOMENT FIT
@@ -1506,7 +1510,7 @@ class FiniteCellSimulator:
                 W = element.CalculateOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
                 for i in range(0, len(W)):
                     mfsc_elems[parent_element_id] = mfsc_elems[parent_element_id] + W[i][0] * J0[i][0]
-        for elem_id, elem_size in mfsc_elems.iteritems():
+        for elem_id, elem_size in six.iteritems(mfsc_elems):
             print("domain size of cut element " + str(elem_id) + ": " + str(elem_size))
             domain_size = domain_size + elem_size
         return domain_size
@@ -1519,14 +1523,14 @@ class FiniteCellSimulator:
         self.CreateForest(model.model_part.Elements, nsampling, quadtree_frame, quadtree_configuration)
         #######QUAD TREE POST PROCESSING###########
         qt_depth = self.params["qt_depth"]
-        for qi, qt in self.forest.iteritems():
+        for qi, qt in six.iteritems(self.forest):
             if qi in group:
                 for i in range(0, qt_depth):
                     qt.RefineBy(self.brep)
         tmodel_part = ModelPart("QuadTree")
         last_node_id = 0x0000000000000000 + len(model.model_part.Nodes)
         last_element_id = 0x0000000000000000
-        for qi, qt in self.forest.iteritems():
+        for qi, qt in six.iteritems(self.forest):
             last_ids = qt.AddToModelPart(tmodel_part, sample_element, last_node_id, last_element_id)
             last_node_id = last_ids[0]
             last_element_id = last_ids[1]
@@ -1555,7 +1559,7 @@ class FiniteCellSimulator:
 
         cut_elems = []
 
-        for qi, qs in self.forest.iteritems():
+        for qi, qs in six.iteritems(self.forest):
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
@@ -1592,14 +1596,14 @@ class FiniteCellSimulator:
         cut_elems = []
 
         if selected_elems == "all":
-            for qi, qs in self.forest.iteritems():
+            for qi, qs in six.iteritems(self.forest):
                 elem = qs.GetElement()
                 stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
                 elem.SetValue(CUT_STATUS, stat)
                 if stat == BRep._CUT:
                     cut_elems.append(qs)
         else:
-            for qi, qs in self.forest.iteritems():
+            for qi, qs in six.iteritems(self.forest):
                 elem = qs.GetElement()
                 if elem.Id in selected_elems:
                     stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
@@ -1642,7 +1646,7 @@ class FiniteCellSimulator:
 
         cut_elems = []
 
-        for qi, qs in self.forest.iteritems():
+        for qi, qs in six.iteritems(self.forest):
             elem = qs.GetElement()
             stat = self.brep.CutStatusBySampling(elem, nsampling, configuration)
             elem.SetValue(CUT_STATUS, stat)
