@@ -260,6 +260,7 @@ public:
 
 
     /// Import the nodes from other model_part to this model_part
+    template<int TFrame>
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const int echo_level);
 
 
@@ -267,6 +268,7 @@ public:
     /// The nodes are offsetted and rotated around the Z-axis.
     /// This function is useful to import the building model_part
     /// The rotation angle shall be in radian
+    template<int TFrame>
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
             const double offset_x, const double offset_y, const double offset_z,
             const double cx, const double cy, const double theta, const int echo_level);
@@ -274,11 +276,12 @@ public:
 
     /// Import the nodes from other model_part to this model_part
     /// The nodes will be applied first with the transformation matrix before importing
+    template<int TFrame>
     static ModelPart::NodesContainerType ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
             const Transformation<double>& rTrans, const int echo_level);
 
 
-    /// Import the elements from list to the this model_part
+    /// Import the elements from list to this model_part
     static ModelPart::ElementsContainerType ImportElements(ModelPart& rThisModelPart,
             const ModelPart::ElementsContainerType& rOtherElements,
             const std::string& sample_element_name, Properties::Pointer pProperties, const int echo_level);
@@ -288,7 +291,7 @@ public:
             const int properties_id_offset, const int echo_level);
 
 
-    /// Import the conditions from list to the this model_part
+    /// Import the conditions from list to this model_part
     static ModelPart::ConditionsContainerType ImportConditions(ModelPart& rThisModelPart,
             const ModelPart::ConditionsContainerType& rOtherConditions,
             const std::string& sample_cond_name, Properties::Pointer pProperties, const int echo_level);

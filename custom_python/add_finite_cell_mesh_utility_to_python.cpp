@@ -400,24 +400,33 @@ Element::Pointer FiniteCellMeshUtility_CreateParasiteElement2(FiniteCellMeshUtil
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes(FiniteCellMeshUtility& rDummy,
-        ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int echo_level)
+        ModelPart& rThisModelPart, ModelPart& rOtherModelPart, const int echo_level, const int frame=1)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, echo_level);
+    if (frame == 0)
+        return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, echo_level);
+    else if (frame == 1)
+        return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
         const double offset_x, const double offset_y, const double offset_z,
-        const double cx, const double cy, const double theta, const int echo_level)
+        const double cx, const double cy, const double theta, const int echo_level, const int frame=1)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
+    if (frame == 0)
+        return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
+    else if (frame == 1)
+        return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshUtility& rDummy,
         ModelPart& rThisModelPart, ModelPart& rOtherModelPart,
-        const Transformation<double>& rTrans, const int echo_level)
+        const Transformation<double>& rTrans, const int echo_level, const int frame=1)
 {
-    return rDummy.ImportNodes(rThisModelPart, rOtherModelPart, rTrans, echo_level);
+    if (frame == 0)
+        return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, rTrans, echo_level);
+    else if (frame == 1)
+        return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, rTrans, echo_level);
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements(FiniteCellMeshUtility& rDummy,
@@ -470,9 +479,9 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
     .def("GenerateStructuredModelPart", &FiniteCellMeshUtility_GenerateStructuredModelPart3DManualSampling)
     .def("CreateParasiteElement", &FiniteCellMeshUtility_CreateParasiteElement)
     .def("CreateParasiteElement", &FiniteCellMeshUtility_CreateParasiteElement2)
-    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes)
-    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes2)
-    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes3)
+    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes, (arg("frame") = 1))
+    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes2, (arg("frame") = 1))
+    .def("ImportNodes", &FiniteCellMeshUtility_ImportNodes3, (arg("frame") = 1))
     .def("ImportElements", &FiniteCellMeshUtility_ImportElements)
     .def("ImportElements", &FiniteCellMeshUtility_ImportElements2)
     .def("ImportConditions", &FiniteCellMeshUtility_ImportConditions)

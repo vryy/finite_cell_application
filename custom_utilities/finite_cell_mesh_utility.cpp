@@ -254,17 +254,21 @@ Element::Pointer FiniteCellMeshUtility::CreateParasiteElement(Element::Pointer p
     return pNewElement;
 }
 
-
+template<int TFrame>
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const int echo_level)
 {
-    std::size_t last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
+    auto last_node_id = FiniteCellAuxiliaryUtility::GetLastNodeId(rThisModelPart);
 
     // create nodes and add to model_part
     ModelPart::NodesContainerType NewNodes;
     for (auto it = rOtherModelPart.NodesBegin(); it != rOtherModelPart.NodesEnd(); ++it)
     {
-        std::size_t new_node_id = ++last_node_id;
-        NodeType::Pointer pNewNode = rThisModelPart.CreateNewNode(new_node_id, it->X(), it->Y(), it->Z());
+        auto new_node_id = ++last_node_id;
+        NodeType::Pointer pNewNode;
+        if constexpr (TFrame == 0)
+            pNewNode = rThisModelPart.CreateNewNode(new_node_id, it->X0(), it->Y0(), it->Z0());
+        else if constexpr (TFrame == 1)
+            pNewNode = rThisModelPart.CreateNewNode(new_node_id, it->X(), it->Y(), it->Z());
         // it->SetValue(OTHER_NODE_ID, new_node_id); // TODO check why this is compiled with clang
         pNewNode->SetValue(OTHER_NODE_ID, it->Id());
         NewNodes.push_back(pNewNode);
@@ -277,7 +281,7 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
     return NewNodes;
 }
 
-
+template<int TFrame>
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
         const double offset_x, const double offset_y, const double offset_z,
         const double cx, const double cy, const double theta, const int echo_level)
@@ -293,15 +297,26 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
     {
         std::size_t new_node_id = ++last_node_id;
 
-        x = it->X() - cx;
-        y = it->Y() - cy;
+        if constexpr (TFrame == 0)
+        {
+            x = it->X0() - cx;
+            y = it->Y0() - cy;
+        }
+        else if constexpr (TFrame == 1)
+        {
+            x = it->X() - cx;
+            y = it->Y() - cy;
+        }
 
         xnew = x * c - y * s;
         ynew = x * s + y * c;
 
         x = xnew + cx + offset_x;
         y = ynew + cy + offset_y;
-        z = it->Z() + offset_z;
+        if constexpr (TFrame == 0)
+            z = it->Z0() + offset_z;
+        else if constexpr (TFrame == 1)
+            z = it->Z() + offset_z;
 
         NodeType::Pointer pNewNode = rThisModelPart.CreateNewNode(new_node_id, x, y, z);
         // it->SetValue(OTHER_NODE_ID, new_node_id);
@@ -316,7 +331,7 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
     return NewNodes;
 }
 
-
+template<int TFrame>
 ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
         const Transformation<double>& rTrans, const int echo_level)
 {
@@ -329,9 +344,18 @@ ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes(ModelPart& rThi
     {
         std::size_t new_node_id = ++last_node_id;
 
-        point[0] = it->X();
-        point[1] = it->Y();
-        point[2] = it->Z();
+        if constexpr (TFrame == 0)
+        {
+            point[0] = it->X0();
+            point[1] = it->Y0();
+            point[2] = it->Z0();
+        }
+        else if constexpr (TFrame == 1)
+        {
+            point[0] = it->X();
+            point[1] = it->Y();
+            point[2] = it->Z();
+        }
         rTrans.ApplyTransformation(point);
 
         NodeType::Pointer pNewNode = rThisModelPart.CreateNewNode(new_node_id, point[0], point[1], point[2]);
@@ -533,5 +557,16 @@ void FiniteCellMeshUtility_Helper<TEntityType, TEntityContainerType>::ImportEnti
 
 template struct FiniteCellMeshUtility_Helper<Element, ModelPart::ElementsContainerType>;
 template struct FiniteCellMeshUtility_Helper<Condition, ModelPart::ConditionsContainerType>;
+
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<0>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const int echo_level);
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<1>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const int echo_level);
+
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<0>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
+        const double offset_x, const double offset_y, const double offset_z, const double cx, const double cy, const double theta, const int echo_level);
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<1>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart,
+        const double offset_x, const double offset_y, const double offset_z, const double cx, const double cy, const double theta, const int echo_level);
+
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<0>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const Transformation<double>& rTrans, const int echo_level);
+template ModelPart::NodesContainerType FiniteCellMeshUtility::ImportNodes<1>(ModelPart& rThisModelPart, const ModelPart& rOtherModelPart, const Transformation<double>& rTrans, const int echo_level);
 
 }  // namespace Kratos.
