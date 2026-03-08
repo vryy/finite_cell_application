@@ -33,7 +33,7 @@ class Model:
         ##################################################################
         ## DEFINE MODELPART ##############################################
         ##################################################################
-        self.model_part = ModelPart("fc_simulation")
+        self.model_part = ModelPart(problem_name)
         self.path = path
         self.problem_name = problem_name
         ##################################################################
