@@ -1023,10 +1023,10 @@ public:
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, 0.0, 0.0));
         typename NodeType::Pointer P4 = typename NodeType::Pointer(new NodeType(3, 0.0, 0.0));
 #else
-        NodeType P1(0, mXmin, mYmin);
-        NodeType P2(1, mXmax, mYmin);
-        NodeType P3(2, mXmax, mYmax);
-        NodeType P4(3, mXmin, mYmax);
+        NodeType P1(0, mXmin, mYmin, 0.0);
+        NodeType P2(1, mXmax, mYmin, 0.0);
+        NodeType P3(2, mXmax, mYmax, 0.0);
+        NodeType P4(3, mXmin, mYmax, 0.0);
 #endif
         return typename GeometryType::Pointer(new Quadrilateral2D4<NodeType>(P1, P2, P3, P4));
     }
@@ -2871,9 +2871,9 @@ public:
         typename NodeType::Pointer P2 = typename NodeType::Pointer(new NodeType(1, mX1, mY1));
         typename NodeType::Pointer P3 = typename NodeType::Pointer(new NodeType(2, mX2, mY2));
 #else
-        NodeType P1(0, mX0, mY0);
-        NodeType P2(1, mX1, mY1);
-        NodeType P3(2, mX2, mY2);
+        NodeType P1(0, mX0, mY0, 0.0);
+        NodeType P2(1, mX1, mY1, 0.0);
+        NodeType P3(2, mX2, mY2, 0.0);
 #endif
         return typename GeometryType::Pointer(new Triangle2D3<NodeType>(P1, P2, P3));
     }
