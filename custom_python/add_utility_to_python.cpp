@@ -37,7 +37,6 @@ void FiniteCellApplication_AddUtilityToPython()
 
 }
 
-}  // namespace Python.
+} // namespace Python.
 
-}  // namespace Kratos.
-
+} // namespace Kratos.

@@ -66,7 +66,7 @@ KratosFiniteCellApplication::KratosFiniteCellApplication()
 
 void KratosFiniteCellApplication::Register()
 {
-    std::cout << "Initializing KratosFiniteCellApplication... " << std::endl;
+    std::cout << "Initializing KratosFiniteCellApplication..." << std::endl;
 
     // register variables to Kratos kernel
     KRATOS_REGISTER_VARIABLE( SUBCELL_WEIGHTS )
