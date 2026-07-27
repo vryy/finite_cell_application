@@ -406,6 +406,8 @@ ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes(FiniteCellMeshUt
         return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, echo_level);
     else if (frame == 1)
         return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, echo_level);
+    else
+        KRATOS_ERROR << "Invalid frame " << frame;
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshUtility& rDummy,
@@ -417,6 +419,8 @@ ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes2(FiniteCellMeshU
         return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
     else if (frame == 1)
         return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, offset_x, offset_y, offset_z, cx, cy, theta, echo_level);
+    else
+        KRATOS_ERROR << "Invalid frame " << frame;
 }
 
 ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshUtility& rDummy,
@@ -427,6 +431,8 @@ ModelPart::NodesContainerType FiniteCellMeshUtility_ImportNodes3(FiniteCellMeshU
         return rDummy.ImportNodes<0>(rThisModelPart, rOtherModelPart, rTrans, echo_level);
     else if (frame == 1)
         return rDummy.ImportNodes<1>(rThisModelPart, rOtherModelPart, rTrans, echo_level);
+    else
+        KRATOS_ERROR << "Invalid frame " << frame;
 }
 
 ModelPart::ElementsContainerType FiniteCellMeshUtility_ImportElements(FiniteCellMeshUtility& rDummy,
@@ -501,4 +507,3 @@ void FiniteCellApplication_AddFiniteCellMeshUtilityToPython()
 }  // namespace Python.
 
 }  // namespace Kratos.
-

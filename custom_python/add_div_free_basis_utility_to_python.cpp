@@ -25,7 +25,7 @@ namespace Python
 
 using namespace boost::python;
 
-Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, const std::size_t& Degree, const DivFreeBasisUtility::CoordinatesArrayType& rPoint)
+Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t Dim, const std::size_t Degree, const DivFreeBasisUtility::CoordinatesArrayType& rPoint)
 {
     if (Dim == 2)
     {
@@ -52,6 +52,8 @@ Matrix ComputeDivFreeBasis(DivFreeBasisUtility& dummy, const std::size_t& Dim, c
     }
     else
         KRATOS_ERROR << "Invalid dimension " << Dim;
+
+    return Matrix(); // can't come here, just to silence the compiler
 }
 
 void DivFreeBasisUtility_AssignQuadrature2D(DivFreeBasisUtility& rDummy, Element::Pointer p_elem,

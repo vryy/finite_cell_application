@@ -334,7 +334,6 @@ public:
         return G;
     }
 
-
     ///@}
     ///@name Operators
     ///@{
@@ -375,7 +374,6 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
     }
-
 
     ///@}
     ///@name Friends
@@ -461,7 +459,6 @@ private:
     /// Copy constructor.
     QuadratureUtility(QuadratureUtility const& rOther);
 
-
     ///@}
 
 }; // Class QuadratureUtility
@@ -476,10 +473,11 @@ private:
 ///@name Input and output
 ///@{
 
-
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream, QuadratureUtility& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream, const QuadratureUtility& rThis)
@@ -490,6 +488,7 @@ inline std::ostream& operator << (std::ostream& rOStream, const QuadratureUtilit
 
     return rOStream;
 }
+
 ///@}
 
 ///@} addtogroup block

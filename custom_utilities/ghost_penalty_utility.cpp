@@ -79,9 +79,12 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     }
 
     if (echo_level > 0)
+    {
+        const auto& temp = *p_sample_condition;
         std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
-                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << " of type " << typeid(temp).name() << " are created and added to model_part " << r_model_part.Name()
                   << std::endl;
+    }
 
     return pNewConditions;
 }
@@ -178,9 +181,12 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     }
 
     if (echo_level > 0)
+    {
+        const auto& temp = *p_sample_condition;
         std::cout << __FUNCTION__ << " on " << pElements.size() << " elements completed: " << pNewConditions.size() << " new ghost conditions"
-                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << " of type " << typeid(temp).name() << " are created and added to model_part " << r_model_part.Name()
                   << std::endl;
+    }
 
     return pNewConditions;
 }
@@ -278,9 +284,12 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     }
 
     if (echo_level > 0)
+    {
+        const auto& temp = *p_sample_condition;
         std::cout << __FUNCTION__ << " on " << pElements.size() << " elements completed: " << pNewConditions.size() << " new ghost conditions"
-                  << " of type " << typeid(*p_sample_condition).name() << " are created and added to model_part " << r_model_part.Name()
+                  << " of type " << typeid(temp).name() << " are created and added to model_part " << r_model_part.Name()
                   << std::endl;
+    }
 
     return pNewConditions;
 }
@@ -305,7 +314,7 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
         {
             Condition::Pointer pNewCond = SetUpSurfacePenaltyCondition(p_element,
 #ifdef SD_APP_FORWARD_COMPATIBILITY
-                                          * rNeighbours(i),
+                                          *rNeighbours(i),
 #else
                                           rNeighbours(i).lock(),
 #endif
@@ -318,8 +327,11 @@ ModelPart::ConditionsContainerType GhostPenaltyUtility::SetUpSurfacePenaltyCondi
     }
 
     if (echo_level > 0)
+    {
+        const auto& temp = *p_sample_condition;
         std::cout << __FUNCTION__ << " completed: " << pNewConditions.size() << " new ghost conditions"
-                  << " of type " << typeid(*p_sample_condition).name() << " are created" << std::endl;
+                  << " of type " << typeid(temp).name() << " are created" << std::endl;
+    }
 
     return pNewConditions;
 }
@@ -697,8 +709,11 @@ Condition::Pointer GhostPenaltyUtility::SetUpSurfacePenaltyCondition(Element::Po
     pNewCond->Set(ACTIVE, true);
 
     if (echo_level > 0)
+    {
+        const auto& temp = *p_sample_condition;
         std::cout << __FUNCTION__ << " completed, new ghost condition of type "
-                  << typeid(*p_sample_condition).name() << " is created" << std::endl;
+                  << typeid(temp).name() << " is created" << std::endl;
+    }
 
     return pNewCond;
 }

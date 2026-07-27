@@ -97,8 +97,7 @@ public:
     {}
 
     /// Destructor.
-    virtual ~DivFreeBasisUtility() {}
-
+    ~DivFreeBasisUtility() override {}
 
     ///@}
     ///@name Operators
@@ -108,7 +107,6 @@ public:
     ///@}
     ///@name Operations
     ///@{
-
 
     template<std::size_t TDimension, std::size_t TDegree>
     static std::size_t BasisNumber()
@@ -130,7 +128,6 @@ public:
             return 0;
         }
     }
-
 
     template<std::size_t TDimension, std::size_t TDegree>
     static Matrix GetValues(const CoordinatesArrayType& rPoint)
@@ -408,21 +405,20 @@ public:
     ///@{
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const override
     {
         return "Divergence-Free Basis";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const override
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const override
     {}
-
 
     ///@}
     ///@name Friends
@@ -486,7 +482,6 @@ private:
     ///@}
     ///@name Private Operations
     ///@{
-
 
     std::vector<std::size_t> GetEdge(const std::size_t& e, const GeometryData::KratosGeometryType& Type)
     {
@@ -590,7 +585,6 @@ private:
         return result;
     }
 
-
     ///@}
     ///@name Private  Access
     ///@{
@@ -611,7 +605,6 @@ private:
     /// Copy constructor.
     DivFreeBasisUtility(DivFreeBasisUtility const& rOther);
 
-
     ///@}
 
 }; // Class DivFreeBasisUtility
@@ -627,21 +620,6 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                                  DivFreeBasisUtility& rThis)
-{}
-
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                                  const DivFreeBasisUtility& rThis)
-{
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
 ///@}
 
 ///@} addtogroup block

@@ -59,9 +59,11 @@ void MomentFittingUtility_FitQuadrature(MomentFittingUtility& rDummy,
 
     if (echo_level > -1)
     {
-        std::cout << "#############prepare moment-fitting for element " << p_elem->Id()
-                  << " of type " << typeid(*p_elem).name()
-                  << ", geometry type " << typeid(p_elem->GetGeometry()).name()
+        const auto& r_elem = (*p_elem);
+        const auto& r_geom = r_elem.GetGeometry();
+        std::cout << "#############prepare moment-fitting for element " << r_elem.Id()
+                  << " of type " << typeid(r_elem).name()
+                  << ", geometry type " << typeid(r_geom).name()
                   << std::endl;
         KRATOS_WATCH(fit_quadrature_type)
         KRATOS_WATCH(fit_quadrature_order)
@@ -125,7 +127,6 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
     {
         elements.push_back(e);
     }
-//        KRATOS_WATCH(elements.size())
 
     std::vector<FunctionR3R1::Pointer> funcs;
     typedef boost::python::stl_input_iterator<FunctionR3R1::Pointer> iterator_func_type;
@@ -135,7 +136,6 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
     {
         funcs.push_back(f);
     }
-//        KRATOS_WATCH(funcs.size())
 
     typedef typename TIntegratorType::Pointer TIntegratorPointerType;
     std::vector<TIntegratorPointerType> integrators;
@@ -146,7 +146,6 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
     {
         integrators.push_back(i);
     }
-//        KRATOS_WATCH(integrators.size())
 
     int fit_quadrature_type = QuadratureUtility::GetQuadratureType(fit_quadrature_method);
 
@@ -204,9 +203,7 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
             {
                 Element::GeometryType::IntegrationPointsArrayType integration_points
                     = (*it_integrator)->ConstructCustomQuadrature(fit_quadrature_type, fit_quadrature_order);
-//KRATOS_WATCH(fit_quadrature_type)
-//KRATOS_WATCH(fit_quadrature_order)
-//KRATOS_WATCH(integration_points.size())
+
                 Vector Weight = rDummy.FitQuadrature<FunctionR3R1, TIntegratorType>((*it)->GetGeometry(),
                                 funcs, r_brep, *(*it_integrator), integration_points,
                                 integrator_integration_method, solver_type, echo_level, small_weight);
@@ -215,9 +212,6 @@ void MomentFittingUtility_MultithreadedFitQuadrature(MomentFittingUtility& rDumm
                 {
                     integration_points[i].Weight() = Weight(i);
                 }
-
-//                    GeometryData::IntegrationMethod ElementalIntegrationMethod
-//                        = BRepMathUtility<>::GetIntegrationMethod(fit_quadrature_order);
 
                 // it is a hack here, since the integration method can be larger than Kratos can accommodate. We set to minimum value. In the element this information is not important anyway.
                 GeometryData::IntegrationMethod ElementalIntegrationMethod = GeometryData::IntegrationMethod::GI_GAUSS_1;
@@ -319,4 +313,3 @@ void FiniteCellApplication_AddMomentFittingUtilityToPython()
 }  // namespace Python.
 
 }  // namespace Kratos.
-

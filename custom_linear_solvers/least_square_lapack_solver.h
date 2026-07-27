@@ -33,24 +33,23 @@
 
 // Project includes
 #include "includes/define.h"
-#include "includes/ublas_interface.h"
+#include "includes/matrix_vector_adapter.h"
 
 
+// definition for LAPACK functions
+extern "C" void dgelsy_(const int* M, const int* N, const int* NRHS, double* A, const int* LDA,
+                        double* B, const int* LDB, int* JPVT, const double* RCOND, int* RANK,
+                        double* WORK, const int* LWORK, int* INFO);
 
-// template for LAPACK functions
-extern "C" void dgelsy_(int* M, int* N, int* NRHS, double* A, int* LDA,
-                        double* B, int* LDB, int* JPVT, double* RCOND, int* RANK,
-                        double* WORK, int* LWORK, int* INFO);
+extern "C" void dgelss_(const int* M, const int* N, const int* NRHS, double* A, const int* LDA,
+                        double* B, const int* LDB, double* S, const double* RCOND, int* RANK,
+                        double* WORK, const int* LWORK, int* INFO);
 
-extern "C" void dgelss_(int* M, int* N, int* NRHS, double* A, int* LDA,
-                        double* B, int* LDB, double* S, double* RCOND, int* RANK,
-                        double* WORK, int* LWORK, int* INFO);
+extern "C" double dlange_(const char* NORM, const int* M, const int* N, const double* A, const int* LDA, double* WORK);
 
-extern "C" double dlange_(char* NORM, int* M, int* N, double* A, int* LDA, double* WORK);
+extern "C" void dgetrf_(const int* M, const int* N, double* A, const int* LDA, int* IPIV, int* INFO);
 
-extern "C" void dgetrf_(int* M, int* N, double* A, int* LDA, int* IPIV, int* INFO);
-
-extern "C" void dgecon_(char* NORM, int* N, double* A, int* LDA, double* ANORM,
+extern "C" void dgecon_(const char* NORM, const int* N, const double* A, const int* LDA, const double* ANORM,
                         double* RCOND, double* WORK, int* IWORK, int* INFO);
 
 
@@ -101,7 +100,6 @@ public:
     /// Destructor.
     virtual ~LeastSquareLAPACKSolver() {}
 
-
     ///@}
     ///@name Operators
     ///@{
@@ -113,7 +111,7 @@ public:
 
 
     /// Estimate the reciprocal condition number of the matrix
-    static double EstimateRCond(Matrix& rA, char* norm_type = "1")
+    static double EstimateRCond(Matrix& rA, const char* norm_type = "1")
     {
         int M = rA.size1();
         int N = rA.size2();
@@ -149,7 +147,9 @@ public:
         delete A;
 #endif
 
-        delete IPIV, WORK, IWORK;
+        delete [] IPIV;
+        delete [] WORK;
+        delete [] IWORK;
         return rcond;
     }
 
@@ -202,7 +202,9 @@ public:
             rX(i) = b[i];
         }
 
-        delete JPVT, b, WORK;
+        delete [] JPVT;
+        delete [] b;
+        delete [] WORK;
 #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete A;
 #endif
@@ -259,7 +261,9 @@ public:
             rX(i) = b[i];
         }
 
-        delete S, b, WORK;
+        delete [] S;
+        delete [] b;
+        delete [] WORK;
 #ifndef ENABLE_FINITE_CELL_BOOST_BINDINGS
         delete A;
 #endif
@@ -298,7 +302,6 @@ public:
     virtual void PrintData(std::ostream& rOStream) const
     {
     }
-
 
     ///@}
     ///@name Friends
@@ -399,11 +402,12 @@ private:
 ///@name Input and output
 ///@{
 
-
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
                                   LeastSquareLAPACKSolver& rThis)
-{}
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
@@ -415,6 +419,7 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
     return rOStream;
 }
+
 ///@}
 
 ///@} addtogroup block
