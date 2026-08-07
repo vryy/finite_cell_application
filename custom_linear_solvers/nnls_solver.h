@@ -24,10 +24,10 @@
 
 // External includes
 #ifdef ENABLE_FINITE_CELL_BOOST_BINDINGS
-#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/matrix_traits.hpp"
-#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/vector_traits.hpp"
-#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_matrix.hpp"
-#include "mkl_solvers_application/external_includes/boost/numeric/bindings/traits/ublas_vector.hpp"
+#include <boost/numeric/bindings/traits/matrix_traits.hpp>
+#include <boost/numeric/bindings/traits/vector_traits.hpp>
+#include <boost/numeric/bindings/traits/ublas_matrix.hpp>
+#include <boost/numeric/bindings/traits/ublas_vector.hpp>
 #endif
 #include "nnls.h"
 
