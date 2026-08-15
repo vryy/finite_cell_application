@@ -1,8 +1,3 @@
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/custom_cmake_modules")
-
-# #include cotire (CMake module to hep generating precompiled header to speed-up the build process)
-# include(cotire)
-
 set(FINITE_CELL_APPLICATION_COMPILE_DEFS "")
 set(FINITE_CELL_APPLICATION_INCLUDE_DIRS "")
 
@@ -21,12 +16,12 @@ endif()
 
 #######################################################################
 
-find_package(NNLS REQUIRED)
-if(${NNLS_FOUND} MATCHES TRUE)
-    message("nnls is found at " ${NNLS_DIR})
+find_package(nnls)
+if(nnls_FOUND)
     set(FINITE_CELL_APPLICATION_COMPILE_DEFS "${FINITE_CELL_APPLICATION_COMPILE_DEFS};FINITE_CELL_APPLICATION_USE_NNLS")
+    message(STATUS "FiniteCellApplication links with nnls")
 else()
-    message("nnls is not found")
+    message(STATUS "FiniteCellApplication does not link with nnls")
 endif()
 
 #######################################################################
@@ -59,8 +54,12 @@ endif()
 
 add_library(KratosFiniteCellApplicationDependencies INTERFACE)
 target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-IF(${NNLS_FOUND} MATCHES TRUE)
-    target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${NNLS_LIBRARIES})
+IF(nnls_FOUND)
+    if(TARGET SS::nnls)
+        target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE SS::nnls)
+    else()
+        target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${NNLS_LIBRARIES})
+    endif()
 ENDIF()
 
 target_link_libraries(KratosFiniteCellApplication PUBLIC KratosCore)

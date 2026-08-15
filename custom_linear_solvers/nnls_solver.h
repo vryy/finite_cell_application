@@ -29,7 +29,7 @@
 #include <boost/numeric/bindings/traits/ublas_matrix.hpp>
 #include <boost/numeric/bindings/traits/ublas_vector.hpp>
 #endif
-#include "nnls.h"
+#include "nnls/nnls.h"
 
 
 // Project includes
