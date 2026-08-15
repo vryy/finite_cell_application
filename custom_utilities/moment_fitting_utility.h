@@ -97,8 +97,7 @@ public:
     MomentFittingUtility() {}
 
     /// Destructor.
-    virtual ~MomentFittingUtility() {}
-
+    ~MomentFittingUtility() override {}
 
     ///@}
     ///@name Operators
@@ -123,10 +122,10 @@ public:
                                 const BRep& r_brep,
                                 const TIntegratorType& r_integrator,
                                 const GeometryType::IntegrationPointsArrayType& integration_points,
-                                const int& integrator_integration_method,
+                                const int integrator_integration_method,
                                 const std::string& solver_type,
-                                const int& echo_level,
-                                const double& small_weight)
+                                const int echo_level,
+                                const double small_weight)
     {
         if (echo_level > -1)
         {
@@ -278,10 +277,10 @@ public:
     void FitQuadratureSubCell(typename TTreeType::Pointer p_tree,
                               const std::vector<typename TFunctionType::Pointer>& r_funcs,
                               const BRep& r_brep,
-                              const int& integrator_integration_method,
+                              const int integrator_integration_method,
                               const std::string& solver_type,
-                              const int& echo_level,
-                              const double& small_weight,
+                              const int echo_level,
+                              const double small_weight,
                               const ProcessInfo& rCurrentProcessInfo) const
     {
         if (echo_level > 0)
@@ -340,10 +339,10 @@ public:
     void MultithreadedFitQuadratureSubCell(std::vector<typename TTreeType::Pointer>& r_trees,
                                            const std::vector<typename TFunctionType::Pointer>& r_funcs,
                                            const BRep& r_brep,
-                                           const int& integrator_integration_method,
+                                           const int integrator_integration_method,
                                            const std::string& solver_type,
-                                           const int& echo_level,
-                                           const double& small_weight,
+                                           const int echo_level,
+                                           const double small_weight,
                                            const ProcessInfo& rCurrentProcessInfo) const
     {
         /* multithreaded fit quadrature subcell */
@@ -432,22 +431,21 @@ public:
     ///@{
 
     /// Turn back information as a string.
-    virtual std::string Info() const
+    std::string Info() const override
     {
         return "Moment Fitting Utility";
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const override
     {
         rOStream << Info();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const override
     {
     }
-
 
     ///@}
     ///@name Friends
@@ -549,21 +547,6 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream, MomentFittingUtility& rThis)
-{
-    return rIStream;
-}
-
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream, const MomentFittingUtility& rThis)
-{
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
 ///@}
 
 ///@} addtogroup block
