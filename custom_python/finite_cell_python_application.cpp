@@ -27,6 +27,7 @@
 #include "custom_python/add_finite_cell_auxiliary_utility_to_python.h"
 #include "custom_python/add_finite_cell_mesh_utility_to_python.h"
 #include "custom_python/add_utility_to_python.h"
+#include "custom_python/add_least_square_solvers_to_python.h"
 
 namespace Kratos
 {
@@ -106,6 +107,7 @@ BOOST_PYTHON_MODULE(KratosFiniteCellApplication)
     FiniteCellApplication_AddFiniteCellAuxiliaryUtilityToPython();
     FiniteCellApplication_AddFiniteCellMeshUtilityToPython();
     FiniteCellApplication_AddUtilityToPython();
+    FiniteCellApplication_AddLeastSquareSolversToPython();
 
     KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_DOMAIN_SIZE )
     KRATOS_REGISTER_IN_PYTHON_VARIABLE( SUBCELL_WEIGHTS )
