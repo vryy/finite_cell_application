@@ -80,14 +80,14 @@ namespace Kratos
 /// Short class definition.
 /** Least square solver based on LAPACK
 */
-class LeastSquareLAPACKSolver
+class LeastSquareLapackSolver
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of LeastSquareLAPACKSolver
-    KRATOS_CLASS_POINTER_DEFINITION(LeastSquareLAPACKSolver);
+    /// Pointer definition of LeastSquareLapackSolver
+    KRATOS_CLASS_POINTER_DEFINITION(LeastSquareLapackSolver);
 
 
     ///@}
@@ -95,10 +95,10 @@ public:
     ///@{
 
     /// Default constructor.
-    LeastSquareLAPACKSolver() {}
+    LeastSquareLapackSolver() {}
 
     /// Destructor.
-    virtual ~LeastSquareLAPACKSolver() {}
+    virtual ~LeastSquareLapackSolver() {}
 
     ///@}
     ///@name Operators
@@ -108,7 +108,6 @@ public:
     ///@}
     ///@name Operations
     ///@{
-
 
     /// Estimate the reciprocal condition number of the matrix
     static double EstimateRCond(Matrix& rA, const char* norm_type = "1")
@@ -152,7 +151,6 @@ public:
         delete [] IWORK;
         return rcond;
     }
-
 
     /// Solve the non-square linear system using least square method
     static int SolveDGELSY(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 0.01)
@@ -212,7 +210,6 @@ public:
         return 0;
     }
 
-
     /// Solve the non-square linear system using least square method
     static int SolveDGELSS(Matrix& rA, Vector& rX, Vector& rB, const double rcond_est = 1.0e-10)
     {
@@ -270,7 +267,6 @@ public:
 
         return 0;
     }
-
 
     ///@}
     ///@name Access
@@ -382,15 +378,14 @@ private:
     ///@{
 
     /// Assignment operator.
-    LeastSquareLAPACKSolver& operator=(LeastSquareLAPACKSolver const& rOther);
+    LeastSquareLapackSolver& operator=(LeastSquareLapackSolver const& rOther);
 
     /// Copy constructor.
-    LeastSquareLAPACKSolver(LeastSquareLAPACKSolver const& rOther);
-
+    LeastSquareLapackSolver(LeastSquareLapackSolver const& rOther);
 
     ///@}
 
-}; // Class LeastSquareLAPACKSolver
+}; // Class LeastSquareLapackSolver
 
 ///@}
 
@@ -404,14 +399,14 @@ private:
 
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
-                                  LeastSquareLAPACKSolver& rThis)
+                                  LeastSquareLapackSolver& rThis)
 {
     return rIStream;
 }
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
-                                  const LeastSquareLAPACKSolver& rThis)
+                                  const LeastSquareLapackSolver& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;

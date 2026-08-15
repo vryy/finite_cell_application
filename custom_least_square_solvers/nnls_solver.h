@@ -63,30 +63,28 @@ namespace Kratos
 ///@{
 
 /// Short class definition.
-/** Nonnegative least square solver based on NNLS
+/** Non-negative least square solver based on NNLS
  * REF: http://suvrit.de/work/soft/nnls.html
  *      D. Kim, S. Sra, I. S. Dhillon. "A non-monotonic method for large-scale non-negative least squares." Optimization Methods and Software, Jan. 2012
 */
-class NNLSSolver
+class NnlsSolver
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of NNLSSolver
-    KRATOS_CLASS_POINTER_DEFINITION(NNLSSolver);
-
+    /// Pointer definition of NnlsSolver
+    KRATOS_CLASS_POINTER_DEFINITION(NnlsSolver);
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    NNLSSolver() {}
+    NnlsSolver() {}
 
     /// Destructor.
-    virtual ~NNLSSolver() {}
-
+    virtual ~NnlsSolver() {}
 
     ///@}
     ///@name Operators
@@ -197,7 +195,6 @@ public:
     {
     }
 
-
     ///@}
     ///@name Friends
     ///@{
@@ -277,15 +274,14 @@ private:
     ///@{
 
     /// Assignment operator.
-    NNLSSolver& operator=(NNLSSolver const& rOther);
+    NnlsSolver& operator=(NnlsSolver const& rOther);
 
     /// Copy constructor.
-    NNLSSolver(NNLSSolver const& rOther);
-
+    NnlsSolver(NnlsSolver const& rOther);
 
     ///@}
 
-}; // Class NNLSSolver
+}; // Class NnlsSolver
 
 ///@}
 
@@ -297,15 +293,16 @@ private:
 ///@name Input and output
 ///@{
 
-
 /// input stream function
 inline std::istream& operator >> (std::istream& rIStream,
-                                  NNLSSolver& rThis)
-{}
+                                  NnlsSolver& rThis)
+{
+    return rIStream;
+}
 
 /// output stream function
 inline std::ostream& operator << (std::ostream& rOStream,
-                                  const NNLSSolver& rThis)
+                                  const NnlsSolver& rThis)
 {
     rThis.PrintInfo(rOStream);
     rOStream << std::endl;
@@ -313,6 +310,7 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
     return rOStream;
 }
+
 ///@}
 
 ///@} addtogroup block

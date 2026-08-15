@@ -34,9 +34,9 @@
 #include "brep_application/custom_algebra/function/function.h"
 #include "brep_application/custom_algebra/function/product_function.h"
 #include "brep_application/custom_algebra/function/heaviside_function.h"
-#include "custom_linear_solvers/least_square_lapack_solver.h"
+#include "custom_least_square_solvers/least_square_lapack_solver.h"
 #ifdef FINITE_CELL_APPLICATION_USE_NNLS
-#include "custom_linear_solvers/nnls_solver.h"
+#include "custom_least_square_solvers/nnls_solver.h"
 #endif
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
@@ -177,7 +177,7 @@ public:
             // estimate the condition number
             if (MA.size1() == MA.size2())
             {
-                double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
+                double rcond = LeastSquareLapackSolver::EstimateRCond(MA);
                 KRATOS_WATCH(rcond)
             }
         }
@@ -220,7 +220,7 @@ public:
             {
                 std::cout << "Lapack DGELSY will be called" << std::endl;
             }
-            LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
+            LeastSquareLapackSolver::SolveDGELSY(MA, Mw, Mb);
         }
         else if (solver_type == std::string("dgelss"))
         {
@@ -229,7 +229,7 @@ public:
             {
                 std::cout << "Lapack DGELSS will be called" << std::endl;
             }
-            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
+            LeastSquareLapackSolver::SolveDGELSS(MA, Mw, Mb);
         }
 #ifdef FINITE_CELL_APPLICATION_USE_NNLS
         else if (solver_type == std::string("nnls"))
@@ -239,7 +239,7 @@ public:
             {
                 std::cout << "NNLS will be called" << std::endl;
             }
-            NNLSSolver::Solve(MA, Mw, Mb, echo_level);
+            NnlsSolver::Solve(MA, Mw, Mb, echo_level);
         }
 #endif
         else
