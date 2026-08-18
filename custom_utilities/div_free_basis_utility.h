@@ -32,8 +32,8 @@
 #include "geometries/geometry.h"
 #include "geometries/geometry_data.h"
 #include "geometries/line_2d_2.h"
+#include "least_square_solvers/lapack_ls_solver.h"
 #include "custom_geometries/finite_cell_geometry.h"
-#include "custom_linear_solvers/least_square_lapack_solver.h"
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
 #include "brep_application/custom_algebra/level_set/level_set.h"
@@ -374,13 +374,13 @@ public:
             }
 //KRATOS_WATCH(Mb)
 #ifdef ESTIMATE_RCOND
-            double rcond = LeastSquareLAPACKSolver::EstimateRCond(MA);
+            double rcond = LapackLsSolver::EstimateRCond(MA);
             KRATOS_WATCH(rcond)
 #endif
 
             /* solve the non-square linear system by least square. NOTE: it can be very ill-conditioned */
             Vector Mw;
-            LeastSquareLAPACKSolver::SolveDGELSY(MA, Mw, Mb);
+            LapackLsSolver::SolveDGELSY(MA, Mw, Mb);
 //            LeastSquareLAPACKSolver::SolveDGELSS(MA, Mw, Mb);
             KRATOS_WATCH(Mw)
             KRATOS_WATCH(sum(Mw))

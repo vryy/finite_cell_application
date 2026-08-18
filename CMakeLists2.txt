@@ -16,16 +16,6 @@ endif()
 
 #######################################################################
 
-find_package(nnls)
-if(nnls_FOUND)
-    set(FINITE_CELL_APPLICATION_COMPILE_DEFS "${FINITE_CELL_APPLICATION_COMPILE_DEFS};FINITE_CELL_APPLICATION_USE_NNLS")
-    message(STATUS "FiniteCellApplication links with nnls")
-else()
-    message(STATUS "FiniteCellApplication does not link with nnls")
-endif()
-
-#######################################################################
-
 ######### add compilation units here
 set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/element_wrapper_condition.cpp
@@ -42,7 +32,6 @@ set( KRATOS_FINITE_CELL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_moment_fitting_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_ghost_penalty_utility_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utility_to_python.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_least_square_solvers_to_python.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/finite_cell_python_application.cpp
 )
 #######################################################################
@@ -53,22 +42,11 @@ if(MSVC)
     target_compile_options(KratosFiniteCellApplication PRIVATE /bigobj)
 endif()
 
-add_library(KratosFiniteCellApplicationDependencies INTERFACE)
-target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-IF(nnls_FOUND)
-    if(TARGET SS::nnls)
-        target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE SS::nnls)
-    else()
-        target_link_libraries(KratosFiniteCellApplicationDependencies INTERFACE ${NNLS_LIBRARIES})
-    endif()
-ENDIF()
-
 target_link_libraries(KratosFiniteCellApplication PUBLIC KratosCore)
 target_link_libraries(KratosFiniteCellApplication PUBLIC KratosBRepApplication)
 if(${ISOGEOMETRIC_APPLICATION} MATCHES ON)
     target_link_libraries(KratosFiniteCellApplication PUBLIC KratosIsogeometricApplication)
 endif()
-target_link_libraries(KratosFiniteCellApplication PUBLIC KratosFiniteCellApplicationDependencies)
 
 # expose the include directories used by this application to any external target that links with it
 target_include_directories(KratosFiniteCellApplication PUBLIC ${FINITE_CELL_APPLICATION_INCLUDE_DIRS})

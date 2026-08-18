@@ -30,14 +30,14 @@
 #include "includes/define.h"
 #include "includes/ublas_interface.h"
 #include "includes/legacy_structural_app_vars.h"
+#include "least_square_solvers/lapack_ls_solver.h"
+#ifdef KRATOS_USE_NNLS
+#include "least_square_solvers/ss_nnls_solver.h"
+#endif
 #include "brep_application/custom_algebra/brep.h"
 #include "brep_application/custom_algebra/function/function.h"
 #include "brep_application/custom_algebra/function/product_function.h"
 #include "brep_application/custom_algebra/function/heaviside_function.h"
-#include "custom_least_square_solvers/least_square_lapack_solver.h"
-#ifdef FINITE_CELL_APPLICATION_USE_NNLS
-#include "custom_least_square_solvers/nnls_solver.h"
-#endif
 #include "custom_utilities/quadrature_utility.h"
 #include "custom_utilities/finite_cell_auxiliary_utility.h"
 #include "custom_utilities/finite_cell_geometry_utility.h"
@@ -176,7 +176,7 @@ public:
             // estimate the condition number
             if (MA.size1() == MA.size2())
             {
-                double rcond = LeastSquareLapackSolver::EstimateRCond(MA);
+                double rcond = LapackLsSolver::EstimateRCond(MA);
                 KRATOS_WATCH(rcond)
             }
         }
@@ -219,7 +219,7 @@ public:
             {
                 std::cout << "Lapack DGELSY will be called" << std::endl;
             }
-            LeastSquareLapackSolver::SolveDGELSY(MA, Mw, Mb);
+            LapackLsSolver::SolveDGELSY(MA, Mw, Mb);
         }
         else if (solver_type == std::string("dgelss"))
         {
@@ -228,9 +228,9 @@ public:
             {
                 std::cout << "Lapack DGELSS will be called" << std::endl;
             }
-            LeastSquareLapackSolver::SolveDGELSS(MA, Mw, Mb);
+            LapackLsSolver::SolveDGELSS(MA, Mw, Mb);
         }
-#ifdef FINITE_CELL_APPLICATION_USE_NNLS
+#ifdef KRATOS_USE_NNLS
         else if (solver_type == std::string("nnls"))
         {
             /* solve the non-square linear system by non-negative least square optimizer. */
@@ -238,7 +238,7 @@ public:
             {
                 std::cout << "NNLS will be called" << std::endl;
             }
-            NnlsSolver::Solve(MA, Mw, Mb, echo_level);
+            SS::NnlsSolver::Solve(MA, Mw, Mb, 1e-9, 100, echo_level);
         }
 #endif
         else
