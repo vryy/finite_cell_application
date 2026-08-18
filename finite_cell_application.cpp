@@ -57,11 +57,7 @@ namespace Kratos
 {
 
 KratosFiniteCellApplication::KratosFiniteCellApplication()
-#ifdef SD_APP_FORWARD_COMPATIBILITY
-    : KratosApplication("KratosFiniteCellApplication")
-#else
-    : KratosApplication()
-#endif
+    : KratosApplication("FiniteCellApplication")
 {}
 
 void KratosFiniteCellApplication::Register()
